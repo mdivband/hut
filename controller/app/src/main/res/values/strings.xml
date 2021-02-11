@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">GSDemo</string>
+    <string name="title_activity_demo">GSDemoActivity</string>
+    <string name="google_app_id">Google_APP_ID</string>
+
+    <!-- Connection Activity -->
+    <string name="title_activity_connection">DJI HUT Controller</string>
+    <string name="img_rc_contentDesc">RC_Status</string>
+    <string name="img_drone_contentDesc">Drone_Status</string>
+    <string name="txt_rc_status_off">Disconnected</string>
+    <string name="txt_rc_status_on">Connected</string>
+    <string name="txt_drone_status_off">Disconnected</string>
+    <string name="txt_drone_status_on">Connected</string>
+    <string name="txt_information_connect_controller">Connect remote controller to device to begin</string>
+    <string name="txt_information_connect_drone">Connect drone to remote controller to continue</string>
+    <string name="btn_connect_txt">Connect to Server</string>
+    <!-- /Connection Activity -->
+
+    <!-- Overview Activity -->
+    <string name="txt_manual_control">Manual Control</string>
+    <!-- /Overview Activity -->
+
+</resources>

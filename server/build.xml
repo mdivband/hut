@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    Author: Feng Wu <wufeng02@gmail.com>
+    Date  : 2013-10-14
+-->
+<project basedir="." default="build" name="maxsum-gui">
+    <property environment="env"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+    <property name="main" value="server.Simulator"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+
+    <path id="maxsum-gui.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="libs/gson-2.2.2.jar"/>
+        <pathelement location="libs/mongodb-driver-3.7.0.jar"/>
+    	<pathelement location="libs/rabbitmq-client.jar"/>
+    	<pathelement location="libs/objenesis-2.6.jar"/>
+    	<pathelement location="libs/cloning-1.9.10.jar"/>
+    </path>
+    
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="clean">
+		<delete dir="bin"/>
+		<delete dir="doc/api"/>
+        <delete file="maxsum-gui.jar"/>
+    </target>
+
+    <target depends="init" name="build">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac includeantruntime="false" 
+            debug="true" debuglevel="${debuglevel}" 
+            destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="maxsum-gui.classpath"/>
+        </javac>
+    </target>
+
+	<target depends="build" name="jar">
+        <jar destfile="maxsum-gui.jar">
+			<fileset dir="bin"/>
+			<zipgroupfileset dir="lib" includes="**/*.jar"/>
+			<manifest>
+				<attribute name="Main-Class" value="${main}"/>
+			</manifest>
+		</jar>
+    </target>
+
+	<target name="doc">
+		<javadoc destdir="doc/api" 
+            author="true" version="true" use="true" 
+            windowtitle="MAXSUM-GUI API">
+			<fileset dir="src" defaultexcludes="yes"/>
+		</javadoc>
+    </target>
+
+	<target depends="build" name="run">
+        <java classname="${main}" fork="yes">
+            <classpath refid="maxsum-gui.classpath"/>
+            <sysproperty key="DEBUG" value="true"/>
+            <jvmarg value="-ea"/>
+        </java>
+    </target>
+	
+</project>

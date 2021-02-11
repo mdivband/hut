@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="libs/commons-cli-1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/commons-io-1.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gson-2.2.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/hamcrest-core.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/junit.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/mysql-connector-java-5.1.39-bin.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/rabbitmq-client-tests.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/rabbitmq-client.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/objenesis-2.6.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/cloning-1.9.10.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/mongodb-driver-3.7.0.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

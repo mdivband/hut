@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project maxsum-gui-v2 with Jar-in-Jar Loader">
+    <!--this file was created by Eclipse Runnable JAR file Export Wizard-->
+    <!--ANT 1.7 is required-->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="${dir.buildfile}/../.."/>
+    <property name="dir.jarfile" value="${dir.buildfile}"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/maxSum.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="server.Simulator"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ gson-2.2.2.jar commons-cli-1.1.jar commons-io-1.2.jar hamcrest-core.jar junit.jar rabbitmq-client-tests.jar rabbitmq-client.jar mysql-connector-java-5.1.39-bin.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="${dir.workspace}/maxsum-gui-v2/bin"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="gson-2.2.2.jar"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="commons-cli-1.1.jar"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="commons-io-1.2.jar"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="hamcrest-core.jar"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="junit.jar"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="rabbitmq-client-tests.jar"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="rabbitmq-client.jar"/>
+            <zipfileset dir="${dir.workspace}/maxsum-gui-v2/lib" includes="mysql-connector-java-5.1.39-bin.jar"/>
+        </jar>
+    </target>
+</project>
