@@ -1,5 +1,5 @@
-# DJI Hut Controller - Documentation
-### University of Southampton 
+# Hut - Documentation
+## DJI Hut Controller - Documentation
 ------
 The DJI Hut Controller is an Android mobile app designed to allow a drone operator to monitor and control a drone that is flying autonomously or under manual control. In autonomous mode, the drone receives commands from a server (see the [server repository][1]), and carries them out without required any input from the operator. The drone can be swapped to manual control, in which case the operator has complete control over the drone and any incoming commands from the server are ignored. 
 
@@ -107,9 +107,9 @@ Since the Android device has to be connected to the drone controller via USB whe
 [project_architecture]: https://bitbucket.org/jearly97/hut_dji_controller/raw/master/docs/project_architecture.png "Project Architecture Overview"
 [app_architecture]: https://bitbucket.org/jearly97/hut_dji_controller/raw/master/docs/app_architecture.png "App Architecture Overview"
 [app_flow]: https://bitbucket.org/jearly97/hut_dji_controller/raw/master/docs/app_flow.png "App Flow"
-----------
-# DJI Hut Server - Documentation
-### University of Southampton
+
+
+## DJI Hut Server - Documentation
 ##### Last Updated: 13/09/2018, Joe Early
 ------
 The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][1]). 
