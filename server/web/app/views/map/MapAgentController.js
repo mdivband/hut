@@ -133,12 +133,12 @@ var MapAgentController = {
         });
     },
     onAgentMarkerLeftClick: function (marker) {
-        // var agent = this.state.agents.get(marker.id);
-        // if (agent.getId() === this.views.clickedAgent)
-        //     this.updateClickedAgent(null);
-        // else
-        //     this.updateClickedAgent(agent);
-        // MapAgentController.updateAllAgentMarkerIcons();
+         var agent = this.state.agents.get(marker.id);
+         if (agent.getId() === this.views.clickedAgent)
+             this.updateClickedAgent(null);
+         else
+             this.updateClickedAgent(agent);
+         MapAgentController.updateAllAgentMarkerIcons();
     },
     onAgentMarkerRightClick: function (marker) {
         var self = this;

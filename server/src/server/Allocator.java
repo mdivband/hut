@@ -1,6 +1,6 @@
 package server;
 
-import com.sun.javafx.geom.Edge;
+//import com.sun.javafx.geom.Edge;
 import maxsum.*;
 import server.model.Agent;
 import server.model.Coordinate;

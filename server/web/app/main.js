@@ -133,7 +133,7 @@ var simulator = {
                 if (elapsedTime < waitTime)
                     window.setTimeout(_.bind(self.run, self), waitTime - elapsedTime);
                 else
-                    _.bind(self.run, self)
+                    _.bind(self.run, self)();
             });
         $('#view_mode').buttonset().css({
             "margin-right": "0px"

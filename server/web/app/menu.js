@@ -54,11 +54,12 @@ function menuInit() {
     var setSelected = function (selectedLi) {
         for(var i = 0; i < gameIds.length; i++) {
             var li = scenarioList[0].children[i];
-            if(li === selectedLi)
+            if(li === selectedLi) {
                 li.classList.add('selected');
+                selectedIndex = i;
+            }
             else
                 li.classList.remove('selected');
-            selectedIndex = i;
         }
         scenarioStartButton.prop('disabled', false);
     };

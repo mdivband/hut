@@ -547,7 +547,7 @@ App.Views.SubMap = Backbone.View.extend({
                     strokeWeight: 0.5,
                     map: self.map
                 });
-                self.bind("camera:boun`ds", function (sw, ne) {
+                self.bind("camera:bounds", function (sw, ne) {
                     self.clickedRect.setBounds(new google.maps.LatLngBounds(sw, ne));
                 });
             }

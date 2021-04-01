@@ -50,6 +50,7 @@ public class AllocationHandler extends RestHandler {
     private void handleAutoAllocate(Response resp) throws IOException {
         LOGGER.info("Running auto allocation.");
         simulator.getAllocator().runAutoAllocation();
+        LOGGER.info("Finished auto allocation.");
         resp.sendOkay();
     }
 
