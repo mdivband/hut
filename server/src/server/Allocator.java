@@ -48,13 +48,18 @@ public class Allocator {
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 
-        Map<String, String> maxsumAllocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-        simulator.getState().setTempAllocation(maxsumAllocation);
+        /*Map<String, String> maxsumAllocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        simulator.getState().setTempAllocation(maxsumAllocation);*/
+
+        Map<String, String> randomAllocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        simulator.getState().setTempAllocation(randomAllocation);
 
         //Set temp route of each agent to task coordinate if allocated, else ensure route is empty
         for(Agent agent : simulator.getState().getAgents()) {
-            if(maxsumAllocation.containsKey(agent.getId())) {
-                Task task = simulator.getState().getTask(maxsumAllocation.get(agent.getId()));
+            /*if(maxsumAllocation.containsKey(agent.getId())) {
+                Task task = simulator.getState().getTask(maxsumAllocation.get(agent.getId()));*/
+            if(randomAllocation.containsKey(agent.getId())) {
+                Task task = simulator.getState().getTask(randomAllocation.get(agent.getId()));
                 if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
                     agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
                 else
@@ -267,6 +272,57 @@ public class Allocator {
 				Map<String, String> result =  runMaxSum(agents, tasks);
                 if (!editMode) oldresult = result;
                 return result;
+        }
+        return null;
+    }
+
+    protected Map<String, String> randomCompute(List<Agent> agents, List<Task> tasks, boolean editMode) {
+        if (!agents.isEmpty() && !tasks.isEmpty()) {
+            HashMap<String, String> result = new HashMap<>();
+
+            for (Task task : tasks) {
+                task.clearAgents();
+            }
+
+            //Make sure the assignments won't be modified if the agent is working
+            ArrayList<Agent> workingAgents = new ArrayList<>();
+            for (Agent agent : agents) {
+                if (agent.getTask() != null && agent.isWorking()) {
+                    if (!tasks.contains(agent.getTask()) && agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
+                        agent.setAllocatedTaskId(null);
+                        agent.setWorking(false);
+                        agent.setSearching(false);
+                    } else {
+                        workingAgents.add(agent);
+                        agent.getTask().addAgent(agent);
+                        result.put(agent.getId(), agent.getTask().getId());
+                        if (agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
+                            tasks.remove(agent.getTask());
+                        }
+
+                    }
+                } else {
+                    agent.setAllocatedTaskId(null);
+                    agent.setSearching(false);
+                    agent.setWorking(false);
+                }
+            }
+
+            for (Agent agent : workingAgents) {
+                agents.remove(agent);
+            }
+
+            for (Task task : tasks) {
+                if (task.getAgents().size() < task.getGroup()) {
+                    int rnd = new Random().nextInt(agents.size());
+                    Agent agent = agents.get(rnd);
+                    result.put(agent.getId(), task.getId());
+                    agents.remove(agent);
+                }
+            }
+
+            if (!editMode) oldresult = result;
+            return result;
         }
         return null;
     }
