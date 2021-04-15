@@ -28,6 +28,11 @@ public class AgentReal extends Agent {
         }
     }
 
+    @Override
+    void performFlocking() {
+        //TODO implement real agent flocking
+    }
+
     private JsonObject getRouteTaskJson(boolean prescan) {
         JsonObject tbr = new JsonObject();
 

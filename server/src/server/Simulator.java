@@ -3,6 +3,7 @@ package server;
 import server.controller.*;
 import server.model.Agent;
 import server.model.Coordinate;
+import server.model.Sensor;
 import server.model.State;
 import server.model.task.Task;
 import server.model.target.Target;
@@ -26,6 +27,7 @@ public class Simulator {
     private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
 
     private State state;
+    private Sensor sensor;
 
     private final QueueManager queueManager;
     private final AgentController agentController;
@@ -43,10 +45,11 @@ public class Simulator {
         instance = this;
 
         state = new State();
+        sensor = new Sensor(this);
         connectionController = new ConnectionController(this);
         allocator = new Allocator(this);
         queueManager = new QueueManager(this);
-        agentController = new AgentController(this);
+        agentController = new AgentController(this, sensor);
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
@@ -99,6 +102,7 @@ public class Simulator {
         for(Agent agent : this.state.getAgents())
             if(agent.isSimulated())
                 agent.heartbeat();
+        this.agentController.stopAllAgents();
         new Thread(this::mainLoop).start();
         this.state.setInProgress(true);
         LOGGER.info("Simulation started.");
@@ -130,7 +134,7 @@ public class Simulator {
             //Step agents
             checkAgentsForTimeout();
             for (Agent agent : state.getAgents())
-                agent.step();
+                agent.step(state.isFlockingEnabled());
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
@@ -211,21 +215,33 @@ public class Simulator {
             Object centre = GsonUtils.getValue(obj, "gameCentre");
             this.state.setGameCentre(new Coordinate(GsonUtils.getValue(centre, "lat"), GsonUtils.getValue(centre, "lng")));
 
-            List<String> possibleMethods = new ArrayList<String>(Arrays.asList(
-                    "random",
-                    "maxsum"
-            ));
-            String allocationMethod = this.state.getAllocationMethod(); // Current default allocationMethod is "random"
             if(GsonUtils.hasKey(obj,"allocationMethod")) {
-                allocationMethod = GsonUtils.getValue(obj, "allocationMethod")
+                String allocationMethod = GsonUtils.getValue(obj, "allocationMethod")
                         .toString()
                         .toLowerCase();
+
+                List<String> possibleMethods = new ArrayList<String>(Arrays.asList(
+                        "random",
+                        "maxsum"
+                ));
+
+                if(possibleMethods.contains(allocationMethod)) {
+                    this.state.setAllocationMethod(allocationMethod);
+                } else {
+                    LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'random'.");
+                    //state.allocationMethod initialised with default value of 'random'
+                }
             }
-            if(possibleMethods.contains(allocationMethod)) {
-                this.state.setAllocationMethod(allocationMethod);
-            } else {
-                LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'random'.");
-                this.state.setAllocationMethod("random");
+
+            if(GsonUtils.hasKey(obj,"flockingEnabled")){
+                Object flockingEnabled = GsonUtils.getValue(obj, "flockingEnabled");
+                if(flockingEnabled.getClass() == Boolean.class) {
+                    this.state.setFlockingEnabled((Boolean)flockingEnabled);
+                } else {
+                    LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
+                            flockingEnabled.toString() + "'. Set to true.");
+                    // state.flockingEnabled initialised with default value of true
+                }
             }
 
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");

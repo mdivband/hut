@@ -13,8 +13,11 @@ public class AgentController extends AbstractController {
     public static int nextAgentAltitude = 5;
     private static int uniqueAgentNumber = 1;
 
-    public AgentController(Simulator simulator) {
+    private Sensor sensor;
+
+    public AgentController(Simulator simulator, Sensor sensor) {
         super(simulator, AgentController.class.getName());
+        this.sensor = sensor;
     }
 
     private String generateUID() {
@@ -29,7 +32,7 @@ public class AgentController extends AbstractController {
     }
 
     public synchronized Agent addVirtualAgent(double lat, double lng, double heading) {
-        Agent agent = new AgentVirtual(generateUID(), new Coordinate(lat, lng));
+        Agent agent = new AgentVirtual(generateUID(), new Coordinate(lat, lng), sensor);
         agent.setHeading(heading);
         simulator.getState().add(agent);
         return agent;

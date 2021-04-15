@@ -67,9 +67,14 @@ public abstract class Agent extends MObject implements Serializable {
     abstract void moveTowardsDestination();
 
     /**
+     * Move an agent based on the average headings of its neighbours.
+     */
+    abstract void performFlocking();
+
+    /**
      * Step an agent for this tick
      */
-    public void step() {
+    public void step(Boolean flockingEnabled) {
         Task task = this.getTask();
         if (task != null) {
             //Ensure agent's goal is set to task coordinate in case task is moved
@@ -91,6 +96,9 @@ public abstract class Agent extends MObject implements Serializable {
                 if (isCurrentDestinationReached() && this.route.size() > 1)
                     this.route.remove(0);
             }
+        }
+        else if (flockingEnabled){
+            performFlocking();
         }
 
         //Check for hazard hits

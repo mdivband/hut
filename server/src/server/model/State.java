@@ -24,6 +24,7 @@ public class State {
     private String gameDescription;
     private int gameType;
     private String allocationMethod = "random";
+    private Boolean flockingEnabled = true;
     private double time;
     private boolean editMode;
 
@@ -208,6 +209,14 @@ public class State {
 
     public synchronized String getAllocationMethod() {
         return this.allocationMethod;
+    }
+
+    public synchronized void setFlockingEnabled(Boolean flockingEnabled) {
+        this.flockingEnabled = flockingEnabled;
+    }
+
+    public synchronized Boolean isFlockingEnabled() {
+        return this.flockingEnabled;
     }
 
     public Collection<Target> getTargets() {

@@ -131,8 +131,12 @@ public class Allocator {
 
         //Clear agents and tasks
         for(Agent agent : simulator.getState().getAgents())
-            if(!agent.isWorking())
+            if(!agent.isWorking()) {
                 agent.setAllocatedTaskId(null);
+                if(simulator.getState().isFlockingEnabled()) {
+                    agent.resume();
+                }
+            }
         for(Task task : simulator.getState().getTasks())
             task.getAgents().clear();
 
