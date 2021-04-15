@@ -48,6 +48,10 @@ public class GsonUtils {
 		assert (obj != null);
 		return ((Map<String, T>)obj).get(key);
 	}
+
+	public static <T> Boolean hasKey(Object obj, String key) {
+		return ((Map<String, T>)obj).containsKey(key);
+	}
 	
 	private static String readStream(InputStream stream) throws IOException {
 		StringBuilder sb = new StringBuilder();

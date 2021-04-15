@@ -11,10 +11,7 @@ import tool.GsonUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -213,6 +210,23 @@ public class Simulator {
             this.state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
             Object centre = GsonUtils.getValue(obj, "gameCentre");
             this.state.setGameCentre(new Coordinate(GsonUtils.getValue(centre, "lat"), GsonUtils.getValue(centre, "lng")));
+
+            List<String> possibleMethods = new ArrayList<String>(Arrays.asList(
+                    "random",
+                    "maxsum"
+            ));
+            String allocationMethod = this.state.getAllocationMethod(); // Current default allocationMethod is "random"
+            if(GsonUtils.hasKey(obj,"allocationMethod")) {
+                allocationMethod = GsonUtils.getValue(obj, "allocationMethod")
+                        .toString()
+                        .toLowerCase();
+            }
+            if(possibleMethods.contains(allocationMethod)) {
+                this.state.setAllocationMethod(allocationMethod);
+            } else {
+                LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'random'.");
+                this.state.setAllocationMethod("random");
+            }
 
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");
             if (agentsJson != null) {

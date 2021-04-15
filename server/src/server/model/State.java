@@ -23,6 +23,7 @@ public class State {
     private String gameId;
     private String gameDescription;
     private int gameType;
+    private String allocationMethod = "random";
     private double time;
     private boolean editMode;
 
@@ -199,6 +200,14 @@ public class State {
 
     public synchronized void setGameCentre(Coordinate gameCentre) {
         this.gameCentre = gameCentre;
+    }
+
+    public synchronized void setAllocationMethod(String allocationMethod) {
+        this.allocationMethod = allocationMethod;
+    }
+
+    public synchronized String getAllocationMethod() {
+        return this.allocationMethod;
     }
 
     public Collection<Target> getTargets() {

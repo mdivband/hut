@@ -37,29 +37,33 @@ public class Allocator {
     }
 
     /**
-     * Automatically allocate agents to tasks using a planning algorithm (currently maxsum).
+     * Automatically allocate agents to tasks using the maxsum planning algorithm
+     * or random allocation.
      * Result is stored in state's temp allocation.
      * This doesn't actually allocate the agents to the tasks,
      *  a call to Allocator#confirmTempAssignemt will do this.
      */
     public void runAutoAllocation() {
+        Map<String, String> allocation = new HashMap<>();
         List<Agent> agentsToAllocate = new ArrayList<>(simulator.getState().getAgents());
         agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut());
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 
-        /*Map<String, String> maxsumAllocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-        simulator.getState().setTempAllocation(maxsumAllocation);*/
+        String allocationMethod = simulator.getState().getAllocationMethod();
 
-        Map<String, String> randomAllocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-        simulator.getState().setTempAllocation(randomAllocation);
+        if(allocationMethod.equals("maxsum")){
+            allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        } else if(allocationMethod.equals("random")) {
+            allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        }
+
+        simulator.getState().setTempAllocation(allocation);
 
         //Set temp route of each agent to task coordinate if allocated, else ensure route is empty
         for(Agent agent : simulator.getState().getAgents()) {
-            /*if(maxsumAllocation.containsKey(agent.getId())) {
-                Task task = simulator.getState().getTask(maxsumAllocation.get(agent.getId()));*/
-            if(randomAllocation.containsKey(agent.getId())) {
-                Task task = simulator.getState().getTask(randomAllocation.get(agent.getId()));
+            if(allocation.containsKey(agent.getId())) {
+                Task task = simulator.getState().getTask(allocation.get(agent.getId()));
                 if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
                     agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
                 else
