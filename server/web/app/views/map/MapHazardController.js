@@ -18,20 +18,23 @@ var MapHazardController = {
         $('#explored_overlay_toggle').change(function () {
             MapHazardController.setHeatmapVisibility(-1, $(this).is(":checked"));
         });
-        $('#fire_overlay_toggle').change(function () {
+        $('#hazard_overlay_toggle').change(function () {
             MapHazardController.setHeatmapVisibility(0, $(this).is(":checked"));
+            MapHazardController.setHeatmapVisibility(1, $(this).is(":checked"));
         });
 
         //Add empty heat map - used to give consistent background colour when multiple heatmaps are active.
         MapHazardController.emptyHeatmap = new HeatmapOverlay(this.map,
             {
-                "backgroundColor": '#00000044'
+                // "backgroundColor": '#00000044'
+                "backgroundColor": '#00000010'
             }
         );
 
         //Add heatmaps
         MapHazardController.addHeatmap(this.state.hazards.NONE, 'blue');
         MapHazardController.addHeatmap(this.state.hazards.FIRE, 'red');
+        MapHazardController.addHeatmap(this.state.hazards.DEBRIS, 'black');
 
         //Make sure visible count is zero after maps are added and emtpty heatmap is not visible
         MapHazardController.visibleCount = 0;
@@ -44,7 +47,8 @@ var MapHazardController = {
             MapHazardController.heatmap[hazardType] = new HeatmapOverlay(this.map,
                 {
                     "radius": 0.0005,
-                    "maxOpacity": 0.4,
+                    // "maxOpacity": 0.4,
+                    "maxOpacity": 0.6,
                     "scaleRadius": true,
                     "useLocalExtrema": false,
                     "gradient": {

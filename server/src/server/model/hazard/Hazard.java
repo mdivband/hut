@@ -9,6 +9,7 @@ public abstract class Hazard extends MObject {
     private final int type;
     public static final int NONE = -1;
     public static final int FIRE = 0;
+    public static final int DEBRIS = 1;
 
     private int size;
 

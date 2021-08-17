@@ -317,6 +317,7 @@ public class State {
         private void init() {
             hazardHits.put(Hazard.NONE, new ConcurrentHashMap<>());
             hazardHits.put(Hazard.FIRE, new ConcurrentHashMap<>());
+            hazardHits.put(Hazard.DEBRIS, new ConcurrentHashMap<>());
         }
 
         private void add(int type, Coordinate location) {
@@ -365,6 +366,7 @@ public class State {
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("-1", context.serialize(hazardHitCollection.hazardHits.get(-1).values()));
             jsonObject.add("0", context.serialize(hazardHitCollection.hazardHits.get(0).values()));
+            jsonObject.add("1", context.serialize(hazardHitCollection.hazardHits.get(1).values()));
             return jsonObject;
         }
     };

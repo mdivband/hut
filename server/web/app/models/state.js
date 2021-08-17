@@ -22,7 +22,8 @@ App.Models.State  = Backbone.Model.extend({
         allocationRedoAvailable: false,
         hazardHits: {
             '-1': [],
-            '0': []
+            '0': [],
+            '1': []
         }
 	},
     url: function() {

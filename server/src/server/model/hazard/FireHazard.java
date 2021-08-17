@@ -8,6 +8,10 @@ public class FireHazard extends Hazard {
         super(id, coordinate, Hazard.FIRE, 150);
     }
 
+    public FireHazard(String id, Coordinate coordinate, int size) {
+        super(id, coordinate, Hazard.FIRE, size);
+    }
+
     @Override
     public void step() {}
 

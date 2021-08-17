@@ -262,7 +262,12 @@ public class Simulator {
                     Double lat = GsonUtils.getValue(hazard, "lat");
                     Double lng = GsonUtils.getValue(hazard, "lng");
                     int type = ((Double) GsonUtils.getValue(hazard, "type")).intValue();
-                    hazardController.addHazard(lat, lng, type);
+                    if (GsonUtils.hasKey(hazard, "size")) {
+                        int size = ((Double) GsonUtils.getValue(hazard, "size")).intValue();
+                        hazardController.addHazard(lat, lng, type, size);
+                    } else {
+                        hazardController.addHazard(lat, lng, type);
+                    }
                 }
             }
 
