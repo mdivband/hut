@@ -1,9 +1,5 @@
 package server.model;
 
-import server.Simulator;
-import server.model.hazard.Hazard;
-import sun.management.resources.agent;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;

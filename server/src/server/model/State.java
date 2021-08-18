@@ -1,6 +1,9 @@
 package server.model;
 
-import com.google.gson.*;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import server.Allocator;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
@@ -8,7 +11,10 @@ import server.model.task.Task;
 import tool.GsonUtils;
 
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;

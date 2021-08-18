@@ -2,7 +2,8 @@ package server.controller.handler;
 
 import server.Simulator;
 import server.model.target.Target;
-import tool.HttpServer.*;
+import tool.HttpServer.Request;
+import tool.HttpServer.Response;
 
 import java.io.IOException;
 import java.util.Arrays;
