@@ -1,13 +1,11 @@
 # Custom
 
-*.iml
 *.log.*
 
 # Created by https://www.gitignore.io/api/eclipse,windows,intellij
 
 ### Eclipse ###
 
-*.iml
 .metadata
 bin/
 tmp/
