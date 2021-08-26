@@ -1,12 +1,11 @@
 package maxsum;
 
+import maxsum.Domain.State;
+import maxsum.Maximizer.MultiKeyMap;
+import server.model.task.Task;
+
 import java.util.ArrayList;
 import java.util.Map;
-
-
-import maxsum.Maximizer.MultiKeyMap;
-import maxsum.Domain.State;
-import server.model.task.Task;
 
 /**
  * @author Feng Wu, Yuai Liu

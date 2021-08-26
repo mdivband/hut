@@ -1,12 +1,11 @@
 package maxsum;
 
+import maxsum.Domain.State;
+import server.model.Agent;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-
-import maxsum.Domain.State;
-import server.model.Agent;
 
 /**
  * @author Feng Wu, Yuai Liu

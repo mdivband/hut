@@ -1,10 +1,9 @@
 package maxsum;
 
+import server.model.task.Task;
+
 import java.util.ArrayList;
 import java.util.Collection;
-
-
-import server.model.task.Task;
 
 /**
  * @author Feng Wu, Yuai Liu

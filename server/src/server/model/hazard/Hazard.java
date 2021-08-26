@@ -1,6 +1,5 @@
 package server.model.hazard;
 
-import server.Simulator;
 import server.model.Coordinate;
 import server.model.MObject;
 

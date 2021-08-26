@@ -1,9 +1,13 @@
 package server.controller;
 
 import server.Simulator;
-import server.model.*;
+import server.model.Agent;
+import server.model.AgentVirtual;
+import server.model.Coordinate;
+import server.model.Sensor;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
+import server.model.AgentReal;
 
 import java.util.List;
 import java.util.Map;

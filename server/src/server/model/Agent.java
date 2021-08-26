@@ -2,7 +2,6 @@ package server.model;
 
 import server.Simulator;
 import server.model.hazard.Hazard;
-import server.model.task.PatrolTask;
 import server.model.task.Task;
 
 import java.io.Serializable;

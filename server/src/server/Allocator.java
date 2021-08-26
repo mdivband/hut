@@ -1,13 +1,18 @@
 package server;
 
 //import com.sun.javafx.geom.Edge;
-import maxsum.*;
+
+import maxsum.Constraint;
+import maxsum.Domain;
+import maxsum.MaxSum;
+import maxsum.Variable;
 import server.model.Agent;
 import server.model.Coordinate;
 import server.model.MObject;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 import server.model.task.WaypointTask;
+import maxsum.EvaluationFunction;
 
 import java.util.*;
 import java.util.logging.Logger;

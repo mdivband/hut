@@ -1,10 +1,10 @@
 package maxsum;
 
 
-import java.util.Map;
-import java.util.HashMap;
-
 import maxsum.Domain.State;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
