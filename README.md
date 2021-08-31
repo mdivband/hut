@@ -151,6 +151,12 @@ There are several steps required to setup a working version of the mobile applic
     * Check that port 8000 is open on the server machine.  
     * Follow the mobile app setup guide, found [here][1].  
 
+### Setup Troubleshooting
+
+```java
+ERROR: calling invokeandwait from read-action leads to possible deadlock
+```
+
 ### Server Architecture
 
 The server application has a model component and a controller componment, as represented by the package structure. Parts of the model are exposed through the server's REST API, with connections to the client broswer application and mobile application handled by the [ConnectionController][15] and the [QueueManager][16] respectively. The ConnectionController uses different handlers for processing REST requests: [AgentHandler][29], [TaskHandler][30], [TargetHandler][31] and [RootHandler][32]. The first three handlers correspond with equivalent controller classes ([AgentController][17], [TargetController][18], [TaskController][19]), while the RootHandler is responsible for all other endpoints that don't fall under the first three categories. The REST endpoints exposed by the server are summarised [here][28].
