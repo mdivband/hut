@@ -232,8 +232,8 @@ public class Simulator {
                 if(possibleMethods.contains(allocationMethod)) {
                     this.state.setAllocationMethod(allocationMethod);
                 } else {
-                    LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'random'.");
-                    //state.allocationMethod initialised with default value of 'random'
+                    LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'maxsum'.");
+                    //state.allocationMethod initialised with default value of 'maxsum'
                 }
             }
 
@@ -243,8 +243,8 @@ public class Simulator {
                     this.state.setFlockingEnabled((Boolean)flockingEnabled);
                 } else {
                     LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
-                            flockingEnabled.toString() + "'. Set to true.");
-                    // state.flockingEnabled initialised with default value of true
+                            flockingEnabled.toString() + "'. Set to false.");
+                    // state.flockingEnabled initialised with default value of false
                 }
             }
 

@@ -1,6 +1,8 @@
 {
   "gameId": "Scalability Test",
   "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "allocationMethod": "random",
+  "flockingEnabled": true,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285

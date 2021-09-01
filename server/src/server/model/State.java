@@ -29,8 +29,8 @@ public class State {
     private String gameId;
     private String gameDescription;
     private int gameType;
-    private String allocationMethod = "random";
-    private Boolean flockingEnabled = true;
+    private String allocationMethod = "maxsum";
+    private Boolean flockingEnabled = false;
     private double time;
     private boolean editMode;
 
