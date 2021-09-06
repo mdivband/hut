@@ -1,11 +1,11 @@
 package maxsum;
 
 
+import maxsum.Domain.State;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import maxsum.Domain.State;
 
 /**
  * @author Feng Wu

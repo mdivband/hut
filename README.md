@@ -5,12 +5,12 @@ The DJI Hut Controller is an Android mobile app designed to allow a drone operat
 
 ### Table of Contents
 
-1. [Repository Structure](#markdown-header-repository-structure)
-2. [Project Architecture](#markdown-header-project-architecture)
-3. [Setup Guide](#markdown-header-setup-guide)
-4. [API Keys](#markdown-header-api-keys)
-5. [App Architecture](#markdown-header-app-architecture)
-6. [Logging](#markdown-header-logging)
+1. [Repository Structure](#repository-structure)
+2. [Project Architecture](#project-architecture)
+3. [Setup Guide](#setup-guide)
+4. [API Keys](#api-keys)
+5. [App Architecture](#app-architecture)
+6. [Logging](#logging)
 
 ### Repository Structure
 
@@ -116,11 +116,12 @@ The DJI Hut Server is a client-server application that is used for coordinating 
 
 ### Table of Contents
 
-1. [Repository Structure](#markdown-header-repository-structure)
-2. [Project Architecture](#markdown-header-project-architecture)
-3. [Setup Guide](#markdown-header-setup-guide)
-4. [Server Architecture](#markdown-header-server-architecture)
-5. [Allocation Process](#markdown-header-allocation-process)
+1. [Repository Structure](#repository-structure-1)
+2. [Project Architecture](#project-architecture-1)
+3. [Setup Guide](#setup-guide-1)
+4. [Setup Troubleshooting](#setup-troubleshooting)
+5. [Server Architecture](#server-architecture)
+5. [Allocation Process](#allocation-process)
 
 ### Repository Structure
 
@@ -150,6 +151,12 @@ There are several steps required to setup a working version of the mobile applic
     * Find the IP of the server (check the Global Protect settings if using the VPN).  
     * Check that port 8000 is open on the server machine.  
     * Follow the mobile app setup guide, found [here][1].  
+
+### Setup Troubleshooting
+
+| Error      | Solution |
+| ----------- | ----------- |
+| `Calling invokeAndWait from read-action leads to possible deadlock`      | Select *Run*, *Edit Configurations...*, then change the *JDK or JRE* version to whichever version says "*SDK of 'hut-server' module*".       |
 
 ### Server Architecture
 

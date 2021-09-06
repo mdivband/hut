@@ -1,10 +1,13 @@
 package server.controller.handler;
 
 import server.Simulator;
-import tool.HttpServer.*;
+import tool.HttpServer.Request;
+import tool.HttpServer.Response;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class AllocationHandler extends RestHandler {
 

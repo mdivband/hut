@@ -1,6 +1,9 @@
 package server.model;
 
-import com.google.gson.*;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import server.Allocator;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
@@ -8,7 +11,10 @@ import server.model.task.Task;
 import tool.GsonUtils;
 
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -23,8 +29,8 @@ public class State {
     private String gameId;
     private String gameDescription;
     private int gameType;
-    private String allocationMethod = "random";
-    private Boolean flockingEnabled = true;
+    private String allocationMethod = "maxsum";
+    private Boolean flockingEnabled = false;
     private double time;
     private boolean editMode;
 
@@ -317,6 +323,7 @@ public class State {
         private void init() {
             hazardHits.put(Hazard.NONE, new ConcurrentHashMap<>());
             hazardHits.put(Hazard.FIRE, new ConcurrentHashMap<>());
+            hazardHits.put(Hazard.DEBRIS, new ConcurrentHashMap<>());
         }
 
         private void add(int type, Coordinate location) {
@@ -365,6 +372,7 @@ public class State {
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("-1", context.serialize(hazardHitCollection.hazardHits.get(-1).values()));
             jsonObject.add("0", context.serialize(hazardHitCollection.hazardHits.get(0).values()));
+            jsonObject.add("1", context.serialize(hazardHitCollection.hazardHits.get(1).values()));
             return jsonObject;
         }
     };

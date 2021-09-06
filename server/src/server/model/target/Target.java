@@ -2,6 +2,7 @@ package server.model.target;
 
 import server.model.Coordinate;
 import server.model.MObject;
+import server.model.task.Task;
 
 import java.io.Serializable;
 

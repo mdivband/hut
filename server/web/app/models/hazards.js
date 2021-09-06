@@ -16,5 +16,6 @@ App.Models.Hazard = App.Models.MObject.extend({
 App.Collections.Hazards = Backbone.Collection.extend({
     model: App.Models.Hazard,
     NONE: -1,
-    FIRE: 0
+    FIRE: 0,
+    DEBRIS: 1
 });

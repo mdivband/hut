@@ -1,12 +1,16 @@
 package server;
 
-import server.controller.*;
+import server.controller.AgentController;
+import server.controller.ConnectionController;
+import server.controller.TaskController;
+import server.controller.TargetController;
+import server.controller.HazardController;
 import server.model.Agent;
 import server.model.Coordinate;
 import server.model.Sensor;
 import server.model.State;
-import server.model.task.Task;
 import server.model.target.Target;
+import server.model.task.Task;
 import tool.GsonUtils;
 
 import java.io.File;
@@ -228,8 +232,8 @@ public class Simulator {
                 if(possibleMethods.contains(allocationMethod)) {
                     this.state.setAllocationMethod(allocationMethod);
                 } else {
-                    LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'random'.");
-                    //state.allocationMethod initialised with default value of 'random'
+                    LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'maxsum'.");
+                    //state.allocationMethod initialised with default value of 'maxsum'
                 }
             }
 
@@ -239,8 +243,8 @@ public class Simulator {
                     this.state.setFlockingEnabled((Boolean)flockingEnabled);
                 } else {
                     LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
-                            flockingEnabled.toString() + "'. Set to true.");
-                    // state.flockingEnabled initialised with default value of true
+                            flockingEnabled.toString() + "'. Set to false.");
+                    // state.flockingEnabled initialised with default value of false
                 }
             }
 
@@ -262,7 +266,12 @@ public class Simulator {
                     Double lat = GsonUtils.getValue(hazard, "lat");
                     Double lng = GsonUtils.getValue(hazard, "lng");
                     int type = ((Double) GsonUtils.getValue(hazard, "type")).intValue();
-                    hazardController.addHazard(lat, lng, type);
+                    if (GsonUtils.hasKey(hazard, "size")) {
+                        int size = ((Double) GsonUtils.getValue(hazard, "size")).intValue();
+                        hazardController.addHazard(lat, lng, type, size);
+                    } else {
+                        hazardController.addHazard(lat, lng, type);
+                    }
                 }
             }
 

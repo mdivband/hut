@@ -175,6 +175,7 @@ var MapController = {
         this.updateAllocationRendering();
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
+        MapHazardController.updateHeatmap(1);
     },
     onMapLeftClick: function (event) {
         if (this.views.clickedAgent != null)

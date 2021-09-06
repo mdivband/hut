@@ -6,7 +6,8 @@ import server.Simulator;
 import server.controller.AgentController;
 import server.model.Agent;
 import server.model.State;
-import tool.HttpServer.*;
+import tool.HttpServer.Request;
+import tool.HttpServer.Response;
 
 import java.io.BufferedWriter;
 import java.io.File;

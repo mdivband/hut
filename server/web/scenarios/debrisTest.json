@@ -1,6 +1,6 @@
 {
-  "gameId": "Test Scenario",
-  "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "gameId": "Debris Test",
+  "gameDescription": "Debris has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
@@ -26,6 +26,12 @@
       "lat": 50.93229829426595,
       "lng": -1.4090726010153958,
       "type": 0
+    },
+    {
+      "lat": 50.93008636656946,
+      "lng": -1.4065928983124234,
+      "type": 1,
+      "size": 50
     }
   ],
   "targets": [

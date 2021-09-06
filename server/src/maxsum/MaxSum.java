@@ -1,10 +1,10 @@
 package maxsum;
 
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.HashMap;
-
 import maxsum.Domain.State;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
 
 /**
  * @author Feng Wu, Yuai Liu

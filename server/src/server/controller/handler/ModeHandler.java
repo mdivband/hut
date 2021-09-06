@@ -3,11 +3,10 @@ package server.controller.handler;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import server.Simulator;
-import tool.GsonUtils;
-import tool.HttpServer.*;
+import tool.HttpServer.Request;
+import tool.HttpServer.Response;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
