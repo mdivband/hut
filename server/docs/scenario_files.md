@@ -1,9 +1,9 @@
 # DJI Hut Server - Scenario Files
 ### University of Southampton
-##### Last Updated: 13/09/2018, Joe Early
+##### Last Updated: 03/10/2021, Ashley Pare
 ------
 
-Scenarios can be loaded from a JSON file. The application looks for scenario files in the [scenarios folder][1]. The following document outlines the format of those files. Fields are the base keys in the JSON file (list in the [Fields](#markdown-header-fields) section); some of them are composed of objects which are outlined in the [Objects](#markdown-header-objects) section.
+Scenarios can be loaded from a JSON file. The application looks for scenario files in the [scenarios folder][1]. The following document outlines the format of those files. Fields are the base keys in the JSON file (list in the [Fields](#fields) section); some of them are composed of objects which are outlined in the [Objects](#objects) section. [Optional Fields](#optional-fields) are base keys that have default values so can be left blank. 
 
 ### Fields
 
@@ -15,6 +15,13 @@ Scenarios can be loaded from a JSON file. The application looks for scenario fil
 |agents|A JSON array composed of the agent objects available in the scenario.|-|-|
 |hazards|A JSON array composed of the hazard objects present in the scenario.|-|-|
 |targets|A JSON array composed of the target objects present in the scenario.|-|-|
+
+### Optional Fields
+
+|Field|Description|Possible Values|Default Values|
+|:---:|:---:|:---:|:---:|
+|allocationMethod|Sets the method used for allocating tasks to agents.|maxsum, random|maxsum|
+|flockingEnabled|Turns flocking of agents on or off. If on, any agents not assigned to a task will follow their neighbours based on average speed and heading of neighbours. If off, any agents without tasks remain stationary.|true, false|false|
 
 ### Objects
 
