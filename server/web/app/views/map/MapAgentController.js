@@ -38,7 +38,7 @@ var MapAgentController = {
             MapAgentController.onAgentRemove(agent);
         });
         this.state.agents.on("change:timedOut", function (agent) {
-            if(agent.isTimedOut())
+            if (agent.isTimedOut())
                 MapAgentController.onAgentTimeOut(agent);
             else
                 MapAgentController.onAgentReconnect(agent);

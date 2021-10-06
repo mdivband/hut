@@ -1,4 +1,5 @@
 var MapController = {
+    showPaths: false,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -28,6 +29,7 @@ var MapController = {
         this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
+        this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
     },
     /**
      * Bind listeners for map view.
@@ -74,7 +76,9 @@ var MapController = {
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
-
+        $('#predicted_paths_toggle').change(function () {
+            MapController.showPredictedPaths( $(this).is(":checked"));
+        });
         //State listeners
         this.state.on("change:time", function () {
             MapController.onTick();
@@ -114,6 +118,11 @@ var MapController = {
         google.maps.event.addListener(this.drawing, "rectanglecomplete", function (rectangle) {
             MapController.onMapRectangleComplete(rectangle);
         });
+
+    },
+    showPredictedPaths: function (setting) {
+        MapController.showPaths = setting;
+        //alert("set showpaths = " + setting)
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");
@@ -173,6 +182,8 @@ var MapController = {
         var time = $.fromTime(this.state.getTime());
         $("#game_time").html("Time: " + time);
         this.updateAllocationRendering();
+        if (MapController.showPaths)
+            this.drawPredictedPaths();
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
