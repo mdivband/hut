@@ -1,4 +1,5 @@
 var MapController = {
+    overrideVisible: true,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -28,6 +29,17 @@ var MapController = {
         this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
+        //Lenses
+        /*
+        this.toggleAgentLens = _.bind(this.toggleAgentLens, context);
+        this.toggleTargetLens = _.bind(this.toggleTargetLens, context);
+        this.toggleHazardLens = _.bind(this.toggleHazardLens, context);
+        this.toggleAllocationLens = _.bind(this.toggleAllocationLens, context);
+        this.toggleTaskLens = _.bind(this.toggleTaskLens, context);
+        this.toggleBatteryLens = _.bind(this.toggleBatteryLens, context);
+
+         */
+        this.updateAllocationVisibility = _.bind(this.updateAllocationVisibility, context);
     },
     /**
      * Bind listeners for map view.
@@ -74,6 +86,11 @@ var MapController = {
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
+        $('#lens_allocation_toggle').change(function () {
+            MapController.updateAllocationVisibility($(this).is(":checked"));
+        });
+
+
 
         //State listeners
         this.state.on("change:time", function () {
@@ -169,10 +186,68 @@ var MapController = {
         if(!this.state.isEdit())
             MapController.swapMode(true, true);
     },
+
+    // Lenses
+    /*
+    toggleAgentLens: function () {
+        this.toggleAgentVisible();
+    },
+    toggleTargetLens: function (){
+        this.toggleTargetVisible()
+    },
+    toggleHazardLens: function (){
+        this.toggleHazardVisible()
+    },
+    toggleAllocationLens: function (){
+        this.toggleAllocationVisible()
+    },
+    toggleTaskLens: function (){
+        this.toggleTaskVisible()
+    },
+    toggleBatteryLens: function (){
+        this.toggleBatteryVisible()
+    },
+     */
+    updateAllocationVisibility: function (setting){
+        // An attempt to remove points of interest
+        /*
+        try {
+            var noPoi = [
+                {
+                    featureType: "poi",
+                    stylers: [
+                        {visibility: "off"}
+                    ]
+                }
+            ];
+
+            //this.$el.gmap.setOptions({styles: noPoi});
+            MapController.map.setOptions({styles: noPoi});
+        } catch (e) {
+            alert(e)
+        }
+         */
+        self = this;
+        try {
+            MapController.overrideVisible = setting;
+            this.state.agents.each(function (agent) {
+                var agentId = agent.getId();
+                var lineId = agentId + "main";
+
+                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[lineId];
+                if(polyline)
+                    polyline.setOptions({visible: setting})
+                //alert("updating: " + agentId);
+            });
+        } catch (e) {
+            alert(e);
+        }
+    },
     onTick: function () {
         var time = $.fromTime(this.state.getTime());
         $("#game_time").html("Time: " + time);
-        this.updateAllocationRendering();
+        if (MapController.overrideVisible)
+            this.updateAllocationRendering();
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);

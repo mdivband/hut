@@ -1,4 +1,5 @@
 var MapTaskController = {
+    overrideVisible: true,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapTaskController.method() without
@@ -23,6 +24,7 @@ var MapTaskController = {
         this.onPatrolTaskRightClick = _.bind(this.onPatrolTaskRightClick, context);
         this.openTaskEditWindow = _.bind(this.openTaskEditWindow, context);
         this.processRegionTaskChange = _.bind(this.processRegionTaskChange, context);
+        this.updateTaskVisibility = _.bind(this.updateTaskVisibility, context)
     },
     /**
      * Bind listeners for task state add, change and remove events
@@ -41,6 +43,22 @@ var MapTaskController = {
         this.state.completedTasks.on("add", function (task) {
             MapTaskController.onTaskCompleted(task);
         });
+
+        $('#lens_task_toggle').change(function () {
+            MapTaskController.updateTaskVisibility($(this).is(":checked"));
+        });
+    },
+    updateTaskVisibility: function (setting) {
+        MapTaskController.overrideVisible = setting;
+        self = this;
+        try{
+            this.state.tasks.each(function (task) {
+                var taskMarker = self.$el.gmap("get", "markers")[task.getId()];
+                taskMarker.setOptions({visible: setting})
+            });
+        } catch (e) {
+            alert(e);
+        }
     },
     onTaskAdd: function (task) {
         console.log("Task added " + task.getId());
@@ -56,7 +74,8 @@ var MapTaskController = {
                 labelClass: "labels",
                 labelStyle: {opacity: 1.0},
                 raiseOnDrag: false,
-                zIndex: 3
+                zIndex: 3,
+                visible: MapTaskController.overrideVisible,
             });
             var marker = this.$el.gmap("get", "markers")[task.getId()];
             MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);

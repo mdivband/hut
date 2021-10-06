@@ -23,6 +23,8 @@ var MapAgentController = {
         this.updateAgentMarkerIcon = _.bind(this.updateAgentMarkerIcon, context);
         this.updateAllAgentMarkerIcons = _.bind(this.updateAllAgentMarkerIcons, context);
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
+        this.updateAgentVisibility = _.bind(this.updateAgentVisibility, context);
+        this.updateBatteryVisibility = _.bind(this.updateBatteryVisibility, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -43,7 +45,60 @@ var MapAgentController = {
             else
                 MapAgentController.onAgentReconnect(agent);
         });
+        $('#lens_agent_toggle').change(function () {
+            MapAgentController.updateAgentVisibility($(this).is(":checked"));
+        });
+        $('#lens_battery_toggle').change(function () {
+            MapAgentController.updateBatteryVisibility($(this).is(":checked"));
+        });
+        /*
+        $("#lens_agent").on('click', function () {
+            MapAgentController.state.agents.each(function (agent) {
+                var agentMarker = self.$el.gmap("get", "markers")[agent.getId()];
+                agentMarker.setOptions({visible: suppressedLenses.agent});
+            });
+        });
+
+        $("#lens_target").on('click', function () {
+            MapController.toggleTargetLens()
+        });
+        $("#lens_hazard").on('click', function () {
+            MapController.toggleHazardLens()
+        });
+        $("#lens_allocation").on('click', function () {
+            MapController.toggleAllocationLens()
+        });
+        $("#lens_task").on('click', function () {
+            MapController.toggleTaskLens()
+        });
+        $("#lens_battery").on('click', function () {
+            MapController.toggleBatteryLens()
+        });
+
+         */
+
     },
+    updateAgentVisibility: function(setting) {
+        self = this;
+        this.state.agents.each(function (agent) {
+            var agentMarker = self.$el.gmap("get", "markers")[agent.getId()];
+            agentMarker.setOptions({visible: setting});
+        });
+    },
+    updateBatteryVisibility: function(setting) {
+        self = this;
+        this.state.agents.each(function (agent) {
+            var id = "MarkerCanvas_" + agent.getId();
+            var can = document.getElementById(id);
+            if (setting) {
+                can.style.display="inline";
+            } else {
+                can.style.display="none";
+            }
+        });
+
+    },
+
     onAgentAdd: function (agent) {
         console.log('Agent added ' + agent.getId());
         var id = agent.getId();

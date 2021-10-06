@@ -1,5 +1,7 @@
 var MapTargetController = {
     revealDistance: 50,
+    overrideVisible: true,
+    overrideShowPopups: true,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapAgentController.method() without
@@ -13,6 +15,8 @@ var MapTargetController = {
         this.updateTargetMarkerVisibility = _.bind(this.updateTargetMarkerVisibility, context);
         this.checkForReveal = _.bind(this.checkForReveal, context);
         this.popupTargetFound = _.bind(this.popupTargetFound, context);
+        this.updateTargetVisibility = _.bind(this.updateTargetVisibility, context);
+        this.updateTargetPopupVisibility = _.bind(this.updateTargetPopupVisibility, context);
     },
     bindEvents: function () {
         this.state.targets.on("add", function (target) {
@@ -22,6 +26,15 @@ var MapTargetController = {
         this.state.targets.on("change:visible", function (target) {
             MapTargetController.updateTargetMarkerVisibility(target);
         });
+        $('#lens_target_toggle').change(function () {
+            MapTargetController.updateTargetVisibility($(this).is(":checked"));
+        });
+        $('#lens_target_popup_toggle').change(function () {
+            MapTargetController.updateTargetPopupVisibility($(this).is(":checked"));
+        });
+
+
+
     },
     onTargetAdd: function (target) {
         console.log('Target added ' + target.getId());
@@ -57,11 +70,30 @@ var MapTargetController = {
             marker.setPosition(target.getPosition());
         }
     },
+    updateTargetVisibility: function(setting) {
+        //alert("pressed, OV was: " + MapTargetController.overrideVisible + " and is now being changed to " + setting)
+        MapTargetController.overrideVisible = setting;
+        this.state.targets.each(function (target) {
+            //alert("updating: " + target.getId() + " and TIV = " + target.isVisible + " and OV = " + MapTargetController.overrideVisible);
+            MapTargetController.updateTargetMarkerVisibility(target)
+        });
+    },
+
+    updateTargetPopupVisibility: function(setting) {
+        //alert("pressed, OV was: " + MapTargetController.overrideVisible + " and is now being changed to " + setting)
+        MapTargetController.overrideShowPopups = setting;
+    },
     updateTargetMarkerVisibility: function (target) {
+        //alert("entering, OV = " + MapTargetController.overrideVisible);
         var marker = this.$el.gmap("get", "markers")[target.getId()];
-        if (!marker.getVisible() && target.isVisible())
+        //  NOTE: If we also want to suppress the popup in the corner, we will need an extra variable here I think
+        //        This is because it re-pushes the popup when we re-enable visibility. It may need to only popup on the first time it's used
+        if (!marker.getVisible() && target.isVisible() && MapTargetController.overrideShowPopups)
             MapTargetController.popupTargetFound(target);
-        marker.setVisible(target.isVisible());
+
+        //alert("Final step, tgt = " + target.getId() + " and TIV = " + target.isVisible + " and OV = " + MapTargetController.overrideVisible)
+        marker.setVisible(target.isVisible() && MapTargetController.overrideVisible);
+        //marker.setVisible(target.isVisible());
     },
     checkForReveal: function (agent) {
         this.state.targets.each(function (target) {
@@ -91,5 +123,5 @@ var MapTargetController = {
             self.map.panTo(target.getPosition());
             self.map.setZoom(19);
         });
-    }
+    },
 };

@@ -9,6 +9,15 @@ var connected = false;
 var api = new $.provStoreApi({username: 'atomicorchid', key: '2ce8131697d4edfcb22e701e78d72f512a94d310'});
 var ps = PostService();
 
+var suppressedLenses = {agent: true,
+                        target: true,
+                        hazard: true,
+                        allocation: true,
+                        task: true,
+                        battery: true,
+}
+
+
 App.Views.Map = Backbone.View.extend({
     ModeEnum: {
         PAN: 'pan',
@@ -272,6 +281,39 @@ App.Views.Map = Backbone.View.extend({
         if (MapAgentController.taskIdToAllocateManually)
             MapTaskController.updateTaskRendering(MapAgentController.taskIdToAllocateManually, this.MarkerColourEnum.BLUE);
     },
+
+
+        /***
+         * This just finds out if the agent markers are visible, then flips that (toggles)
+         * Currently this assumes all agent visibility is the same
+         */
+    /*
+    toggleAgentVisible: function (){
+        suppressedLenses.agent = !suppressedLenses.agent;
+        self = this;
+        this.state.agents.each(function (agent) {
+            var agentMarker = self.$el.gmap("get", "markers")[agent.getId()];
+            agentMarker.setOptions({visible: suppressedLenses.agent});
+        });
+    },
+
+    toggleTargetVisible: function (){
+        suppressedLenses.target = !suppressedLenses.target;
+
+        // In theory this should set a property in the MapTargetController that overrides visibility  of targets
+        MapTargetController.setOverrideVisible(suppressedLenses.target)
+
+    },
+    toggleHazardVisible: function (){
+        suppressedLenses.hazard = !suppressedLenses.hazard;
+
+        this.state.hazards.each(function (hazard) {
+            var hazardMarker = self.$el.gmap("get", "markers")[hazard.getId()];
+            hazardMarker.setOptions({visible: suppressedLenses.hazard})
+        });
+    },
+
+     */
     drawAllocation: function (lineId, lineColour, agentId, taskId) {
         var self = this;
         var isTempLine = lineId.endsWith('temp');
@@ -672,6 +714,7 @@ App.Views.SubMap = Backbone.View.extend({
             marker.setPosition(model.getPosition());
         });
     },
+
 });
 
 function rgb(r, g, b) {
