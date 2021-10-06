@@ -173,6 +173,7 @@ var MapController = {
         var time = $.fromTime(this.state.getTime());
         $("#game_time").html("Time: " + time);
         this.updateAllocationRendering();
+        this.drawUncertainties();
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
