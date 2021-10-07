@@ -51,6 +51,11 @@ var MapAgentController = {
         $('#lens_battery_toggle').change(function () {
             MapAgentController.updateBatteryVisibility($(this).is(":checked"));
         });
+        $('#lens_extras_set').change(function () {
+            MapAgentController.updateBatteryVisibility($(this).is(":checked"));
+        });
+
+
         /*
         $("#lens_agent").on('click', function () {
             MapAgentController.state.agents.each(function (agent) {
@@ -348,6 +353,7 @@ var MapAgentController = {
             canvas.id = id;
             canvas.width = container.width();
             canvas.height = container.height() + 15;
+            canvas.style.display="none";  //  start with battery off
             container.append(canvas);
         }
 

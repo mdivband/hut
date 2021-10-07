@@ -89,6 +89,11 @@ var MapController = {
         $('#lens_allocation_toggle').change(function () {
             MapController.updateAllocationVisibility($(this).is(":checked"));
         });
+        $('#lens_task_set').change(function () {
+            MapController.updateAllocationVisibility($(this).is(":checked"));
+        });
+
+
 
 
 
@@ -186,28 +191,6 @@ var MapController = {
         if(!this.state.isEdit())
             MapController.swapMode(true, true);
     },
-
-    // Lenses
-    /*
-    toggleAgentLens: function () {
-        this.toggleAgentVisible();
-    },
-    toggleTargetLens: function (){
-        this.toggleTargetVisible()
-    },
-    toggleHazardLens: function (){
-        this.toggleHazardVisible()
-    },
-    toggleAllocationLens: function (){
-        this.toggleAllocationVisible()
-    },
-    toggleTaskLens: function (){
-        this.toggleTaskVisible()
-    },
-    toggleBatteryLens: function (){
-        this.toggleBatteryVisible()
-    },
-     */
     updateAllocationVisibility: function (setting){
         // An attempt to remove points of interest
         /*

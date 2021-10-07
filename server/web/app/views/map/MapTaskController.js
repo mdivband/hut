@@ -47,6 +47,9 @@ var MapTaskController = {
         $('#lens_task_toggle').change(function () {
             MapTaskController.updateTaskVisibility($(this).is(":checked"));
         });
+        $('#lens_task_set').change(function () {
+            MapTaskController.updateTaskVisibility($(this).is(":checked"));
+        });
     },
     updateTaskVisibility: function (setting) {
         MapTaskController.overrideVisible = setting;

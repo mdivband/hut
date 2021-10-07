@@ -32,6 +32,9 @@ var MapTargetController = {
         $('#lens_target_popup_toggle').change(function () {
             MapTargetController.updateTargetPopupVisibility($(this).is(":checked"));
         });
+        $('#lens_task_set').change(function () {
+            MapTargetController.updateTargetPopupVisibility($(this).is(":checked"));
+        });
 
 
 
