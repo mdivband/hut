@@ -33,6 +33,8 @@ public class Simulator {
     private State state;
     private Sensor sensor;
 
+    private Random random;
+
     private final QueueManager queueManager;
     private final AgentController agentController;
     private final TaskController taskController;
@@ -57,6 +59,7 @@ public class Simulator {
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
+        random = new Random();
 
         queueManager.initDroneDataConsumer();
     }
@@ -253,7 +256,17 @@ public class Simulator {
                 for (Object agentJSon : agentsJson) {
                     Double lat = GsonUtils.getValue(agentJSon, "lat");
                     Double lng = GsonUtils.getValue(agentJSon, "lng");
-                    Agent agent = agentController.addVirtualAgent(lat, lng, 0);
+
+                    Boolean programmed = GsonUtils.getValue(agentJSon, "programmed");
+                    Agent agent;
+                    if(programmed != null && programmed) {
+                        //agent = agentController.addProgrammedAgent(lat, lng, 0);
+                        agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
+                    } else {
+                        agent = agentController.addVirtualAgent(lat, lng, 0);
+                    }
+
+                    //Agent agent = agentController.addVirtualAgent(lat, lng, 0);
                     Double battery = GsonUtils.getValue(agentJSon, "battery");
                     if(battery != null)
                         agent.setBattery(battery);

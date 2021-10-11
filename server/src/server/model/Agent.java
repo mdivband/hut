@@ -5,6 +5,8 @@ import server.model.hazard.Hazard;
 import server.model.task.Task;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -193,6 +195,10 @@ public abstract class Agent extends MObject implements Serializable {
         return allocatedTaskId != null ? Simulator.instance.getState().getTask(this.allocatedTaskId) : null;
     }
 
+    public Collection<Task> getAllTasks(){
+        return Simulator.instance.getState().getTasks();
+    }
+
     public double getSpeed() {
         return speed;
     }
@@ -223,6 +229,17 @@ public abstract class Agent extends MObject implements Serializable {
 
     public List<Coordinate> getRoute() {
         return route;
+    }
+
+    public void addToRoute(Coordinate coord) {
+        List<Coordinate> rt;
+        if (this.route.isEmpty()) {
+            rt = new ArrayList<>();
+        } else {
+            rt = getRoute();
+        }
+        rt.add(coord);
+        setRoute(rt);
     }
 
     public void setRoute(List<Coordinate> route) {

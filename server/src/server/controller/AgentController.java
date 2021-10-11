@@ -1,16 +1,13 @@
 package server.controller;
 
 import server.Simulator;
-import server.model.Agent;
-import server.model.AgentVirtual;
-import server.model.Coordinate;
-import server.model.Sensor;
+import server.model.*;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
-import server.model.AgentReal;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class AgentController extends AbstractController {
 
@@ -41,6 +38,21 @@ public class AgentController extends AbstractController {
         simulator.getState().add(agent);
         return agent;
     }
+
+    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading) {
+        Agent agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor);
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController) {
+        Agent agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, random, taskController);
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
 
     public synchronized boolean deleteAgent(String id) {
         Agent agent = simulator.getState().getAgent(id);

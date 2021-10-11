@@ -128,4 +128,8 @@ public class TaskController extends AbstractController {
         for(String key : keysToRemove)
             allocation.remove(key);
     }
+
+    public Task findTaskByCoord(Coordinate coordinate) {
+        return simulator.getState().getTaskByCoordinate(coordinate);
+    }
 }

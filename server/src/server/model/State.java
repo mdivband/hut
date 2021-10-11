@@ -296,6 +296,15 @@ public class State {
         hazardHits.decayAll();
     }
 
+    public Task getTaskByCoordinate(Coordinate coordinate) {
+        for (Task t : tasks) {
+            if(t.getCoordinate().equals(coordinate)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
     private class HazardHit {
         private Coordinate location;
         private double weight;
