@@ -132,4 +132,13 @@ public class TaskController extends AbstractController {
     public Task findTaskByCoord(Coordinate coordinate) {
         return simulator.getState().getTaskByCoordinate(coordinate);
     }
+
+    /*
+    public Task findTaskByCentreCoord(Coordinate coordinate) {
+        return simulator.getState().getTaskByCentreCoordinate(coordinate);
+    }
+
+     */
+
+
 }

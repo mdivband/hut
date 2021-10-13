@@ -112,6 +112,10 @@ public abstract class Agent extends MObject implements Serializable {
         Simulator.instance.getState().addHazardHit(Hazard.NONE, this.getCoordinate());
     }
 
+    public void incrementTimeInAir(){
+        timeInAir += 0.2;
+    }
+
     /**
      * Stop an agent - should maintain its current position.
      */

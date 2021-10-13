@@ -1,5 +1,6 @@
 package server.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AgentProgrammer {
@@ -19,57 +20,80 @@ public class AgentProgrammer {
 
     public void step() {
         // Called at every time step (currently 200ms)
+        if (a.agent.getId().contains("UAV-1") && flag == 0) {
+            double lat = 50.931;
+            double lng = -1.408;
 
-        if (a.agent.getId().contains("UAV-1")) {
-            if (flag==0) {
-                double lat = 50.931;
-                double lng = -1.408;
+            List<Coordinate> thisTask = new ArrayList<>();
+            thisTask.add(new Coordinate(lat, lng));
+            a.tempPlaceNewTask("waypoint", thisTask);
 
-                a.tempPlaceNewTask(new Coordinate(lat, lng));
+            lat = 50.932;
+            lng = -1.410;
 
-                flag = 1;
-            } else {
-                double lat = 50.931;
-                double lng = -1.408;
-                a.broadcast("TASK_WAYPOINT;" + lat + "," + lng, 100);
-                a.setHeading(70);
-                a.moveAlongHeading(1);
-            }
-        } else if (a.isStopped()) {
-            String nearestTask = a.getNearestTask();
-            if (!nearestTask.equals("")) {
-                a.setTask(a.getTaskById(nearestTask));
-                //a.addToRoute(a.getTaskById(nearestTask));
-                a.resume();
-            }
-            //a.followRoute();
-        } else {
-            List<Coordinate> c = a.getRoute();
-            a.followRoute();
-            //TODO must end the task when we get there
-        }
+            thisTask = new ArrayList<>();
+            thisTask.add(new Coordinate(lat, lng));
+            a.tempPlaceNewTask("waypoint", thisTask);
+
+            lat = 50.929;
+            lng = -1.409;
+            thisTask = new ArrayList<>();
+            thisTask.add(new Coordinate(lat, lng));
+            a.tempPlaceNewTask("waypoint", thisTask);
+
+            lat = 50.920;
+            lng = -1.408;
+            thisTask = new ArrayList<>();
+            thisTask.add(new Coordinate(lat, lng));
+            a.tempPlaceNewTask("waypoint", thisTask);
 
 
-        /*
-        if (a.getId().contains("1")) {
-            //if (Math.random() > 0.99)
-                //a.setHeading(Math.random() * 360);
-            a.performTask();
-            //a.moveAlongHeading(1);
-        } else {
-            List<Agent> ns = a.getNeighboursAsAgentObjects(200);
-            if (!ns.isEmpty()){
-                double heading = ns.get(0).getHeading();
-                a.setHeading(heading);
-                if (ns.get(0).getSpeed()!=0) {
-                    a.moveAlongHeading(1);
+            flag = 1;
+
+        } else
+            if(a.agent.getId().contains("UAV-3") && flag == 0) {
+            double lat = 50.936;
+            double lng = -1.4105;
+            List<Coordinate> thisTask = new ArrayList<>();
+            thisTask.add(new Coordinate(lat, lng));
+            a.tempPlaceNewTask("waypoint", thisTask);
+
+            lat = 50.9347;
+            lng = -1.403;
+            thisTask = new ArrayList<>();
+            thisTask.add(new Coordinate(lat, lng));
+            a.tempPlaceNewTask("waypoint", thisTask);
+
+            lat = 50.93412;
+            lng = -1.40687;
+            thisTask = new ArrayList<>();
+            thisTask.add(new Coordinate(lat, lng));
+            a.tempPlaceNewTask("waypoint", thisTask);
+
+            flag = 1;
+
+        } else if (a.isStopped() && (a.agent.getId().contains("1") || a.agent.getId().contains("2") || a.agent.getId().contains("3"))) {
+                
+            //List<Coordinate> nearestTask = a.getNearestTask();
+            List<Coordinate> nearestTask = a.getNearestEmptyTask();
+            if (!nearestTask.isEmpty()) {
+                if (a.getAgentsAssigned(nearestTask).isEmpty()) {
+                    a.setTask(nearestTask);
+                    a.resume();
                 }
-
             }
+        } else if (a.agent.getId().contains("1") || a.agent.getId().contains("2") || a.agent.getId().contains("3")) {
+            a.followRoute();
+        } else if (a.hasNeighbours()) {
+            flock();
         }
-    */
-
-
 
     }
+
+    public void flock(){
+        // TODO this is a little bugged, as it continues to average across agents who have left its detection radius
+        a.setHeading(a.calculateAverageNeighbourHeading());
+        a.moveAlongHeading(1);
+    }
+
 }

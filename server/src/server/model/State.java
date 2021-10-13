@@ -7,6 +7,7 @@ import com.google.gson.JsonSerializer;
 import server.Allocator;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
+import server.model.task.PatrolTask;
 import server.model.task.Task;
 import tool.GsonUtils;
 
@@ -304,6 +305,22 @@ public class State {
         }
         return null;
     }
+
+    /*
+    public Task getTaskByCentreCoordinate(Coordinate coordinate) {
+        for (Task t : tasks) {
+            PatrolTask
+            if(t.getCoordinate().equals(coordinate)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+     */
+
+
+
 
     private class HazardHit {
         private Coordinate location;

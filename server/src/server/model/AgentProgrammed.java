@@ -1,9 +1,11 @@
 package server.model;
 
 import server.controller.TaskController;
+import server.model.task.PatrolTask;
 import server.model.task.Task;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -66,11 +68,29 @@ public class AgentProgrammed extends Agent {
     }
 
     @Override
-    //In theory this shouldn't ever be called
     void moveTowardsDestination() {
-        //Align agent, if aligned then moved towards target
-        if(!isStopped() && this.adjustHeadingTowardsGoal())
-            this.moveAlongHeading(1);
+
+        //Move agents
+        if (!getRoute().isEmpty() && !isCurrentDestinationReached()) {
+            if (!getSearching()) {
+
+                //Align agent, if aligned then moved towards target
+                if(!isStopped() && this.adjustHeadingTowardsGoal())
+                    this.moveAlongHeading(1);
+
+                incrementTimeInAir();
+            }
+            if (isCurrentDestinationReached() && this.getRoute().size() > 1)
+                this.getRoute().remove(0);
+        }
+
+        if (isCurrentDestinationReached() && !isStopped()) {
+            stop();
+            programmerHandler.completeTask();
+        }
+
+
+
     }
 
     @Override
@@ -79,15 +99,34 @@ public class AgentProgrammed extends Agent {
 
     }
 
-    public void setAllocatedTaskByCoord(Coordinate coord) {
+    public void setAllocatedTaskByCoords(List<Coordinate> coords) {
         // TODO Does this assign it in the task handling??
-        setAllocatedTaskId(taskController.findTaskByCoord(coord).getId());
+        Coordinate coordToUse;
+        if (coords.size() == 1) {
+            // Singleton => waypoint task, so represented as its only coord
+            coordToUse = coords.get(0);
+            setTempRoute(Collections.singletonList(taskController.findTaskByCoord(coordToUse).getCoordinate()));
+            //setAllocatedTaskId(taskController.findTaskByCoord(coordToUse).getId());
+        } else {
+            // Region or patrol task, represented by its verteces
+            coordToUse = Coordinate.findCentre(coords);
+            setTempRoute(Collections.singletonList(((PatrolTask) taskController.findTaskByCoord(coordToUse)).getNearestPointAbsolute(this)));
+            //setAllocatedTaskId(taskController.findTaskByCentreCoord(coordToUse).getId());
+        }
+        setAllocatedTaskId(taskController.findTaskByCoord(coordToUse).getId());
+        //setRoute(coords);
+
     }
 
-    public void tempPlaceNewTask(Coordinate coord) {
+    public void tempPlaceNewTask(String type, List<Coordinate> coords) {
         // TODO this is temporary and is a bit messy. It allows us to create tasks from the programmer, but in future
         // the user will probably directly create these tasks from the main view
-        taskController.createTask(Task.TASK_WAYPOINT, coord.latitude, coord.longitude);
+        if (type.equals("waypoint")) {
+            taskController.createTask(Task.TASK_WAYPOINT, coords.get(0).latitude, coords.get(0).longitude);
+        } else if (type.equals("region")) {
+            taskController.createRegionTask(coords.get(0), coords.get(1),coords.get(2),coords.get(3));
+        }
+
     }
 
     /**
