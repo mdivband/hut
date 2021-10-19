@@ -1,23 +1,27 @@
 package server.model;
 
 import server.model.task.Task;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.logging.Logger;
 
+/***
+ * Handles the drone controller, like an API. Mostly helper functions to pass throughout the intricacies of the code
+ * structure and convert things to more easily understandable formats
+ */
 public class ProgrammerHandler implements Serializable {
-    AgentProgrammed agent;
+    private final int SENSE_RANGE = 100; // The max (and default) radius used for sensing neighbours etc
+    private int pingCounter = 0;
+    private final int pingTimeout = 5; // (5x200ms = every 1 secons)
 
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
-
+    AgentProgrammed agent;
     private final transient AgentProgrammer agentProgrammer;
 
     private HashMap<String, Position> neighbours;
-
     private List<Coordinate> currentTask = new ArrayList<>();
-    private HashMap<List<Coordinate>, List<String>> tasks;
-    private ArrayList<Coordinate> completedTasks;
+    private final HashMap<List<Coordinate>, List<String>> tasks;
+    private final List<List<Coordinate>> completedTasks;
 
     /***
      * Constructor. Connects the agent to the programmer s.t. this class behaves akin to an MVC controller
@@ -32,44 +36,97 @@ public class ProgrammerHandler implements Serializable {
     }
 
     /***
-     * Called at every time step, we pass through to the programmer
+     * Called at every time step, we set up on the first run, then pass through to the programmer after
      */
     public void step() {
         if (agent.getNetworkId().equals("")) {
             // Must perform setup on the first step, otherwise they can't find each other
-            //agent.generateID();
             agent.setNetworkID(agent.generateRandomTag());
+            declareSelf(SENSE_RANGE);
             agentProgrammer.setup();
         } else {
+            declareSelf(SENSE_RANGE);
             agentProgrammer.step();
-            broadcastAll();
+        }
+        pingCounter++;
+        if (pingCounter >= pingTimeout) {
+            clearNeighbours();
+            //declareSelf(SENSE_RANGE);
+            pingCounter = 0;
         }
     }
 
-    private void broadcastAll() {
-        declareSelf(100);
-        for (var entry : tasks.entrySet()){
-            // Assuming that completion has been correctly pruned out
-            StringBuilder sb = new StringBuilder();
-
-            if (entry.getKey().size() == 1) {
-                sb.append("TASK_WAYPOINT");
-            } else {
-                sb.append("TASK_REGION");
-            }
-
-            List<Coordinate> coords = entry.getKey();
-            for (Coordinate c : coords) {
-                sb.append(";");
-                sb.append(c.latitude);
-                sb.append(",");
-                sb.append(c.longitude);
-
-            }
-            broadcast(sb.toString(), 100);
-
+    /***
+     * Because the receiver (base station) inherits from this class, we use a function here just for that class
+     */
+    public void baseStep() {
+        if (agent.getNetworkId().equals("")) {
+            // Must perform setup on the first step, otherwise they can't find each other
+            agent.setNetworkID(agent.generateRandomTag());
+            declareSelf(SENSE_RANGE);
+            agentProgrammer.setup();
+        } else {
+            declareSelf(SENSE_RANGE); // This must be separate, as order matters for the first case
         }
+        broadcastTasks();
+    }
 
+    protected Coordinate getPosition(){
+        return agent.getCoordinate();
+    }
+
+    /***
+     * Broadcasts all known tasks, including completed ones to the network
+     * There is a known issue here with concurrent modification when adding tasks during runtime. It should be handled
+     * and will be fixed in future
+     */
+    private void broadcastTasks(){
+        // TODO fix this concurrent modification exception that triggers when task is placed during a completion step
+        try {
+            for (var entry : tasks.entrySet()) {
+                // Assuming that completion has been correctly pruned out
+                StringBuilder sb = new StringBuilder();
+
+                if (entry.getKey().size() == 1) {
+                    sb.append("TASK_WAYPOINT");
+                } else {
+                    sb.append("TASK_REGION");
+                }
+
+                List<Coordinate> coords = entry.getKey();
+                for (Coordinate c : coords) {
+                    sb.append(";");
+                    sb.append(c.latitude);
+                    sb.append(",");
+                    sb.append(c.longitude);
+
+                }
+                broadcast(sb.toString(), SENSE_RANGE);
+
+            }
+
+            for (List<Coordinate> tsk : completedTasks) {
+                // Assuming that completion has been correctly pruned out
+                StringBuilder sb = new StringBuilder();
+
+                if (tsk.size() == 1) {
+                    sb.append("COMPLETED_WAYPOINT");
+                } else {
+                    sb.append("COMPLETED_REGION");
+                }
+
+                for (Coordinate c : tsk) {
+                    sb.append(";");
+                    sb.append(c.latitude);
+                    sb.append(",");
+                    sb.append(c.longitude);
+
+                }
+                broadcast(sb.toString(), SENSE_RANGE);
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Concurrent modification exception for the task list. This is a known error and needs fixing");
+        }
     }
 
     /***
@@ -84,7 +141,7 @@ public class ProgrammerHandler implements Serializable {
      * Moves the agent along its current heading for the given distance
      * @param i The distance to move
      */
-    protected void moveAlongHeading(int i) {
+    protected void moveAlongHeading(double i) {
         agent.moveAlongHeading(i);
     }
 
@@ -96,17 +153,22 @@ public class ProgrammerHandler implements Serializable {
     }
 
     /***
-     * Stop the agent when following a route
+     * Stop the agent
      */
     protected void stop() {
         agent.stop();
     }
 
     /***
-     * Resumes the agent when following a route
+     * Resumes the agent
      */
     protected void resume(){
         agent.resume();
+    }
+
+    protected void cancel(){
+        tasks.get(currentTask).remove(getId());
+        currentTask = new ArrayList<>();
     }
 
     /***
@@ -121,7 +183,7 @@ public class ProgrammerHandler implements Serializable {
      * Estimates the time remaining for this agent to complete the passed route
      * @param start Start Coordinate
      * @param target Target Coordinate
-     * @return
+     * @return time remaining
      */
     protected double getTimeRemaining(Coordinate start, Coordinate target){
         return agent.getTime(start, target);
@@ -208,7 +270,6 @@ public class ProgrammerHandler implements Serializable {
         return agent.getSearching();
     }
 
-    //TODO consider whether the programmer should handle route movement, or if that should be automatic
     /***
      * Sets the route for this agent.
      * @param coords The list of waypoints in the planned route
@@ -218,6 +279,10 @@ public class ProgrammerHandler implements Serializable {
     }
 
 
+    /***
+     * Adds the given coordinate to the route planned for this agent
+     * @param coord The coordinate object to add
+     */
     protected void addToRoute(Coordinate coord){
         if (coord != null) {
             agent.addToRoute(coord);
@@ -232,18 +297,20 @@ public class ProgrammerHandler implements Serializable {
         return agent.getRoute();
     }
 
+    /***
+     * Makes the agent follow the route that is currently set
+     */
     public void followRoute() {
         agent.moveTowardsDestination();
-
     }
 
+    /***
+     * Completes the task currently set. Also sends this completion message to the network automatically, and adds it
+     * to the set of tasks that it will report as complete from now on
+     */
     protected void completeTask(){
         List<Coordinate> coords = currentTask;
-        if (coords.size() > 1) {
-            completedTasks.add(Coordinate.findCentre(coords));
-        } else {
-            completedTasks.add(coords.get(0));
-        }
+
         tasks.remove(currentTask);
 
         StringBuilder sb = new StringBuilder();
@@ -255,26 +322,41 @@ public class ProgrammerHandler implements Serializable {
             sb.append(c.longitude);
 
         }
-        broadcast(sb.toString(), 100);
+        broadcast(sb.toString(), SENSE_RANGE);
     }
 
-    private void receiveCompleteTask(List<Coordinate> coords){
-        Coordinate coord;
-        if (coords.size() > 1) {
-            coord = Coordinate.findCentre(coords);
-        } else {
-            coord = coords.get(0);
+    protected void completeTask(Coordinate task){
+        List<Coordinate> thisTask = new ArrayList<>();
+        thisTask.add(task);
+        tasks.remove(thisTask);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("COMPLETED");
+        for (Coordinate c : thisTask) {
+            sb.append(";");
+            sb.append(c.latitude);
+            sb.append(",");
+            sb.append(c.longitude);
+
         }
-        completedTasks.add(coord);
+        broadcast(sb.toString(), SENSE_RANGE);
+    }
+
+    /***
+     * Handles a completion message. Adds this task to the completed list
+     * @param coords
+     */
+    private void receiveCompleteTask(List<Coordinate> coords){
+        completedTasks.add(coords);
         tasks.remove(coords);
-        //if (getTaskById(getCurrentTaskId()).equals(coords)) {
+        if (agent instanceof AgentReceiver) {
+            agent.tempRemoveTask(currentTask);
+        }
         if (currentTask.equals(coords)) {
             currentTask = new ArrayList<>();
             stop();
         }
-
     }
-
 
     /***
      * Senses all other agents within the given radius, and returns their locations
@@ -307,12 +389,10 @@ public class ProgrammerHandler implements Serializable {
         return coords;
     }
 
-
-
     /***
      * It is important that this remains private. We shouldn't allow simulated agents to access other agents directly
-     * This is needed for "under the hood" functionality but don't use it otherwise
-     * @return
+     * This may be needed for "under the hood" functionality but don't use it otherwise
+     * @return The agent at the given coordinate
      */
     private Agent agentAt(Coordinate coordinate){
         List<Agent> neighbours = agent.senseNeighbours(1000000);
@@ -326,8 +406,8 @@ public class ProgrammerHandler implements Serializable {
 
     /***
      * It is important that this remains private. We shouldn't allow simulated agents to access other agents directly
-     * This is needed for "under the hood" functionality but don't use it otherwise
-     * @return
+     * This may be needed for "under the hood" functionality but don't use it otherwise
+     * @return The agent at with the given networkID
      */
     private Agent getAgentByNetworkId(String networkID){
         List<Agent> neighbours = agent.senseNeighbours(100000);  // Note that this is not infinite, perhaps it should be
@@ -346,6 +426,9 @@ public class ProgrammerHandler implements Serializable {
         return null;
     }
 
+    /***
+     * Just for diagnostics. Prints the neighbours of this agent to the log
+     */
     public void printNeighbours(){
         LOGGER.severe("I am " + agent.getNetworkId());
         for (var entry : neighbours.entrySet()) {
@@ -354,12 +437,18 @@ public class ProgrammerHandler implements Serializable {
         LOGGER.severe("");
     }
 
+    /***
+     * Declares this agent to its neighbours. Sends its full positional information (to the best of its knowledge),
+     * and, if it has a current task assigned, shares that too.
+     * @param radius the radius to broadcast too
+     */
     public void declareSelf(int radius) {
         if (currentTask.size() == 0) {
             String msg = "HS_GREET;" + agent.getNetworkId() + ";"
                     + agent.getCoordinate().getLatitude() + ","
                     + agent.getCoordinate().getLongitude() + ","
-                    + agent.getHeading();
+                    + agent.getHeading() + ","
+                    + agent.isStopped();
             broadcast(msg, radius);
 
         } else {
@@ -381,14 +470,19 @@ public class ProgrammerHandler implements Serializable {
             String msg = "HS_GREET;" + agent.getNetworkId() + ";"
                     + agent.getCoordinate().getLatitude() + ","
                     + agent.getCoordinate().getLongitude() + ","
-                    + agent.getHeading()
+                    + agent.getHeading() + ","
+                    + agent.isStopped()
                     + ";" + sb;
             broadcast(msg, radius);
         }
     }
 
+    /***
+     * Broadcasts the given message (in a standard format) to the network across a given radius
+     * @param message The message to send
+     * @param radius The range of communication
+     */
     protected void broadcast(String message, int radius) {
-        //updateNeighbours(radius);
         List<Agent> neighbours = agent.senseNeighbours(radius);
         for (Agent n : neighbours) {
             try {
@@ -401,64 +495,75 @@ public class ProgrammerHandler implements Serializable {
         }
     }
 
-    private void updateNeighbours(int radius) {
-        for (Agent n : agent.senseNeighbours(radius)) {
-            try {
-                // For now, we just cast it to a programmed agent. In future, we may need to implement message handling for all agents
-                AgentProgrammed ap = (AgentProgrammed) n;
-                String id = ap.getNetworkId();
-                if(!id.equals("")) {
-                    if (neighbours.get(id) != null) {
-                        Position position = new Position(ap.getCoordinate(), 0d);
-                        neighbours.put(id, position);
-                    } else {
-                        neighbours.get(id).setLocation(ap.getCoordinate());
-                    }
-
-                }
-            } catch (Exception e) {
-                LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
-            }
-        }
-
-    }
-
+    /***
+     * Checks that a task is possible to add. Ensures it has not been completed and is not already added
+     * @param coords The coordinates of the gieven task
+     * @return Whether the task is possible to add
+     */
     private boolean checkTaskPossible(List<Coordinate> coords) {
-        Coordinate centre = Coordinate.findCentre(coords);
+        //Coordinate centre = Coordinate.findCentre(coords);
 
-        for (Coordinate c1 : completedTasks) {
-            if (c1.equals(centre)) {
-                // already done
+        for (List<Coordinate> tsk : completedTasks) {
+            boolean match = true;
+            for (Coordinate c : tsk) {
+                if (!coords.contains(c)) {
+                    // any difference in this set means it's not in completedTasks
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                // Complete match, so already done
                 return false;
             }
         }
 
         for (var entry : tasks.entrySet()) {
-            Coordinate thisTaskCentre = Coordinate.findCentre(entry.getKey());
-            if (centre.equals(thisTaskCentre)) {
-                // If any coordinate is different, this task can't be a match
+            //Coordinate thisTaskCentre = Coordinate.findCentre(entry.getKey());
+            boolean match = true;
+            for (Coordinate c : entry.getKey()) {
+                //if (centre.equals(thisTaskCentre)) {
+                if (!coords.contains(c)) {
+                    // If any coordinate is different, this task can't be a match
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                // Already in the task list
                 return false;
             }
-
         }
         return true;
     }
 
-
-
-
-
+    /***
+     * The main communication protocol. Handles the given message, in a form of operator and operands, then acts on the
+     * given information
+     * @param message The entire message given
+     */
     protected void receiveMessage(String message) {
         // TODO as of a recent java update, we can use regex-based case statements here in future
         try {
-            if (message.contains("HS_GREET;")){
+            if (message.contains("CUSTOM")) {
+                String opCode = message.split(";")[1];
+                String payload = message.substring((message.indexOf(";") + opCode.length() + 2));
+                // First semicolon, plus length of the opcode, plus both semicolons themselves (2)
+                //String payload = message.substring(message.indexOf(";"));  // Always gets the first occurrence
+                agentProgrammer.onMessageReceived(opCode, payload);
+
+            } else if (message.contains("HS_GREET;")) {
                 // Handshake introduction
                 String id = message.split(";")[1];
                 String locX = message.split(";")[2].split(",")[0];
                 String locY = message.split(";")[2].split(",")[1];
                 String heading = message.split(";")[2].split(",")[2];
+                String stopped = message.split(";")[2].split(",")[3];
                 //Coordinate coord = getAgentByNetworkId(id).getCoordinate();
-                Position newPos = new Position(new Coordinate(Double.parseDouble(locX), Double.parseDouble(locY)), Double.parseDouble(heading));
+                Position newPos = new Position(new Coordinate(Double.parseDouble(locX), Double.parseDouble(locY)), Double.parseDouble(heading), Boolean.parseBoolean(stopped));
+                if (neighbours.containsKey(id)) {
+                    broadcast("GET_TASKS;" + id, SENSE_RANGE);
+                }
                 neighbours.put(id, newPos);
                 // Note that we should only register neighbours based on messages. This includes coordinates, just in
                 // case we want to model error etc
@@ -480,11 +585,31 @@ public class ProgrammerHandler implements Serializable {
                     }
                     if (tasks.get(thisTask) != null && !tasks.get(thisTask).contains(id)) {
                         tasks.get(thisTask).add(id);
+                    } else if (tasks.get(thisTask) == null) {
+                        tasks.put(thisTask, new ArrayList<>());
+                        tasks.get(thisTask).add(id);
+
+
                     }
                 }
 
-            } else if (message.contains("HS_REPLY")){
-                // Handshake response, currently ignored
+            } else if (message.contains("GET_TASKS")) {
+                String id = message.split(";")[1];
+                if (id.equals(agent.getNetworkId())) {
+                    // We have been asked to broadcast task info
+                    broadcastTasks();
+                }
+            } else if (message.contains("COMPLETED_WAYPOINT")) {
+                String x = message.split(";")[1].split(",")[0];
+                String y = message.split(";")[1].split(",")[1];
+                Coordinate thisCoord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
+                List<Coordinate> thisTask = new ArrayList<>();
+                thisTask.add(thisCoord);
+                if (checkTaskPossible(thisTask)) {
+                    completedTasks.add(thisTask);
+                    // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
+                }
+
 
             } else if (message.contains("TASK_WAYPOINT")) {
                 String x = message.split(";")[1].split(",")[0];
@@ -521,7 +646,7 @@ public class ProgrammerHandler implements Serializable {
                 Iterator<String> msgIt = Arrays.stream(msgArray).iterator();
                 msgIt.next();  // Discard the operand ("COMPLETED")
                 List<Coordinate> thisTask = new ArrayList<>();
-                while (msgIt.hasNext()){
+                while (msgIt.hasNext()) {
                     String thisLine = msgIt.next();
                     String x = thisLine.split(",")[0];
                     String y = thisLine.split(",")[1];
@@ -530,6 +655,11 @@ public class ProgrammerHandler implements Serializable {
                 }
                 receiveCompleteTask(thisTask);
 
+            } else if(message.contains("DIAG")) {
+                LOGGER.severe("Diagnostic message received: \"" + message.split(";")[1] + "\"");
+
+            } else {
+                LOGGER.severe("Uncategorized message received: \"" + message + "\"");
             }
 
         } catch (Exception e) {
@@ -538,10 +668,42 @@ public class ProgrammerHandler implements Serializable {
 
     }
 
+    /***
+     * Sends a message to a given NetworkID that will be printed in the log. Mostly for diagnostics etc
+     * @param targetID The NetworkID to send to
+     * @param message The message to send
+     */
+    protected void sendDiagnosticMessage(String targetID, String message){
+        List<Agent> neighbours = agent.senseNeighbours(SENSE_RANGE);
+        for (Agent n : neighbours) {
+            try {
+                // For now, we just cast it to a programmed agent. In future, we may need to implement message handling
+                // for all agents
+                AgentProgrammed ap = (AgentProgrammed) n;
+                if (ap.getNetworkId().equals(targetID)) {
+                    ap.receiveMessage(message);
+                }
+            } catch (Exception e) {
+                LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
+            }
+        }
+
+    }
+
+    /***
+     * The list of tasks. This is an unusual hashmap format:
+     * Key = Task (by list of coordinates, usually a singleton)
+     * Entry = (List of Strings) NetworkIDs of agents working on this task
+     * @return tasks
+     */
     public HashMap<List<Coordinate>, List<String>> getTasks() {
         return tasks;
     }
 
+    /***
+     * Get the nearest task known
+     * @return nearest task
+     */
     public List<Coordinate> getNearestTask() {
         List<Coordinate> bestTask = new ArrayList<>();
         double shortestDist = 100000;
@@ -558,6 +720,10 @@ public class ProgrammerHandler implements Serializable {
         return bestTask;
     }
 
+    /***
+     * Get the nearest known task that has no agents assigned to it yet
+     * @return The nearest task with no agents assigned
+     */
     public List<Coordinate> getNearestEmptyTask(){
         List<Coordinate> bestTask = new ArrayList<>();
         double shortestDist = 100000;
@@ -576,87 +742,208 @@ public class ProgrammerHandler implements Serializable {
         return bestTask;
     }
 
-    public double calculateAverageNeighbourHeading() {
+    /***
+     * Calculates the average heading of all known neighbours
+     * @param includeStationary Whether to include agents that are stationary (usually you don't want to, as they aren't
+     *                          doing anything)
+     * @return Average heading of neighbours
+     */
+    public double calculateAverageNeighbourHeading(boolean includeStationary) {
         double totalHeading = 0;
         for (var entry : neighbours.entrySet()) {
-            totalHeading += entry.getValue().heading;
+                if(!includeStationary || !entry.getValue().getStopped()) {
+                    // Includes it if we aren't including stationary, or if it's stopped otherwise
+                    totalHeading += entry.getValue().heading;
+                }
         }
         return totalHeading / neighbours.size();
     }
 
+    /***
+     * Default handler for this method, assumes you don't want to include stationary agents
+     * @return Average heading of neighbours
+     */
+    public double calculateAverageNeighbourHeading() {
+        return calculateAverageNeighbourHeading(false);
+    }
+
+    /***
+     * Sets this agents task to the given coordinate set
+     * @param taskCoords The coordinates of this task
+     */
     public void setTask(List<Coordinate> taskCoords) {
-        agent.setAllocatedTaskByCoords(taskCoords);
-        currentTask = taskCoords;
-        agent.setRoute(taskCoords);
+        try {
+            agent.setAllocatedTaskByCoords(taskCoords);
+            currentTask = taskCoords;
+            agent.setRoute(taskCoords);
+            resume();
+        } catch (Exception e) {
+            // Failed to do this, probably due to incorrect information. We have to allow this mistake to happen,
+            // as otherwise we are letting globally known information leak into the process
+            tempPlaceNewTask("waypoint", taskCoords);
+            agent.setAllocatedTaskByCoords(taskCoords);
+            currentTask = taskCoords;
+            agent.setRoute(taskCoords);
+            resume();
+        }
 
     }
 
+    /***
+     * Gets the list of all agents (by network id) assigned ot the given task
+     * @param task The task to check
+     * @return The list of NetworkIDs for the agents assigned
+     */
     protected List<String> getAgentsAssigned(List<Coordinate> task) {
         return tasks.get(task);
     }
 
-    public void tempPlaceNewTask(String type, List<Coordinate> coords) {
+    /***
+     * Unused currently; This is a clumsy way of adding tasks from the programmer. It does work, but the receiver method
+     * is better
+     * @param type Type of task
+     * @param coords Task's coordinate
+     */
+    protected void tempPlaceNewTask(String type, List<Coordinate> coords) {
         agent.tempPlaceNewTask(type, coords);
         tasks.put(coords, new ArrayList<>());
     }
 
+    /***
+     * Returns whether this agent has any known neighbours
+     * @return if this agnet has neighbours
+     */
     public boolean hasNeighbours() {
         return (neighbours.size() != 0);
     }
 
-
-    /*
-    public List<ATask> getTasks() {
-        List<ATask> tasks = new ArrayList<>();
-        for(Task t: agent.getAllTasks()){
-            tasks.add(new ATask(t));
-        }
-        return tasks;
+    /**
+     * Returns the number of neighbours this drone has
+     * @return Number of neighbours
+     */
+    public int getNumberOfNeighbours() {
+        return neighbours.size();
     }
 
-    public ATask getNearestTask() {
-        Task nearest = null;
-        double minDist = 100000;
-        for(Task t: agent.getAllTasks()){
-            double thisDist = agent.getCoordinate().getDistance(t.getCoordinate());
-            if (thisDist < minDist) {
-                nearest = t;
-                minDist = thisDist;
+    /***
+     * Clears the list of neighbours
+     */
+    public void clearNeighbours() {
+        neighbours = new HashMap<>();
+    }
+
+    /***
+     * This shouldn't be used by controller, as it handles Task objects. You can create tasks as coordinate lists and
+     * use the TempPlaceTask, or you can set a route for an agent, but probably best not to use this.
+     * Adds a task to this agent. Passed through to receivers, when adding tasks from the user
+     * @param item Task to add
+     */
+    protected void addTask(Task item) {
+        // For now, assume it's a waypoint task. In future we may need to check what type of task (instanceof) and go from there
+        List<Coordinate> thisTask = new ArrayList<>();
+        thisTask.add(item.getCoordinate());
+        tasks.put(thisTask, new ArrayList<>());
+    }
+
+    /***
+     * Uses the pre-existing flocking algorithm based on attraction and repulsion
+     */
+    protected void flockWithAttractionRepulsion(){
+        agent.adjustFlockingHeading();
+    }
+
+    /***
+     * Checks whether this agent is a receiver of tasks
+     * @return If it is a receiver
+     */
+    protected boolean isReceiver() {
+        return (agent instanceof AgentReceiver);
+    }
+
+    /***
+     * Gets average movement based on if agents are stopped or moving, NOT their "speed" stat as that doesn't change
+     * @return Average movement
+     */
+    public double getAverageNeighbourSpeed() {
+        int n = 0;
+        int total = 0;
+        for (var entry : neighbours.entrySet()) {
+            if (!entry.getValue().getStopped()){
+                total++;
+            }
+            n++;
+        }
+        if (total == 0) {
+            // The case when all are stationary (div/0)
+            return 0;
+        } else {
+            return (double) total / (double) n;
+        }
+
+    }
+
+    /**
+     * Checks whether any neighbours are moving. This is the easiest way to stop them flying off at the start
+     * @return Whether any neighbours are moving
+     */
+    protected boolean checkForNeighbourMovement(){
+        for (var entry : neighbours.entrySet()) {
+            if (!entry.getValue().getStopped()){
+                return true;
             }
         }
-        if (nearest != null) {
-            return new ATask(nearest);
-        } else {
-            return null;
+        return false;
+    }
+
+    /**
+     * Allows the programmer to handle custom messages that may be passed through normally
+     * @param opCode A code to allow you to differentiate messages for different functionalities
+     * @param payload The useful part of the message you want to handle
+     */
+    public void sendCustomMessage(String opCode, String payload) {
+        broadcast("CUSTOM;"+opCode+";"+payload, SENSE_RANGE);
+    }
+
+    public String getRandomNeighbour() {
+        int index = (int) Math.floor(Math.random() * neighbours.size());
+
+        return neighbours.keySet().toArray()[index].toString();
+    }
+
+    public List<Position> getNeighbourPositions() {
+        List<Position> positions = new ArrayList<>();
+        for(var entry : neighbours.entrySet()) {
+            positions.add(entry.getValue());
         }
-
+        return positions;
     }
 
-
-
-    public void setTask(ATask t) {
-        agent.setAllocatedTaskId(t.task.getId());
-        LOGGER.severe("Set " + agent.getId() + " to " + agent.getTask());
-        List<Coordinate> route = new ArrayList<>();
-        route.add(t.task.getCoordinate());
-        agent.setRoute(route);
-
-
-        putInTempAllocation(String agentId, String taskId)
-        //agent.setSearching(true);
-        //agent.setWorking(true);
-        //agent.resume();
-        //t.task.addAgent(agent);
+    public HashMap<String, Position> getNeighbours() {
+        return neighbours;
     }
 
-*/
-    private class Position {
+    public boolean checkNeighbourHasTask(String key) {
+        for (var entry : tasks.entrySet()) {
+            if (entry.getValue().contains(key)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /***
+     * We use an internal class to make handling positional information easier. Holds location, heading, and whether it
+     * is stopped
+     */
+    protected static class Position {
         private Coordinate location;
         private Double heading;
+        private Boolean stopped;
 
-        public Position(Coordinate loc, Double hd){
+        public Position(Coordinate loc, Double hd, Boolean stpd){
             location=loc;
             heading=hd;
+            stopped = stpd;
         }
 
         public Coordinate getLocation() {
@@ -673,6 +960,14 @@ public class ProgrammerHandler implements Serializable {
 
         public void setHeading(Double heading) {
             this.heading = heading;
+        }
+
+        public Boolean getStopped() {
+            return stopped;
+        }
+
+        public void setStopped(Boolean stopped) {
+            this.stopped = stopped;
         }
     }
 

@@ -46,6 +46,12 @@
       "lng": -1.4078189690011413,
       "battery": 0.5,
       "programmed": true
+    },
+    {
+      "lat": 50.9292,
+      "lng": -1.408,
+      "battery": 0.5,
+      "programmed": true
     }
   ],
   "hazards": [

@@ -111,6 +111,27 @@ public class TaskController extends AbstractController {
         return true;
     }
 
+    public synchronized void deleteTaskByCoords(List<Coordinate> coords) {
+        try {
+            deleteTask(findTaskByCoord(Coordinate.findCentre(coords)).getId(), true);
+        } catch (Exception e){
+            // For now we leave this. It's rare, but when deleting an already completed task this throws an error
+            // It doesn't matter that we let this through, because it was already gone
+        }
+    }
+
+    public Coordinate checkIfNearbyTaskComplete(Coordinate position, double eps){
+        for (Task t :simulator.getState().getTasks()) {
+            Coordinate thisPos = t.getCoordinate();
+            if(Math.abs(position.getLatitude() - thisPos.getLatitude()) < eps &&
+               Math.abs(position.getLongitude() - thisPos.getLongitude()) < eps) {
+                // The agent is close enough to this task, we'll report it
+                return thisPos;
+            }
+        }
+        return null;
+    }
+
     public synchronized void updateTaskGroup(String taskId, int group) {
         simulator.getState().getTask(taskId).setGroup(group);
     }

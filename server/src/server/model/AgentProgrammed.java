@@ -5,6 +5,7 @@ import server.model.task.PatrolTask;
 import server.model.task.Task;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -33,6 +34,18 @@ public class AgentProgrammed extends Agent {
         this.programmerHandler = new ProgrammerHandler(this);
     }
 
+    /***
+     * Generates a random tag for a network ID. We use a global random object, but in real life these may be based on
+     * unique information such as serial numbers PUFs.
+     *
+     * Collision chance (approx):
+     * 26 letters = 4 bits (plus another for remaining 8, but we'll assume the worst)
+     * 4*16 = 64, a 64 bit hash for e.g. 100 agents has collision probability
+     * 2.22e-16
+     * According to https://everydayinternetstuff.com/2015/04/hash-collision-probability-calculator/
+     *
+     * @return a 16-char alphanumeric ID
+     */
     protected String generateRandomTag(){
         // from https://www.baeldung.com/java-random-string
         int leftLimit = 97; // letter 'a'
@@ -65,11 +78,21 @@ public class AgentProgrammed extends Agent {
         if(!isTimedOut())
             heartbeat();
         this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
+
+        //manualCheckTaskComplete();
+    }
+
+    private void manualCheckTaskComplete(){
+        Coordinate completeNearbyTask = taskController.checkIfNearbyTaskComplete(getCoordinate(), getEPS());
+        if (completeNearbyTask != null) {
+            // We have checked, and found a task near to this drone, so we will complete it
+            programmerHandler.completeTask(completeNearbyTask);
+        }
+
     }
 
     @Override
     void moveTowardsDestination() {
-
         //Move agents
         if (!getRoute().isEmpty() && !isCurrentDestinationReached()) {
             if (!getSearching()) {
@@ -99,23 +122,22 @@ public class AgentProgrammed extends Agent {
 
     }
 
+    /***
+     * Finds teh task with these coordinates, and assigns it to this agent
+     * @param coords
+     */
     public void setAllocatedTaskByCoords(List<Coordinate> coords) {
-        // TODO Does this assign it in the task handling??
         Coordinate coordToUse;
         if (coords.size() == 1) {
             // Singleton => waypoint task, so represented as its only coord
             coordToUse = coords.get(0);
             setTempRoute(Collections.singletonList(taskController.findTaskByCoord(coordToUse).getCoordinate()));
-            //setAllocatedTaskId(taskController.findTaskByCoord(coordToUse).getId());
         } else {
-            // Region or patrol task, represented by its verteces
+            // Region or patrol task, represented by its vertices
             coordToUse = Coordinate.findCentre(coords);
             setTempRoute(Collections.singletonList(((PatrolTask) taskController.findTaskByCoord(coordToUse)).getNearestPointAbsolute(this)));
-            //setAllocatedTaskId(taskController.findTaskByCentreCoord(coordToUse).getId());
         }
         setAllocatedTaskId(taskController.findTaskByCoord(coordToUse).getId());
-        //setRoute(coords);
-
     }
 
     public void tempPlaceNewTask(String type, List<Coordinate> coords) {
@@ -127,6 +149,10 @@ public class AgentProgrammed extends Agent {
             taskController.createRegionTask(coords.get(0), coords.get(1),coords.get(2),coords.get(3));
         }
 
+    }
+
+    public void tempRemoveTask(List<Coordinate> coords){
+        taskController.deleteTaskByCoords(coords);
     }
 
     /**
@@ -216,5 +242,91 @@ public class AgentProgrammed extends Agent {
         return this.sensor.senseNeighbours(this, sensingRadius);
     }
 
+    /**
+     * Adjust heading of agent towards the average heading of its neighbours.
+     * @return isAligned - Whether the agent is aligned or needs to continue rotating.
+     */
+    protected boolean adjustFlockingHeading() {
+        // I lifted this straight out of the AgentVirtual
+        double xSum = 0.0;
+        double ySum = 0.0;
+        double magnitude = 0.0;
+        double xAlign = 0.0;
+        double yAlign = 0.0;
+        double xRepulse = 0.0;
+        double yRepulse = 0.0;
+        double xAttract = 0.0;
+        double yAttract = 0.0;
+        double targetHeading = Math.toRadians(this.heading);
+
+        List<Agent> neighbours = this.sensor.senseNeighbours(this, 50.0);
+
+        if (neighbours.size() > 0) {
+
+            for (Agent neighbour : neighbours) {
+                double multiplier = 1;
+                if (neighbour.getTask() != null) {
+                    multiplier = 100;
+                }
+                else {
+                    multiplier = 1;
+                }
+                double neighbourHeading = Math.toRadians(neighbour.getHeading());
+                xSum += Math.cos(neighbourHeading) * multiplier;
+                ySum += Math.sin(neighbourHeading) * multiplier;
+            }
+            magnitude = Math.sqrt(xSum * xSum + ySum * ySum);
+            xAlign = xSum/magnitude;
+            yAlign = ySum/magnitude;
+
+            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 15.0);
+            List<Agent> notTooClose = new ArrayList<>(neighbours);
+
+            if (tooCloseNeighbours.size() > 0) {
+                notTooClose.removeAll(tooCloseNeighbours);
+
+                xSum = 0.0;
+                ySum = 0.0;
+
+                for(Agent neighbour : tooCloseNeighbours) {
+                    double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
+                    double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
+                    double lat2 = Math.toRadians(neighbour.getCoordinate().getLatitude());
+                    double lng2 = Math.toRadians(neighbour.getCoordinate().getLongitude());
+                    double dLng = (lng2 - lng1);
+                    ySum -= Math.sin(dLng) * Math.cos(lat2);
+                    xSum -= Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+                            * Math.cos(lat2) * Math.cos(dLng);
+                    magnitude = Math.sqrt(xSum * xSum + ySum * ySum);
+                    xRepulse = xSum/magnitude;
+                    yRepulse = ySum/magnitude;
+                }
+            }
+
+            xSum = 0.0;
+            ySum = 0.0;
+
+            for(Agent neighbour : notTooClose) {
+                double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
+                double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
+                double lat2 = Math.toRadians(neighbour.getCoordinate().getLatitude());
+                double lng2 = Math.toRadians(neighbour.getCoordinate().getLongitude());
+                double dLng = (lng2 - lng1);
+                ySum += Math.sin(dLng) * Math.cos(lat2);
+                xSum += Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+                        * Math.cos(lat2) * Math.cos(dLng);
+                magnitude = Math.sqrt(xSum * xSum + ySum * ySum);
+                xAttract = xSum/magnitude;
+                yAttract = ySum/magnitude;
+            }
+
+            targetHeading = Math.atan2(
+                    yAlign + 0.5 * yAttract + yRepulse,
+                    xAlign + 0.5 * xAttract + xRepulse
+            );
+        }
+        adjustHeading(targetHeading);
+        return true;
+    }
 
 }

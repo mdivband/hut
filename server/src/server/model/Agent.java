@@ -264,6 +264,10 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
+    protected double getEPS(){
+        return EPS;
+    }
+
     public boolean isCurrentDestinationReached() {
         return isReached(this.getCurrentDestination());
     }
@@ -272,7 +276,7 @@ public abstract class Agent extends MObject implements Serializable {
         return isReached(this.getFinalDestination());
     }
 
-    private boolean isReached(Coordinate goal) {
+    protected boolean isReached(Coordinate goal) {
         if(goal == null)
             return true;
         Coordinate position = this.getCoordinate();

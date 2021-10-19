@@ -258,10 +258,20 @@ public class Simulator {
                     Double lng = GsonUtils.getValue(agentJSon, "lng");
 
                     Boolean programmed = GsonUtils.getValue(agentJSon, "programmed");
+                    Boolean stationary = GsonUtils.getValue(agentJSon, "stationary");
                     Agent agent;
                     if(programmed != null && programmed) {
-                        //agent = agentController.addProgrammedAgent(lat, lng, 0);
-                        agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
+                        Boolean baseStation = GsonUtils.getValue(agentJSon, "receiver");
+                        if (baseStation != null && baseStation) {
+                            if(stationary != null && stationary) {
+                                agent = agentController.addReceiver(lat, lng, 0, random, taskController, true);
+                            } else {
+                                agent = agentController.addReceiver(lat, lng, 0, random, taskController);
+                            }
+                        } else {
+                            //agent = agentController.addProgrammedAgent(lat, lng, 0);
+                            agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
+                        }
                     } else {
                         agent = agentController.addVirtualAgent(lat, lng, 0);
                     }

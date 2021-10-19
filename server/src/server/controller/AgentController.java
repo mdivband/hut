@@ -53,6 +53,20 @@ public class AgentController extends AbstractController {
         return agent;
     }
 
+    public synchronized Agent addReceiver(double lat, double lng, double heading, Random random, TaskController taskController) {
+        Agent agent = new AgentReceiver(generateUID(), new Coordinate(lat, lng), sensor, random, taskController, false);
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    public synchronized Agent addReceiver(double lat, double lng, double heading, Random random, TaskController taskController, boolean isStationary) {
+        Agent agent = new AgentReceiver(generateUID(), new Coordinate(lat, lng), sensor, random, taskController, isStationary);
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
 
     public synchronized boolean deleteAgent(String id) {
         Agent agent = simulator.getState().getAgent(id);

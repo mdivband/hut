@@ -7,7 +7,6 @@ import com.google.gson.JsonSerializer;
 import server.Allocator;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
-import server.model.task.PatrolTask;
 import server.model.task.Task;
 import tool.GsonUtils;
 
@@ -118,14 +117,21 @@ public class State {
     public void add(IdObject item) {
         if(item instanceof Target)
             add(targets, (Target) item);
-        else if(item instanceof  Task)
+        else if(item instanceof  Task) {
             add(tasks, (Task) item);
-        else if(item instanceof Agent)
+            // For programmed agents:
+            for (Agent a : agents) {
+                if (a instanceof AgentReceiver abs) {
+                    abs.addTaskFromUser((Task) item);
+                }
+            }
+        } else if(item instanceof Agent)
             add(agents, (Agent) item);
         else if(item instanceof Hazard)
             add(hazards, (Hazard) item);
         else
             throw new RuntimeException("Cannot add item to state, unrecognised class - " + item.getClass().getSimpleName());
+
     }
 
     public void remove(IdObject item) {
