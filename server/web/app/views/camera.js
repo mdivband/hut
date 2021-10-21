@@ -4,6 +4,7 @@ var targetMarkers = [];
 
 App.Views.CameraGMap = Backbone.View.extend({ 
 	initialize: function(options) {
+
 		this.mapOptions = {
                 tilt: 45,
                 heading: 90,

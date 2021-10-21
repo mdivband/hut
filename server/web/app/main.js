@@ -33,6 +33,14 @@ var simulator = {
             views: this.views
         });
 
+
+        /*this.views.pfd = new App.Views.PFDView({
+            el: $("#pfd"),
+            state: this.state,
+            views: this.views
+        });*/
+
+
         this.views.editgraph = new App.Views.Graph({
             el: $("#accordion_agent_schedule_m"),
             state: this.state,

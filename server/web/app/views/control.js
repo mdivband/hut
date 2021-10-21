@@ -19,6 +19,8 @@ App.Views.Control = Backbone.View.extend({
 		if (model) {
 			this.agent = model;
 			var id = model.getId();
+
+
 			
 			if (!model.isSimulated()) {
 				this.setup_ardrone(model);

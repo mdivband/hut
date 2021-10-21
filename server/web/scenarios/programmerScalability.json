@@ -1,5 +1,5 @@
 {
-  "gameId": "Base Station Test",
+  "gameId": "Programmer Scalability Test",
   "gameDescription": "A copy of the fire test, but using programmable drones",
   "gameCentre": {
     "lat": 50.929378522204615,
@@ -11,7 +11,7 @@
       "lng": -1.409,
       "programmed": true,
       "receiver": true,
-      "stationary": true
+      "stationary": false
     },
     {
       "lat": 50.93,
@@ -90,51 +90,6 @@
     },
     {
       "lat": 50.929,
-      "lng": -1.408,
-      "programmed": true
-    },
-
-
-
-
-
-    {
-      "lat": 50.934,
-      "lng": -1.41,
-      "programmed": true
-    },
-    {
-      "lat": 50.9341,
-      "lng": -1.40975,
-      "programmed": true
-    },
-    {
-      "lat": 50.9342,
-      "lng": -1.4095,
-      "programmed": true
-    },
-    {
-      "lat": 50.9343,
-      "lng": -1.40925,
-      "programmed": true
-    },
-    {
-      "lat": 50.9343,
-      "lng": -1.40875,
-      "programmed": true
-    },
-    {
-      "lat": 50.9342,
-      "lng": -1.4085,
-      "programmed": true
-    },
-    {
-      "lat": 50.9341,
-      "lng": -1.40825,
-      "programmed": true
-    },
-    {
-      "lat": 50.934,
       "lng": -1.408,
       "programmed": true
     }

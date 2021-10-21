@@ -1,4 +1,5 @@
 package server.model;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -20,7 +21,6 @@ public class AgentProgrammer {
         if (Math.random() > 0.75 || a.isReceiver()) {
             leader = true;
         }
-
     }
 
     /***
@@ -31,16 +31,9 @@ public class AgentProgrammer {
             if (a.isStopped()) {
                 List<Coordinate> task = a.getNearestEmptyTask();
                 if (!task.isEmpty()) {
-                    if (task.get(0).getDistance(a.getPosition()) > 350){
-                        // Nearest task too far away. Pass leadership to a random neighbour
-                        leader = false;
-                        String targetId = a.getRandomNeighbour();
-                        a.sendCustomMessage("ELECT", targetId);
-                    } else {
-                        // perform this task
-                        a.setTask(task);
-                        a.resume();
-                    }
+                    // perform this task
+                    a.setTask(task);
+                    a.resume();
                 }
             } else {
                 a.followRoute();
