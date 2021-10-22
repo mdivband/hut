@@ -1,7 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Simulator" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="16" />
-    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="server.Simulator" />
     <module name="hut-server" />
     <extension name="coverage">

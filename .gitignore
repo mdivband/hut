@@ -142,3 +142,7 @@ $RECYCLE.BIN/
 
 *.log
 *.log.lck
+
+server/classes/
+
+server/src/META-INF/
