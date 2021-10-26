@@ -1678,7 +1678,7 @@ public class HttpServer {
      *        the default virtual host
      * @return the virtual host with the given name, or null if it doesn't exist
      */
-    public VirtualHost getVirtualHost(String name) {
+    public MultiHttpServer.VirtualHost getVirtualHost(String name) {
         return hosts.get(name == null ? VirtualHost.DEFAULT_HOST_NAME : name);
     }
 
@@ -1687,7 +1687,7 @@ public class HttpServer {
      *
      * @return all virtual hosts (as an unmodifiable set)
      */
-    public Set<VirtualHost> getVirtualHosts() {
+    public Set<MultiHttpServer.VirtualHost> getVirtualHosts() {
         return Collections.unmodifiableSet(
             new HashSet<VirtualHost>(hosts.values()));
     }

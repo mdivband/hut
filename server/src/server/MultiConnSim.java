@@ -1,6 +1,5 @@
-package server.controller;
+package server;
 
-import server.Simulator;
 import server.controller.handler.*;
 import tool.HttpServer;
 import tool.HttpServer.*;
@@ -12,59 +11,28 @@ import java.util.logging.Logger;
 /**
  * @author Feng Wu
  */
-public class ConnectionController extends AbstractController {
+public class MultiConnSim {
 
     private HttpServer httpserver;
 
-    private Logger LOGGER = Logger.getLogger(ConnectionController.class.getName());
+    private Simulator[] sims;
+    private int maxUsers = 4;
 
-    public ConnectionController(Simulator simulator) {
-        super(simulator, ConnectionController.class.getName());
+    private Logger LOGGER = Logger.getLogger(MultiConnSim.class.getName());
+
+    public static void main(String[] args) {
+        MultiConnSim multiConnectionController = new MultiConnSim();
+        multiConnectionController.init(8000);
     }
 
-    public void init(int port, String webRef) {
-        httpserver = new HttpServer(port);
-        LOGGER.info("Server port: " + port);
-
-        final VirtualHost host = httpserver.getVirtualHost(null);
-        host.setAllowGeneratedIndex(true);
-
-        try {
-            final File dir = new File(webRef);
-            if (!dir.canRead())
-                throw new IOException(dir + " cannot read.");
-            LOGGER.info("Server home: " + dir);
-
-            host.addContext("/", new ContextHandler() {
-                ContextHandler fileHandler = new FileContextHandler(dir, "/");
-
-                @Override
-                public int serve(Request req, Response resp) throws IOException {
-                    resp.getHeaders().add("Cache-Control", "no-cache, no-store, private, max-age=0");
-                    resp.getHeaders().add("Content-Language", "en");
-                    resp.getHeaders().add("Pragma", "no-cache");
-                    resp.getHeaders().add("Expires", "0");
-
-                    //Attempt to handle as endpoint
-                    if (handleEndpoint(req, resp))
-                        return 200;
-
-                    //If not endpoint then handle as file request.
-                    return fileHandler.serve(req, resp);
-                }
-            });
-
-            RestHandlerFactory.unregisterAllHandlers();
-            RestHandlerFactory.registerRestHandler(new RootHandler("/", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AgentHandler("/agents", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TaskHandler("/tasks", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TargetHandler("/targets", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
-            RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
-            RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
-        } catch (IOException e) {
-            e.printStackTrace();
+    public MultiConnSim() {
+        sims = new Simulator[maxUsers];
+        for (int i=0; i<maxUsers; i++) {
+            Simulator simulator = new Simulator();
+            simulator.start();
+            sims[i] = simulator;
         }
+
     }
 
     public void init(int port) {
@@ -99,14 +67,17 @@ public class ConnectionController extends AbstractController {
                 }
             });
 
-            RestHandlerFactory.unregisterAllHandlers();
-            RestHandlerFactory.registerRestHandler(new RootHandler("/", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AgentHandler("/agents", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TaskHandler("/tasks", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TargetHandler("/targets", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
-            RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
-            RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
+            for (int i=0; i<maxUsers; i++) {
+
+                RestHandlerFactory.unregisterAllHandlers();
+                RestHandlerFactory.registerRestHandler(new RootHandler("/"+i+"/", sims[i]));
+                RestHandlerFactory.registerRestHandler(new AgentHandler("/"+i+"/agents", sims[i]));
+                RestHandlerFactory.registerRestHandler(new TaskHandler("/"+i+"/tasks", sims[i]));
+                RestHandlerFactory.registerRestHandler(new TargetHandler("/"+i+"/targets", sims[i]));
+                RestHandlerFactory.registerRestHandler(new AllocationHandler("/"+i+"/allocation", sims[i]));
+                RestHandlerFactory.registerRestHandler(new ModeHandler("/"+i+"/mode", sims[i]));
+                RestHandlerFactory.registerRestHandler(new VisualizerHandler("/"+i+"/visualizer", sims[i]));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

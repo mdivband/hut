@@ -1,10 +1,6 @@
 package server;
 
-import server.controller.AgentController;
-import server.controller.ConnectionController;
-import server.controller.TaskController;
-import server.controller.TargetController;
-import server.controller.HazardController;
+import server.controller.*;
 import server.model.Agent;
 import server.model.Coordinate;
 import server.model.Sensor;
@@ -24,14 +20,11 @@ import java.util.logging.Logger;
  * @author Feng Wu
  */
 /* Edited by Yuai */
-public class Simulator {
+public class ParallelizedSimulator extends Simulator{
 
-    private String webRef;
-
-    private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
-    private final static String SCENARIO_DIR_PATH = "/scenarios/";
-    private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
-
+    private final static String SERVER_CONFIG_FILE = "web/config/serverConfig.json";
+    private final static String SCENARIO_DIR_PATH = "web/scenarios/";
+    private Logger LOGGER = Logger.getLogger(ParallelizedSimulator.class.getName());
 
     private State state;
     private Sensor sensor;
@@ -40,20 +33,20 @@ public class Simulator {
     private final AgentController agentController;
     private final TaskController taskController;
     private final TargetController targetController;
-    private final ConnectionController connectionController;
+    private final MultiConnectionController multiConnectionController;
     private final HazardController hazardController;
     private final Allocator allocator;
 
-    public static Simulator instance;
+    public static ParallelizedSimulator instance;
 
     private static final double gameSpeed = 6;
 
-    public Simulator() {
+    public ParallelizedSimulator(MultiConnectionController multiCon) {
         instance = this;
 
         state = new State();
         sensor = new Sensor(this);
-        connectionController = new ConnectionController(this);
+        multiConnectionController = multiCon;
         allocator = new Allocator(this);
         queueManager = new QueueManager(this);
         agentController = new AgentController(this, sensor);
@@ -64,22 +57,6 @@ public class Simulator {
         queueManager.initDroneDataConsumer();
     }
 
-    public static void main(String[] args) {
-        try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("./logging.properties"));
-        } catch (final IOException e) {
-            Logger.getAnonymousLogger().severe("Could not load default logging.properties file");
-            Logger.getAnonymousLogger().severe(e.getMessage());
-        }
-
-        //Setup GSON
-        GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
-        GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
-        GsonUtils.create();
-
-        new Simulator().start();
-    }
-
     public void start() {
         //Setup GSON
         GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
@@ -87,14 +64,7 @@ public class Simulator {
         GsonUtils.create();
 
         readConfig();
-        new Thread(connectionController::start).start();
-        LOGGER.info("Server ready.");
-    }
-
-    public void start(int port, int webRef) {
-        this.webRef = "web"+webRef;
-        pushConfig(port);
-        new Thread(connectionController::start).start();
+        new Thread(multiConnectionController::start).start();
         LOGGER.info("Server ready.");
     }
 
@@ -107,7 +77,7 @@ public class Simulator {
 
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
-        if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
+        if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
             LOGGER.info("Scenario loaded.");
             return true;
         } else {
@@ -129,16 +99,16 @@ public class Simulator {
 
     public Map<String, String> getScenarioFileListWithGameIds() {
         Map<String, String> scenarios = new HashMap<>();
-        File scenarioDir = new File(webRef+SCENARIO_DIR_PATH);
+        File scenarioDir = new File(SCENARIO_DIR_PATH);
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
-                String scenarioName = getScenarioNameFromFile(webRef+SCENARIO_DIR_PATH + file.getName());
+                String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
                 if(scenarioName != null)
                     scenarios.put(file.getName(), scenarioName);
             }
         }
         else
-            LOGGER.severe("Could not find scenario directory at " + webRef+SCENARIO_DIR_PATH);
+            LOGGER.severe("Could not find scenario directory at " + SCENARIO_DIR_PATH);
         return scenarios;
     }
 
@@ -213,20 +183,17 @@ public class Simulator {
 
     private void readConfig() {
         try {
-            LOGGER.info("Reading Server Config File: " + webRef+SERVER_CONFIG_FILE);
-            String json = GsonUtils.readFile(webRef+SERVER_CONFIG_FILE);
+            LOGGER.info("Reading Server Config File: " + SERVER_CONFIG_FILE);
+            String json = GsonUtils.readFile(SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
 
-            connectionController.init((port != null) ? port.intValue() : 8080, webRef);
+            //connectionController.init((port != null) ? port.intValue() : 8080);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void pushConfig(int port) {
-        connectionController.init(port, webRef);
-    }
 
     private boolean loadScenarioFromFile(String scenarioFile) {
         try {
@@ -334,34 +301,6 @@ public class Simulator {
             e.printStackTrace();
             return false;
         }
-    }
-
-    public synchronized String getStateAsString() {
-        return state.toString();
-    }
-
-    public synchronized State getState() {
-        return state;
-    }
-
-    public Allocator getAllocator() {
-        return this.allocator;
-    }
-
-    public AgentController getAgentController() {
-        return agentController;
-    }
-
-    public TaskController getTaskController() {
-        return taskController;
-    }
-
-    public TargetController getTargetController() {
-        return targetController;
-    }
-
-    public QueueManager getQueueManager() {
-        return queueManager;
     }
 
 }
