@@ -52,7 +52,6 @@ App.Views.Map = Backbone.View.extend({
 
         this.icons = {
             UAV: $.loadIcon("icons/used/uav.png", "icons/plane.shadow.png", 30, 30),
-            myNewIcon: $.loadIcon("icons/used/hand.png", "icons/plane.shadow.png", 50, 40),
             UAVManual: $.loadIcon("icons/used/uav_manual.png", "icons/plane.shadow.png", 30, 30),
             UAVSelected: $.loadIcon("icons/used/uav_selected.png", "icons/plane.shadow.png", 30, 30),
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
@@ -235,12 +234,11 @@ App.Views.Map = Backbone.View.extend({
         var self = this;
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
-
+            var sigma = 10; // Uncertainty radius in metres
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
 
             if(currentCircle) {
                 currentCircle.setOptions({center: agent.getPosition()});
-
             } else {
 
                 self.$el.gmap("addShape", "Circle", {
@@ -248,10 +246,10 @@ App.Views.Map = Backbone.View.extend({
                     strokeColor: "#FF0000",
                     strokeOpacity: 0.8,
                     strokeWeight: 2,
-                    fillColor: "#FF0000",
-                    fillOpacity: 0.35,
+                    fillColor: "#0033ff",
+                    fillOpacity: 0.6,
                     center: agent.getPosition(),
-                    radius: 50,
+                    radius: sigma,
                 });
             }
         })

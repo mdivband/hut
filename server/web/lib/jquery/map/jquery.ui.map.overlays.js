@@ -13,7 +13,7 @@
 		
 		/**
 		 * Adds a shape to the map
-		 * @param shapeType:string Polygon, Polyline, Rectangle, Circle, Ellipse
+		 * @param shapeType:string Polygon, Polyline, Rectangle, Circle
 		 * @param shapeOptions:object
 		 * @return object
 		 */

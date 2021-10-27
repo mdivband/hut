@@ -35,7 +35,7 @@ public class AgentController extends AbstractController {
         return agent;
     }
 
-    public synchronized Agent addVirtualAgent(double lat, double lng, double heading ) {
+    public synchronized Agent addVirtualAgent(double lat, double lng, double heading) {
         Agent agent = new AgentVirtual(generateUID(), new Coordinate(lat, lng), sensor);
         agent.setHeading(heading);
         simulator.getState().add(agent);
