@@ -223,108 +223,51 @@ App.Views.Map = Backbone.View.extend({
         //     });
         // }
     },
-    drawPredictedPaths: function (){
-        // This part is not much use but I am keeping it here. It handles drawing new arrows
-        /*
+    drawPredictedPath: function (predDepth){
         try {
-
             self = this;
-
-            //polyline.setOptions({path: path});
-
-            this.state.agents.each(function (agent) {
+            this.state.agents.forEach(function (agent) {
                 var predId = agent.getId() + "_pred";
                 var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
 
-                // Setup the path
-                var agentMarker = self.$el.gmap("get", "markers")[agent.getId()];
-                var path = [agentMarker.getPosition()];
-                var route = agent.getTempRoute();
-                var convertedRoute = route.map(function (c) {
-                    return new google.maps.LatLng(c.latitude, c.longitude);
-                });
-                path = path.concat(convertedRoute);
-                if (polyline) {
-                    // We found a path line we've already drawn, let's update it
-                    polyline.setOptions({path: path})
-                    //alert("updating line")
-                } else {
-                    //alert("adding first time line")
-                    // Assuming we found a path to use
-                    if (path) {
+                var predPath = agent.getRoute();
+
+                if (predPath.length !== 0) {
+                    var newPath = [];
+                    newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
+                    predPath.forEach(function (item, index) {
+                        if (index < predDepth) {
+                            newPath[index + 1] = {lat: item.latitude, lng: item.longitude}
+                        }
+                    });
+
+                    if (polyline) {
+                        // We found a path line we've already drawn, let's update it
+                        polyline.setOptions({path: newPath})
+                        //polyline.setMap(this.map);
+                        polyline.setOptions({visible: true})
+                        //alert("path is from: (" + agent.getPosition().latitude + ", " + agent.getPosition().longitude +
+                        //   " TO (" + (agent.getPosition().latitude + relativeVector[0]) +", " + (agent.getPosition().longitude + relativeVector[1]) + ")")
+                        //alert("updating line for " + agent.getId())
+                    } else {
+                        //alert("adding first time line for " + agent.getId())
+                        // Make a new one
                         self.$el.gmap("addShape", "Polyline", {
-                            path: path,
+                            path: newPath,
                             id: predId,
-                            icons: [this.polylineIcon],
+                            icons: [self.polylineIcon],
                             strokeOpacity: 0.8,
                             strokeColor: '#a91f1f',
-                            strokeWeight: 20,
-                            zIndex: 1,
+                            strokeWeight: 1,
+                            zIndex: 2,
+                            visible: true,
                         });
+
                     }
                 }
             });
-
         } catch (e) {
-            alert("ssss " + e)
-        }
-         */
-
-
-        try {
-            self = this;
-
-            this.state.agents.each(function (agent) {
-                var predId = agent.getId() + "_pred";
-                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
-
-                // Setup the path
-                var agentMarker = self.$el.gmap("get", "markers")[agent.getId()];
-                var heading = agent.getHeading();  // Angle in deg
-                //var speed = agent.getSpeed();
-
-                var distance = 0.001;  // Temporary, this may need to be calculated contextually based on, e.g. the next 5 time steps
-
-                var relativeVector = [distance*Math.cos(heading * (Math.PI / 180)), distance*Math.sin(heading * (Math.PI / 180))];  // Using std polar coords
-
-                //var endpoint = [agent.getPosition().lat + relativeVector[0], agent.getPosition().lng + relativeVector[1]];
-
-                // New path for the arrow from here to predicted location
-
-
-                var newPath = [
-                    { lat: agent.getPosition().lat(), lng: agent.getPosition().lng() },
-                    { lat: agent.getPosition().lat() + relativeVector[0], lng: agent.getPosition().lng() + relativeVector[1] },
-                ];
-
-
-                if (polyline) {
-                    // We found a path line we've already drawn, let's update it
-                    polyline.setOptions({path: newPath})
-                    //polyline.setMap(this.map);
-                    polyline.setOptions({visible: true})
-                    //alert("path is from: (" + agent.getPosition().latitude + ", " + agent.getPosition().longitude +
-                     //   " TO (" + (agent.getPosition().latitude + relativeVector[0]) +", " + (agent.getPosition().longitude + relativeVector[1]) + ")")
-                    //alert("updating line for " + agent.getId())
-                } else {
-                    //alert("adding first time line for " + agent.getId())
-                    // Make a new one
-                    self.$el.gmap("addShape", "Polyline", {
-                        path: newPath,
-                        id: predId,
-                        icons: [self.polylineIcon],
-                        strokeOpacity: 0.8,
-                        strokeColor: '#a91f1f',
-                        strokeWeight: 1,
-                        zIndex: 2,
-                        visible: true,
-                    });
-
-                }
-            });
-
-        } catch (e) {
-            alert("ssss " + e)
+            alert("Uncertainty drawing error: " + e)
         }
 
 

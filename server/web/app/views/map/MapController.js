@@ -182,8 +182,15 @@ var MapController = {
         var time = $.fromTime(this.state.getTime());
         $("#game_time").html("Time: " + time);
         this.updateAllocationRendering();
+        var predDepth = 8;
         if (MapController.showPaths)
-            this.drawPredictedPaths();
+            this.drawPredictedPath(predDepth);
+            //this.state.agents.each(function (agent) {
+            //    // Currently the prediction depth is hardcoded
+            //    var predDepth = 3;
+            //    this.drawPredictedPath(agent, predDepth);
+            //});
+        //}
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
