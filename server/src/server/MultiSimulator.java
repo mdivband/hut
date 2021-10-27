@@ -18,11 +18,11 @@ import java.util.logging.Logger;
 
 public class MultiSimulator {
 
-    private Logger LOGGER = Logger.getLogger(MultiSimulator.class.getName());
+    private final Logger LOGGER = Logger.getLogger(MultiSimulator.class.getName());
 
     private int index = 0;
     private int maxUsers = 4;
-    private int startPort = 8000;
+    private final int startPort = 8000;
 
     private Simulator[] sims;
 
@@ -30,8 +30,11 @@ public class MultiSimulator {
         sims = new Simulator[maxUsers];
     }
 
+    // Temporary solution: Create several servers on different ports
     public static void main(String[] args) {
-        // Temporary (bad) solution: Create several servers on different ports
+        // TODO At present, running separate Simulator objects in parallel on different ports does work, but this method
+        // doesn't, I'm not sure why not.
+
         MultiSimulator multiSimulator = new MultiSimulator();
         for (int i=0; i< multiSimulator.getMaxUsers(); i++) {
             multiSimulator.createSim();
@@ -51,10 +54,16 @@ public class MultiSimulator {
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
-        Simulator simulator = new Simulator();
-        simulator.start(startPort + index, index);
-        sims[index] = simulator;
+        //Simulator simulator = new Simulator();
+        //simulator.start(startPort + index, index);
+        //sims[index] = simulator;
+        sims[index] = new Simulator(this);
+        sims[index].start(startPort + index, index);
         index++;
+    }
+
+    private Simulator[] getSims() {
+        return sims;
     }
 
     public int getIndex() {

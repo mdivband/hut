@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 /* Edited by Yuai */
 public class Simulator {
 
-    private String webRef;
+    private String webRef ="web";
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
@@ -47,6 +47,25 @@ public class Simulator {
     public static Simulator instance;
 
     private static final double gameSpeed = 6;
+
+    private MultiSimulator link;
+
+    public Simulator(MultiSimulator link) {
+        this.link = link;
+        instance = this;
+
+        state = new State();
+        sensor = new Sensor(this);
+        connectionController = new ConnectionController(this);
+        allocator = new Allocator(this);
+        queueManager = new QueueManager(this);
+        agentController = new AgentController(this, sensor);
+        taskController = new TaskController(this);
+        hazardController = new HazardController(this);
+        targetController = new TargetController(this);
+
+        queueManager.initDroneDataConsumer();
+    }
 
     public Simulator() {
         instance = this;
@@ -77,7 +96,13 @@ public class Simulator {
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
-        new Simulator().start();
+        int port;
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
+        } else {
+            port = 8000;
+        }
+        new Simulator().start(port);
     }
 
     public void start() {
@@ -87,6 +112,12 @@ public class Simulator {
         GsonUtils.create();
 
         readConfig();
+        new Thread(connectionController::start).start();
+        LOGGER.info("Server ready.");
+    }
+
+    public void start(int port) {
+        pushConfig(port);
         new Thread(connectionController::start).start();
         LOGGER.info("Server ready.");
     }
