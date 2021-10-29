@@ -245,9 +245,9 @@ App.Views.Map = Backbone.View.extend({
                     id: agentId + "_unc",
                     strokeColor: "#FF0000",
                     strokeOpacity: 0.8,
-                    strokeWeight: 2,
+                    strokeWeight: 0,
                     fillColor: "#0033ff",
-                    fillOpacity: 0.6,
+                    fillOpacity: 0.4,
                     center: agent.getPosition(),
                     radius: sigma,
                 });
