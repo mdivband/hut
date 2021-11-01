@@ -111,12 +111,18 @@ public class TaskController extends AbstractController {
         return true;
     }
 
-    public synchronized void deleteTaskByCoords(List<Coordinate> coords) {
+    public void deleteTaskByCoords(List<Coordinate> coords) {
         try {
-            deleteTask(findTaskByCoord(Coordinate.findCentre(coords)).getId(), true);
+            if (coords.size() == 1) {
+                deleteTask(findTaskByCoord(coords.get(0)).getId(), true);
+            } else {
+                deleteTask(findTaskByCoord(Coordinate.findCentre(coords)).getId(), true);
+            }
+
         } catch (Exception e){
             // For now we leave this. It's rare, but when deleting an already completed task this throws an error
             // It doesn't matter that we let this through, because it was already gone
+            //LOGGER.severe(e.toString());
         }
     }
 

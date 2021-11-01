@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 public class ProgrammerHandler implements Serializable {
     private final int SENSE_RANGE = 100; // The max (and default) radius used for sensing neighbours etc
     private int pingCounter = 0;
-    private final int pingTimeout = 5; // (5x200ms = every 1 secons)
+    private final int pingTimeout = 5; // (5x200ms = every 1 seconds)
 
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
     AgentProgrammed agent;
@@ -99,7 +99,6 @@ public class ProgrammerHandler implements Serializable {
                     sb.append(c.latitude);
                     sb.append(",");
                     sb.append(c.longitude);
-
                 }
                 broadcast(sb.toString(), SENSE_RANGE);
 
@@ -120,7 +119,6 @@ public class ProgrammerHandler implements Serializable {
                     sb.append(c.latitude);
                     sb.append(",");
                     sb.append(c.longitude);
-
                 }
                 broadcast(sb.toString(), SENSE_RANGE);
             }
@@ -313,6 +311,10 @@ public class ProgrammerHandler implements Serializable {
 
         tasks.remove(currentTask);
 
+        if (agent instanceof AgentReceiver) {
+            agent.tempRemoveTask(currentTask);
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append("COMPLETED");
         for (Coordinate c : coords) {
@@ -329,6 +331,10 @@ public class ProgrammerHandler implements Serializable {
         List<Coordinate> thisTask = new ArrayList<>();
         thisTask.add(task);
         tasks.remove(thisTask);
+
+        if (agent instanceof AgentReceiver) {
+            agent.tempRemoveTask(thisTask);
+        }
 
         StringBuilder sb = new StringBuilder();
         sb.append("COMPLETED");
@@ -350,7 +356,7 @@ public class ProgrammerHandler implements Serializable {
         completedTasks.add(coords);
         tasks.remove(coords);
         if (agent instanceof AgentReceiver) {
-            agent.tempRemoveTask(currentTask);
+            agent.tempRemoveTask(coords);
         }
         if (currentTask.equals(coords)) {
             currentTask = new ArrayList<>();
