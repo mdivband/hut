@@ -48,25 +48,6 @@ public class Simulator {
 
     private static final double gameSpeed = 6;
 
-    private MultiSimulator link;
-
-    public Simulator(MultiSimulator link) {
-        this.link = link;
-        instance = this;
-
-        state = new State();
-        sensor = new Sensor(this);
-        connectionController = new ConnectionController(this);
-        allocator = new Allocator(this);
-        queueManager = new QueueManager(this);
-        agentController = new AgentController(this, sensor);
-        taskController = new TaskController(this);
-        hazardController = new HazardController(this);
-        targetController = new TargetController(this);
-
-        queueManager.initDroneDataConsumer();
-    }
-
     public Simulator() {
         instance = this;
 
