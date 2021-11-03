@@ -43,7 +43,7 @@ import java.util.concurrent.Executors;
  * required by the RFC, as well as some of the optional functionality.
  * Among the features are virtual hosts, partial content (i.e. download
  * continuation), file-based serving, automatic directory index generation,
- * GET/HEAD/POST/PUT/DELETE/PATCH/OPTIONS/TRACE method support, multiple 
+ * GET/HEAD/POST/PUT/DELETE/PATCH/OPTIONS/TRACE method support, multiple
  * contexts per host, file upload support and more.
  *
  * This server is multithreaded in its support for multiple concurrent HTTP
@@ -73,9 +73,9 @@ public class HttpServer {
      * while the others are supported by recipients for backwards-compatibility.
      */
     public static final String[] DATE_PATTERNS = {
-        "EEE, dd MMM yyyy HH:mm:ss Z", // RFC 822, updated by RFC 1123
-        "EEEE, dd-MMM-yy HH:mm:ss Z",  // RFC 850, obsoleted by RFC 1036
-        "EEE MMM d HH:mm:ss yyyy"      // ANSI C's asctime() format
+            "EEE, dd MMM yyyy HH:mm:ss Z", // RFC 822, updated by RFC 1123
+            "EEEE, dd-MMM-yy HH:mm:ss Z",  // RFC 850, obsoleted by RFC 1036
+            "EEE MMM d HH:mm:ss yyyy"      // ANSI C's asctime() format
     };
 
     /**
@@ -120,7 +120,7 @@ public class HttpServer {
      * MIME types.
      */
     protected static final Map<String, String> contentTypes =
-        new ConcurrentHashMap<String, String>();
+            new ConcurrentHashMap<String, String>();
 
     static {
         // add some default common content types
@@ -177,7 +177,7 @@ public class HttpServer {
          * @throws NullPointerException if the given stream is null
          */
         public LimitedInputStream(InputStream in, long limit,
-                boolean prematureEndException) {
+                                  boolean prematureEndException) {
             super(in);
             if (in == null)
                 throw new NullPointerException("input stream is null");
@@ -197,7 +197,7 @@ public class HttpServer {
         @Override
         public int read(byte b[], int off, int len) throws IOException {
             int res = limit == 0 ? -1
-                : in.read(b, off, len > limit ? (int)limit : len);
+                    : in.read(b, off, len > limit ? (int)limit : len);
             if (res == -1 && limit > 0 && prematureEndException)
                 throw new IOException("unexpected end of stream");
             limit = res == -1 ? 0 : limit - res;
@@ -302,7 +302,7 @@ public class HttpServer {
                 return parseULong(line, 16); // throws NFE
             } catch (NumberFormatException nfe) {
                 throw new IllegalArgumentException(
-                    "invalid chunk size line: \"" + line + "\"");
+                        "invalid chunk size line: \"" + line + "\"");
             }
         }
     }
@@ -643,7 +643,7 @@ public class HttpServer {
         protected final String name;
         protected final Set<String> aliases = new CopyOnWriteArraySet<String>();
         protected final Map<String, ContextHandler> contexts =
-            new ConcurrentHashMap<String, ContextHandler>();
+                new ConcurrentHashMap<String, ContextHandler>();
         protected volatile String directoryIndex = "index.html";
         private volatile boolean allowGeneratedIndex;
 
@@ -782,10 +782,10 @@ public class HttpServer {
                         m.setAccessible(true); // allow access to private member
                         Class<?>[] params = m.getParameterTypes();
                         if (params.length != 2
-                            || !Request.class.isAssignableFrom(params[0])
-                            || !Response.class.isAssignableFrom(params[1])
-                            || !int.class.isAssignableFrom(m.getReturnType()))
-                                throw new IllegalArgumentException(
+                                || !Request.class.isAssignableFrom(params[0])
+                                || !Response.class.isAssignableFrom(params[1])
+                                || !int.class.isAssignableFrom(m.getReturnType()))
+                            throw new IllegalArgumentException(
                                     "@Context used with invalid method: " + m);
                         String path = context.value();
                         addContext(path, new MethodContextHandler(m, o));
@@ -1206,7 +1206,7 @@ public class HttpServer {
         public void setPath(String path) {
             try {
                 uri = new URI(uri.getScheme(), uri.getHost(),
-                    trimDuplicates(path, '/'), uri.getFragment());
+                        trimDuplicates(path, '/'), uri.getFragment());
             } catch (URISyntaxException use) {
                 throw new IllegalArgumentException("error setting path", use);
             }
@@ -1270,7 +1270,7 @@ public class HttpServer {
             if (contentType != null && contentType.toLowerCase()
                     .startsWith("application/x-www-form-urlencoded"))
                 params.putAll(parseParams(
-                    readToken(body, -1, "UTF-8", 2097152))); // 2MB limit
+                        readToken(body, -1, "UTF-8", 2097152))); // 2MB limit
             return params;
         }
 
@@ -1286,7 +1286,7 @@ public class HttpServer {
         public long[] getRange(long length) {
             String header = headers.get("Range");
             return header == null || !header.startsWith("bytes=")
-                ? null : parseRange(header.substring(6), length);
+                    ? null : parseRange(header.substring(6), length);
         }
 
         /**
@@ -1325,21 +1325,21 @@ public class HttpServer {
             VirtualHost host = HttpServer.this.getVirtualHost(name);
             return host != null ? host : HttpServer.this.getVirtualHost(null);
         }
-        
-		public String getBodyContent() throws IOException {
-			if (content != null) {
-				return content;
-			}
-			
-			BufferedReader reader = new BufferedReader(new InputStreamReader(body));
-			String line = null;
-			StringBuilder str = new StringBuilder();
-			while ((line = reader.readLine()) != null) {
-				str.append(line);
-			}
-			content = str.toString();
-			return content;
-		}
+
+        public String getBodyContent() throws IOException {
+            if (content != null) {
+                return content;
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(body));
+            String line = null;
+            StringBuilder str = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                str.append(line);
+            }
+            content = str.toString();
+            return content;
+        }
     }
 
     /**
@@ -1404,8 +1404,8 @@ public class HttpServer {
          *         written, or null if isDiscardBody() returns true, in which
          *         case the body should not be written
          */
-		@SuppressWarnings("all")
-		public ChunkedOutputStream getChunkedBody() {
+        @SuppressWarnings("all")
+        public ChunkedOutputStream getChunkedBody() {
             headers.replace("Transfer-Encoding", "chunked");
             return discardBody ? null : new ChunkedOutputStream(out);
         }
@@ -1458,17 +1458,17 @@ public class HttpServer {
          * @throws IOException if an error occurs
          */
         public void sendHeaders(int status, long length,
-                long lastModified, String etag, String contentType,
-                long[] range) throws IOException {
+                                long lastModified, String etag, String contentType,
+                                long[] range) throws IOException {
             if (range != null) {
                 headers.add("Content-Range", "bytes " + range[0] + "-" +
-                    range[1] + "/" + (length >= 0 ? length : "*"));
+                        range[1] + "/" + (length >= 0 ? length : "*"));
                 length = range[1] - range[0] + 1;
                 if (status == 200)
                     status = 206;
             }
             if (length >= 0 && !headers.contains("Content-Length")
-                            && !headers.contains("Transfer-Encoding"))
+                    && !headers.contains("Transfer-Encoding"))
                 headers.add("Content-Length", Long.toString(length));
             if (!headers.contains("Content-Type")) {
                 if (contentType == null)
@@ -1499,8 +1499,8 @@ public class HttpServer {
         public void send(int status, String text) throws IOException {
             byte[] content = text.getBytes("UTF-8");
             sendHeaders(status, content.length, -1,
-                "\"H" + Integer.toHexString(text.hashCode()) + "\"",
-                "text/html; charset=utf-8", null);
+                    "\"H" + Integer.toHexString(text.hashCode()) + "\"",
+                    "text/html; charset=utf-8", null);
             if (!discardBody)
                 out.write(content);
             out.flush();
@@ -1519,10 +1519,10 @@ public class HttpServer {
         public void sendError(int status, String text) throws IOException {
             Formatter f = new Formatter();
             f.format("<!DOCTYPE html>%n" +
-                "<html>%n<head><title>%d %s</title></head>%n" +
-                "<body><h1>%d %s</h1>%n<p>%s</p>%n</body></html>",
-                status, statuses[status], status, statuses[status],
-                escapeHTML(text));
+                            "<html>%n<head><title>%d %s</title></head>%n" +
+                            "<body><h1>%d %s</h1>%n<p>%s</p>%n</body></html>",
+                    status, statuses[status], status, statuses[status],
+                    escapeHTML(text));
             send(status, f.toString());
             f.close();
         }
@@ -1587,9 +1587,9 @@ public class HttpServer {
             else
                 sendError(302, "Temporarily moved to " + url);
         }
-        
+
         public void sendOkay() throws IOException {
-        	send(200, statuses[200]);
+            send(200, statuses[200]);
         }
     }
 
@@ -1629,7 +1629,7 @@ public class HttpServer {
     protected volatile Executor executor;
     protected volatile ServerSocket serv;
     protected final Map<String, VirtualHost> hosts =
-        new ConcurrentHashMap<String, VirtualHost>();
+            new ConcurrentHashMap<String, VirtualHost>();
 
     /**
      * Constructs an HTTPServer which can accept connections on the given port.
@@ -1678,7 +1678,7 @@ public class HttpServer {
      *        the default virtual host
      * @return the virtual host with the given name, or null if it doesn't exist
      */
-    public MultiHttpServer.VirtualHost getVirtualHost(String name) {
+    public VirtualHost getVirtualHost(String name) {
         return hosts.get(name == null ? VirtualHost.DEFAULT_HOST_NAME : name);
     }
 
@@ -1687,9 +1687,9 @@ public class HttpServer {
      *
      * @return all virtual hosts (as an unmodifiable set)
      */
-    public Set<MultiHttpServer.VirtualHost> getVirtualHosts() {
+    public Set<VirtualHost> getVirtualHosts() {
         return Collections.unmodifiableSet(
-            new HashSet<VirtualHost>(hosts.values()));
+                new HashSet<VirtualHost>(hosts.values()));
     }
 
     /**
@@ -1748,7 +1748,7 @@ public class HttpServer {
      */
     protected void handleConnection(Socket sock) throws IOException {
         OutputStream out = new BufferedOutputStream(
-            sock.getOutputStream(), 4096);
+                sock.getOutputStream(), 4096);
         InputStream in = new BufferedInputStream(sock.getInputStream(), 4096);
         String connectionHeader;
         do {
@@ -1770,7 +1770,7 @@ public class HttpServer {
                 break;
             } catch (IOException ioe) {
                 resp.sendError(500,
-                    "error processing request: " + ioe.getMessage());
+                        "error processing request: " + ioe.getMessage());
                 break;
             }
             out.flush(); // flush response output
@@ -1849,8 +1849,8 @@ public class HttpServer {
      */
     protected void handleMethod(Request req, Response resp) throws IOException {
         String method = req.getMethod();
-        if (method.equals("GET") || method.equals("POST") || 
-        	method.equals("PUT") || method.equals("DELETE") || method.equals("PATCH")) {
+        if (method.equals("GET") || method.equals("POST") ||
+                method.equals("PUT") || method.equals("DELETE") || method.equals("PATCH")) {
             serve(req, resp);
         } else if (method.equals("HEAD")) { // process normally but discard body
             resp.setDiscardBody(true);
@@ -1955,7 +1955,7 @@ public class HttpServer {
     public static String getContentType(String path, String def) {
         int dot = path.lastIndexOf('.');
         String type = dot < 0 ? def
-            : contentTypes.get(path.substring(dot + 1).toLowerCase());
+                : contentTypes.get(path.substring(dot + 1).toLowerCase());
         return type != null ? type : def;
     }
 
@@ -1989,7 +1989,7 @@ public class HttpServer {
             return Collections.emptyMap();
         Map<String, String> params = new LinkedHashMap<String, String>(8);
         Scanner scanner = new Scanner(s);
-		Scanner sc = scanner.useDelimiter("&");
+        Scanner sc = scanner.useDelimiter("&");
         while (sc.hasNext()) {
             String pair = sc.next();
             int pos = pair.indexOf('=');
@@ -2001,8 +2001,8 @@ public class HttpServer {
                 if (name.length() > 0)
                     params.put(name, val);
             } catch (UnsupportedEncodingException ignore) {
-            	sc.close();
-            	scanner.close();
+                sc.close();
+                scanner.close();
             } // never thrown
         }
         sc.close();
@@ -2299,7 +2299,7 @@ public class HttpServer {
      *         or the maximum length is reached before the token end is reached
      */
     public static String readToken(InputStream in, int delim,
-            String enc, int maxLength) throws IOException {
+                                   String enc, int maxLength) throws IOException {
         // note: we avoid using a ByteArrayOutputStream here because it
         // suffers the overhead of synchronization for each byte written
         int buflen = maxLength < 512 ? maxLength : 512; // start with less
@@ -2337,7 +2337,7 @@ public class HttpServer {
     public static String readLine(InputStream in) throws IOException {
         String s = readToken(in, '\n', "ISO8859_1", 8192);
         return s.length() > 0 && s.charAt(s.length() - 1) == '\r'
-            ? s.substring(0, s.length() - 1) : s;
+                ? s.substring(0, s.length() - 1) : s;
     }
 
     /**
@@ -2359,7 +2359,7 @@ public class HttpServer {
         while ((line = readLine(in)).length() > 0) {
             int first;
             for (first = 0; first < line.length() &&
-                Character.isWhitespace(line.charAt(first)); first++);
+                    Character.isWhitespace(line.charAt(first)); first++);
             if (first > 0) // unfold header continuation line
                 line = prevLine + ' ' + line.substring(first);
             int separator = line.indexOf(':');
@@ -2415,7 +2415,7 @@ public class HttpServer {
      * @return the appropriate response status for the request
      */
     public static int getConditionalStatus(Request req,
-            long lastModified, String etag) {
+                                           long lastModified, String etag) {
         Headers headers = req.getHeaders();
         // If-Match
         String header = headers.get("If-Match");
@@ -2440,7 +2440,7 @@ public class HttpServer {
         if (header != null) {
             if (match(true, splitElements(header), etag))
                 status = req.getMethod().equals("GET")
-                    || req.getMethod().equals("HEAD") ? 304 : 412;
+                        || req.getMethod().equals("HEAD") ? 304 : 412;
             else
                 force = true;
         }
@@ -2467,13 +2467,13 @@ public class HttpServer {
      * @throws IOException if an error occurs
      */
     public static int serveFile(File base, String context,
-            Request req, Response resp) throws IOException {
+                                Request req, Response resp) throws IOException {
         String relativePath = req.getPath().substring(context.length());
         File file = new File(base, relativePath).getCanonicalFile();
         if (!file.exists() || file.isHidden()) {
             return 404;
         } else if (!file.canRead()
-                   || !file.getPath().startsWith(base.getPath())) { // validate
+                || !file.getPath().startsWith(base.getPath())) { // validate
             return 403;
         } else if (file.isDirectory()) {
             if (relativePath.endsWith("/") || relativePath.length() == 0) {
@@ -2550,8 +2550,8 @@ public class HttpServer {
             case 200:
                 // send OK response
                 resp.sendHeaders(200, len, lastModified, etag,
-                    getContentType(file.getName(), "application/octet-stream"),
-                    range);
+                        getContentType(file.getName(), "application/octet-stream"),
+                        range);
                 // send body
                 FileInputStream fis = new FileInputStream(file);
                 try {
@@ -2586,29 +2586,29 @@ public class HttpServer {
         // note: we use apache's format, for consistent user experience
         Formatter f = new Formatter(Locale.US);
         f.format("<!DOCTYPE html>%n" +
-            "<html><head><title>Index of %s</title></head>%n" +
-            "<body><h1>Index of %s</h1>%n" +
-            "<pre> Name%" + (w - 5) + "s Last modified      Size<hr>",
-            path, path, "");
+                        "<html><head><title>Index of %s</title></head>%n" +
+                        "<body><h1>Index of %s</h1>%n" +
+                        "<pre> Name%" + (w - 5) + "s Last modified      Size<hr>",
+                path, path, "");
         if (path.length() > 1) // add parent link if not root path
             f.format(" <a href=\"%s/\">Parent Directory</a>%"
-                + (w + 5) + "s-%n", getParentPath(path), "");
+                    + (w + 5) + "s-%n", getParentPath(path), "");
         for (File file : dir.listFiles()) {
             try {
                 String name = file.getName() + (file.isDirectory() ? "/" : "");
                 String size = file.isDirectory() ? "- "
-                                                 : toSizeApproxString(file.length());
+                        : toSizeApproxString(file.length());
                 // properly url-encode the link
                 String link = new URI(null, path + name, null).toASCIIString();
                 f.format(" <a href=\"%s\">%s</a>%-" + (w - name.length()) +
-                    "s&#8206;%td-%<tb-%<tY %<tR%6s%n",
-                    link, name, "", file.lastModified(), size);
+                                "s&#8206;%td-%<tb-%<tY %<tR%6s%n",
+                        link, name, "", file.lastModified(), size);
             } catch (URISyntaxException ignore) {}
         }
         f.format("</pre></body></html>");
         String str = f.toString();
         f.close();
-        
+
         return str;
     }
 
@@ -2619,37 +2619,37 @@ public class HttpServer {
      */
     public static void main(String[] args) {
         try {
-        	String home = args.length == 0 ? "web/" : args[0];
+            String home = args.length == 0 ? "web/" : args[0];
             final File dir = new File(home);
             if (!dir.canRead()) {
                 System.err.println("error opening " + dir.getAbsolutePath());
                 return;
             }
-            
+
             final int port = args.length < 2 ? 8080 : Integer.parseInt(args[1]);
             final HttpServer server = new HttpServer(port);
-            
+
             VirtualHost host = server.getVirtualHost(null); // default host
             host.setAllowGeneratedIndex(true);
-            
+
             host.addContext("/", new ContextHandler() {
-            	ContextHandler defaultHandler = new FileContextHandler(dir, "/");
-            	
-				@Override
-				public int serve(Request req, Response resp) throws IOException {
-					String method = req.getMethod();
-					if (method.equals("POST") || method.equals("PUT") || method.equals("DELETE") || method.equals("PATCH")) {
-						System.out.println(method + " " + req.getPath() + " " + req.getParams());
-						System.out.println(req.getBodyContent());
-						resp.sendOkay();
-						return 200;
-					}
-					return defaultHandler.serve(req, resp);
-				}
+                ContextHandler defaultHandler = new FileContextHandler(dir, "/");
+
+                @Override
+                public int serve(Request req, Response resp) throws IOException {
+                    String method = req.getMethod();
+                    if (method.equals("POST") || method.equals("PUT") || method.equals("DELETE") || method.equals("PATCH")) {
+                        System.out.println(method + " " + req.getPath() + " " + req.getParams());
+                        System.out.println(req.getBodyContent());
+                        resp.sendOkay();
+                        return 200;
+                    }
+                    return defaultHandler.serve(req, resp);
+                }
             });
-          System.out.printf("Server start [dir='%s', port=%d]\n", home, port);
-          
-          server.start();
+            System.out.printf("Server start [dir='%s', port=%d]\n", home, port);
+
+            server.start();
         } catch (Exception e) {
             System.err.println("error: " + e.getMessage());
         }

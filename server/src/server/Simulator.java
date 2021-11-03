@@ -86,6 +86,10 @@ public class Simulator {
         new Simulator().start(port);
     }
 
+    public void runFromExternal(int port){
+        start(port);
+    }
+
     public void start() {
         //Setup GSON
         GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
@@ -97,7 +101,7 @@ public class Simulator {
         LOGGER.info("Server ready.");
     }
 
-    public void start(int port) {
+    public void start(Integer port) {
         pushConfig(port);
         new Thread(connectionController::start).start();
         LOGGER.info("Server ready.");
