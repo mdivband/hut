@@ -1,0 +1,38 @@
+{
+  "gameId": "Temp test",
+  "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.4094788872327502
+    },
+    {
+      "lat": 50.929378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 0.5
+    },
+    {
+      "lat": 50.93008636656946,
+      "lng": -1.4065928983124234,
+      "battery": 0.75
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 0
+    }
+  ],
+  "targets": [
+    {
+      "lat":  50.93325287410678,
+      "lng": -1.4111580599510987,
+      "type": 0
+    }
+  ]
+}

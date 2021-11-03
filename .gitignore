@@ -142,3 +142,9 @@ $RECYCLE.BIN/
 
 *.log
 *.log.lck
+
+server/classes/artifacts/hut_server_jar/hut-server.jar
+
+server/src/META-INF/MANIFEST.MF
+
+server/classes/

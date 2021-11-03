@@ -2,6 +2,7 @@ package server.model;
 
 import server.Simulator;
 import server.model.hazard.Hazard;
+import server.model.target.Target;
 import server.model.task.Task;
 
 import java.io.Serializable;
@@ -357,4 +358,34 @@ public abstract class Agent extends MObject implements Serializable {
             return start.getDistance(goal);
         }
     }
+
+    public int[][] snapShot(double minDist, double lw) {
+        int span = (int) (lw / minDist);
+        int[][] snapshot = new int[span-1][span-1];
+
+        // In coordinate order, not standard matrix order
+        for (int i=0; i<span - 1; i++) {
+            for (int j=0; j<span - 1; j++) {
+                for (Target t : Simulator.instance.getState().getTargets()) {
+                    // Check FROM far left + current progress TO far left + current progress + 1 more space etc
+                    boolean targetHere = (getCoordinate().longitude - lw/2 + (minDist * i) <= t.getCoordinate().longitude &&
+                            t.getCoordinate().longitude < getCoordinate().longitude - lw/2 + (minDist * (i + 1)) &&
+                            getCoordinate().latitude - lw/2 + (minDist * j) <= t.getCoordinate().latitude &&
+                            t.getCoordinate().latitude < getCoordinate().latitude - lw/2 + (minDist * (j + 1)));
+
+
+                    // Note here that we find the compliment for the indices, as array order is different to cartesian
+                    // (fills from TL -> BR, instead of BL -> TR)
+                    if (targetHere) {
+                        snapshot[i][span - (j+2)] = 1;
+                        break;
+                    } else {
+                        snapshot[i][span - (j+2)] = 0;
+                    }
+                }
+            }
+        }
+        return snapshot;
+    }
+
 }

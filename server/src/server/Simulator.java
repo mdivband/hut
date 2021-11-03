@@ -1,10 +1,6 @@
 package server;
 
-import server.controller.AgentController;
-import server.controller.ConnectionController;
-import server.controller.TaskController;
-import server.controller.TargetController;
-import server.controller.HazardController;
+import server.controller.*;
 import server.model.Agent;
 import server.model.Coordinate;
 import server.model.Sensor;
@@ -19,6 +15,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 /**
  * @author Feng Wu
@@ -41,6 +38,8 @@ public class Simulator {
     private final HazardController hazardController;
     private final Allocator allocator;
 
+    private final MessageController messageController;
+
     public static Simulator instance;
 
     private static final double gameSpeed = 6;
@@ -57,6 +56,8 @@ public class Simulator {
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
+
+        messageController = new MessageController(this);
 
         queueManager.initDroneDataConsumer();
     }
@@ -137,8 +138,28 @@ public class Simulator {
 
             //Step agents
             checkAgentsForTimeout();
-            for (Agent agent : state.getAgents())
+            for (Agent agent : state.getAgents()) {
                 agent.step(state.isFlockingEnabled());
+                //messageController.send(agent.snapShot(1, 100));
+                int[][] snap = agent.snapShot(0.0001, 0.001);
+                boolean hasOne = false;
+                for(int[] line : snap) {
+                    if (IntStream.of(line).anyMatch(x -> x == 1)) {
+                        hasOne = true;
+                        break;
+                    }
+                }
+                if (hasOne) {
+                    System.out.println("==========================" + agent.getId() + "===============================");
+                    for(int[] line : snap) {
+                        System.out.println(Arrays.toString(line));
+                    }
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    sleep(5000);
+                }
+            }
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
