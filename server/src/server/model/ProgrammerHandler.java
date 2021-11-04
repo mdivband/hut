@@ -10,7 +10,7 @@ import java.util.logging.Logger;
  * structure and convert things to more easily understandable formats
  */
 public class ProgrammerHandler implements Serializable {
-    private final int SENSE_RANGE = 100; // The max (and default) radius used for sensing neighbours etc
+    private final int SENSE_RANGE = 200; // The max (and default) radius used for sensing neighbours etc
     private int pingCounter = 0;
     private final int pingTimeout = 5; // (5x200ms = every 1 seconds)
 
@@ -132,7 +132,7 @@ public class ProgrammerHandler implements Serializable {
      * @return ID
      */
     protected String getId(){
-        return agent.getId();
+        return agent.getNetworkId();
     }
 
     /***
@@ -567,10 +567,10 @@ public class ProgrammerHandler implements Serializable {
                 String stopped = message.split(";")[2].split(",")[3];
                 //Coordinate coord = getAgentByNetworkId(id).getCoordinate();
                 Position newPos = new Position(new Coordinate(Double.parseDouble(locX), Double.parseDouble(locY)), Double.parseDouble(heading), Boolean.parseBoolean(stopped));
+                neighbours.put(id, newPos);
                 if (neighbours.containsKey(id)) {
                     broadcast("GET_TASKS;" + id, SENSE_RANGE);
                 }
-                neighbours.put(id, newPos);
                 // Note that we should only register neighbours based on messages. This includes coordinates, just in
                 // case we want to model error etc
 
@@ -731,7 +731,7 @@ public class ProgrammerHandler implements Serializable {
      * @return The nearest task with no agents assigned
      */
     public List<Coordinate> getNearestEmptyTask(){
-        List<Coordinate> bestTask = new ArrayList<>();
+        List<Coordinate> bestTask = null;
         double shortestDist = 100000;
 
         for (var entry : tasks.entrySet()) {
@@ -935,6 +935,10 @@ public class ProgrammerHandler implements Serializable {
             }
         }
         return false;
+    }
+
+    public void setLeaderVisual(boolean leader) {
+        agent.setLeaderVisual(leader);
     }
 
     /***

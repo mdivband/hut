@@ -42,6 +42,8 @@ public abstract class Agent extends MObject implements Serializable {
     private transient boolean startSearching;
     private transient boolean stopped;
 
+    protected boolean isLeader = false;
+
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
 
@@ -381,5 +383,9 @@ public abstract class Agent extends MObject implements Serializable {
         } else {
             return start.getDistance(goal);
         }
+    }
+
+    public void setLeaderVisual(boolean leader) {
+        isLeader = true;
     }
 }

@@ -14,7 +14,8 @@ App.Models.Agent = App.Models.MObject.extend({
         simulated: false,
         timedOut: false,
         timeInAir: 0,
-        working: false
+        working: false,
+        isLeader: false
     },
     destroy: function() {
         //Remove from collection without posting DELETE request

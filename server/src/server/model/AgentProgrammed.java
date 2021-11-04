@@ -143,10 +143,12 @@ public class AgentProgrammed extends Agent {
     public void tempPlaceNewTask(String type, List<Coordinate> coords) {
         // TODO this is temporary and is a bit messy. It allows us to create tasks from the programmer, but in future
         // the user will probably directly create these tasks from the main view
-        if (type.equals("waypoint")) {
-            taskController.createTask(Task.TASK_WAYPOINT, coords.get(0).latitude, coords.get(0).longitude);
-        } else if (type.equals("region")) {
-            taskController.createRegionTask(coords.get(0), coords.get(1),coords.get(2),coords.get(3));
+        if (taskController.findTaskByCoord(Coordinate.findCentre(coords)) == null) {
+            if (type.equals("waypoint")) {
+                taskController.createTask(Task.TASK_WAYPOINT, coords.get(0).latitude, coords.get(0).longitude);
+            } else if (type.equals("region")) {
+                taskController.createRegionTask(coords.get(0), coords.get(1), coords.get(2), coords.get(3));
+            }
         }
 
     }

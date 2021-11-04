@@ -263,6 +263,7 @@ var MapAgentController = {
                 icon = this.icons.UAV;
         }
         marker.setIcon(icon.Image);
+
         marker.setPosition(agent.getPosition());
         //Rotate agent marker - seems clunky but GoogleMapsAPI doesn't allow for marker rotation...
         if (marker.icon) {
