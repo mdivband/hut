@@ -81,7 +81,7 @@ public class Simulator {
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         } else {
-            port = 8000;
+            port = 44100;
         }
         new Simulator().start(port);
     }
