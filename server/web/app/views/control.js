@@ -405,8 +405,10 @@ App.Views.Control = Backbone.View.extend({
 			
 			$("#map_canvas_s").hide();
 			$("#camera_canvas_s").show();
+			$("#detection_canvas").show();
 			
 			$("#camera").detach().appendTo("#camera_canvas_s");
+			$("#detection").detach().appendTo("#detection_canvas");
 			
 			this.views.map.trigger("refresh");
 			this.views.camera.trigger("refresh");

@@ -41,6 +41,8 @@ public abstract class Agent extends MObject implements Serializable {
     private transient boolean startSearching;
     private transient boolean stopped;
 
+    private int counter = 0;
+
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
 
@@ -367,20 +369,30 @@ public abstract class Agent extends MObject implements Serializable {
         for (int i=0; i<span - 1; i++) {
             for (int j=0; j<span - 1; j++) {
                 for (Target t : Simulator.instance.getState().getTargets()) {
-                    // Check FROM far left + current progress TO far left + current progress + 1 more space etc
+                        // Check FROM far left + current progress TO far left + current progress + 1 more space etc
+
+                    // Left extent
+                    // Right extent
+                    // Bottom extent
+                    // Top extent
+
                     boolean targetHere = (getCoordinate().longitude - lw/2 + (minDist * i) <= t.getCoordinate().longitude &&
-                            t.getCoordinate().longitude < getCoordinate().longitude - lw/2 + (minDist * (i + 1)) &&
-                            getCoordinate().latitude - lw/2 + (minDist * j) <= t.getCoordinate().latitude &&
-                            t.getCoordinate().latitude < getCoordinate().latitude - lw/2 + (minDist * (j + 1)));
+                                        t.getCoordinate().longitude < getCoordinate().longitude - lw/2 + (minDist * (i + 1)) &&
+                                          getCoordinate().latitude - lw/2 + (minDist * j) <= t.getCoordinate().latitude &&
+                                        t.getCoordinate().latitude < getCoordinate().latitude - lw/2 + (minDist * (j + 1)));
 
 
                     // Note here that we find the compliment for the indices, as array order is different to cartesian
                     // (fills from TL -> BR, instead of BL -> TR)
-                    if (targetHere) {
-                        snapshot[i][span - (j+2)] = 1;
-                        break;
-                    } else {
-                        snapshot[i][span - (j+2)] = 0;
+                    try {
+                        if (targetHere) {
+                            snapshot[span - j - 2][i] = 1;
+                            break;
+                        } else {
+                            snapshot[span - j - 2][i] = 0;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -388,4 +400,12 @@ public abstract class Agent extends MObject implements Serializable {
         return snapshot;
     }
 
+    public boolean incrementAndCheck(int stepsPerCheck){
+        if (counter >= stepsPerCheck) {
+            counter = 0;
+            return true;
+        }
+        counter++;
+        return false;
+    }
 }

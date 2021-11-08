@@ -140,29 +140,15 @@ public class Simulator {
             checkAgentsForTimeout();
             for (Agent agent : state.getAgents()) {
                 agent.step(state.isFlockingEnabled());
-                //messageController.send(agent.snapShot(1, 100));
-                int[][] snap = agent.snapShot(0.0001, 0.001);
-                boolean hasOne = false;
-                for(int[] line : snap) {
-                    if (IntStream.of(line).anyMatch(x -> x == 1)) {
-                        hasOne = true;
-                        break;
-                    }
+                if (messageController.step(agent)) {
+                    sleep(50);
                 }
-                if (hasOne) {
-                    System.out.println("==========================" + agent.getId() + "===============================");
-                    for(int[] line : snap) {
-                        System.out.println(Arrays.toString(line));
-                    }
-                    System.out.println();
-                    System.out.println();
-                    System.out.println();
-                    sleep(5000);
-                }
+
+
             }
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
-            List<Task> completedTasks = new ArrayList<Task>();
+            List<Task> completedTasks = new ArrayList<>();
             for (Task task : state.getTasks())
                 if(task.step())
                     completedTasks.add(task);

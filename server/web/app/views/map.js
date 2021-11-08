@@ -42,7 +42,7 @@ App.Views.Map = Backbone.View.extend({
             mapTypeId: google.maps.MapTypeId.HYBRID,
             overviewMapControl: false,
             streetViewControl: false,
-            mapTypeControl: false,
+            mapTypeControl: true,
             scaleControl: false,
             scrollwheel: true,
             disableDoubleClickZoom: false,

@@ -33,6 +33,19 @@ var simulator = {
             views: this.views
         });
 
+        /*
+        try {
+            this.views.detection = new App.Views.Detection({
+                el: $("#detection"),
+                state: this.state,
+                views: this.views
+            });
+        } catch (e) {
+            alert("Exception thrown" + e.stack);
+        }
+
+         */
+
         this.views.editgraph = new App.Views.Graph({
             el: $("#accordion_agent_schedule_m"),
             state: this.state,
@@ -74,6 +87,8 @@ var simulator = {
         });
 
         $("#camera_canvas_s").append($("#camera"));
+
+        $("#detection_canvas_s").append($("#detection"));
 
         this.views.control = new App.Views.Control({
             el: $("#control"),
