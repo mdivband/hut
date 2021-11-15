@@ -191,6 +191,7 @@ var MapController = {
             //    this.drawPredictedPath(agent, predDepth);
             //});
         //}
+        this.drawUncertainties();
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);

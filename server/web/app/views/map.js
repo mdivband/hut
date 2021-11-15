@@ -274,6 +274,38 @@ App.Views.Map = Backbone.View.extend({
 
 
     },
+
+    /***
+     * A function to draw the circles for uncertainty.
+     * Currently these are of a constant size (proof of concept)
+     *      The "radius" value can be imported based on real values live if required, as this is called with each time step
+     *      Colour or opacity could also be modulated
+     */
+    drawUncertainties: function () {
+        var self = this;
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var sigma = 10; // Uncertainty radius in metres
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
+
+            if(currentCircle) {
+                currentCircle.setOptions({center: agent.getPosition()});
+            } else {
+
+                self.$el.gmap("addShape", "Circle", {
+                    id: agentId + "_unc",
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 0,
+                    fillColor: "#0033ff",
+                    fillOpacity: 0.4,
+                    center: agent.getPosition(),
+                    radius: sigma,
+                });
+            }
+        })
+    },
+
     updateAllocationRendering: function () {
         var self = this;
         var mainAllocation = this.state.getAllocation();

@@ -47,6 +47,7 @@ var MapAgentController = {
     onAgentAdd: function (agent) {
         console.log('Agent added ' + agent.getId());
         var id = agent.getId();
+
         this.$el.gmap("addMarker", {
             bounds: !agent.isSimulated(), //Centre in map if real agent
             marker: MarkerWithLabel,
@@ -59,14 +60,58 @@ var MapAgentController = {
             position: agent.getPosition(),
             heading: agent.getHeading(),
             raiseOnDrag: false,
-            zIndex: 2
+            zIndex: 2,
         });
+
+
+        /*
+
+        // Code to calculate ellipse as a polyline
+        var lat = agent.getPosition().lat();
+        var lng = agent.getPosition().lng();
+
+        // Currently hard-coded radii
+        var firstradius = 50;
+        var secondradius = 50;
+
+        var center = new google.maps.LatLng(lat, lng);
+        var center1 = new google.maps.LatLng(lat + 0.1, lng);
+        var center2 = new google.maps.LatLng(lat, lng + 0.1);
+        var latConv = google.maps.geometry.spherical.computeDistanceBetween(center, center1) * 10;
+        var lngConv = google.maps.geometry.spherical.computeDistanceBetween(center, center2) * 10;
+        var points = [];
+        var Angle;
+        for (var Angle = 0; Angle < 360; Angle++) {
+            var x = lat + ((firstradius * Math.cos(Angle * (Math.PI / 180))) / latConv);
+            var y = lng + ((secondradius * Math.sin(Angle * (Math.PI / 180))) / lngConv);
+            var point = new google.maps.LatLng(x, y);
+            points.push(point);
+        }
+
+        // Write ellipse to canvas as polyline
+        this.$el.gmap("addShape", "Polyline", {
+            id: "_uncertainty"+id,
+            editable: false,
+            clickable: false,
+            path: points,
+            strokeColor: "#FF0000",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#FF0000",
+            fillOpacity: 0.35,
+            zIndex: 0,
+            position: agent,
+        });
+
+        */
+
         //If real agent is added, zoom to it
         if (!agent.isSimulated())
             this.map.setZoom(19);
 
         MapAgentController.updateAgentMarkerIcon(agent);
         var marker = this.$el.gmap("get", "markers")[id];
+
         $(marker).click(function () {
             MapAgentController.onAgentMarkerLeftClick(marker);
         }).rightclick(function () {
@@ -77,12 +122,84 @@ var MapAgentController = {
             MapAgentController.onAgentMarkerDragEnd(marker);
         });
     },
+
     onAgentChange: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
-        if (marker)
+        if (marker) {
             MapAgentController.updateAgentMarkerIcon(agent);
+
+            //var uncMarker = this.$el.gmap("get", "shapes")["_unc"+agent.getId()];
+            //if(uncMarker){
+            //    alert("found one: " + uncMarker)
+
+            //TODO try to get these circles and either delete or update (position update further down)
+
+            /*
+            this.$el.gmap("addShape", "Circle", {
+                id: "_unc"+marker,
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#FF0000",
+                fillOpacity: 0.35,
+                center: marker.position,
+                radius: 20
+            });
+
+             */
+
+        }
         this.updateTable();
         MapTargetController.checkForReveal(agent);
+
+
+        /*
+        var markerEquivName = "_uncertainty"+agent.getId();
+        var uncMarker = this.$el.gmap("get", "markers")[markerEquivName];
+
+        if (uncMarker) {
+            alert(marker.id)
+            // Code to calculate ellipse as a polyline
+            var lat = marker.getPosition().lat();
+            var lng = marker.getPosition().lng();
+
+            // Currently hard-coded radii
+            var firstradius = 50;
+            var secondradius = 50;
+
+            var center = new google.maps.LatLng(lat, lng);
+            var center1 = new google.maps.LatLng(lat + 0.1, lng);
+            var center2 = new google.maps.LatLng(lat, lng + 0.1);
+            var latConv = google.maps.geometry.spherical.computeDistanceBetween(center, center1) * 10;
+            var lngConv = google.maps.geometry.spherical.computeDistanceBetween(center, center2) * 10;
+            var points = [];
+            var Angle;
+            for (var Angle = 0; Angle < 360; Angle++) {
+                var x = lat + ((firstradius * Math.cos(Angle * (Math.PI / 180))) / latConv);
+                var y = lng + ((secondradius * Math.sin(Angle * (Math.PI / 180))) / lngConv);
+                var point = new google.maps.LatLng(x, y);
+                points.push(point);
+            }
+
+            // Write ellipse to canvas as polyline
+            this.$el.gmap("addShape", "Polyline", {
+                id: "_uncertainty" + id,
+                editable: false,
+                clickable: false,
+                path: points,
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#FF0000",
+                fillOpacity: 0.35,
+                zIndex: 0,
+            });
+
+        }
+
+         */
+
+
     },
     onAgentRemove: function (agent) {
         console.log('Agent removed ' + agent.getId());
@@ -275,6 +392,7 @@ var MapAgentController = {
             });
             MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
         }
+
     },
     updateAllAgentMarkerIcons: function () {
         this.state.agents.each(function (agent) {
