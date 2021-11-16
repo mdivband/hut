@@ -268,8 +268,17 @@
                 <div class="game_info_item", style="text-align: left;">
                     <input id="explored_overlay_toggle" type="checkbox">Explored Overlay</input><br>
                     <input id="hazard_overlay_toggle" type="checkbox">Hazard Overlay</input><br>
-                    <input id="region_path_toggle" type="checkbox">Show Region Paths</input><br>
-                    <input id="predicted_paths_toggle" type="checkbox">Show Predicted Paths</input>
+                    <!-- I think the region paths are now redundant? -WH
+                    <input id="region_path_toggle" type="checkbox">Show Region Paths</input><br>-->
+
+                    <div id="uncertainties_wrapper_div" class="edit_buttons_sub" style="display:none">
+                        <input id="uncertainties_toggle" type="checkbox">Show Positional Uncertainties</input><br>
+                    </div>
+
+                    <div id="prediction_wrapper_div" class="edit_buttons_sub" style="display:none">
+                        <input id="prediction_slider" type="range" min="0" max="20" value="0" class="slider">Path Prediction Length</input><br>
+                    </div>
+
                 </div>
             </div>
 

@@ -287,6 +287,16 @@ public class Simulator {
                 }
             }
 
+            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
+            if (uiJson != null) {
+                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
+                    state.addUIOption("predictions");
+                }
+                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
+                    state.addUIOption("uncertainties");
+                }
+            }
+
             return true;
         } catch (IOException e) {
             e.printStackTrace();

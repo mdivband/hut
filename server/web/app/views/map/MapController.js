@@ -1,5 +1,6 @@
 var MapController = {
-    showPaths: false,
+    showPaths: 0,
+    showUncertainties: false,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -76,9 +77,18 @@ var MapController = {
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
-        $('#predicted_paths_toggle').change(function () {
-            MapController.showPredictedPaths( $(this).is(":checked"));
+        $('#prediction_slider').on('change', function() {
+            if ($(this).val() === $(this).prop('max')) {
+                MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
+            } else {
+                MapController.showPredictedPaths($(this).val());
+            }
         });
+
+        $('#uncertainties_toggle').change(function () {
+            MapController.toggleUncertainties( $(this).is(":checked"));
+        });
+
         //State listeners
         this.state.on("change:time", function () {
             MapController.onTick();
@@ -122,7 +132,9 @@ var MapController = {
     },
     showPredictedPaths: function (setting) {
         MapController.showPaths = setting;
-        //alert("set showpaths = " + setting)
+   },
+    toggleUncertainties: function (setting) {
+        MapController.showUncertainties = setting;
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");
@@ -182,16 +194,12 @@ var MapController = {
         var time = $.fromTime(this.state.getTime());
         $("#game_time").html("Time: " + time);
         this.updateAllocationRendering();
-        var predDepth = 8;
-        if (MapController.showPaths)
-            this.drawPredictedPath(predDepth);
-            //this.state.agents.each(function (agent) {
-            //    // Currently the prediction depth is hardcoded
-            //    var predDepth = 3;
-            //    this.drawPredictedPath(agent, predDepth);
-            //});
-        //}
-        this.drawUncertainties();
+        if (MapController.showPaths > 0) {
+            this.drawPredictedPath(MapController.showPaths);
+        }
+        if (MapController.showUncertainties) {
+            this.drawUncertainties();
+        }
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
@@ -270,6 +278,20 @@ var MapController = {
         $("#allocation_redo").prop('disabled', !this.state.isAllocationRedoAvailable());
     },
     swapMode: function (toEditMode, sendUpdate) {
+        self = this;
+        try {
+            this.state.getUiOptions().forEach(function (option) {
+                if (option === "predictions") {
+                    $("#prediction_wrapper_div").show();
+                } else if (option === "uncertainties") {
+                    $("#uncertainties_wrapper_div").show();
+                }
+
+            });
+
+        } catch (e) {
+            alert(e)
+        }
         if(toEditMode) {
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();

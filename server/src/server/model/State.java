@@ -59,6 +59,8 @@ public class State {
 
     private HazardHitCollection hazardHits;
 
+    private ArrayList<String> uiOptions = new ArrayList<>();
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -294,6 +296,10 @@ public class State {
 
     public void decayHazardHits() {
         hazardHits.decayAll();
+    }
+
+    public void addUIOption(String option) {
+        uiOptions.add(option);
     }
 
     private class HazardHit {

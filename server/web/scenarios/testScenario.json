@@ -1,6 +1,10 @@
 {
   "gameId": "Test Scenario",
   "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
