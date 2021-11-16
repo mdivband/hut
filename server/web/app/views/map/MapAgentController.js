@@ -63,48 +63,6 @@ var MapAgentController = {
             zIndex: 2,
         });
 
-
-        /*
-
-        // Code to calculate ellipse as a polyline
-        var lat = agent.getPosition().lat();
-        var lng = agent.getPosition().lng();
-
-        // Currently hard-coded radii
-        var firstradius = 50;
-        var secondradius = 50;
-
-        var center = new google.maps.LatLng(lat, lng);
-        var center1 = new google.maps.LatLng(lat + 0.1, lng);
-        var center2 = new google.maps.LatLng(lat, lng + 0.1);
-        var latConv = google.maps.geometry.spherical.computeDistanceBetween(center, center1) * 10;
-        var lngConv = google.maps.geometry.spherical.computeDistanceBetween(center, center2) * 10;
-        var points = [];
-        var Angle;
-        for (var Angle = 0; Angle < 360; Angle++) {
-            var x = lat + ((firstradius * Math.cos(Angle * (Math.PI / 180))) / latConv);
-            var y = lng + ((secondradius * Math.sin(Angle * (Math.PI / 180))) / lngConv);
-            var point = new google.maps.LatLng(x, y);
-            points.push(point);
-        }
-
-        // Write ellipse to canvas as polyline
-        this.$el.gmap("addShape", "Polyline", {
-            id: "_uncertainty"+id,
-            editable: false,
-            clickable: false,
-            path: points,
-            strokeColor: "#FF0000",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#FF0000",
-            fillOpacity: 0.35,
-            zIndex: 0,
-            position: agent,
-        });
-
-        */
-
         //If real agent is added, zoom to it
         if (!agent.isSimulated())
             this.map.setZoom(19);
