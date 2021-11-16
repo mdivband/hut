@@ -25,7 +25,9 @@ App.Models.State  = Backbone.Model.extend({
             '0': [],
             '1': []
         },
-        uiOptions: {}
+        uiOptions: {},
+        uncertaintyRadius: 0
+
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -121,5 +123,8 @@ App.Models.State  = Backbone.Model.extend({
 	},
     getUiOptions: function () {
         return this.get("uiOptions");
+    },
+    getUncertaintyRadius: function () {
+        return this.get("uncertaintyRadius");
     }
 });

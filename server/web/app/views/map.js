@@ -244,14 +244,9 @@ App.Views.Map = Backbone.View.extend({
                     if (polyline) {
                         // We found a path line we've already drawn, let's update it
                         polyline.setOptions({path: newPath})
-                        //polyline.setMap(this.map);
-                        polyline.setOptions({visible: true})
-                        //alert("path is from: (" + agent.getPosition().latitude + ", " + agent.getPosition().longitude +
-                        //   " TO (" + (agent.getPosition().latitude + relativeVector[0]) +", " + (agent.getPosition().longitude + relativeVector[1]) + ")")
-                        //alert("updating line for " + agent.getId())
+                        polyline.setOptions({visible: true}) // In case it was hidden by the clearUncertainties() method
                     } else {
-                        //alert("adding first time line for " + agent.getId())
-                        // Make a new one
+                        // Otherwise make a new one
                         self.$el.gmap("addShape", "Polyline", {
                             path: newPath,
                             id: predId,
@@ -267,31 +262,39 @@ App.Views.Map = Backbone.View.extend({
                 }
             });
         } catch (e) {
-            alert("Uncertainty drawing error: " + e)
+            alert("Prediction drawing error: " + e)
         }
-
-
-
-
     },
-
+    /**
+     * To clear the existing predictions from the UI
+     */
+    clearPredictions: function () {
+        self = this
+        this.state.agents.each(function (agent) {
+            var predId = agent.getId() + "_pred";
+            var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
+            if (polyline) {
+                polyline.setOptions({visible: false});
+            }
+        });
+    },
     /***
      * A function to draw the circles for uncertainty.
      * Currently these are of a constant size (proof of concept)
      *      The "radius" value can be imported based on real values live if required, as this is called with each time step
      *      Colour or opacity could also be modulated
      */
-    drawUncertainties: function () {
+    drawUncertainties: function (radius) {
         var self = this;
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
-            var sigma = 10; // Uncertainty radius in metres
+            var sigma = radius; // Uncertainty radius in metres
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
 
             if(currentCircle) {
                 currentCircle.setOptions({center: agent.getPosition()});
+                currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
             } else {
-
                 self.$el.gmap("addShape", "Circle", {
                     id: agentId + "_unc",
                     strokeColor: "#FF0000",
@@ -305,7 +308,19 @@ App.Views.Map = Backbone.View.extend({
             }
         })
     },
-
+    /**
+     * To clear the existing circles from the UI
+     */
+    clearUncertainties: function () {
+        self = this
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_unc"];
+            if (currentCircle) {
+                currentCircle.setOptions({visible: false});
+            }
+        });
+    },
     updateAllocationRendering: function () {
         var self = this;
         var mainAllocation = this.state.getAllocation();

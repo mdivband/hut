@@ -1,6 +1,7 @@
 var MapController = {
-    showPaths: 0,
+    predictionLength: 0,
     showUncertainties: false,
+    uncertaintyRadius: 10,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -80,6 +81,8 @@ var MapController = {
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
                 MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
+            } else if ($(this).val() === $(this).prop('min')) {
+                MapController.showPredictedPaths(0);
             } else {
                 MapController.showPredictedPaths($(this).val());
             }
@@ -131,7 +134,7 @@ var MapController = {
 
     },
     showPredictedPaths: function (setting) {
-        MapController.showPaths = setting;
+        MapController.predictionLength = setting;
    },
     toggleUncertainties: function (setting) {
         MapController.showUncertainties = setting;
@@ -194,11 +197,15 @@ var MapController = {
         var time = $.fromTime(this.state.getTime());
         $("#game_time").html("Time: " + time);
         this.updateAllocationRendering();
-        if (MapController.showPaths > 0) {
-            this.drawPredictedPath(MapController.showPaths);
+        if (MapController.predictionLength > 0) {
+            this.drawPredictedPath(MapController.predictionLength);
+        } else {
+            this.clearPredictions();
         }
         if (MapController.showUncertainties) {
-            this.drawUncertainties();
+            this.drawUncertainties(MapController.uncertaintyRadius);
+        } else {
+            this.clearUncertainties();
         }
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
@@ -277,21 +284,28 @@ var MapController = {
         $("#allocation_undo").prop('disabled', !this.state.isAllocationUndoAvailable());
         $("#allocation_redo").prop('disabled', !this.state.isAllocationRedoAvailable());
     },
+    /**
+     * Swaps the UI mode (typically monitor/task view)
+     * I have added a check for UI options specified in the scenario file -WH
+     * @param toEditMode
+     * @param sendUpdate
+     */
     swapMode: function (toEditMode, sendUpdate) {
         self = this;
+        this.state.getUiOptions().forEach(function (option) {
+            if (option === "predictions") {
+                $("#prediction_wrapper_div").show();
+            } else if (option === "uncertainties") {
+                $("#uncertainties_wrapper_div").show();
+            }
+        });
         try {
-            this.state.getUiOptions().forEach(function (option) {
-                if (option === "predictions") {
-                    $("#prediction_wrapper_div").show();
-                } else if (option === "uncertainties") {
-                    $("#uncertainties_wrapper_div").show();
-                }
-
-            });
-
+            MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
         } catch (e) {
-            alert(e)
+           alert(e);
         }
+
+
         if(toEditMode) {
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();

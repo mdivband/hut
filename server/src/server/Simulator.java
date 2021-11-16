@@ -297,6 +297,12 @@ public class Simulator {
                 }
             }
 
+            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
+                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            }
+
+
+
             return true;
         } catch (IOException e) {
             e.printStackTrace();

@@ -60,6 +60,7 @@ public class State {
     private HazardHitCollection hazardHits;
 
     private ArrayList<String> uiOptions = new ArrayList<>();
+    private double uncertaintyRadius = 0;
 
     public State() {
         agents = new ArrayList<>();
@@ -300,6 +301,10 @@ public class State {
 
     public void addUIOption(String option) {
         uiOptions.add(option);
+    }
+
+    public void setUncertaintyRadius(double uncertaintyRadius) {
+        this.uncertaintyRadius = uncertaintyRadius;
     }
 
     private class HazardHit {
