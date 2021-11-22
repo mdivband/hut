@@ -2,9 +2,7 @@ package server.model.task;
 
 import com.google.gson.*;
 import server.Simulator;
-import server.model.Agent;
-import server.model.Coordinate;
-import server.model.MObject;
+import server.model.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -65,11 +63,30 @@ public abstract class Task extends MObject implements Serializable {
         LOGGER.info("Task " + this.getId() + " has been completed");
     }
 
+    private ArrayList<Agent> tempGetArrivedAgents(){
+        ArrayList<Agent> arrivedAgents = new ArrayList<>();
+        for (Agent a : Simulator.instance.getState().getAgents()) {
+            if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+                arrivedAgents.add(a);
+                if (a instanceof AgentProgrammed ap && !(a instanceof AgentReceiver)) {
+                    ap.tempManualPushCompletedTask(this.getCoordinate());
+                }
+            }
+        }
+        return arrivedAgents;
+    }
+
     /**
      * Step a task based on changes to its agents and progress.
      * @return True if the task has been completed, false otherwise.
      */
     public boolean step() {
+        ArrayList<Agent> arrivedAgents = tempGetArrivedAgents();
+        if (arrivedAgents.size() > 0) {
+            setStatus(Task.STATUS_DONE);
+            return status == Task.STATUS_DONE;
+        }
+
         if (status == STATUS_TODO) {
             boolean hasAnyAgentArrived = false;
             for (Agent agent : getAgents()) {

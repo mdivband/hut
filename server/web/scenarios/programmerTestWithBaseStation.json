@@ -1,6 +1,11 @@
 {
   "gameId": "Base Station Test",
   "gameDescription": "A copy of the fire test, but using programmable drones",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
+  "uncertaintyRadius": 200.0,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
@@ -14,11 +19,6 @@
       "stationary": true
     },
     {
-      "lat": 50.93,
-      "lng": -1.41,
-      "programmed": true
-    },
-    {
       "lat": 50.9301,
       "lng": -1.40975,
       "programmed": true
@@ -46,16 +46,6 @@
     {
       "lat": 50.9301,
       "lng": -1.40825,
-      "programmed": true
-    },
-    {
-      "lat": 50.93,
-      "lng": -1.408,
-      "programmed": true
-    },
-    {
-      "lat": 50.929,
-      "lng": -1.41,
       "programmed": true
     },
     {
@@ -88,31 +78,8 @@
       "lng": -1.40825,
       "programmed": true
     },
-    {
-      "lat": 50.929,
-      "lng": -1.408,
-      "programmed": true
-    },
 
 
-
-
-
-    {
-      "lat": 50.934,
-      "lng": -1.41,
-      "programmed": true
-    },
-    {
-      "lat": 50.9341,
-      "lng": -1.40975,
-      "programmed": true
-    },
-    {
-      "lat": 50.9342,
-      "lng": -1.4095,
-      "programmed": true
-    },
     {
       "lat": 50.9343,
       "lng": -1.40925,
@@ -123,21 +90,18 @@
       "lng": -1.40875,
       "programmed": true
     },
+
     {
-      "lat": 50.9342,
-      "lng": -1.4085,
+      "lat": 50.93224344370692,
+      "lng": -1.4142445267805148,
       "programmed": true
     },
     {
-      "lat": 50.9341,
-      "lng": -1.40825,
-      "programmed": true
-    },
-    {
-      "lat": 50.934,
-      "lng": -1.408,
+      "lat": 50.93301427462339,
+      "lng": -1.404202336228757,
       "programmed": true
     }
+
   ],
   "hazards": [
     {

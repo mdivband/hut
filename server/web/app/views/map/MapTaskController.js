@@ -207,6 +207,7 @@ var MapTaskController = {
         task.destroy();
     },
     onTaskCompleted: function (task) {
+        /*
         console.log("Task completed " + task.getId());
         var self = this;
         var uid = task.getId() + "_completed";
@@ -225,6 +226,8 @@ var MapTaskController = {
             self.map.panTo(task.getPosition());
             self.map.setZoom(19);
         });
+
+         */
     },
     onTaskMarkerLeftClick: function (marker) {},
     onTaskMarkerRightClick: function (marker) {

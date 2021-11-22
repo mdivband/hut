@@ -1,4 +1,7 @@
 var MapController = {
+    predictionLength: 0,
+    showUncertainties: false,
+    uncertaintyRadius: 10,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -28,6 +31,7 @@ var MapController = {
         this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
+        this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
     },
     /**
      * Bind listeners for map view.
@@ -74,6 +78,19 @@ var MapController = {
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
+        $('#prediction_slider').on('change', function() {
+            if ($(this).val() === $(this).prop('max')) {
+                MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
+            } else if ($(this).val() === $(this).prop('min')) {
+                MapController.showPredictedPaths(0);
+            } else {
+                MapController.showPredictedPaths($(this).val());
+            }
+        });
+
+        $('#uncertainties_toggle').change(function () {
+            MapController.toggleUncertainties( $(this).is(":checked"));
+        });
 
         //State listeners
         this.state.on("change:time", function () {
@@ -114,6 +131,13 @@ var MapController = {
         google.maps.event.addListener(this.drawing, "rectanglecomplete", function (rectangle) {
             MapController.onMapRectangleComplete(rectangle);
         });
+
+    },
+    showPredictedPaths: function (setting) {
+        MapController.predictionLength = setting;
+    },
+    toggleUncertainties: function (setting) {
+        MapController.showUncertainties = setting;
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");
@@ -173,6 +197,16 @@ var MapController = {
         var time = $.fromTime(this.state.getTime());
         $("#game_time").html("Time: " + time);
         this.updateAllocationRendering();
+        if (MapController.predictionLength > 0) {
+            this.drawPredictedPath(MapController.predictionLength);
+        } else {
+            this.clearPredictions();
+        }
+        if (MapController.showUncertainties) {
+            this.drawUncertainties(MapController.uncertaintyRadius);
+        } else {
+            this.clearUncertainties();
+        }
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
@@ -250,7 +284,28 @@ var MapController = {
         $("#allocation_undo").prop('disabled', !this.state.isAllocationUndoAvailable());
         $("#allocation_redo").prop('disabled', !this.state.isAllocationRedoAvailable());
     },
+    /**
+     * Swaps the UI mode (typically monitor/task view)
+     * I have added a check for UI options specified in the scenario file -WH
+     * @param toEditMode
+     * @param sendUpdate
+     */
     swapMode: function (toEditMode, sendUpdate) {
+        self = this;
+        this.state.getUiOptions().forEach(function (option) {
+            if (option === "predictions") {
+                $("#prediction_wrapper_div").show();
+            } else if (option === "uncertainties") {
+                $("#uncertainties_wrapper_div").show();
+            }
+        });
+        try {
+            MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
+        } catch (e) {
+            alert(e);
+        }
+
+
         if(toEditMode) {
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();
@@ -306,8 +361,8 @@ var MapController = {
                 lng: path.getAt(pathSize - 1).lng()
             });
         }
-        //If any other point is dragged, add or edit vertex as required.
-        // Index passed to server is one less than index on client as server route doesn't include the start point
+            //If any other point is dragged, add or edit vertex as required.
+            // Index passed to server is one less than index on client as server route doesn't include the start point
         // (current agent position)
         else {
             if (insert) {

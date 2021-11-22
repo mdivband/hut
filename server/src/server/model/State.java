@@ -59,6 +59,10 @@ public class State {
 
     private HazardHitCollection hazardHits;
 
+    private ArrayList<String> uiOptions = new ArrayList<>();
+    private double uncertaintyRadius = 0;
+
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -293,6 +297,14 @@ public class State {
 
     public void setInProgress(boolean inProgress) {
         this.inProgress = inProgress;
+    }
+
+    public void addUIOption(String option) {
+        uiOptions.add(option);
+    }
+
+    public void setUncertaintyRadius(double uncertaintyRadius) {
+        this.uncertaintyRadius = uncertaintyRadius;
     }
 
     public synchronized void addHazardHit(int type, Coordinate location) {

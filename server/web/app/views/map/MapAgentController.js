@@ -38,7 +38,7 @@ var MapAgentController = {
             MapAgentController.onAgentRemove(agent);
         });
         this.state.agents.on("change:timedOut", function (agent) {
-            if(agent.isTimedOut())
+            if (agent.isTimedOut())
                 MapAgentController.onAgentTimeOut(agent);
             else
                 MapAgentController.onAgentReconnect(agent);
@@ -47,6 +47,7 @@ var MapAgentController = {
     onAgentAdd: function (agent) {
         console.log('Agent added ' + agent.getId());
         var id = agent.getId();
+
         this.$el.gmap("addMarker", {
             bounds: !agent.isSimulated(), //Centre in map if real agent
             marker: MarkerWithLabel,
@@ -59,14 +60,16 @@ var MapAgentController = {
             position: agent.getPosition(),
             heading: agent.getHeading(),
             raiseOnDrag: false,
-            zIndex: 2
+            zIndex: 2,
         });
+
         //If real agent is added, zoom to it
         if (!agent.isSimulated())
             this.map.setZoom(19);
 
         MapAgentController.updateAgentMarkerIcon(agent);
         var marker = this.$el.gmap("get", "markers")[id];
+
         $(marker).click(function () {
             MapAgentController.onAgentMarkerLeftClick(marker);
         }).rightclick(function () {
@@ -77,6 +80,7 @@ var MapAgentController = {
             MapAgentController.onAgentMarkerDragEnd(marker);
         });
     },
+
     onAgentChange: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         if (marker)
@@ -133,12 +137,12 @@ var MapAgentController = {
         });
     },
     onAgentMarkerLeftClick: function (marker) {
-         var agent = this.state.agents.get(marker.id);
-         if (agent.getId() === this.views.clickedAgent)
-             this.updateClickedAgent(null);
-         else
-             this.updateClickedAgent(agent);
-         MapAgentController.updateAllAgentMarkerIcons();
+        var agent = this.state.agents.get(marker.id);
+        if (agent.getId() === this.views.clickedAgent)
+            this.updateClickedAgent(null);
+        else
+            this.updateClickedAgent(agent);
+        MapAgentController.updateAllAgentMarkerIcons();
     },
     onAgentMarkerRightClick: function (marker) {
         var self = this;
@@ -255,15 +259,16 @@ var MapAgentController = {
         if (agent.getId() === this.views.clickedAgent)
             icon = this.icons.UAVSelected;
         else {
-            if(agent.getManuallyControlled())
+            if (agent.getVisualType() === "hub")
+                icon = this.icons.FLAG;  //TODO make a new icon
+            else if (agent.getManuallyControlled() || agent.getVisualType() === "leader")
                 icon = this.icons.UAVManual;
-            else if(agent.isTimedOut())
+            else if (agent.isTimedOut())
                 icon = this.icons.UAVTimedOut;
             else
                 icon = this.icons.UAV;
         }
         marker.setIcon(icon.Image);
-
         marker.setPosition(agent.getPosition());
         //Rotate agent marker - seems clunky but GoogleMapsAPI doesn't allow for marker rotation...
         if (marker.icon) {
@@ -276,6 +281,7 @@ var MapAgentController = {
             });
             MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
         }
+
     },
     updateAllAgentMarkerIcons: function () {
         this.state.agents.each(function (agent) {

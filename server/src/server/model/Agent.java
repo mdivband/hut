@@ -42,7 +42,7 @@ public abstract class Agent extends MObject implements Serializable {
     private transient boolean startSearching;
     private transient boolean stopped;
 
-    protected boolean isLeader = false;
+    protected String visualType;
 
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
@@ -60,6 +60,7 @@ public abstract class Agent extends MObject implements Serializable {
         working = false;
         allocatedTaskId = "";
         timedOut = false;
+        visualType = "standard";
 
         this.lastHeartbeat = System.currentTimeMillis();
     }
@@ -255,6 +256,12 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
+    public void clearRoute() {
+        synchronized (this.route) {
+            this.route.clear();
+        }
+    }
+
     public List<Coordinate> getTempRoute() {
         return tempRoute;
     }
@@ -385,7 +392,7 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
-    public void setLeaderVisual(boolean leader) {
-        isLeader = true;
+    public void setVisual(String type) {
+        visualType = type;
     }
 }

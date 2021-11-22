@@ -33,8 +33,6 @@ public class Simulator {
     private State state;
     private Sensor sensor;
 
-    private Random random;
-
     private final QueueManager queueManager;
     private final AgentController agentController;
     private final TaskController taskController;
@@ -46,6 +44,7 @@ public class Simulator {
     public static Simulator instance;
 
     private static final double gameSpeed = 6;
+    private Random random;
 
     public Simulator() {
         instance = this;
@@ -309,6 +308,22 @@ public class Simulator {
                     targetController.setTargetVisibility(target.getId(), false);
                 }
             }
+
+            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
+            if (uiJson != null) {
+                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
+                    state.addUIOption("predictions");
+                }
+                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
+                    state.addUIOption("uncertainties");
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
+                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            }
+
+
 
             return true;
         } catch (IOException e) {

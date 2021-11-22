@@ -91,6 +91,10 @@ public class AgentProgrammed extends Agent {
 
     }
 
+    public void tempManualPushCompletedTask(Coordinate coordinate) {
+        programmerHandler.completeTask(coordinate);
+    }
+
     @Override
     void moveTowardsDestination() {
         //Move agents
@@ -131,7 +135,12 @@ public class AgentProgrammed extends Agent {
         if (coords.size() == 1) {
             // Singleton => waypoint task, so represented as its only coord
             coordToUse = coords.get(0);
-            setTempRoute(Collections.singletonList(taskController.findTaskByCoord(coordToUse).getCoordinate()));
+            try {
+                setTempRoute(Collections.singletonList(taskController.findTaskByCoord(coordToUse).getCoordinate()));
+            } catch (Exception e) {
+                LOGGER.severe("ERROR TRYING TO PERFORM A COMPLETED TASK. RE-ADDING");
+                tempPlaceNewTask("waypoint", coords);
+            }
         } else {
             // Region or patrol task, represented by its vertices
             coordToUse = Coordinate.findCentre(coords);
@@ -154,7 +163,7 @@ public class AgentProgrammed extends Agent {
     }
 
     public void tempRemoveTask(List<Coordinate> coords){
-        taskController.deleteTaskByCoords(coords);
+        //taskController.deleteTaskByCoords(coords);
     }
 
     /**

@@ -23,6 +23,9 @@ public class ProgrammerHandler implements Serializable {
     private final HashMap<List<Coordinate>, List<String>> tasks;
     private final List<List<Coordinate>> completedTasks;
 
+    private Coordinate home = new Coordinate(50.9295, -1.409); // TODO make this inferred from a hub announcement
+    private boolean isGoingHome = false;
+
     /***
      * Constructor. Connects the agent to the programmer s.t. this class behaves akin to an MVC controller
      * @param connectedAgent The agent that this handler controls
@@ -61,6 +64,7 @@ public class ProgrammerHandler implements Serializable {
      */
     public void baseStep() {
         if (agent.getNetworkId().equals("")) {
+            agent.visualType = "hub";
             // Must perform setup on the first step, otherwise they can't find each other
             agent.setNetworkID(agent.generateRandomTag());
             declareSelf(SENSE_RANGE);
@@ -307,6 +311,8 @@ public class ProgrammerHandler implements Serializable {
      * to the set of tasks that it will report as complete from now on
      */
     protected void completeTask(){
+        //isGoingHome = false;
+
         List<Coordinate> coords = currentTask;
 
         tasks.remove(currentTask);
@@ -332,9 +338,9 @@ public class ProgrammerHandler implements Serializable {
         thisTask.add(task);
         tasks.remove(thisTask);
 
-        if (agent instanceof AgentReceiver) {
-            agent.tempRemoveTask(thisTask);
-        }
+        //if (agent instanceof AgentReceiver) {
+        //    agent.tempRemoveTask(thisTask);
+        //}
 
         StringBuilder sb = new StringBuilder();
         sb.append("COMPLETED");
@@ -355,9 +361,9 @@ public class ProgrammerHandler implements Serializable {
     private void receiveCompleteTask(List<Coordinate> coords){
         completedTasks.add(coords);
         tasks.remove(coords);
-        if (agent instanceof AgentReceiver) {
-            agent.tempRemoveTask(coords);
-        }
+        //if (agent instanceof AgentReceiver) {
+        //    agent.tempRemoveTask(coords);
+        //}
         if (currentTask.equals(coords)) {
             currentTask = new ArrayList<>();
             stop();
@@ -711,7 +717,7 @@ public class ProgrammerHandler implements Serializable {
      * @return nearest task
      */
     public List<Coordinate> getNearestTask() {
-        List<Coordinate> bestTask = new ArrayList<>();
+        List<Coordinate> bestTask = null;
         double shortestDist = 100000;
 
         for (var entry : tasks.entrySet()) {
@@ -811,7 +817,7 @@ public class ProgrammerHandler implements Serializable {
      * @param coords Task's coordinate
      */
     protected void tempPlaceNewTask(String type, List<Coordinate> coords) {
-        agent.tempPlaceNewTask(type, coords);
+        //agent.tempPlaceNewTask(type, coords);
         tasks.put(coords, new ArrayList<>());
     }
 
@@ -901,6 +907,7 @@ public class ProgrammerHandler implements Serializable {
         return false;
     }
 
+
     /**
      * Allows the programmer to handle custom messages that may be passed through normally
      * @param opCode A code to allow you to differentiate messages for different functionalities
@@ -911,9 +918,13 @@ public class ProgrammerHandler implements Serializable {
     }
 
     public String getRandomNeighbour() {
-        int index = (int) Math.floor(Math.random() * neighbours.size());
+        try {
+            int index = (int) Math.floor(Math.random() * neighbours.size());
 
-        return neighbours.keySet().toArray()[index].toString();
+            return neighbours.keySet().toArray()[index].toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public List<Position> getNeighbourPositions() {
@@ -937,8 +948,34 @@ public class ProgrammerHandler implements Serializable {
         return false;
     }
 
-    public void setLeaderVisual(boolean leader) {
-        agent.setLeaderVisual(leader);
+    public void setVisual(String type) {
+        agent.setVisual(type);
+    }
+
+    public void goHome(){
+        LOGGER.severe(agent.getId() + " is going home");
+        //tempPlaceNewTask("waypoint", Collections.singletonList(home));
+        setTask(Collections.singletonList(home));
+        //setRoute(Collections.singletonList(home));
+        isGoingHome = true;
+        resume();
+    }
+
+    public boolean isGoingHome() {
+        return isGoingHome;
+    }
+
+    public List<List<Coordinate>> getCompletedTasks() {
+        return completedTasks;
+    }
+
+    public Coordinate getHome() {
+        return home;
+    }
+
+    public void stopGoingHome() {
+        isGoingHome = false;
+        agent.clearRoute();
     }
 
     /***

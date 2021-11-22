@@ -57,7 +57,8 @@ App.Views.Map = Backbone.View.extend({
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
             MarkerMonitor: $.loadIcon("icons/used/marker_monitor.png", "icons/msmarker.shadow.png", 10, 34),
-            TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30)
+            TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
+            FLAG: $.loadIcon("icons/flag_over.png", "icons/man.shadow.png", 15, 15)
         };
 
         this.first = true;
@@ -222,6 +223,104 @@ App.Views.Map = Backbone.View.extend({
         //         }
         //     });
         // }
+    },
+    drawPredictedPath: function (predDepth){
+        try {
+            self = this;
+            this.state.agents.forEach(function (agent) {
+                var predId = agent.getId() + "_pred";
+                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
+
+                var predPath = agent.getRoute();
+
+                if (predPath.length !== 0) {
+                    var newPath = [];
+                    newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
+                    predPath.forEach(function (item, index) {
+                        if (index < predDepth) {
+                            newPath[index + 1] = {lat: item.latitude, lng: item.longitude}
+                        }
+                    });
+
+                    if (polyline) {
+                        // We found a path line we've already drawn, let's update it
+                        polyline.setOptions({path: newPath})
+                        polyline.setOptions({visible: true}) // In case it was hidden by the clearUncertainties() method
+                    } else {
+                        // Otherwise make a new one
+                        self.$el.gmap("addShape", "Polyline", {
+                            path: newPath,
+                            id: predId,
+                            icons: [self.polylineIcon],
+                            strokeOpacity: 0.8,
+                            strokeColor: '#a91f1f',
+                            strokeWeight: 1,
+                            zIndex: 2,
+                            visible: true,
+                        });
+
+                    }
+                }
+            });
+        } catch (e) {
+            alert("Prediction drawing error: " + e)
+        }
+    },
+    /**
+     * To clear the existing predictions from the UI
+     */
+    clearPredictions: function () {
+        self = this
+        this.state.agents.each(function (agent) {
+            var predId = agent.getId() + "_pred";
+            var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
+            if (polyline) {
+                polyline.setOptions({visible: false});
+            }
+        });
+    },
+    /***
+     * A function to draw the circles for uncertainty.
+     * Currently these are of a constant size (proof of concept)
+     *      The "radius" value can be imported based on real values live if required, as this is called with each time step
+     *      Colour or opacity could also be modulated
+     */
+    drawUncertainties: function (radius) {
+        var self = this;
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var sigma = radius; // Uncertainty radius in metres
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
+
+            if(currentCircle) {
+                currentCircle.setOptions({center: agent.getPosition()});
+                currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
+            } else {
+                self.$el.gmap("addShape", "Circle", {
+                    id: agentId + "_unc",
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 0,
+                    fillColor: "#0033ff",
+                    fillOpacity: 0.4,
+                    center: agent.getPosition(),
+                    radius: sigma,
+                });
+            }
+        })
+    },
+    /**
+     * To clear the existing circles from the UI
+     */
+    clearUncertainties: function () {
+        self = this
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_unc"];
+            if (currentCircle) {
+                currentCircle.setOptions({visible: false});
+            }
+        });
     },
     updateAllocationRendering: function () {
         var self = this;
