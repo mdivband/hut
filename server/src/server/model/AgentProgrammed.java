@@ -138,14 +138,17 @@ public class AgentProgrammed extends Agent {
             try {
                 setTempRoute(Collections.singletonList(taskController.findTaskByCoord(coordToUse).getCoordinate()));
             } catch (Exception e) {
-                LOGGER.severe("ERROR TRYING TO PERFORM A COMPLETED TASK. RE-ADDING");
-                tempPlaceNewTask("waypoint", coords);
+                //LOGGER.severe("ERROR TRYING TO PERFORM A COMPLETED TASK. RE-ADDING");
+                //tempPlaceNewTask("waypoint", coords);
+                setRoute(coords);
+                return;
             }
         } else {
             // Region or patrol task, represented by its vertices
             coordToUse = Coordinate.findCentre(coords);
             setTempRoute(Collections.singletonList(((PatrolTask) taskController.findTaskByCoord(coordToUse)).getNearestPointAbsolute(this)));
         }
+        // TODO this may need to be reworked with a "going home" ID so others know what's happening and can predict from this
         setAllocatedTaskId(taskController.findTaskByCoord(coordToUse).getId());
     }
 

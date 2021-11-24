@@ -1,6 +1,4 @@
 package server.model;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -40,8 +38,13 @@ public class AgentProgrammer {
         if (leader) {
             if (a.isStopped()) {
                 if (Math.random() < 0.9) {
-                    // temp pass to add a delay
-                    flock();
+                    if (a.getCompletedTasks().size() > 0) {
+                        // temp pass to add a delay. Flock 1 step, then stop again so this gets recalled (as a leader)
+                        a.flockWithAttractionRepulsion();
+                        a.moveAlongHeading(1);
+                        a.stop();
+                    }
+
                 } else {
                     List<Coordinate> task = a.getNearestEmptyTask();
                     if (task != null) {
@@ -72,6 +75,7 @@ public class AgentProgrammer {
      */
     public void flock() {
         if (!a.isGoingHome()) {
+            System.out.println("A: " + strandedCounter);
             if (strandedCounter == 0) {
                 // wait and check
                 if (a.checkForNeighbourMovement()) {
@@ -93,10 +97,15 @@ public class AgentProgrammer {
                 a.goHome();
             }
         } else {
+            System.out.println("B: " + strandedCounter);
             if (a.getPosition().getDistance(a.getHome()) > 150) {
+                System.out.println("B: a");
+                //a.resume();   //TODO stopping here fixes the stranded problem but causes new ones
                 a.followRoute();
             } else {
-                strandedCounter = 0;
+                System.out.println("B: b");
+                LOGGER.severe("GOT HOME");
+                strandedCounter = 1;
                 a.stopGoingHome();
             }
 
@@ -105,10 +114,10 @@ public class AgentProgrammer {
 
     private void pingLeaders() {
         hasNearbyLeader = false;
-        a.sendCustomMessage("PING_LEADERS_SEND", a.getId());  // USe id as return address
+        a.sendCustomMessage("PING_LEADERS_SEND", a.getId());  // Use id as return address
 
         if (!hasNearbyLeader) {
-            LOGGER.severe("Failed to find a nearby leader for agent: " + a.getId());
+            //LOGGER.severe("Failed to find a nearby leader for agent: " + a.getId());
         }
     }
 

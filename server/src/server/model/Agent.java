@@ -273,6 +273,12 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
+    public void clearTempRoute() {
+        synchronized (this.tempRoute) {
+            this.tempRoute.clear();
+        }
+    }
+
     protected double getEPS(){
         return EPS;
     }

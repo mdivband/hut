@@ -26,6 +26,9 @@ public class ProgrammerHandler implements Serializable {
     private Coordinate home = new Coordinate(50.9295, -1.409); // TODO make this inferred from a hub announcement
     private boolean isGoingHome = false;
 
+    private int dbgCounter = 0;
+    private int forgivenessCounter = 0;
+
     /***
      * Constructor. Connects the agent to the programmer s.t. this class behaves akin to an MVC controller
      * @param connectedAgent The agent that this handler controls
@@ -280,6 +283,10 @@ public class ProgrammerHandler implements Serializable {
         agent.setRoute(coords);
     }
 
+    private void setTempRoute(List<Coordinate> coords) {
+        agent.setTempRoute(coords);
+    }
+
 
     /***
      * Adds the given coordinate to the route planned for this agent
@@ -306,12 +313,13 @@ public class ProgrammerHandler implements Serializable {
         agent.moveTowardsDestination();
     }
 
+
+
     /***
      * Completes the task currently set. Also sends this completion message to the network automatically, and adds it
      * to the set of tasks that it will report as complete from now on
      */
     protected void completeTask(){
-        //isGoingHome = false;
 
         List<Coordinate> coords = currentTask;
 
@@ -359,7 +367,10 @@ public class ProgrammerHandler implements Serializable {
      * @param coords
      */
     private void receiveCompleteTask(List<Coordinate> coords){
-        completedTasks.add(coords);
+        if (!completedTasks.contains(coords)) {
+            completedTasks.add(coords);
+        }
+
         tasks.remove(coords);
         //if (agent instanceof AgentReceiver) {
         //    agent.tempRemoveTask(coords);
@@ -478,7 +489,6 @@ public class ProgrammerHandler implements Serializable {
                 sb.append(c.longitude);
 
             }
-
             String msg = "HS_GREET;" + agent.getNetworkId() + ";"
                     + agent.getCoordinate().getLatitude() + ","
                     + agent.getCoordinate().getLongitude() + ","
@@ -487,6 +497,7 @@ public class ProgrammerHandler implements Serializable {
                     + ";" + sb;
             broadcast(msg, radius);
         }
+
     }
 
     /***
@@ -793,7 +804,7 @@ public class ProgrammerHandler implements Serializable {
             // Failed to do this, probably due to incorrect information. We have to allow this mistake to happen,
             // as otherwise we are letting globally known information leak into the process
             tempPlaceNewTask("waypoint", taskCoords);
-            agent.setAllocatedTaskByCoords(taskCoords);
+            //agent.setAllocatedTaskByCoords(taskCoords);
             currentTask = taskCoords;
             agent.setRoute(taskCoords);
             resume();
@@ -953,10 +964,11 @@ public class ProgrammerHandler implements Serializable {
     }
 
     public void goHome(){
-        LOGGER.severe(agent.getId() + " is going home");
+        agent.clearRoute();
+        //LOGGER.severe(agent.getId() + " is going home");
         //tempPlaceNewTask("waypoint", Collections.singletonList(home));
-        setTask(Collections.singletonList(home));
-        //setRoute(Collections.singletonList(home));
+        //setTask(Collections.singletonList(home));
+        setRoute(Collections.singletonList(home));
         isGoingHome = true;
         resume();
     }
@@ -976,6 +988,8 @@ public class ProgrammerHandler implements Serializable {
     public void stopGoingHome() {
         isGoingHome = false;
         agent.clearRoute();
+        //agent.clearTempRoute();
+        stop();
     }
 
     /***
@@ -986,6 +1000,11 @@ public class ProgrammerHandler implements Serializable {
         private Coordinate location;
         private Double heading;
         private Boolean stopped;
+
+        public String toString() {
+            return "At loc=" + location + ", hd=" + heading + ", stp=" + stopped;
+        }
+
 
         public Position(Coordinate loc, Double hd, Boolean stpd){
             location=loc;

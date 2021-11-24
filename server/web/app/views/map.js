@@ -260,6 +260,11 @@ App.Views.Map = Backbone.View.extend({
                         });
 
                     }
+                } else {
+                    if (polyline) {
+                        // Hide the old line, as no route planned. It will be revealed again if it is updated
+                        polyline.setOptions({visible: false});
+                    }
                 }
             });
         } catch (e) {
