@@ -62,6 +62,8 @@ public class State {
     private ArrayList<String> uiOptions = new ArrayList<>();
     private double uncertaintyRadius = 0;
 
+    private Coordinate hubLocation;
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -305,6 +307,14 @@ public class State {
 
     public void setUncertaintyRadius(double uncertaintyRadius) {
         this.uncertaintyRadius = uncertaintyRadius;
+    }
+
+    public void setHubLocation(Coordinate coordinate) {
+        hubLocation = coordinate;
+    }
+
+    public Coordinate getHubLocation() {
+        return hubLocation;
     }
 
     private class HazardHit {

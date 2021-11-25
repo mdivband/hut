@@ -34,6 +34,7 @@ public abstract class Agent extends MObject implements Serializable {
     private boolean simulated;
     private boolean timedOut;
     private boolean working;
+    protected boolean hub = false;
 
     //Used in server but not in client
     private transient long lastHeartbeat;
@@ -82,11 +83,15 @@ public abstract class Agent extends MObject implements Serializable {
                     //TODO this is very inefficient so have removed it for now. Only need to recalculate point if task moves.
                     //route.set(route.size() - 1, ((PatrolTask) task).getNearestPointAbsolute(this));
                 }
+            } else if (task.getType() == Task.TASK_DEEP_SCAN) {
+                //System.out.println("passing");
             }
-            else if(route.size() > 0)
+            else if(route.size() > 0) {
                 route.set(route.size() - 1, task.getCoordinate());
 
-            //Move agents
+                //Move agents
+            }
+
             if (!route.isEmpty() && !isCurrentDestinationReached()) {
                 if (!getSearching()) {
                     moveTowardsDestination();
@@ -251,7 +256,7 @@ public abstract class Agent extends MObject implements Serializable {
         return isReached(this.getFinalDestination());
     }
 
-    private boolean isReached(Coordinate goal) {
+    public boolean isReached(Coordinate goal) {
         if(goal == null)
             return true;
         Coordinate position = this.getCoordinate();

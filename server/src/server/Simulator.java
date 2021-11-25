@@ -248,6 +248,15 @@ public class Simulator {
                 }
             }
 
+            Object hub = GsonUtils.getValue(obj, "hub");
+            if(hub != null) {
+                Double lat = GsonUtils.getValue(hub, "lat");
+                Double lng = GsonUtils.getValue(hub, "lng");
+                agentController.addHubAgent(lat, lng);
+                state.setHubLocation(new Coordinate(lat, lng));
+            }
+
+
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");
             if (agentsJson != null) {
                 for (Object agentJSon : agentsJson) {

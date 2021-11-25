@@ -14,7 +14,8 @@ App.Models.Agent = App.Models.MObject.extend({
         simulated: false,
         timedOut: false,
         timeInAir: 0,
-        working: false
+        working: false,
+        hub: false
     },
     destroy: function() {
         //Remove from collection without posting DELETE request
@@ -55,6 +56,9 @@ App.Models.Agent = App.Models.MObject.extend({
     },
     isWorking: function () {
         return this.get("working");
+    },
+    isHub: function () {
+        return this.get("hub")
     }
 });
 

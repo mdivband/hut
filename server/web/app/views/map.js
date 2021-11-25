@@ -57,7 +57,8 @@ App.Views.Map = Backbone.View.extend({
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
             MarkerMonitor: $.loadIcon("icons/used/marker_monitor.png", "icons/msmarker.shadow.png", 10, 34),
-            TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30)
+            TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
+            FLAG: $.loadIcon("icons/flag_over.png", "icons/man.shadow.png", 15, 15)
         };
 
         this.first = true;

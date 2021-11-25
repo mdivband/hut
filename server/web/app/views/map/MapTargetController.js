@@ -13,6 +13,7 @@ var MapTargetController = {
         this.updateTargetMarkerVisibility = _.bind(this.updateTargetMarkerVisibility, context);
         this.checkForReveal = _.bind(this.checkForReveal, context);
         this.popupTargetFound = _.bind(this.popupTargetFound, context);
+        this.openScanWindow = _.bind(this.openScanWindow, context);
     },
     bindEvents: function () {
         this.state.targets.on("add", function (target) {
@@ -39,8 +40,59 @@ var MapTargetController = {
             zIndex: 1
         });
 
+        var marker = this.$el.gmap("get", "markers")[id];
+        self = this;
+        $(marker).click(function () {
+            MapTargetController.openScanWindow(id, marker, marker.getPosition());
+        })
+
+
         MapTargetController.updateTargetMarkerIcon(target);
         MapTargetController.updateTargetMarkerVisibility(target);
+    },
+    openScanWindow : function (id, marker, position) {
+        try {
+            self = this;
+            this.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
+                var property = document.createElement("div");
+
+                property.innerHTML = _.template($("#target_scan_edit").html(), {});
+                iw.setContent(property);
+                iw.setPosition(position);
+
+                //if (!self.state.isEdit()) {
+                //    $("#task_edit_update").hide();
+                //    $("#task_edit_delete").hide();
+                //    $("#task_priority").attr("readonly","readonly");
+                //    $("#group_size").attr("readonly","readonly");
+                //}
+
+                google.maps.event.addListener(iw, 'domready', function () {
+                    //Update task if values changed
+                    $(property).on("click", "#scan_shallow", function () {
+                        //alert("Scanning shallow");
+                        var newId = "(" + id + ")";
+                        marker.setOptions({labelContent: newId});
+                        MapTaskController.addShallowScanTask(position);
+                        // TODO send instant image back (or maybe send a drone to this target?)
+                    });
+                    $(property).on("click", "#scan_deep", function () {
+                        try {
+                            var newId = "[" + id + "]";
+                            marker.setOptions({labelContent: newId});
+                            MapTaskController.addDeepScanTask(position);
+                            // TODO change the sprite to denote change
+                            // TODO consider also making this now not possible to scan again
+                        } catch (e) {
+                            alert("1112: " + e)
+                        }
+                    });
+
+                });
+            });
+        } catch (e) {
+            alert(e)
+        }
     },
     updateTargetMarkerIcon: function (target) {
         var marker = this.$el.gmap("get", "markers")[target.getId()];

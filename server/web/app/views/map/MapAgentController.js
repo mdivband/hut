@@ -256,6 +256,7 @@ var MapAgentController = {
     updateAgentMarkerIcon: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         var icon;
+
         if (agent.getId() === this.views.clickedAgent)
             icon = this.icons.UAVSelected;
         else {
@@ -263,6 +264,10 @@ var MapAgentController = {
                 icon = this.icons.UAVManual;
             else if(agent.isTimedOut())
                 icon = this.icons.UAVTimedOut;
+            else if(agent.isHub()) {
+                icon = this.icons.FLAG;
+                marker.setOptions({clickable: false, draggable: false})
+            }
             else
                 icon = this.icons.UAV;
         }

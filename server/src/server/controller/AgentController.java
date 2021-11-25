@@ -1,13 +1,9 @@
 package server.controller;
 
 import server.Simulator;
-import server.model.Agent;
-import server.model.AgentVirtual;
-import server.model.Coordinate;
-import server.model.Sensor;
+import server.model.*;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
-import server.model.AgentReal;
 
 import java.util.List;
 import java.util.Map;
@@ -38,6 +34,13 @@ public class AgentController extends AbstractController {
     public synchronized Agent addVirtualAgent(double lat, double lng, double heading) {
         Agent agent = new AgentVirtual(generateUID(), new Coordinate(lat, lng), sensor);
         agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    public synchronized Agent addHubAgent(double lat, double lng) {
+        // We assume just one HUB, so this is a unique ID
+        Agent agent = new AgentHub("HUB", new Coordinate(lat, lng), sensor);
         simulator.getState().add(agent);
         return agent;
     }

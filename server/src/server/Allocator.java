@@ -7,6 +7,7 @@ import maxsum.Domain;
 import maxsum.MaxSum;
 import maxsum.Variable;
 import server.model.Agent;
+import server.model.AgentHub;
 import server.model.Coordinate;
 import server.model.MObject;
 import server.model.task.PatrolTask;
@@ -51,7 +52,7 @@ public class Allocator {
     public void runAutoAllocation() {
         Map<String, String> allocation = new HashMap<>();
         List<Agent> agentsToAllocate = new ArrayList<>(simulator.getState().getAgents());
-        agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut());
+        agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub));
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 

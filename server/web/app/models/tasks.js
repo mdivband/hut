@@ -42,7 +42,10 @@ App.Collections.Tasks = Backbone.Collection.extend({
     TASK_WAYPOINT: 0,
     TASK_MONITOR: 1,
 	TASK_PATROL: 2,
-	TASK_REGION: 3
+	TASK_REGION: 3,
+
+	TASK_DEEP_SCAN: 4,
+	TASK_SHALLOW_SCAN: 5
 });
 
 App.Collections.CompletedTasks = Backbone.Collection.extend({

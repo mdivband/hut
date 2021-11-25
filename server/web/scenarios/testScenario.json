@@ -5,6 +5,10 @@
     "predictions": true,
     "uncertainties": true
   },
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
   "uncertaintyRadius": 20.0,
   "gameCentre": {
     "lat": 50.929378522204615,

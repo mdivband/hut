@@ -23,6 +23,8 @@ var MapTaskController = {
         this.onPatrolTaskRightClick = _.bind(this.onPatrolTaskRightClick, context);
         this.openTaskEditWindow = _.bind(this.openTaskEditWindow, context);
         this.processRegionTaskChange = _.bind(this.processRegionTaskChange, context);
+        this.addDeepScanTask = _.bind(this.addDeepScanTask, context);
+        this.addShallowScanTask = _.bind(this.addShallowScanTask, context);
     },
     /**
      * Bind listeners for task state add, change and remove events
@@ -459,6 +461,20 @@ var MapTaskController = {
         corners.push(sw.lat(), sw.lng());
         $.post("/tasks/region/update/" + taskId, {
             corners: corners.toString()
+        });
+    },
+    addDeepScanTask: function (position) {
+        $.post("/tasks", {
+            type: this.state.tasks.TASK_DEEP_SCAN,
+            lat: position.lat,
+            lng: position.lng
+        });
+    },
+    addShallowScanTask: function (position) {
+        $.post("/tasks", {
+            type: this.state.tasks.TASK_SHALLOW_SCAN,
+            lat: position.lat,
+            lng: position.lng
         });
     }
 };
