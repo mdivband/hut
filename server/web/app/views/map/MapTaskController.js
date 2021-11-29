@@ -211,6 +211,9 @@ var MapTaskController = {
     onTaskCompleted: function (task) {
         console.log("Task completed " + task.getId());
         var self = this;
+
+        // TODO Maybe consider changing the image now. Probably not until the image is dealt with though
+
         var uid = task.getId() + "_completed";
         var content = _.template($("#popup_left_right").html(), {
             left_content: task.getId() + " has been completed",

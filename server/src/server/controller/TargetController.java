@@ -2,6 +2,7 @@ package server.controller;
 
 import server.Simulator;
 import server.model.Coordinate;
+import server.model.target.AdjustableTarget;
 import server.model.target.HumanTarget;
 import server.model.target.Target;
 
@@ -32,6 +33,9 @@ public class TargetController extends AbstractController {
             case Target.HUMAN:
                 target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
                 break;
+            case Target.ADJUSTABLE:
+                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng));
+                break;
             default:
                 throw new RuntimeException("Unrecognized target type - " + type);
         }
@@ -56,4 +60,22 @@ public class TargetController extends AbstractController {
     }
 
 
+    public void adjustForTask(int taskType, double lat, double lng) {
+        for (Target t : Simulator.instance.getState().getTargets()) {
+            //System.out.println("Checking : ");
+            //System.out.println("    lat: " + t.getCoordinate().getLatitude());
+           // System.out.println("    lng: " + t.getCoordinate().getLongitude());
+            try {
+                if (t.getCoordinate().getLatitude() == lat && t.getCoordinate().getLongitude() == lng) {
+                    System.out.println("Located target for this task");
+                    t.setType(taskType);
+                    //AdjustableTarget aT = (AdjustableTarget) t;
+                    //aT.setStatus(taskType);
+                }
+            } catch (Exception e) {
+                System.out.println("Error changing sprite. Probably due to casting error");
+                e.printStackTrace();
+            }
+        }
+    }
 }

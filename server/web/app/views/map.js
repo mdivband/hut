@@ -58,7 +58,15 @@ App.Views.Map = Backbone.View.extend({
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
             MarkerMonitor: $.loadIcon("icons/used/marker_monitor.png", "icons/msmarker.shadow.png", 10, 34),
             TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
-            FLAG: $.loadIcon("icons/flag_over.png", "icons/man.shadow.png", 15, 15)
+
+            TargetUnknown: $.loadIcon("icons/question.png", "icons/man.shadow.png", 30, 30),
+            TargetDeepScan: $.loadIcon("icons/rectangle_red.png", "icons/man.shadow.png", 30, 30),
+            TargetShallowScan: $.loadIcon("icons/rectangle_green.png", "icons/man.shadow.png", 30, 30),
+            TargetDismissed: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
+            TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
+
+
+            FLAG: $.loadIcon("icons/flag_up.png", "icons/man.shadow.png", 15, 15)
         };
 
         this.first = true;

@@ -1,10 +1,6 @@
 package server;
 
-import server.controller.AgentController;
-import server.controller.ConnectionController;
-import server.controller.TaskController;
-import server.controller.TargetController;
-import server.controller.HazardController;
+import server.controller.*;
 import server.model.Agent;
 import server.model.Coordinate;
 import server.model.Sensor;
@@ -41,6 +37,8 @@ public class Simulator {
     private final HazardController hazardController;
     private final Allocator allocator;
 
+    private final ImageController imageController;
+
     public static Simulator instance;
 
     private static final double gameSpeed = 6;
@@ -57,6 +55,8 @@ public class Simulator {
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
+
+        imageController = new ImageController(this);
 
         queueManager.initDroneDataConsumer();
     }
@@ -370,4 +370,7 @@ public class Simulator {
         return queueManager;
     }
 
+    public ImageController getImageController() {
+        return imageController;
+    }
 }

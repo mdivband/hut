@@ -3,6 +3,7 @@ package server.controller;
 import server.Simulator;
 import server.model.Agent;
 import server.model.Coordinate;
+import server.model.target.AdjustableTarget;
 import server.model.task.*;
 
 import java.util.ArrayList;
@@ -33,9 +34,11 @@ public class TaskController extends AbstractController {
                 break;
             case Task.TASK_DEEP_SCAN:
                 task = new DeepScanTask(id, new Coordinate(lat, lng));
+                simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
                 break;
             case Task.TASK_SHALLOW_SCAN:
                 task = new ShallowScanTask(id, new Coordinate(lat, lng));
+                simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
                 break;
             default:
                 throw new IllegalArgumentException("Unable to create task of type " + taskType);

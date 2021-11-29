@@ -43,14 +43,14 @@ var MapTargetController = {
         var marker = this.$el.gmap("get", "markers")[id];
         self = this;
         $(marker).click(function () {
-            MapTargetController.openScanWindow(id, marker, marker.getPosition());
+            MapTargetController.openScanWindow(target, marker);
         })
 
 
         MapTargetController.updateTargetMarkerIcon(target);
         MapTargetController.updateTargetMarkerVisibility(target);
     },
-    openScanWindow : function (id, marker, position) {
+    openScanWindow : function (target, marker) {
         try {
             self = this;
             this.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
@@ -58,7 +58,7 @@ var MapTargetController = {
 
                 property.innerHTML = _.template($("#target_scan_edit").html(), {});
                 iw.setContent(property);
-                iw.setPosition(position);
+                iw.setPosition(target.getPosition());
 
                 //if (!self.state.isEdit()) {
                 //    $("#task_edit_update").hide();
@@ -69,23 +69,34 @@ var MapTargetController = {
 
                 google.maps.event.addListener(iw, 'domready', function () {
                     //Update task if values changed
+
+                    // TODO clear old tasks when one is added (IMPORTANT!)
+
                     $(property).on("click", "#scan_shallow", function () {
                         //alert("Scanning shallow");
-                        var newId = "(" + id + ")";
+                        var newId = "(" + target.getId() + ")";
                         marker.setOptions({labelContent: newId});
-                        MapTaskController.addShallowScanTask(position);
+                        MapTaskController.addShallowScanTask(target.getPosition());
+                        MapTargetController.updateTargetMarkerIcon(target);
+                        icon = self.icons.TargetShallowScan;
+                        marker.setIcon(icon.Image)
+
                         // TODO send instant image back (or maybe send a drone to this target?)
                     });
                     $(property).on("click", "#scan_deep", function () {
                         try {
-                            var newId = "[" + id + "]";
+                            var newId = "[" + target.getId() + "]";
                             marker.setOptions({labelContent: newId});
-                            MapTaskController.addDeepScanTask(position);
-                            // TODO change the sprite to denote change
-                            // TODO consider also making this now not possible to scan again
+                            MapTaskController.addDeepScanTask(target.getPosition());
+                            MapTargetController.updateTargetMarkerIcon(target);
+                            icon = self.icons.TargetDeepScan;
+                            marker.setIcon(icon.Image)
+
                         } catch (e) {
-                            alert("1112: " + e)
+                            alert(e)
                         }
+
+                        // TODO consider also making this now not possible to scan again
                     });
 
                 });
@@ -97,12 +108,39 @@ var MapTargetController = {
     updateTargetMarkerIcon: function (target) {
         var marker = this.$el.gmap("get", "markers")[target.getId()];
         var icon;
-        switch (target.getType()) {
-            case this.state.targets.HUMAN:
-                icon = this.icons.TargetHuman;
-                break;
-            default:
-                console.log("No icon found for target type " + target.getType());
+        //alert("t = " + target.getType());
+        try {
+            switch (target.getType()) {
+                case this.state.targets.HUMAN:
+                    icon = this.icons.TargetHuman;
+                    break;
+                case this.state.targets.ADJUSTABLE:
+                    icon = this.icons.TargetUnknown;
+                    break;
+                //alert("adj")
+                //alert("stat got, = " + target.getStatus())
+                //switch (target.getStatus()) {
+                //case this.state.targets.ADJ_UNKNOWN:
+                //    icon = this.icons.TargetUnknown;
+                //    break;
+                case this.state.targets.ADJ_DEEP_SCAN:
+                    icon = this.icons.TargetDeepScan;
+                    break;
+                case this.state.targets.ADJ_SHALLOW_SCAN:
+                    icon = this.icons.TargetShallowScan;
+                    break;
+                case this.state.targets.ADJ_DISMISSED:
+                    icon = this.icons.TargetDismissed;
+                    break;
+                case this.state.targets.ADJ_FOUND:
+                    icon = this.icons.TargetFound;
+                    break;
+                //}
+                default:
+                    console.log("No icon found for target type " + target.getType());
+            }
+        } catch (e) {
+           alert("eee + " + e)
         }
         if (icon) {
             marker.setIcon(icon.Image);
