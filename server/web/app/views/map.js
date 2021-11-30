@@ -35,6 +35,7 @@ App.Views.Map = Backbone.View.extend({
         MapTaskController.bind(this);
         MapHazardController.bind(this);
         MapTargetController.bind(this);
+        MapImageController.bind(this);
 
         this.mapOptions = {
             zoom: 18,
@@ -77,6 +78,7 @@ App.Views.Map = Backbone.View.extend({
         MapTaskController.bindEvents();
         MapHazardController.bindEvents();
         MapTargetController.bindEvents();
+        MapImageController.bindEvents();
 
         setTimeout(function () {
             self.setupROS();

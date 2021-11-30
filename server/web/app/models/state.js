@@ -26,7 +26,8 @@ App.Models.State  = Backbone.Model.extend({
             '1': []
         },
         uiOptions: {},
-        uncertaintyRadius: 0
+        uncertaintyRadius: 0,
+        storedImages : {"abc" : "efg"}
 
 	},
     url: function() {
@@ -126,5 +127,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getUncertaintyRadius: function () {
         return this.get("uncertaintyRadius");
+    },
+    getStoredImages: function () {
+        return this.get("storedImages")
     }
 });

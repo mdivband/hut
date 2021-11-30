@@ -290,7 +290,18 @@ public class Simulator {
                     Double lat = GsonUtils.getValue(targetJson, "lat");
                     Double lng = GsonUtils.getValue(targetJson, "lng");
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
-                    Target target = targetController.addTarget(lat, lng, type);
+                    Target target;
+                    if (GsonUtils.hasKey(targetJson, "real")) {
+                        boolean isReal = GsonUtils.getValue(targetJson, "real");
+                        if (isReal) {
+                            target = targetController.addTarget(lat, lng, type);
+                        } else {
+                            target = targetController.addTarget(lat, lng, type, true);
+                        }
+                    } else {
+                        target = targetController.addTarget(lat, lng, type);
+                    }
+
                     //Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), false);
                 }

@@ -41,7 +41,8 @@ public class ShallowScanTask extends Task {
                     System.out.println("================");
                     System.out.println("SHALLOW SCAN IMAGE TAKEN HERE");
                     System.out.println("TODO - Here we will instantly send the image");
-                    String imageName = Simulator.instance.getImageController().getImageName(1,2,3);
+                    //String imageName = Simulator.instance.getImageController().getImageName(1,2,3);
+                    Simulator.instance.getImageController().takeImage(agent.getCoordinate(), false);
 
                     return true;
                 }

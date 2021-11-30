@@ -34,7 +34,23 @@ public class TargetController extends AbstractController {
                 target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
                 break;
             case Target.ADJUSTABLE:
-                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng));
+                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), true);
+                break;
+            default:
+                throw new RuntimeException("Unrecognized target type - " + type);
+        }
+        simulator.getState().add(target);
+        return target;
+    }
+
+    public synchronized Target addTarget(double lat, double lng, int type, boolean isReal) {
+        Target target;
+        switch(type) {
+            case Target.HUMAN:
+                target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
+                break;
+            case Target.ADJUSTABLE:
+                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), isReal);
                 break;
             default:
                 throw new RuntimeException("Unrecognized target type - " + type);
@@ -78,4 +94,19 @@ public class TargetController extends AbstractController {
             }
         }
     }
+
+    public Target getTargetAt(Coordinate c) {
+        for (Target t : Simulator.instance.getState().getTargets()) {
+            if(t.getCoordinate().getDistance(c) < 1) {  // TODO work out appropriate epsilon value
+                System.out.println("Found target at " + c + " ("+t.getId()+")");
+                return t;
+            }
+        }
+        return null;
+    }
+
+    public void requestImage(String id) {
+        simulator.getImageController().requestImage(id);
+    }
+
 }

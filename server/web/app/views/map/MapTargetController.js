@@ -13,6 +13,7 @@ var MapTargetController = {
         this.updateTargetMarkerVisibility = _.bind(this.updateTargetMarkerVisibility, context);
         this.checkForReveal = _.bind(this.checkForReveal, context);
         this.popupTargetFound = _.bind(this.popupTargetFound, context);
+        this.getTargetAt = _.bind(this.getTargetAt, context);
         this.openScanWindow = _.bind(this.openScanWindow, context);
     },
     bindEvents: function () {
@@ -162,6 +163,16 @@ var MapTargetController = {
                 }
             }
         });
+    },
+    getTargetAt : function (position) {
+        var ret = null;
+        this.state.targets.each(function (target) {
+            var dist = google.maps.geometry.spherical.computeDistanceBetween(position, target.getPosition());
+            if (dist === 0) {  // might need to use an epsilon error to cover rounding
+                ret = target;
+            }
+        });
+        return ret;
     },
     popupTargetFound: function (target) {
         var self = this;

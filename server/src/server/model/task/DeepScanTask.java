@@ -36,6 +36,7 @@ public class DeepScanTask extends Task {
                 System.out.println("================");
                 System.out.println("DEEP SCAN IMAGE TAKEN HERE");
                 System.out.println("TODO - Here we will send a request to he controller to prepare the image");
+                Simulator.instance.getImageController().takeImage(agent.getCoordinate(), true);
                 imageTaken = true;
             }
         }

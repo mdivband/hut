@@ -11,10 +11,7 @@ import server.model.task.Task;
 import tool.GsonUtils;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -64,6 +61,9 @@ public class State {
 
     private Coordinate hubLocation;
 
+    //                       ID->ImageName
+    private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -94,6 +94,8 @@ public class State {
         allocation.clear();
         tempAllocation.clear();
         hazardHits.clear();
+
+        storedImages.clear();
 
         hazardHits.init();
     }
@@ -315,6 +317,14 @@ public class State {
 
     public Coordinate getHubLocation() {
         return hubLocation;
+    }
+
+    public Map<String, String> getStoredImages() {
+        return storedImages;
+    }
+
+    public void addToStoredImages(String id, String filename) {
+        storedImages.put(id, filename);
     }
 
     private class HazardHit {
