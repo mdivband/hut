@@ -51,6 +51,19 @@ var simulator = {
             forEditMode: true
         });
 
+        try {
+            this.views.images = new App.Views.Images({
+                el: $("#scans_list"),
+                state: this.state,
+                views: this.views,
+                //ctx: $("#scans_button_panel").get(0).getContext("2d"),
+                //canvas: $("#scans_button_panel").get(0),
+                forEditMode: true
+            });
+        } catch (e) {
+            alert("error creating images.js: " + e)
+        }
+
         // setup accordion for jquery ui
         $("#accordion_smallview").accordion({
             collapsible: true
@@ -102,7 +115,7 @@ var simulator = {
             .done(function () {
                 if (!self.initialisedState) {
                     self.initialisedState = true;
-                    MapController.swapMode(self.state.isEdit(), false);
+                    MapController.swapMode(self.state.getEditMode(), false);
 
                     if (self.state.attributes.prov_doc == null) {
                         var api = new $.provStoreApi({

@@ -8,7 +8,7 @@ App.Models.State  = Backbone.Model.extend({
 		allocation: {},
         tempAllocation: {},
         droppedAllocation: {},
-        editMode: true,
+        editMode: 1,
         inProgress: false,
 		gameId: null,
         gameType: null,
@@ -27,7 +27,7 @@ App.Models.State  = Backbone.Model.extend({
         },
         uiOptions: {},
         uncertaintyRadius: 0,
-        storedImages : {"abc" : "efg"}
+        storedImages : {}
 
 	},
     url: function() {
@@ -102,7 +102,7 @@ App.Models.State  = Backbone.Model.extend({
     getHazardHits: function(type) {
         return this.get("hazardHits")[type];
     },
-	isEdit:function(){
+	getEditMode:function(){
 		return this.get("editMode");
 	},
     isAllocationUndoAvailable: function (){
@@ -114,13 +114,27 @@ App.Models.State  = Backbone.Model.extend({
     isInProgress: function (){
         return this.get("inProgress");
     },
-    toggleEdit: function(toEditMode) {
-		 this.set("editMode", toEditMode);
-		 $.post("/changeview", {edit: toEditMode});
-		 if (toEditMode)
-		 	$("#map_title").html("Edit Mode");
-		 else
-		 	$("#map_title").html("Monitor Mode");
+    pushMode: function(modeFlag) {
+        // modeflag 1 = monitor
+        //          2 = edit
+        //          3 = images
+        if (modeFlag === 2) {
+            this.set("editMode", 2);
+            $("#map_title").html("Edit Mode");
+        } else if (modeFlag === 1) {
+            this.set("editMode", 1);
+            $("#map_title").html("Monitor Mode");
+        }
+
+        // TODO Swithcing modes causes issues, probably due to backend not handling it correctly
+
+        //else if (modeFlag === 3) {
+        //    this.set("editMode", 3);
+        //    $("#map_title").html("Image Review");
+        //}
+
+		 $.post("/changeview", {edit: modeFlag});
+
 	},
     getUiOptions: function () {
         return this.get("uiOptions");

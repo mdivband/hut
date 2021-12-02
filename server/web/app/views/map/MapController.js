@@ -17,6 +17,7 @@ var MapController = {
         this.onConfirmAllocationClick = _.bind(this.onConfirmAllocationClick, context);
         this.onViewModePressed = _.bind(this.onViewModePressed, context);
         this.onMonitorModePressed = _.bind(this.onMonitorModePressed, context);
+        this.onScanModePressed = _.bind(this.onScanModePressed, context)
         this.onEditModePressed = _.bind(this.onEditModePressed, context);
         this.swapMode = _.bind(this.swapMode, context);
         this.onTick = _.bind(this.onTick, context);
@@ -32,6 +33,7 @@ var MapController = {
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
+
     },
     /**
      * Bind listeners for map view.
@@ -112,7 +114,7 @@ var MapController = {
             MapController.onUndoRedoAvailableChange();
         });
         this.state.on("change:editMode", function () {
-            MapController.swapMode(self.state.isEdit(), false);
+            MapController.swapMode(self.state.getEditMode(), false);
         });
 
         //Map listeners
@@ -165,7 +167,7 @@ var MapController = {
         $.post("/allocation/confirm", function () {
             self.state.fetch({
                 success: function () {
-                    MapController.swapMode(false, true);
+                    MapController.swapMode(1, true);
                 }
             });
         });
@@ -176,22 +178,29 @@ var MapController = {
     onViewModePressed: function (viewModeValue) {
         if (viewModeValue === "monitor")
             MapController.onMonitorModePressed();
-        else
+        else if (viewModeValue === "editmode")
             MapController.onEditModePressed();
+        else {
+            MapController.onScanModePressed();
+        }
     },
     onMonitorModePressed: function () {
-        if(this.state.isEdit()) {
+        if(this.state.getEditMode() !== 1) {
             var mainAllocation = this.state.getAllocation();
             var tempAllocation = this.state.getTempAllocation();
             if(_.compareAllocations(mainAllocation, tempAllocation))
-                MapController.swapMode(false, true);
+                MapController.swapMode(1, true);
             else
                 MapController.abortAllocation();
         }
     },
     onEditModePressed: function () {
-        if(!this.state.isEdit())
-            MapController.swapMode(true, true);
+        if(this.state.getEditMode() !== 2)
+            MapController.swapMode(2, true);
+    },
+    onScanModePressed: function () {
+        if(this.state.getEditMode() !== 3)
+            MapController.swapMode(3, true);
     },
     onTick: function () {
         var time = $.fromTime(this.state.getTime());
@@ -287,10 +296,13 @@ var MapController = {
     /**
      * Swaps the UI mode (typically monitor/task view)
      * I have added a check for UI options specified in the scenario file -WH
-     * @param toEditMode
+     * @param modeFlag
      * @param sendUpdate
      */
-    swapMode: function (toEditMode, sendUpdate) {
+    swapMode: function (modeFlag, sendUpdate) {
+        // modeflag 1 = monitor
+        //          2 = edit
+        //          3 = images
         self = this;
         this.state.getUiOptions().forEach(function (option) {
             if (option === "predictions") {
@@ -306,24 +318,40 @@ var MapController = {
         }
 
 
-        if(toEditMode) {
+        if(modeFlag === 2) {  // edit
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();
             $("#edit_buttons_sub").show();
             $("#sandbox_buttons_sub").show();
             MapController.onUndoRedoAvailableChange();
-        } else {
+            $("#scan_view").hide();
+            $('#scanmode').prop("checked", false);
+            $('#editmode').prop("checked", true);
+            $('#monitor').prop("checked", false);
+        } else if (modeFlag === 1) { // monitor
             $("#monitor_accordions").show();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();
             $("#sandbox_buttons_sub").hide();
+            $("#scan_view").hide();
+            $('#scanmode').prop("checked", false);
+            $('#editmode').prop("checked", false);
+            $('#monitor').prop("checked", true);
+        } else {  // scans
+            $("#monitor_accordions").hide();
+            $("#edit_contexts").hide();
+            $("#edit_buttons_sub").hide();
+            $("#sandbox_buttons_sub").hide();
+            $("#scan_view").show();
+            $('#scanmode').prop("checked", true);
+            $('#editmode').prop("checked", false);
+            $('#monitor').prop("checked", false);
         }
-        $('#monitor').prop("checked", !toEditMode);
-        $('#editmode').prop("checked", toEditMode);
+
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
         if(sendUpdate)
-            this.state.toggleEdit(toEditMode);
+            this.state.pushMode(modeFlag);
     },
     abortAllocation: function() {
         var mainAllocation = this.state.getAllocation();
@@ -333,7 +361,7 @@ var MapController = {
         else
             cancelConfirmed = confirm("This will result with an empty allocation. Continue?");
         if(cancelConfirmed)
-            MapController.swapMode(false, true);
+            MapController.swapMode(1, true);
     },
     processWaypointChange: function(agentId, polyline, vertex, insert) {
         var path = polyline.getPath();

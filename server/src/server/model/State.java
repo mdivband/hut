@@ -29,7 +29,7 @@ public class State {
     private String allocationMethod = "maxsum";
     private Boolean flockingEnabled = false;
     private double time;
-    private boolean editMode;
+    private int editMode;
 
     private String prov_doc;
 
@@ -83,7 +83,7 @@ public class State {
 
     public synchronized void reset() {
         time = 0;
-        editMode = false;
+        editMode = 1;
         inProgress = false;
 
         agents.clear();
@@ -180,11 +180,11 @@ public class State {
         setTime(this.time + increment);
     }
 
-    public synchronized boolean isEditMode() {
+    public synchronized int getEditMode() {
         return editMode;
     }
 
-    public synchronized void setEditMode(boolean editMode) {
+    public synchronized void setEditMode(int editMode) {
         this.editMode = editMode;
     }
 

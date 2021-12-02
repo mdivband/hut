@@ -165,7 +165,7 @@ var MapAgentController = {
                     deleteButton.hide();
                     dropoutButton.hide();
                 }
-                else if (!self.state.isEdit())
+                else if (self.state.getEditMode() === 1)
                     deleteButton.hide();
 
                 if(agent.isTimedOut())
@@ -191,7 +191,7 @@ var MapAgentController = {
     },
     onAgentMarkerDrag: function (marker) {
         var agent = this.state.agents.get(marker.id);
-        if(this.state.isEdit() && !agent.isTimedOut() && !agent.getManuallyControlled()) {
+        if(this.state.getEditMode() === 2 && !agent.isTimedOut() && !agent.getManuallyControlled()) {
             //Agent marker dragging is used for manual allocation
             MapAgentController.isManuallyAllocating = true;
 

@@ -351,7 +351,7 @@ App.Views.Map = Backbone.View.extend({
 
             //Draw or hide 'real' allocation.
             if (agentId in mainAllocation) {
-                if (!self.state.isEdit())
+                if (self.state.getEditMode() === 1)
                     MapTaskController.updateTaskRendering(mainAllocation[agentId], self.MarkerColourEnum.GREEN);
                 if (!agent.isWorking())
                     self.drawAllocation(mainLineId, "green", agentId, mainAllocation[agentId]);
@@ -362,7 +362,7 @@ App.Views.Map = Backbone.View.extend({
                 self.hidePolyline(mainLineId);
 
             //Draw or hide 'temp' allocation.
-            if (self.state.isEdit() && agentId in tempAllocation) {
+            if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
                 MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
                 if((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
                     self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
@@ -371,7 +371,7 @@ App.Views.Map = Backbone.View.extend({
                 self.hidePolyline(tempLineId);
 
             //Draw or hide 'dropped' allocation.
-            if (self.state.isEdit() && agentId in droppedAllocation)
+            if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
                 self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
             else
                 self.hidePolyline(droppedLineId);
@@ -533,7 +533,7 @@ App.Views.Map = Backbone.View.extend({
         var tempAllocation = this.state.getTempAllocation();
         var self = this;
 
-        if (this.state.isEdit()) {
+        if (this.state.getEditMode() === 2) {
             var originalDist = 0;
             var originalTime = 0;
             var newDist = 0;

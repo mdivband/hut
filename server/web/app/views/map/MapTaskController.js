@@ -216,7 +216,7 @@ var MapTaskController = {
         var uid = task.getId() + "_completed";
         if (task.getType() === this.state.tasks.TASK_SHALLOW_SCAN || task.getType() === this.state.tasks.TASK_DEEP_SCAN) {
             var content = _.template($("#popup_left_right").html(), {
-                left_content: task.getId() + " scanned, image ready. Click to view",
+                left_content: task.getId() + " scanned.",
                 right_content: "View",
                 uid: uid
             });
@@ -228,6 +228,7 @@ var MapTaskController = {
 
             // TODO Maybe mount this on the target popup instead
             $("#" + uid).on('click', function () {
+                alert("temp approach. In future this should change view and trigger an opening of this image");
                 MapImageController.showImage(task)
             });
 
@@ -257,13 +258,13 @@ var MapTaskController = {
     onTaskMarkerDrag: function (marker) {
         var task = this.state.tasks.get(marker.id);
         //Keep marker in same place if not in edit mode.
-        if(!this.state.isEdit())
+        if(this.state.getEditMode() === 1)
             marker.setPosition(task.getPosition());
         this.updateAllocationRendering();
     },
     onTaskMarkerDragEnd: function (marker) {
         var task = this.state.tasks.get(marker.id);
-        if (this.state.isEdit()) {
+        if (this.state.getEditMode() === 2) {
             if (this.state.tasks.get(marker.id)) {
                 var latlng = _.coordinate(marker.getPosition());
                 $.post("/tasks/" + marker.id, {
@@ -299,7 +300,7 @@ var MapTaskController = {
             var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];
             polyline.setOptions({
                 strokeColor: colourOptions['name'],
-                editable: self.state.isEdit()
+                editable: (self.state.getEditMode() === 2)
             });
             MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
             var marker = this.$el.gmap("get", "markers")[taskId];
@@ -321,7 +322,7 @@ var MapTaskController = {
             rect.setOptions({
                 fillColor: colourOptions['name'],
                 strokeColor: colourOptions['name'],
-                editable: self.state.isEdit()
+                editable: (self.state.getEditMode() === 2)
             });
             MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
             var marker = this.$el.gmap("get", "markers")[taskId];
@@ -428,7 +429,7 @@ var MapTaskController = {
             iw.setContent(property);
             iw.setPosition(position);
 
-            if (!self.state.isEdit()) {
+            if (self.state.getEditMode() === 1) {
                 $("#task_edit_update").hide();
                 $("#task_edit_delete").hide();
                 $("#task_priority").attr("readonly","readonly");

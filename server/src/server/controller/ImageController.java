@@ -41,16 +41,20 @@ public class ImageController {
                 if (at.isReal()) {
                     // TODO filepath
                     if (isDeep) {
+                        System.out.println("Adding image for agent: " +at.getId() + ", using " +  tempHighResTP + "( it's real)");
                         addImage(at.getId(), tempHighResTP, true);
                     } else {
+                        System.out.println("Adding image for agent: " +at.getId() + ", using " +  tempLowResTP + "( it's real)");
                         addImage(at.getId(), tempLowResTP, false);
                     }
 
                 } else {
                     // TODO filepath
                     if (isDeep) {
+                        System.out.println("Adding image for agent: " +at.getId() + ", using " +  tempHighResFP + "( it's false)");
                         addImage(at.getId(), tempHighResFP, true);
                     } else {
+                        System.out.println("Adding image for agent: " +at.getId() + ", using " +  tempLowResFP + "( it's false)");
                         addImage(at.getId(), tempLowResFP, false);
                     }
                 }

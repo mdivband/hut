@@ -72,6 +72,7 @@ $LAB.setOptions({
     .script("app/views/graph.js")
     .script("app/views/camera.js")
     .script("app/views/map.js")
+    .script("app/views/images.js")
     .script("app/views/map/MapController.js")
     .script("app/views/map/MapAgentController.js")
     .script("app/views/map/MapTaskController.js")

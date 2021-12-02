@@ -174,16 +174,16 @@ public class Simulator {
         }
     }
 
-    public void changeView(boolean toEdit) {
-        if (toEdit) {
+    public void changeView(int modeFlag) {
+        if (modeFlag == 2) {
             agentController.stopAllAgents();
             agentController.updateAgentsTempRoutes();
             allocator.copyRealAllocToTempAlloc();
             allocator.clearAllocationHistory();
-            state.setEditMode(true);
-        } else {
+            state.setEditMode(2);
+        } else if (modeFlag == 1){
             allocator.confirmAllocation(state.getAllocation());
-            state.setEditMode(false);
+            state.setEditMode(1);
         }
     }
 
@@ -293,11 +293,7 @@ public class Simulator {
                     Target target;
                     if (GsonUtils.hasKey(targetJson, "real")) {
                         boolean isReal = GsonUtils.getValue(targetJson, "real");
-                        if (isReal) {
-                            target = targetController.addTarget(lat, lng, type);
-                        } else {
-                            target = targetController.addTarget(lat, lng, type, true);
-                        }
+                        target = targetController.addTarget(lat, lng, type, isReal);
                     } else {
                         target = targetController.addTarget(lat, lng, type);
                     }

@@ -23,6 +23,7 @@
         <!-- Map Panel -->
         <div class="ui-layout-center">
             <div id="map_canvas"></div>
+            <div id="image_review_canvas" style="display: none;"></div>
             <!-- <div id="camera_canvas" style="display: none;"></div> -->
 
             <!-- Added by Y submapviews -->
@@ -44,11 +45,13 @@
                 <!--Added by Y -->
                 <!-- view mode change buttons -->
                 <form>
-                    <div id="view_mode" class="fixed">
+                    <div id="view_mode" class="fixed-top">
                         <input type="radio" id="monitor" name="radio" value="monitor"><label
                             for="monitor">Monitor</label>
-                        <input type="radio" id="editmode" name="radio" value="editmode"><label for="editmode">Task
-                        Edit</label>
+                        <input type="radio" id="editmode" name="radio" value="editmode"><label
+                            for="editmode">Task Edit</label>
+                        <input type="radio" id="scanmode" name="radio" value="scanmode"><label
+                            for="scanmode">View Scans</label>
                     </div>
                 </form>
                 <!-- END Y -->
@@ -156,6 +159,20 @@
                     </div>
 
                 </div>
+
+                <div id="scan_view">
+
+                    <div id="scans_list">
+                        <h3>Scans</h3>
+                        <div id = "button_panel">
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+
 
 
                 <div id="controller" style="display: none;">

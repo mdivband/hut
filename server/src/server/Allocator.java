@@ -59,9 +59,9 @@ public class Allocator {
         String allocationMethod = simulator.getState().getAllocationMethod();
 
         if(allocationMethod.equals("maxsum")){
-            allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+            allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
         } else if(allocationMethod.equals("random")) {
-            allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+            allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
         }
 
         simulator.getState().setTempAllocation(allocation);
