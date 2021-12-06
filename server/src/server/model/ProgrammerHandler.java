@@ -1,6 +1,9 @@
 package server.model;
 
+import com.google.gson.Gson;
 import server.model.task.Task;
+import tool.GsonUtils;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.logging.Logger;
@@ -10,12 +13,17 @@ import java.util.logging.Logger;
  * structure and convert things to more easily understandable formats
  */
 public class ProgrammerHandler implements Serializable {
+    // To make JSON output more usable. These may be too much info
+    private final String simID;
+    private String networkID;
+    private Coordinate believedPosition;
+
     private final int SENSE_RANGE = 200; // The max (and default) radius used for sensing neighbours etc
     private int pingCounter = 0;
     private final int pingTimeout = 5; // (5x200ms = every 1 seconds)
 
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
-    AgentProgrammed agent;
+    protected transient AgentProgrammed agent;
     private final transient AgentProgrammer agentProgrammer;
 
     private HashMap<String, Position> neighbours;
@@ -39,17 +47,21 @@ public class ProgrammerHandler implements Serializable {
         tasks = new HashMap<>();
         completedTasks = new ArrayList<>();
         agentProgrammer = new AgentProgrammer(this);
+        simID = agent.getId();
     }
 
     /***
      * Called at every time step, we set up on the first run, then pass through to the programmer after
      */
     public void step() {
+        believedPosition = agent.getCoordinate();
         if (agent.getNetworkId().equals("")) {
             // Must perform setup on the first step, otherwise they can't find each other
             agent.setNetworkID(agent.generateRandomTag());
+            networkID = agent.getNetworkId();
             declareSelf(SENSE_RANGE);
             agentProgrammer.setup();
+
         } else {
             declareSelf(SENSE_RANGE);
             agentProgrammer.step();
@@ -990,6 +1002,10 @@ public class ProgrammerHandler implements Serializable {
         agent.clearRoute();
         //agent.clearTempRoute();
         stop();
+    }
+
+    public String getModel(){
+        return GsonUtils.toJson(this);
     }
 
     /***

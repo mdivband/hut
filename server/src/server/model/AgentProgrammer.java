@@ -75,7 +75,6 @@ public class AgentProgrammer {
      */
     public void flock() {
         if (!a.isGoingHome()) {
-            System.out.println("A: " + strandedCounter);
             if (strandedCounter == 0) {
                 // wait and check
                 if (a.checkForNeighbourMovement()) {
@@ -97,14 +96,11 @@ public class AgentProgrammer {
                 a.goHome();
             }
         } else {
-            System.out.println("B: " + strandedCounter);
             if (a.getPosition().getDistance(a.getHome()) > 150) {
-                System.out.println("B: a");
                 //a.resume();   //TODO stopping here fixes the stranded problem but causes new ones
                 a.followRoute();
             } else {
-                System.out.println("B: b");
-                LOGGER.severe("GOT HOME");
+                //LOGGER.severe("GOT HOME");
                 strandedCounter = 1;
                 a.stopGoingHome();
             }

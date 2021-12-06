@@ -5,6 +5,7 @@ import server.model.*;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -165,6 +166,18 @@ public class AgentController extends AbstractController {
             return false;
         agent.setTimedOut(timedOut);
         return true;
+    }
+
+    public ArrayList<String> getBelievedModels() {
+        ArrayList<String> models = new ArrayList<>(8);
+        for (Agent a : simulator.getState().getAgents()) {
+            if (a instanceof AgentProgrammed){
+                models.add(((AgentProgrammed) a).getBelievedModel());
+            }
+        }
+
+        return models;
+
     }
 
 }

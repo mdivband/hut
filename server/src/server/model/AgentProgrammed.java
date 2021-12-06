@@ -343,4 +343,8 @@ public class AgentProgrammed extends Agent {
         return true;
     }
 
+    public String getBelievedModel() {
+        return programmerHandler.getModel();
+    }
+
 }

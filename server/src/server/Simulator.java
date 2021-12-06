@@ -5,10 +5,7 @@ import server.controller.ConnectionController;
 import server.controller.TaskController;
 import server.controller.TargetController;
 import server.controller.HazardController;
-import server.model.Agent;
-import server.model.Coordinate;
-import server.model.Sensor;
-import server.model.State;
+import server.model.*;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -130,6 +127,7 @@ public class Simulator {
     }
 
     private void mainLoop() {
+        long topStart = System.currentTimeMillis();
         final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
         int sleepTime;
         do {
@@ -147,9 +145,27 @@ public class Simulator {
             for (Task task : state.getTasks())
                 if(task.step())
                     completedTasks.add(task);
-            for(Task task : completedTasks)
+            for(Task task : completedTasks) {
                 task.complete();
 
+                if ((System.currentTimeMillis() - topStart) > 30000) {
+                    printBeliefs();
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    System.out.println("================================Te = " + (System.currentTimeMillis() - topStart) + "=========================================");
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    printStateJson();
+                } else {
+                    LOGGER.severe("Te = " + (System.currentTimeMillis() - topStart));
+                }
+            }
             //Step hazard hits
             this.state.decayHazardHits();
 
@@ -353,6 +369,23 @@ public class Simulator {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private void printBeliefs() {
+        ArrayList<String> beliefs = agentController.getBelievedModels();
+        System.out.println("===========Beliefs===========");
+        for (String b : beliefs) {
+            System.out.println(b);
+            System.out.println();
+        }
+    }
+
+
+    private void printStateJson() {
+        String stateJson = GsonUtils.toJson(state);
+        System.out.println(stateJson);
+
+
     }
 
     public synchronized String getStateAsString() {
