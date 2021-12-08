@@ -113,12 +113,6 @@ public class Simulator {
         this.agentController.stopAllAgents();
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
-        /* try {
-
-        }
-        catch(InterruptedException e) {
-            //  java always throws InterruptedException during Thread.interrupt()
-        } */
         this.state.setInProgress(true);
         allocator.runAutoAllocation();
         allocator.confirmAllocation(state.getTempAllocation());
@@ -155,6 +149,9 @@ public class Simulator {
             }
 
             state.incrementTime(0.2);
+            if (state.getTime() >= 30 * gameSpeed) {
+                this.reset();
+            }
 
             // Step agents
             checkAgentsForTimeout();
@@ -242,7 +239,9 @@ public class Simulator {
     }
 
     public synchronized void reset() {
-        this.mainLoopThread.interrupt();
+        if (this.mainLoopThread != null) {
+            this.mainLoopThread.interrupt();
+        }
         state.reset();
         scoreController.reset();
         LOGGER.info("Server reset.");
