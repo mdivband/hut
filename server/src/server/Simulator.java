@@ -45,6 +45,8 @@ public class Simulator {
     private static final double gameSpeed = 2;
     private Random random;
 
+    private Thread mainLoopThread;
+
     public Simulator() {
         instance = this;
 
@@ -109,7 +111,14 @@ public class Simulator {
             if(agent.isSimulated())
                 agent.heartbeat();
         this.agentController.stopAllAgents();
-        new Thread(this::mainLoop).start();
+        this.mainLoopThread = new Thread(this::mainLoop);
+        mainLoopThread.start();
+        /* try {
+
+        }
+        catch(InterruptedException e) {
+            //  java always throws InterruptedException during Thread.interrupt()
+        } */
         this.state.setInProgress(true);
         allocator.runAutoAllocation();
         allocator.confirmAllocation(state.getTempAllocation());
@@ -233,6 +242,7 @@ public class Simulator {
     }
 
     public synchronized void reset() {
+        this.mainLoopThread.interrupt();
         state.reset();
         scoreController.reset();
         LOGGER.info("Server reset.");
