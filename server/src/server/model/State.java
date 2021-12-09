@@ -29,8 +29,8 @@ public class State {
     private String gameId;
     private String gameDescription;
     private int gameType;
-    private String allocationMethod = "maxsum";
-    private Boolean flockingEnabled = false;
+    private String allocationMethod;
+    private Boolean flockingEnabled;
     private double time;
     private boolean editMode;
 
@@ -77,9 +77,12 @@ public class State {
     }
 
     public synchronized void reset() {
+        // Define defaults
         time = 0;
         editMode = false;
         inProgress = false;
+        allocationMethod = "maxsum";
+        flockingEnabled = false;
 
         agents.clear();
         tasks.clear();

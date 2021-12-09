@@ -137,9 +137,6 @@ public class Simulator {
             long startTime = System.currentTimeMillis();
 
             state.incrementTime(0.2);
-            if (state.getTime() >= 30 * gameSpeed) {
-                this.reset();
-            }
 
             //Step agents
             checkAgentsForTimeout();
