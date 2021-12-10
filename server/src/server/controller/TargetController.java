@@ -55,5 +55,9 @@ public class TargetController extends AbstractController {
         return true;
     }
 
+    public synchronized void resetTargetNumbers() {
+        this.uniqueTargetNumbers = new HashMap<>();
+    }
+
 
 }

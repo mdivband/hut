@@ -128,4 +128,8 @@ public class TaskController extends AbstractController {
         for(String key : keysToRemove)
             allocation.remove(key);
     }
+
+    public synchronized void resetTaskNumbers() {
+        this.uniqueTaskNumber = 1;
+    }
 }
