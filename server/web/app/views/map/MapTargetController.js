@@ -1,5 +1,6 @@
 var MapTargetController = {
     revealDistance: 50,
+    revealedNumber: 0,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapAgentController.method() without
@@ -58,9 +59,13 @@ var MapTargetController = {
         }
     },
     updateTargetMarkerVisibility: function (target) {
-        var marker = this.$el.gmap("get", "markers")[target.getId()];
-        if (!marker.getVisible() && target.isVisible())
+        var id = target.getId();
+        var marker = this.$el.gmap("get", "markers")[id];
+        if (!marker.getVisible() && target.isVisible()) {
             MapTargetController.popupTargetFound(target);
+            MapTargetController.revealedNumber++;
+            marker.set("labelContent", id.replace(/\d/g, MapTargetController.revealedNumber));
+        }
         marker.setVisible(target.isVisible());
     },
     checkForReveal: function (agent) {
