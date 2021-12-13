@@ -41,6 +41,9 @@ public class TargetController extends AbstractController {
 
     public synchronized void setTargetVisibility(String targetId, boolean visible) {
         Target target = simulator.getState().getTarget(targetId);
+        if (!target.isVisible() && visible) {
+            LOGGER.info("New target found:" + targetId);
+        }
         target.setVisible(visible);
     }
 
