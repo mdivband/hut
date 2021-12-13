@@ -145,15 +145,15 @@ function menuInit() {
     $.get("/mode/in-progress", {}, function(data) {
         data = String(data);
         var inProgress = (data === 'true');
-        if(inProgress)
+        if (inProgress) {
             inProgressDiv.show();
-        else
+        } else {
             mainButtonGroup.show();
             // Ensure any scenario is loaded with a clean slate
             $.post('/reset', function () {
                         state.reset();
-
                     });
+        }
     }).fail(function () {
         showError("Unable to connect to server.");
     })
