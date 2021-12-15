@@ -109,4 +109,11 @@ public class TargetController extends AbstractController {
         simulator.getImageController().requestImage(id);
     }
 
+    /**
+     * Removes target if it has this id
+     * @param id
+     */
+    public void removeTarget(String id) {
+        simulator.getState().getTargets().removeIf(tgt -> tgt.getId().equals(id));
+    }
 }

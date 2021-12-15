@@ -4,10 +4,13 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
 import server.model.target.Target;
+import server.model.task.Task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 public class ImageController {
 
@@ -15,12 +18,15 @@ public class ImageController {
     private final List<String> deepScannedTargets = new ArrayList<>(16);
     private final List<String> shallowScannedTargets = new ArrayList<>(16);
 
+    private final Map<String, Boolean> decisions = new HashMap<>(16);
+
     // Filenames of high and low resolution true and false positives
     private ArrayList<String> highResTrue;
     private ArrayList<String> lowResTrue;
     private ArrayList<String> highResFalse;
     private ArrayList<String> LowResFalse;
 
+    //private String tempLowResFP = "images/image_gmaps_no_globe_320x240.jpg";
     private String tempLowResFP = "images/lowFP.jpg";
     private String tempLowResTP = "images/lowTP.jpg";
     private String tempHighResFP = "images/highFP.jpg";
@@ -84,5 +90,34 @@ public class ImageController {
 
     }
 
+    public void classify(String ref, boolean status) {
+        Map<String, String> map = simulator.getState().getStoredImages();
+        String id = map
+                .entrySet()
+                .stream().
+                filter(entry -> ref.equals(entry.getValue()))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .get();
 
+        // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
+        decisions.put(id, status);
+        deepScannedTargets.remove(id);
+        shallowScannedTargets.remove(id);
+        map.remove(id);
+
+        // Foreach loop automatically handles the null case (no tasks found) by not entering
+        for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
+            t.complete();
+        }
+        simulator.getTargetController().deleteTarget(id);
+
+        System.out.println("=====DIAG=====");
+        decisions.entrySet().forEach(System.out::println);
+        System.out.println();
+    }
+
+    public Map<String, Boolean> getDecisions() {
+        return decisions;
+    }
 }

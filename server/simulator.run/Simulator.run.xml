@@ -2,8 +2,7 @@
   <configuration default="false" name="Simulator" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="openjdk-17" />
     <option name="MAIN_CLASS_NAME" value="server.Simulator" />
-    <module name="hut" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/server" />
+    <module name="hut-server" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="server.*" />

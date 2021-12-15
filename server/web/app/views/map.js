@@ -40,7 +40,7 @@ App.Views.Map = Backbone.View.extend({
         this.mapOptions = {
             zoom: 18,
             center: new google.maps.LatLng(50.939025, -1.461583),
-            mapTypeId: google.maps.MapTypeId.HYBRID,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
             overviewMapControl: false,
             streetViewControl: false,
             mapTypeControl: false,

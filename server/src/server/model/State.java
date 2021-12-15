@@ -61,7 +61,7 @@ public class State {
 
     private Coordinate hubLocation;
 
-    //                       ID->ImageName
+    //                   ID->ImageName
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
 
     public State() {

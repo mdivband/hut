@@ -4,6 +4,7 @@ import server.Simulator;
 import server.model.Agent;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
+import server.model.target.Target;
 import server.model.task.*;
 
 import java.util.ArrayList;
@@ -132,5 +133,25 @@ public class TaskController extends AbstractController {
         }
         for(String key : keysToRemove)
             allocation.remove(key);
+    }
+
+    /**
+     * Removes tasks matching this coordinate. It may be that we need to introduce an epsilon value later
+     * @param coordinate
+     */
+    public void removeAllTasksAt(Coordinate coordinate) {
+        simulator.getState().getTasks().removeIf(tsk -> tsk.getCoordinate().equals(coordinate));
+    }
+
+    public List<Task> getAllTasksAt(Coordinate coordinate) {
+       List<Task> foundTasks = new ArrayList<>(2);
+
+       for (Task t : simulator.getState().getTasks()) {
+           if (t.getCoordinate().equals(coordinate)) {
+               foundTasks.add(t);
+           }
+       }
+
+       return foundTasks;
     }
 }

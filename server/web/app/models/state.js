@@ -128,10 +128,10 @@ App.Models.State  = Backbone.Model.extend({
 
         // TODO Swithcing modes causes issues, probably due to backend not handling it correctly
 
-        //else if (modeFlag === 3) {
-        //    this.set("editMode", 3);
-        //    $("#map_title").html("Image Review");
-        //}
+        else if (modeFlag === 3) {
+            this.set("editMode", 3);
+            $("#map_title").html("Image Review");
+        }
 
 		 $.post("/changeview", {edit: modeFlag});
 

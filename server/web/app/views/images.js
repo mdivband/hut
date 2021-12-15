@@ -5,27 +5,27 @@ App.Views.Images = Backbone.View.extend({
     initialize: function(options) {
         this.state = options.state;
         this.views = options.views;
-        //this.canvas = options.canvas;
-        //this.ctx = options.ctx;
         this.viewButtons = document.getElementById("button_panel");
         this.addedIds = [];
         this.addedRefs = [];
         this.render();
 
         var self = this;
+
         this.state.on("change", function () {
             self.update();
         });
 
+        this.state.on("change:storedImages", function () {
+            self.checkForRemoval();
+        });
+
         this.bind("update", this.update);
-        //this.bind("refresh", this.refresh);
     },
     setup: function() {
 
     },
     update: function() {
-        //var myWindow = window.open("", "", "width=800,height=600");
-        //myWindow.document.write("<img src=" + iRef + ">");
         var self = this;
         try {
             var knownImages = self.state.getStoredImages();
@@ -42,14 +42,14 @@ App.Views.Images = Backbone.View.extend({
                         self.viewButtons.append(button);
 
                         button.addEventListener("click", function (event) {
-                            //alert(id + " => " + iRef)
-                            var myWindow = window.open("", "", "width=1400,height=1000");
-                            myWindow.document.write("<img src=" + iRef + ">");
+                            MapImageController.triggerImage(id, iRef);
+                            this.class = "image_select_buttons_active";
                         });
 
                         self.addedIds.push(id)
                         self.addedRefs.push(iRef)
-                    } else if (!self.addedRefs.includes(id)) {
+                    }
+                    else if (!self.addedRefs.includes(iRef)) {
                         // Update button
                         var button = document.getElementById(id);
                         button.remove()
@@ -61,9 +61,8 @@ App.Views.Images = Backbone.View.extend({
                         self.viewButtons.append(button);
 
                         button.addEventListener("click", function (event) {
-                            //alert(id + " => " + iRef)
-                            var myWindow = window.open("", "", "width=1400,height=1000");
-                            myWindow.document.write("<img src=" + iRef + ">");
+                            MapImageController.triggerImage(id, iRef);
+                            this.class = "image_select_buttons_active";
                         });
 
                         self.addedRefs.push(iRef)
@@ -77,5 +76,51 @@ App.Views.Images = Backbone.View.extend({
         }
 
     },
+    checkForRemoval: function () {
+        try {
+            var self = this;
+            var lim = self.addedIds.length;
+            if (lim > 0) {
+                for (var i = 0; i < lim; i++) {
+                    var found = false;
+                    self.state.targets.each(function (target) {
+                        if (target.getId() === self.addedIds[i]) {
+                            found = true;
+                        }
+                    });
+                    if (!found) {
+                        // TODO Check this. I think we can just leave the iRef there. It becomes lost and I doubt this
+                        //  will incur measurable memory leakage unless the number of tasks explodes (remember that
+                        //  this array is only storing references
+                        this.safeRemoveId(self.addedIds[i])
+                    }
 
+                }
+            }
+
+        } catch (e) {
+            alert("cfr " + e)
+        }
+    },
+    /**
+     * This is essentially a manual trash collection on the array. Note the newIndex variable to remove gaps as it updates
+     * @param id
+     */
+    safeRemoveId : function (id) {
+        var self = this;
+        var newArray = [];
+        var newIndex = 0;
+        for (var i = 0; i < self.addedIds.length; i++) {
+            if (self.addedIds[i] !== id) {
+                newArray[newIndex] = self.addedIds[i]
+                newIndex++;
+            } else {
+                var button = document.getElementById(self.addedIds[i]);
+                button.remove()
+            }
+        }
+        this.addedIds = newArray;
+        MapController.clearReviewImage();
+        this.update();
+    }
 });

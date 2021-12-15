@@ -24,6 +24,19 @@ var simulator = {
             views: this.views
         });
 
+        try {
+            this.views.review = new App.Views.Review({
+                el: $("#image_review"),
+                state: this.state,
+                views: this.views,
+                ctx: $("#image_review_canvas").get(0).getContext("2d"),
+                canvas: $("#image_review_canvas").get(0),
+                forEditMode: true
+            });
+        } catch (e) {
+            alert("error creating review: " + e)
+        }
+
         this.views.camera = new App.Views.Camera({
             el: $("#camera"),
             mapOptions: {
@@ -64,6 +77,21 @@ var simulator = {
             alert("error creating images.js: " + e)
         }
 
+        /*
+        try {
+            this.views.subCam = new App.Views.SubCam({
+                el: $("#camera_det"),
+                state: this.state,
+                views: this.views,
+                //ctx: $("#scans_button_panel").get(0).getContext("2d"),
+                //canvas: $("#scans_button_panel").get(0),
+                forEditMode: true
+            });
+        } catch (e) {
+            alert("error creating subCam: " + e)
+        }
+         */
+
         // setup accordion for jquery ui
         $("#accordion_smallview").accordion({
             collapsible: true
@@ -88,6 +116,86 @@ var simulator = {
 
         $("#camera_canvas_s").append($("#camera"));
 
+        $("#image_review_canvas").draggable({
+            drag: function(event, ui) {
+                if (ui.position.top > 0) {
+                    ui.position.top = 0;
+                }
+                var maxtop = ui.helper.parent().height() - ui.helper.height();
+                if ( ui.position.top < maxtop) {
+                    ui.position.top = maxtop;
+                }
+                if ( ui.position.left > 0) {
+                    ui.position.left = 0;
+                }
+                var maxleft = ui.helper.parent().width() - ui.helper.width();
+                if ( ui.position.left < maxleft) {
+                    ui.position.left = maxleft;
+                }
+            }
+
+        });
+
+        // 0.5 scale per
+        var self = this
+        $("#image_review_canvas").bind('mousewheel', function(e) {
+            var cursorX = e.pageX;
+            var cursorY = e.pageY - 167;  //TODO make general
+
+            // Centre of IMAGE
+            var centreX = $(this).position().left + $(this).width() / 2;
+            var centreY = $(this).position().top + $(this).height() / 2;
+
+            var oldSizeX = $(this).width();
+            var oldSizeY = $(this).height();
+
+            if(e.originalEvent.wheelDelta /120 > 0) {
+                // Scroll up (zoom in)
+                if (self.views.review.scale < 20) {
+                    self.views.review.scale += 0.5
+                    $(this).width(self.views.review.originalWidth * self.views.review.scale);
+                    $(this).height(self.views.review.originalHeight * self.views.review.scale);
+                }
+            } else {
+                // Scroll down (zoom out)
+                // these statements ensure the image always fills canvas in both dimensions
+                //if (($(this).height()/1.5) > $("#image_review").height() || ($(this).width()/1.5) > $("#image_review").width()) {
+                if (self.views.review.originalWidth * (self.views.review.scale - 0.5) > $("#image_review").width()
+                 && self.views.review.originalHeight * (self.views.review.scale - 0.5) > $("#image_review").height()) {
+                    self.views.review.scale -= 0.5
+                    $(this).width(self.views.review.originalWidth * self.views.review.scale);
+                    $(this).height(self.views.review.originalHeight * self.views.review.scale);
+                }
+            }
+
+            var x = $(this).width() - oldSizeX;
+            var y = $(this).height() - oldSizeY;
+
+            var diffX = cursorX - centreX;
+            var diffY = cursorY - centreY;
+            var relX = diffX / ($(this).width() / 2)
+            var relY = diffY / ($(this).height() / 2)
+
+            var newCentreX = centreX + (-relX * x/2);
+            var newCentreY = centreY + (-relY * y/2);
+            var newL = newCentreX - $(this).width() / 2;
+            var newT = newCentreY - $(this).height() / 2;
+
+            if (newL > 0) {
+                newL = 0;
+            } else if (newL + $(this).width() < $("#image_review").width()) {
+                newL = $("#image_review").width() - $(this).width();
+            }
+
+            if (newT > 0) {
+                newT = 0;
+            } else if (newT + $(this).height() < $("#image_review").height()) {
+                newT = $("#image_review").height() - $(this).height();
+            }
+
+            $(this).css({top: newT, left: newL, position:'relative'});
+
+        });
         this.views.control = new App.Views.Control({
             el: $("#control"),
             state: this.state,

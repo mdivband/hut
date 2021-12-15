@@ -145,11 +145,15 @@ public class Simulator {
             for (Task task : state.getTasks())
                 if(task.step())
                     completedTasks.add(task);
-            for(Task task : completedTasks)
+            for(Task task : completedTasks) {
                 task.complete();
+                //printDiag();
+            }
 
             //Step hazard hits
             this.state.decayHazardHits();
+
+
 
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));
@@ -157,6 +161,12 @@ public class Simulator {
                 sleepTime = 0;
             }
         } while (sleep(sleepTime));
+    }
+
+    private void printDiag() {
+        Map<String, Boolean> decisions = imageController.getDecisions();
+        decisions.entrySet().forEach(System.out::println);
+
     }
 
     /**
@@ -184,6 +194,8 @@ public class Simulator {
         } else if (modeFlag == 1){
             allocator.confirmAllocation(state.getAllocation());
             state.setEditMode(1);
+        } else if (modeFlag == 3) {
+            state.setEditMode(3);
         }
     }
 

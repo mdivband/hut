@@ -23,7 +23,15 @@
         <!-- Map Panel -->
         <div class="ui-layout-center">
             <div id="map_canvas"></div>
-            <div id="image_review_canvas" style="display: none;"></div>
+            <div id="review_panel" style="float: top; display: none">
+                <button type="button" id="rev_real" class="rev_buttons">Real Casualty</button>
+                <button type="button" id="rev_false" class="rev_buttons">False Positive</button>
+                <button type="button" id="rev_deep" class="rev_buttons">Request Deep Scan</button>
+            </div>
+            <div id="image_review" style="display: none;">
+                    <canvas id="image_review_canvas" style="display:inline-block;"></canvas>
+            </div>
+
             <!-- <div id="camera_canvas" style="display: none;"></div> -->
 
             <!-- Added by Y submapviews -->
@@ -366,10 +374,12 @@
                 </div>
             </script>
 
-
+            <!-- Popup window when targets are selected-->
             <script type="text/template" id="target_scan_edit">
                 <div style="margin: 0px 1px 0px 5px;">
-                    <!-- TODO maybe a basic image here too -->
+                    <div>
+                        <div id="camera_canvas_det"></div>
+                    </div>
                     <div style="float: left;">
                         <button id="scan_shallow">shallow</button>
                     </div>

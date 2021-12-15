@@ -33,6 +33,9 @@ var MapController = {
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
+        this.pushImage = _.bind(this.pushImage, context);
+        this.getCurrentImage = _.bind(this.getCurrentImage, context);
+        this.clearReviewImage = _.bind(this.clearReviewImage, context);
 
     },
     /**
@@ -325,6 +328,12 @@ var MapController = {
             $("#sandbox_buttons_sub").show();
             MapController.onUndoRedoAvailableChange();
             $("#scan_view").hide();
+
+            $("#map_canvas").show();
+            $("#image_review").hide();
+            $("#review_panel").hide();
+
+
             $('#scanmode').prop("checked", false);
             $('#editmode').prop("checked", true);
             $('#monitor').prop("checked", false);
@@ -334,6 +343,11 @@ var MapController = {
             $("#edit_buttons_sub").hide();
             $("#sandbox_buttons_sub").hide();
             $("#scan_view").hide();
+
+            $("#map_canvas").show();
+            $("#image_review").hide();
+            $("#review_panel").hide();
+
             $('#scanmode').prop("checked", false);
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", true);
@@ -343,6 +357,11 @@ var MapController = {
             $("#edit_buttons_sub").hide();
             $("#sandbox_buttons_sub").hide();
             $("#scan_view").show();
+
+            $("#map_canvas").hide();
+            $("#image_review").show();
+            $("#review_panel").show();
+
             $('#scanmode').prop("checked", true);
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", false);
@@ -352,6 +371,19 @@ var MapController = {
         this.hideForGametype();
         if(sendUpdate)
             this.state.pushMode(modeFlag);
+    },
+    pushImage: function (id, iRef) {
+        try {
+            this.views.review.displayImage(id, iRef);
+        } catch (e) {
+            alert("PI: " + e)
+        }
+    },
+    getCurrentImage: function () {
+        return this.views.review.currentImageRef;
+    },
+    clearReviewImage : function () {
+        this.views.review.clearImage();
     },
     abortAllocation: function() {
         var mainAllocation = this.state.getAllocation();

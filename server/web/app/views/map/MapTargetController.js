@@ -15,6 +15,8 @@ var MapTargetController = {
         this.popupTargetFound = _.bind(this.popupTargetFound, context);
         this.getTargetAt = _.bind(this.getTargetAt, context);
         this.openScanWindow = _.bind(this.openScanWindow, context);
+        this.clearReviewedTarget = _.bind(this.clearReviewedTarget, context);
+        this.placeEmptyTargetMarker = _.bind(this.placeEmptyTargetMarker, context);
     },
     bindEvents: function () {
         this.state.targets.on("add", function (target) {
@@ -61,12 +63,7 @@ var MapTargetController = {
                 iw.setContent(property);
                 iw.setPosition(target.getPosition());
 
-                //if (!self.state.isEdit()) {
-                //    $("#task_edit_update").hide();
-                //    $("#task_edit_delete").hide();
-                //    $("#task_priority").attr("readonly","readonly");
-                //    $("#group_size").attr("readonly","readonly");
-                //}
+                self.views.clickedTarget = target;
 
                 google.maps.event.addListener(iw, 'domready', function () {
                     //Update task if values changed
@@ -192,5 +189,46 @@ var MapTargetController = {
             self.map.panTo(target.getPosition());
             self.map.setZoom(19);
         });
+    },
+    clearReviewedTarget: function (marker) {
+        if (marker) {
+            marker.setMap(null);
+            marker = null;
+            delete marker;
+        }
+    },
+    placeEmptyTargetMarker: function (position, targetId, real) {
+        try {
+            var icon;
+            var label;
+            if (real) {
+                icon = this.icons.TargetHuman;
+                label = "CASUALTY"
+            } else {
+                icon = this.icons.TargetDismissed;
+                label = "FALSE POS"
+            }
+
+            var thisId = targetId + "_done";
+            console.log('EmptyMarker added ' + thisId);
+            this.$el.gmap("addMarker", {
+                bounds: false, //Centre in map if real agent
+                marker: MarkerWithLabel,
+                draggable: false,
+                labelContent: label,
+                labelAnchor: new google.maps.Point(50, -18),
+                labelClass: "labels",
+                labelStyle: {opacity: 0.6},
+                id: thisId,
+                position: position,
+                zIndex: 1,
+                opacity: 0.6,
+            });
+
+            var marker = this.$el.gmap("get", "markers")[thisId];
+            marker.setIcon(icon.Image);
+        } catch (e) {
+            alert(e);
+        }
     }
 };
