@@ -41,9 +41,14 @@ App.Views.Images = Backbone.View.extend({
                         button.className = "image_select_buttons";
                         self.viewButtons.append(button);
 
+                        //console.log($("#rev_deep"));
+                        //console.log($("#rev_deep").css);
+
                         button.addEventListener("click", function (event) {
                             MapImageController.triggerImage(id, iRef);
-                            this.class = "image_select_buttons_active";
+                            button.focus();
+                            $("#rev_deep").removeClass("rev_buttons_greyed").addClass("rev_buttons");
+                            $("#rev_deep").prop('disabled', false);
                         });
 
                         self.addedIds.push(id)
@@ -62,7 +67,9 @@ App.Views.Images = Backbone.View.extend({
 
                         button.addEventListener("click", function (event) {
                             MapImageController.triggerImage(id, iRef);
-                            this.class = "image_select_buttons_active";
+                            $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
+                            button.focus();
+                            $("#rev_deep").prop('disabled', true);
                         });
 
                         self.addedRefs.push(iRef)

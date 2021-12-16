@@ -68,8 +68,6 @@ var MapTargetController = {
                 google.maps.event.addListener(iw, 'domready', function () {
                     //Update task if values changed
 
-                    // TODO clear old tasks when one is added (IMPORTANT!)
-
                     $(property).on("click", "#scan_shallow", function () {
                         //alert("Scanning shallow");
                         var newId = "(" + target.getId() + ")";
@@ -106,7 +104,6 @@ var MapTargetController = {
     updateTargetMarkerIcon: function (target) {
         var marker = this.$el.gmap("get", "markers")[target.getId()];
         var icon;
-        //alert("t = " + target.getType());
         try {
             switch (target.getType()) {
                 case this.state.targets.HUMAN:
@@ -115,12 +112,6 @@ var MapTargetController = {
                 case this.state.targets.ADJUSTABLE:
                     icon = this.icons.TargetUnknown;
                     break;
-                //alert("adj")
-                //alert("stat got, = " + target.getStatus())
-                //switch (target.getStatus()) {
-                //case this.state.targets.ADJ_UNKNOWN:
-                //    icon = this.icons.TargetUnknown;
-                //    break;
                 case this.state.targets.ADJ_DEEP_SCAN:
                     icon = this.icons.TargetDeepScan;
                     break;
@@ -133,7 +124,6 @@ var MapTargetController = {
                 case this.state.targets.ADJ_FOUND:
                     icon = this.icons.TargetFound;
                     break;
-                //}
                 default:
                     console.log("No icon found for target type " + target.getType());
             }

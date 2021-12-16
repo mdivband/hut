@@ -75,9 +75,25 @@ var MapImageController = {
         MapTargetController.placeEmptyTargetMarker(position, tgtId, status);
     },
     referDeep: function () {
-        // TODO make this button greyed out when showing a deep scan
-        alert("deep pressed")
+        var tgtId = this.views.review.currentImageName;
+        var marker = this.$el.gmap("get", "markers")[tgtId];
 
+        var newId = "[" + tgtId + "]";
+        var existingMarker = this.$el.gmap("get", "markers")[newId];
+
+        // TODO If you reselect you can add this again, must fix
+        if (!existingMarker) {
+            marker.setOptions({labelContent: newId});
+            MapTaskController.addDeepScanTask(marker.getPosition());
+            // MapTargetController.updateTargetMarkerIcon(target);
+            var icon = self.icons.TargetDeepScan;
+            marker.setIcon(icon.Image)
+        } else {
+            console.log("Already pressed")
+        }
+
+        MapController.clearReviewImage();
+        button.focusout();
 
     }
 

@@ -308,6 +308,20 @@ ul.list li:hover {
 	background-image: -o-linear-gradient(top, #26759e, #133d5b);
 }
 
+.rev_buttons_greyed {
+	width: 98%;
+	border: 1px solid #000000;
+	font-size:20px;
+	font-family:arial, helvetica, sans-serif;
+	padding: 10px;
+	margin: 5px;
+	text-shadow: -1px -1px 0 rgba(0,0,0,0.3);
+	font-weight:bold;
+	color: #000000;
+	background-color: rgba(0, 0, 0, 0.29);
+
+}
+
 #image_review{
 	position: sticky;
 	overflow: hidden;
@@ -541,7 +555,7 @@ ul.list li:hover {
 
 }
 
-.image_select_buttons_active {
+.image_select_buttons:focus {
 	width: 98%;
 	border: 1px solid #000000;
 	font-size:20px;
