@@ -4,7 +4,6 @@ import server.controller.TaskController;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +23,7 @@ public class AgentProgrammed extends Agent {
         super(id, position, true);
         this.programmerHandler = new ProgrammerHandler(this);
         this.sensor = sensor;
+        type = "programmed";
     }
 
     public AgentProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
@@ -32,6 +32,7 @@ public class AgentProgrammed extends Agent {
         this.sensor = sensor;
         this.taskController = taskController;
         this.programmerHandler = new ProgrammerHandler(this);
+        type = "programmed";
     }
 
     /***
@@ -92,6 +93,11 @@ public class AgentProgrammed extends Agent {
     }
 
     public void tempManualPushCompletedTask(Coordinate coordinate) {
+        programmerHandler.completeTask(coordinate);
+    }
+
+    public void registerCompleteTask(Coordinate coordinate) {
+        //programmerHandler.completeTask(coordinate);
         programmerHandler.completeTask(coordinate);
     }
 
@@ -166,7 +172,7 @@ public class AgentProgrammed extends Agent {
     }
 
     public void tempRemoveTask(List<Coordinate> coords){
-        //taskController.deleteTaskByCoords(coords);
+        taskController.deleteTaskByCoords(coords);
     }
 
     /**

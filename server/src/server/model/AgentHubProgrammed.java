@@ -9,11 +9,13 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
 
     public AgentHubProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
         super(id, position, sensor, random, taskController);
-        visualType = "hub";
+        type = "hub";
+        stop();
     }
 
     public void addTaskFromUser(Task item) {
         programmerHandler.addTask(item);
+        System.out.println("Adding task from user at: " + item.getCoordinate());
     }
 
     // Called by the Simulator, we will use this to call the Programmer

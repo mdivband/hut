@@ -326,6 +326,15 @@ public class State {
         return null;
     }
 
+    public Target getTargetByCoordinate(Coordinate coordinate) {
+        for (Target t : targets) {
+            if(t.getCoordinate().equals(coordinate)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
     /*
     public Task getTaskByCentreCoordinate(Coordinate coordinate) {
         for (Task t : tasks) {

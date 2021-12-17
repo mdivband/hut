@@ -1,6 +1,7 @@
 package server.model;
 
-import com.google.gson.Gson;
+import server.Simulator;
+import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
 
@@ -32,6 +33,7 @@ public class ProgrammerHandler implements Serializable {
     private List<Coordinate> currentTask = new ArrayList<>();
     private final HashMap<List<Coordinate>, List<String>> tasks;
     private final List<List<Coordinate>> completedTasks;
+    private final List<Coordinate> foundTargets;
 
     private Coordinate home = new Coordinate(50.9295, -1.409); // TODO make this inferred from a hub announcement
     private boolean isGoingHome = false;
@@ -48,6 +50,7 @@ public class ProgrammerHandler implements Serializable {
         neighbours = new HashMap<>();
         tasks = new HashMap<>();
         completedTasks = new ArrayList<>();
+        foundTargets = new ArrayList<>();
         agentProgrammer = new AgentProgrammer(this);
         simID = agent.getId();
     }
@@ -65,6 +68,8 @@ public class ProgrammerHandler implements Serializable {
             agentProgrammer.setup();
         } else if (pingCounter >= pingTimeout) {
             declareSelf(SENSE_RANGE);
+            checkForTargets();
+            declareTargets(SENSE_RANGE);
             pingCounter = 0;
         }
         pingCounter++;
@@ -79,12 +84,33 @@ public class ProgrammerHandler implements Serializable {
         agentProgrammer.step();
     }
 
+    private void checkForTargets() {
+        for (Target t : Simulator.instance.getState().getTargets()) {
+            if (t.getCoordinate().getDistance(getPosition()) < 10) {  //  10m for now
+                foundTargets.add(t.getCoordinate());
+            }
+        }
+
+    }
+
+    private void declareTargets(int radius) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("TARGETS");
+        for (Coordinate tgt : foundTargets) {
+            sb.append(";");
+            sb.append(tgt.latitude);
+            sb.append(",");
+            sb.append(tgt.longitude);
+        }
+        broadcast(sb.toString(), radius);
+    }
+
     /***
      * Because the receiver (base station) inherits from this class, we use a function here just for that class
      */
     public void baseStep() {
         if (agent.getNetworkId().equals("")) {
-            agent.visualType = "hub";
+            agent.type = "hub";
             // Must perform setup on the first step, otherwise they can't find each other
             agent.setNetworkID(agent.generateRandomTag());
             declareSelf(SENSE_RANGE);
@@ -92,6 +118,7 @@ public class ProgrammerHandler implements Serializable {
         } else if (pingCounter >= pingTimeout) {
             declareSelf(SENSE_RANGE); // This must be separate, as order matters for the first case
             broadcastTasks();
+            declareTargets(SENSE_RANGE);
             pingCounter = 0;
         }
         pingCounter++;
@@ -136,9 +163,9 @@ public class ProgrammerHandler implements Serializable {
                 StringBuilder sb = new StringBuilder();
 
                 if (tsk.size() == 1) {
-                    sb.append("COMPLETED_WAYPOINT");
+                    sb.append("COMPLETED");
                 } else {
-                    sb.append("COMPLETED_REGION");
+                    sb.append("COMPLETED");
                 }
 
                 for (Coordinate c : tsk) {
@@ -333,8 +360,6 @@ public class ProgrammerHandler implements Serializable {
         agent.moveTowardsDestination();
     }
 
-
-
     /***
      * Completes the task currently set. Also sends this completion message to the network automatically, and adds it
      * to the set of tasks that it will report as complete from now on
@@ -344,10 +369,6 @@ public class ProgrammerHandler implements Serializable {
         List<Coordinate> coords = currentTask;
 
         tasks.remove(currentTask);
-
-        if (agent instanceof Hub) {
-            agent.tempRemoveTask(currentTask);
-        }
 
         StringBuilder sb = new StringBuilder();
         sb.append("COMPLETED");
@@ -365,10 +386,6 @@ public class ProgrammerHandler implements Serializable {
         List<Coordinate> thisTask = new ArrayList<>();
         thisTask.add(task);
         tasks.remove(thisTask);
-
-        //if (agent instanceof AgentReceiver) {
-        //    agent.tempRemoveTask(thisTask);
-        //}
 
         StringBuilder sb = new StringBuilder();
         sb.append("COMPLETED");
@@ -391,15 +408,22 @@ public class ProgrammerHandler implements Serializable {
             completedTasks.add(coords);
         }
 
+        if (agent instanceof Hub) {
+            agent.tempRemoveTask(coords);
+        }
+
         tasks.remove(coords);
-        //if (agent instanceof AgentReceiver) {
-        //    agent.tempRemoveTask(coords);
-        //}
         if (currentTask.equals(coords)) {
             currentTask = new ArrayList<>();
             stop();
         }
     }
+
+    private void receiveTarget(Coordinate coords){
+        Target t = Simulator.instance.getTargetController().findTargetByCoord(coords);
+        Simulator.instance.getTargetController().setTargetVisibility(t.getId(), true);
+    }
+
 
     /***
      * Senses all other agents within the given radius, and returns their locations
@@ -540,7 +564,7 @@ public class ProgrammerHandler implements Serializable {
 
     /***
      * Checks that a task is possible to add. Ensures it has not been completed and is not already added
-     * @param coords The coordinates of the gieven task
+     * @param coords The coordinates of the given task
      * @return Whether the task is possible to add
      */
     private boolean checkTaskPossible(List<Coordinate> coords) {
@@ -552,6 +576,7 @@ public class ProgrammerHandler implements Serializable {
                 if (!coords.contains(c)) {
                     // any difference in this set means it's not in completedTasks
                     match = false;
+                    //System.out.println("-- Task at " + c + " already complete");
                     break;
                 }
             }
@@ -569,6 +594,7 @@ public class ProgrammerHandler implements Serializable {
                 if (!coords.contains(c)) {
                     // If any coordinate is different, this task can't be a match
                     match = false;
+                    //System.out.println("-- Task at " + c + " already known");
                     break;
                 }
             }
@@ -577,6 +603,9 @@ public class ProgrammerHandler implements Serializable {
                 return false;
             }
         }
+
+        // TODO - once drones head home they stop receiving newly added tasks, this shouldn't be the case
+        System.out.println("CLEARED - Task at " + coords.get(0) + " not known or complete, so adding");
         return true;
     }
 
@@ -586,11 +615,6 @@ public class ProgrammerHandler implements Serializable {
      * @param message The entire message given
      */
     protected void receiveMessage(String message) {
-        //if (agent instanceof Hub) {
-        //    System.out.println("Receiving: " + message);
-        //}
-
-
         // TODO as of a recent java update, we can use regex-based case statements here in future
         try {
             if (message.contains("CUSTOM")) {
@@ -633,6 +657,9 @@ public class ProgrammerHandler implements Serializable {
                     }
                     if (tasks.get(thisTask) != null && !tasks.get(thisTask).contains(id)) {
                         tasks.get(thisTask).add(id);
+                        if (agent instanceof Hub) {
+                            System.out.println("HUB:        " + id + " is doing task at " + thisTask.get(0));
+                        }
                     } else if (tasks.get(thisTask) == null) {
                         tasks.put(thisTask, new ArrayList<>());
                         tasks.get(thisTask).add(id);
@@ -648,6 +675,7 @@ public class ProgrammerHandler implements Serializable {
                     broadcastTasks();
                 }
             } else if (message.contains("COMPLETED_WAYPOINT")) {
+                System.out.println("askhdgakjshfafafasfasdfsadf");
                 String x = message.split(";")[1].split(",")[0];
                 String y = message.split(";")[1].split(",")[1];
                 Coordinate thisCoord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
@@ -656,7 +684,7 @@ public class ProgrammerHandler implements Serializable {
                 if (checkTaskPossible(thisTask)) {
                     completedTasks.add(thisTask);
                     if (agent instanceof Hub) {
-                        System.out.println("Receiving completed task from message: " + message);
+                        System.out.println("Receiving completed at: " + thisCoord);
                     }
                     // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
                 }
@@ -670,9 +698,13 @@ public class ProgrammerHandler implements Serializable {
                 thisTask.add(thisCoord);
                 if (checkTaskPossible(thisTask)) {
                     tasks.put(thisTask, new ArrayList<>());
-                    if (agent instanceof Hub) {
-                        System.out.println("Receiving new task from message: " + message);
+                    System.out.println("Added task: " + message);
+                    // Debug to display agent knowledge of new tasks
+                    /*
+                    if (!(agent instanceof Hub)) {
+                        System.out.println(agent.getNetworkId() + ": Receiving new task from message: " + message);
                     }
+                     */
                 }
             } else if (message.contains("TASK_REGION")) {
                 String nwX = message.split(";")[1].split(",")[0];
@@ -694,9 +726,6 @@ public class ProgrammerHandler implements Serializable {
                 thisTask.add(sw);
                 if (checkTaskPossible(thisTask)) {
                     tasks.put(thisTask, new ArrayList<>());
-                    if (agent instanceof Hub) {
-                        System.out.println("Receiving new task from message: " + message);
-                    }
                 }
             } else if (message.contains("COMPLETED")) {
                 String[] msgArray = message.split(";");
@@ -710,9 +739,33 @@ public class ProgrammerHandler implements Serializable {
                     Coordinate coord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
                     thisTask.add(coord);
                 }
+
+                // Debug to display hub knowledge of task completion
+                if (!completedTasks.contains(thisTask)) {
+                    if (agent instanceof Hub) {
+                        System.out.println("HUB:        Receiving completed task from message: " + message);
+                    }
+                }
+
                 receiveCompleteTask(thisTask);
-                if (agent instanceof Hub) {
-                    System.out.println("Receiving completed task from message: " + message);
+
+            } else if (message.contains("TARGETS")) {
+                String[] msgArray = message.split(";");
+                Iterator<String> msgIt = Arrays.stream(msgArray).iterator();
+                msgIt.next();  // Discard the operand ("TARGETS")
+                while (msgIt.hasNext()) {
+                    String thisLine = msgIt.next();
+                    String x = thisLine.split(",")[0];
+                    String y = thisLine.split(",")[1];
+                    Coordinate coord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
+                    if (!foundTargets.contains(coord)) {
+                        foundTargets.add(coord);
+                        if (agent instanceof Hub) {
+                            System.out.println("HUB:        Receiving target location at: " + coord);
+                            receiveTarget(coord);
+                        }
+                    }
+
                 }
 
             } else if(message.contains("DIAG")) {
@@ -787,7 +840,9 @@ public class ProgrammerHandler implements Serializable {
     public List<Coordinate> getNearestEmptyTask(){
         List<Coordinate> bestTask = null;
         double shortestDist = 100000;
-
+        //System.out.println("Searching for nearest empty task of: ");
+        //tasks.entrySet().forEach(System.out::println);
+        //System.out.println();
         for (var entry : tasks.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 for (Coordinate c : entry.getKey()) {
@@ -989,7 +1044,7 @@ public class ProgrammerHandler implements Serializable {
     }
 
     public void setVisual(String type) {
-        agent.setVisual(type);
+        agent.setType(type);
     }
 
     public void goHome(){

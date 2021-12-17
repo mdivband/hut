@@ -4,6 +4,7 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.HumanTarget;
 import server.model.target.Target;
+import server.model.task.Task;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,10 @@ public class TargetController extends AbstractController {
         simulator.getState().remove(target);
         LOGGER.info("Deleted agent " + id);
         return true;
+    }
+
+    public Target findTargetByCoord(Coordinate coordinate) {
+        return simulator.getState().getTargetByCoordinate(coordinate);
     }
 
 

@@ -29,4 +29,6 @@ public abstract class Target extends MObject implements Serializable {
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
+
+
 }

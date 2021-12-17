@@ -42,7 +42,8 @@ public abstract class Agent extends MObject implements Serializable {
     private transient boolean startSearching;
     private transient boolean stopped;
 
-    protected String visualType;
+    protected String type;
+
 
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
@@ -60,7 +61,7 @@ public abstract class Agent extends MObject implements Serializable {
         working = false;
         allocatedTaskId = "";
         timedOut = false;
-        visualType = "standard";
+        type = "standard";
 
         this.lastHeartbeat = System.currentTimeMillis();
     }
@@ -398,7 +399,7 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
-    public void setVisual(String type) {
-        visualType = type;
+    public void setType(String type) {
+        this.type = type;
     }
 }

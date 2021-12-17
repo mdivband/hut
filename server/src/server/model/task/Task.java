@@ -55,12 +55,24 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
+        boolean allProgrammed = true;  // We assume they aren't all the same, in case later we implement it
         for (Agent agent : getAgents()) {
             agent.setWorking(false);
             agent.setSearching(false);
+            if (!(agent instanceof AgentProgrammed)) {
+                allProgrammed = false;
+            }
         }
-        Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-        LOGGER.info("Task " + this.getId() + " has been completed");
+        if (!allProgrammed) {
+            Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+            LOGGER.info("Task " + this.getId() + " has been completed");
+        } else {
+            for (Agent agent : getAgents()) {
+                if (agent instanceof AgentProgrammed) {  // Always true under current assumptions
+                    ((AgentProgrammed) agent).registerCompleteTask(getCoordinate());
+                }
+            }
+        }
     }
 
     private ArrayList<Agent> tempGetArrivedAgents(){
@@ -69,7 +81,8 @@ public abstract class Task extends MObject implements Serializable {
             if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
                 arrivedAgents.add(a);
                 if (a instanceof AgentProgrammed ap && !(a instanceof Hub)) {
-                    ap.tempManualPushCompletedTask(this.getCoordinate());
+                    //ap.tempManualPushCompletedTask(this.getCoordinate());
+                    ap.registerCompleteTask(this.getCoordinate());
                 }
             }
         }

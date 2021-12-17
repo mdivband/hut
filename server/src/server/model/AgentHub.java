@@ -10,7 +10,7 @@ public class AgentHub extends Agent implements Hub{
     public AgentHub(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
         this.sensor = sensor;
-        visualType = "hub";
+        type = "hub";
     }
 
     @Override

@@ -16,7 +16,7 @@ App.Models.Agent = App.Models.MObject.extend({
         timeInAir: 0,
         working: false,
         isLeader: false,
-        visualType: "standard"
+        type: "standard"
     },
     destroy: function() {
         //Remove from collection without posting DELETE request
@@ -58,9 +58,8 @@ App.Models.Agent = App.Models.MObject.extend({
     isWorking: function () {
         return this.get("working");
     },
-    getVisualType: function () {
-        //alert("retn ; " + this.get("visualType"))
-        return this.get("visualType");
+    getType: function () {
+        return this.get("type");
     }
 });
 
