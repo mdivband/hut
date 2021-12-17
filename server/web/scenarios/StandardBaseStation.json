@@ -1,5 +1,5 @@
 {
-  "gameId": "Programmed Base Station Test",
+  "gameId": "Standard Base Station",
   "gameDescription": "A copy of the fire test, but using programmable drones",
   "extendedUIOptions": {
     "predictions": true,
@@ -9,7 +9,6 @@
     "lat": 50.928955248687274,
     "lng": -1.40882186832185
   },
-  "programmed": true,
   "uncertaintyRadius": 200.0,
   "gameCentre": {
     "lat": 50.929378522204615,

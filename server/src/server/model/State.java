@@ -62,6 +62,8 @@ public class State {
     private ArrayList<String> uiOptions = new ArrayList<>();
     private double uncertaintyRadius = 0;
 
+    private Coordinate hubLocation;
+
 
     public State() {
         agents = new ArrayList<>();
@@ -125,7 +127,7 @@ public class State {
             add(tasks, (Task) item);
             // For programmed agents:
             for (Agent a : agents) {
-                if (a instanceof AgentReceiver abs) {
+                if (a instanceof AgentHubProgrammed abs) {
                     abs.addTaskFromUser((Task) item);
                 }
             }
@@ -337,8 +339,13 @@ public class State {
 
      */
 
+    public Coordinate getHubLocation() {
+        return hubLocation;
+    }
 
-
+    public void setHubLocation(Coordinate hubLocation) {
+        this.hubLocation = hubLocation;
+    }
 
     private class HazardHit {
         private Coordinate location;

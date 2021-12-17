@@ -148,6 +148,7 @@ public class Simulator {
             for(Task task : completedTasks) {
                 task.complete();
 
+                /*
                 if ((System.currentTimeMillis() - topStart) > 30000) {
                     printBeliefs();
                     System.out.println();
@@ -165,6 +166,7 @@ public class Simulator {
                 } else {
                     LOGGER.severe("Te = " + (System.currentTimeMillis() - topStart));
                 }
+                 */
             }
             //Step hazard hits
             this.state.decayHazardHits();
@@ -266,32 +268,42 @@ public class Simulator {
                 }
             }
 
+            // Now we just set programmed globally, it's simpler and prevents issues.
+            //  In future we could reconfigure to allow both
+            boolean programmed = false;
+            if(GsonUtils.hasKey(obj,"programmed")) {
+                Object progSetting = GsonUtils.getValue(obj, "programmed");
+                if (progSetting.getClass() == Boolean.class) {
+                    programmed = (Boolean) progSetting;
+                }
+            }
+
+
+            Object hub = GsonUtils.getValue(obj, "hub");
+            if(hub != null) {
+                Double lat = GsonUtils.getValue(hub, "lat");
+                Double lng = GsonUtils.getValue(hub, "lng");
+                if (programmed) {
+                    agentController.addHubProgrammedAgent(lat, lng, random, taskController);
+                } else {
+                    agentController.addHubAgent(lat, lng);
+                }
+
+                state.setHubLocation(new Coordinate(lat, lng));
+            }
+
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");
             if (agentsJson != null) {
                 for (Object agentJSon : agentsJson) {
                     Double lat = GsonUtils.getValue(agentJSon, "lat");
                     Double lng = GsonUtils.getValue(agentJSon, "lng");
 
-                    Boolean programmed = GsonUtils.getValue(agentJSon, "programmed");
-                    Boolean stationary = GsonUtils.getValue(agentJSon, "stationary");
                     Agent agent;
-                    if(programmed != null && programmed) {
-                        Boolean baseStation = GsonUtils.getValue(agentJSon, "receiver");
-                        if (baseStation != null && baseStation) {
-                            if(stationary != null && stationary) {
-                                agent = agentController.addReceiver(lat, lng, 0, random, taskController, true);
-                            } else {
-                                agent = agentController.addReceiver(lat, lng, 0, random, taskController);
-                            }
-                        } else {
-                            //agent = agentController.addProgrammedAgent(lat, lng, 0);
-                            agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
-                        }
+                    if (programmed) {
+                        agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
                     } else {
                         agent = agentController.addVirtualAgent(lat, lng, 0);
                     }
-
-                    //Agent agent = agentController.addVirtualAgent(lat, lng, 0);
                     Double battery = GsonUtils.getValue(agentJSon, "battery");
                     if(battery != null)
                         agent.setBattery(battery);

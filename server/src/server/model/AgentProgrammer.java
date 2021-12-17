@@ -11,7 +11,6 @@ public class AgentProgrammer {
 
     private boolean leader = false;
     private int strandedCounter = 0;
-
     private boolean hasNearbyLeader = false;
 
 
@@ -20,10 +19,9 @@ public class AgentProgrammer {
      * This would be a good place to make the agent randomly decide if it should be a leader, if desired
      */
     public void setup() {
-        if (a.isReceiver()) {
+        if (a.isHub()) {
             LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
             leader = true;
-            a.setVisual("hub");
         } else if (Math.random() > 0.65) {
             LOGGER.severe("Sv: Agent with GLOBAL ID " + a.agent.getId() + " randomly assigned leadership");
             leader = true;
@@ -109,8 +107,11 @@ public class AgentProgrammer {
     }
 
     private void pingLeaders() {
-        hasNearbyLeader = false;
-        a.sendCustomMessage("PING_LEADERS_SEND", a.getId());  // Use id as return address
+        //hasNearbyLeader = false;
+        //a.sendCustomMessage("PING_LEADERS_SEND", a.getId());  // Use id as return address
+
+        hasNearbyLeader = true;
+
 
         if (!hasNearbyLeader) {
             //LOGGER.severe("Failed to find a nearby leader for agent: " + a.getId());
@@ -125,7 +126,7 @@ public class AgentProgrammer {
      */
     public void onMessageReceived(String opCode, String payload) {
         if (opCode.equals("PING_LEADERS_SEND")) {
-            if (leader && !a.isReceiver()) {  // Check that we are a leader, and are not the hub
+            if (leader && !a.isHub()) {  // Check that we are a leader, and are not the hub
                 //LOGGER.severe(a.getId() + " has been pinged, and is a leader, returning confirmation");
                 a.sendCustomMessage("PING_LEADERS_RECEIVE", payload);
             }

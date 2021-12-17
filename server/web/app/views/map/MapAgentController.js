@@ -259,13 +259,14 @@ var MapAgentController = {
         if (agent.getId() === this.views.clickedAgent)
             icon = this.icons.UAVSelected;
         else {
-            if (agent.getVisualType() === "hub")
-                icon = this.icons.FLAG;  //TODO make a new icon
-            else if (agent.getManuallyControlled() || agent.getVisualType() === "leader")
+            if(agent.getVisualType() === "hub") {
+                icon = this.icons.FLAG;
+                marker.setOptions({clickable: false, draggable: false})
+            } else if(agent.getManuallyControlled() || agent.getVisualType() === "leader") {
                 icon = this.icons.UAVManual;
-            else if (agent.isTimedOut())
+            } else if(agent.isTimedOut()) {
                 icon = this.icons.UAVTimedOut;
-            else
+            } else
                 icon = this.icons.UAV;
         }
         marker.setIcon(icon.Image);

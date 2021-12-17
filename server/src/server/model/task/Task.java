@@ -68,7 +68,7 @@ public abstract class Task extends MObject implements Serializable {
         for (Agent a : Simulator.instance.getState().getAgents()) {
             if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
                 arrivedAgents.add(a);
-                if (a instanceof AgentProgrammed ap && !(a instanceof AgentReceiver)) {
+                if (a instanceof AgentProgrammed ap && !(a instanceof Hub)) {
                     ap.tempManualPushCompletedTask(this.getCoordinate());
                 }
             }

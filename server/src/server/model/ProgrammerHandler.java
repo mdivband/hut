@@ -20,7 +20,9 @@ public class ProgrammerHandler implements Serializable {
 
     private final int SENSE_RANGE = 200; // The max (and default) radius used for sensing neighbours etc
     private int pingCounter = 0;
-    private final int pingTimeout = 5; // (5x200ms = every 1 seconds)
+    private int resetPingCounter = 0;
+    private final int resetTimeout = 300; // (50x200ms = every 60 seconds)
+    private final int pingTimeout = 50; // (5x200ms = every 10 seconds)
 
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
     protected transient AgentProgrammed agent;
@@ -61,17 +63,20 @@ public class ProgrammerHandler implements Serializable {
             networkID = agent.getNetworkId();
             declareSelf(SENSE_RANGE);
             agentProgrammer.setup();
-
-        } else {
+        } else if (pingCounter >= pingTimeout) {
             declareSelf(SENSE_RANGE);
-            agentProgrammer.step();
-        }
-        pingCounter++;
-        if (pingCounter >= pingTimeout) {
-            clearNeighbours();
-            //declareSelf(SENSE_RANGE);
             pingCounter = 0;
         }
+        pingCounter++;
+        if (resetPingCounter >= resetTimeout) {
+            clearNeighbours();
+            //declareSelf(SENSE_RANGE);
+            resetPingCounter = 0;
+        }
+        resetPingCounter++;
+
+
+        agentProgrammer.step();
     }
 
     /***
@@ -84,10 +89,13 @@ public class ProgrammerHandler implements Serializable {
             agent.setNetworkID(agent.generateRandomTag());
             declareSelf(SENSE_RANGE);
             agentProgrammer.setup();
-        } else {
+        } else if (pingCounter >= pingTimeout) {
             declareSelf(SENSE_RANGE); // This must be separate, as order matters for the first case
+            broadcastTasks();
+            pingCounter = 0;
         }
-        broadcastTasks();
+        pingCounter++;
+
     }
 
     protected Coordinate getPosition(){
@@ -337,7 +345,7 @@ public class ProgrammerHandler implements Serializable {
 
         tasks.remove(currentTask);
 
-        if (agent instanceof AgentReceiver) {
+        if (agent instanceof Hub) {
             agent.tempRemoveTask(currentTask);
         }
 
@@ -578,6 +586,11 @@ public class ProgrammerHandler implements Serializable {
      * @param message The entire message given
      */
     protected void receiveMessage(String message) {
+        //if (agent instanceof Hub) {
+        //    System.out.println("Receiving: " + message);
+        //}
+
+
         // TODO as of a recent java update, we can use regex-based case statements here in future
         try {
             if (message.contains("CUSTOM")) {
@@ -642,6 +655,9 @@ public class ProgrammerHandler implements Serializable {
                 thisTask.add(thisCoord);
                 if (checkTaskPossible(thisTask)) {
                     completedTasks.add(thisTask);
+                    if (agent instanceof Hub) {
+                        System.out.println("Receiving completed task from message: " + message);
+                    }
                     // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
                 }
 
@@ -654,6 +670,9 @@ public class ProgrammerHandler implements Serializable {
                 thisTask.add(thisCoord);
                 if (checkTaskPossible(thisTask)) {
                     tasks.put(thisTask, new ArrayList<>());
+                    if (agent instanceof Hub) {
+                        System.out.println("Receiving new task from message: " + message);
+                    }
                 }
             } else if (message.contains("TASK_REGION")) {
                 String nwX = message.split(";")[1].split(",")[0];
@@ -675,6 +694,9 @@ public class ProgrammerHandler implements Serializable {
                 thisTask.add(sw);
                 if (checkTaskPossible(thisTask)) {
                     tasks.put(thisTask, new ArrayList<>());
+                    if (agent instanceof Hub) {
+                        System.out.println("Receiving new task from message: " + message);
+                    }
                 }
             } else if (message.contains("COMPLETED")) {
                 String[] msgArray = message.split(";");
@@ -689,6 +711,9 @@ public class ProgrammerHandler implements Serializable {
                     thisTask.add(coord);
                 }
                 receiveCompleteTask(thisTask);
+                if (agent instanceof Hub) {
+                    System.out.println("Receiving completed task from message: " + message);
+                }
 
             } else if(message.contains("DIAG")) {
                 LOGGER.severe("Diagnostic message received: \"" + message.split(";")[1] + "\"");
@@ -888,14 +913,6 @@ public class ProgrammerHandler implements Serializable {
     }
 
     /***
-     * Checks whether this agent is a receiver of tasks
-     * @return If it is a receiver
-     */
-    protected boolean isReceiver() {
-        return (agent instanceof AgentReceiver);
-    }
-
-    /***
      * Gets average movement based on if agents are stopped or moving, NOT their "speed" stat as that doesn't change
      * @return Average movement
      */
@@ -1007,6 +1024,11 @@ public class ProgrammerHandler implements Serializable {
     public String getModel(){
         return GsonUtils.toJson(this);
     }
+
+    public boolean isHub() {
+        return agent instanceof Hub;
+    }
+
 
     /***
      * We use an internal class to make handling positional information easier. Holds location, heading, and whether it

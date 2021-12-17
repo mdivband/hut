@@ -16,9 +16,9 @@ public class AgentProgrammed extends Agent {
     private transient Random random;
     private transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
 
-    private transient Sensor sensor;
-    private transient TaskController taskController;
-    private transient ProgrammerHandler programmerHandler;
+    protected transient Sensor sensor;
+    protected transient TaskController taskController;
+    protected transient ProgrammerHandler programmerHandler;
 
     public AgentProgrammed(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);

@@ -40,13 +40,6 @@ public class AgentController extends AbstractController {
         return agent;
     }
 
-    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading) {
-        Agent agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor);
-        agent.setHeading(heading);
-        simulator.getState().add(agent);
-        return agent;
-    }
-
     public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController) {
         Agent agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, random, taskController);
         agent.setHeading(heading);
@@ -54,20 +47,19 @@ public class AgentController extends AbstractController {
         return agent;
     }
 
-    public synchronized Agent addReceiver(double lat, double lng, double heading, Random random, TaskController taskController) {
-        Agent agent = new AgentReceiver(generateUID(), new Coordinate(lat, lng), sensor, random, taskController, false);
-        agent.setHeading(heading);
+    public synchronized Agent addHubAgent(double lat, double lng) {
+        // We assume just one HUB, so this is a unique ID
+        Agent agent = new AgentHub("HUB", new Coordinate(lat, lng), sensor);
         simulator.getState().add(agent);
         return agent;
     }
 
-    public synchronized Agent addReceiver(double lat, double lng, double heading, Random random, TaskController taskController, boolean isStationary) {
-        Agent agent = new AgentReceiver(generateUID(), new Coordinate(lat, lng), sensor, random, taskController, isStationary);
-        agent.setHeading(heading);
+    public synchronized Agent addHubProgrammedAgent(double lat, double lng, Random random, TaskController taskController) {
+        // We assume just one HUB, so this is a unique ID
+        Agent agent = new AgentHubProgrammed("HUB", new Coordinate(lat, lng), sensor, random, taskController);
         simulator.getState().add(agent);
         return agent;
     }
-
 
     public synchronized boolean deleteAgent(String id) {
         Agent agent = simulator.getState().getAgent(id);
