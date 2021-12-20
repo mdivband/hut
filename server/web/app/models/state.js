@@ -34,6 +34,7 @@ App.Models.State  = Backbone.Model.extend({
     },
     initialize: function() {
         this.agents = new App.Collections.Agents();
+        this.ghosts = new App.Collections.Ghosts();
         this.tasks = new App.Collections.Tasks();
         this.completedTasks = new App.Collections.CompletedTasks();
         this.hazards = new App.Collections.Hazards();
@@ -46,12 +47,14 @@ App.Models.State  = Backbone.Model.extend({
         // remove:false prevents firing of removed events (might not be wanted)
         //  but also prevents DELETE HTTP requests being sent (probably wanted!).
         this.agents.update(resp.agents, {parse:true});
+        this.ghosts.update(resp.ghosts, {parse:true});
         this.tasks.update(resp.tasks, {parse:true});
         this.completedTasks.update(resp.completedTasks, {parse:true});
         this.hazards.update(resp.hazards, {parse:true});
         this.targets.update(resp.targets, {parse:true});
 
         delete resp.agents;
+        delete resp.ghosts;
         delete resp.tasks;
         delete resp.completedTasks;
         delete resp.hazards;

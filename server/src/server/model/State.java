@@ -37,6 +37,7 @@ public class State {
     private String prov_doc;
 
     private final Collection<Agent> agents;
+    private final Collection<AgentGhost> ghosts;
     private final Collection<Task> tasks;
     private final Collection<Task> completedTasks;
     private final Collection<Hazard> hazards;
@@ -67,6 +68,7 @@ public class State {
 
     public State() {
         agents = new ArrayList<>();
+        ghosts = new ArrayList<>();
         tasks = new ArrayList<>();
         completedTasks = new ArrayList<>();
         targets = new ArrayList<>();
@@ -88,6 +90,7 @@ public class State {
         inProgress = false;
 
         agents.clear();
+        ghosts.clear();
         tasks.clear();
         completedTasks.clear();
         targets.clear();
@@ -354,6 +357,55 @@ public class State {
 
     public void setHubLocation(Coordinate hubLocation) {
         this.hubLocation = hubLocation;
+    }
+
+    public void updateAgentVisibility(int range) {
+        for (Agent agent : agents) {
+            // TODO Also consider setting this to trigger a "ghost agent", which is moved around by the hub purely as a
+            //  marker with no interaction
+            //if (hubLocation.getDistance(agent.getCoordinate()) > range && agent.isVisible()) {
+            if (hubLocation.getDistance(agent.getCoordinate()) < range && !agent.isVisible()) {  // TODO this isn't needed here if adjusted in ghost mthds
+                agent.setVisible(true);
+            } else if (hubLocation.getDistance(agent.getCoordinate()) > range && agent.isVisible()){
+                // Has left the range
+                agent.setVisible(false);
+                addGhost(agent);
+            }
+        }
+    }
+
+    private void addGhost(Agent agent) {
+        ghosts.add(new AgentGhost(agent));
+        System.out.println("Ghosting " + agent.getId());
+    }
+
+    public void updateGhosts(int range) {
+        ArrayList<AgentGhost> ghostsToRemove = new ArrayList<>();
+        for (AgentGhost ghost : ghosts) {
+            if (hubLocation.getDistance(ghost.getCoordinate()) < range) {
+                // Has re-entered the range. We must kill this ghost and reinstate the real agent
+                ghostsToRemove.add(ghost);
+            }
+        }
+        try {
+            for (AgentGhost ghostToRem : ghostsToRemove) {
+                ghosts.remove(ghostToRem);
+                String baseId = ghostToRem.getId().split("_")[0];  // Removes the "_ghost" part
+                // Line below just finds first (and only) agent with this ID. Shouldn't ever fail if everything else is correct
+                Agent agentToReinstate = agents.stream().filter(agent -> agent.getId().equals(baseId)).findFirst().get();
+                agentToReinstate.setVisible(true);
+                System.out.println("Reinstating: " + agentToReinstate.getId());
+            }
+        } catch (Exception e) {
+            System.out.println("Error reinstating agent: " + e);
+        }
+    }
+
+    public void moveGhosts() {
+        for (AgentGhost ghost : ghosts) {
+            ghost.step(false);
+        }
+
     }
 
     private class HazardHit {

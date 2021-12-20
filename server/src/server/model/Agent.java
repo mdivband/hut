@@ -28,7 +28,7 @@ public abstract class Agent extends MObject implements Serializable {
     protected double battery;
     protected double heading;
     private boolean manuallyControlled = false;
-    private final List<Coordinate> route;
+    protected final List<Coordinate> route;
     private final List<Coordinate> tempRoute;
     protected double speed;
     private String allocatedTaskId;
@@ -37,13 +37,13 @@ public abstract class Agent extends MObject implements Serializable {
     private boolean timedOut;
     private boolean working;
 
+    protected String type;
+    protected boolean visible = false;
+
     //Used in server but not in client
     private transient long lastHeartbeat;
     private transient boolean startSearching;
     private transient boolean stopped;
-
-    protected String type;
-
 
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
@@ -401,5 +401,13 @@ public abstract class Agent extends MObject implements Serializable {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 }

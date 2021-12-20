@@ -137,8 +137,12 @@ public class Simulator {
 
             //Step agents
             checkAgentsForTimeout();
-            for (Agent agent : state.getAgents())
+            for (Agent agent : state.getAgents()) {
                 agent.step(state.isFlockingEnabled());
+            }
+            state.updateAgentVisibility(200);  // TODO pass this value in with scenario file
+            state.updateGhosts(200);
+            state.moveGhosts();
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();

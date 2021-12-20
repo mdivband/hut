@@ -1,7 +1,7 @@
-_.provide("App.Models.Agent");
-_.provide("App.Collections.Agents");
+_.provide("App.Models.Ghost");
+_.provide("App.Collections.Ghosts");
 
-App.Models.Agent = App.Models.MObject.extend({
+App.Models.Ghost = App.Models.MObject.extend({
     defaults: {
         allocatedTaskId: null,
         altitude: 3,
@@ -16,8 +16,8 @@ App.Models.Agent = App.Models.MObject.extend({
         timeInAir: 0,
         working: false,
         isLeader: false,
-        type: "standard",
-        visible: false,
+        type: "ghost",
+        visible: true,
 
     },
     destroy: function() {
@@ -68,7 +68,7 @@ App.Models.Agent = App.Models.MObject.extend({
     }
 });
 
-App.Collections.Agents = Backbone.Collection.extend({
-    model: App.Models.Agent,
-    url: "/agents"
+App.Collections.Ghosts = Backbone.Collection.extend({
+    model: App.Models.Ghost,
+    url: "/ghosts"
 });

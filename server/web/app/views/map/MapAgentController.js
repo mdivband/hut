@@ -23,6 +23,9 @@ var MapAgentController = {
         this.updateAgentMarkerIcon = _.bind(this.updateAgentMarkerIcon, context);
         this.updateAllAgentMarkerIcons = _.bind(this.updateAllAgentMarkerIcons, context);
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
+        this.updateAgentMarkerVisibility = _.bind(this.updateAgentMarkerVisibility, context);
+        this.onGhostAdd = _.bind(this.onGhostAdd, context);
+        this.onGhostChange = _.bind(this.onGhostChange, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -31,10 +34,19 @@ var MapAgentController = {
         this.state.agents.on("add", function (agent) {
             MapAgentController.onAgentAdd(agent);
         });
+        this.state.ghosts.on("add", function (agent) {
+            MapAgentController.onGhostAdd(agent);
+        });
         this.state.agents.on("change", function (agent) {
             MapAgentController.onAgentChange(agent);
         });
+        this.state.ghosts.on("change", function (agent) {
+            MapAgentController.onGhostChange(agent);
+        });
         this.state.agents.on("remove", function (agent) {
+            MapAgentController.onAgentRemove(agent);
+        });
+        this.state.ghosts.on("remove", function (agent) {
             MapAgentController.onAgentRemove(agent);
         });
         this.state.agents.on("change:timedOut", function (agent) {
@@ -43,6 +55,10 @@ var MapAgentController = {
             else
                 MapAgentController.onAgentReconnect(agent);
         });
+        this.state.agents.on("change:visible", function (agent) {
+            MapAgentController.updateAgentMarkerVisibility(agent)
+        });
+
     },
     onAgentAdd: function (agent) {
         console.log('Agent added ' + agent.getId());
@@ -61,6 +77,7 @@ var MapAgentController = {
             heading: agent.getHeading(),
             raiseOnDrag: false,
             zIndex: 2,
+            visible: agent.isVisible(),
         });
 
         //If real agent is added, zoom to it
@@ -80,13 +97,37 @@ var MapAgentController = {
             MapAgentController.onAgentMarkerDragEnd(marker);
         });
     },
+    onGhostAdd: function (agent) {
+        console.log('Ghost added ' + agent.getId());
+        var id = agent.getId();
 
+        this.$el.gmap("addMarker", {
+            marker: MarkerWithLabel,
+            draggable: false, //Allows use of drag and dragend events even though the marker shouldn't be moved by dragging.
+            labelContent: id,
+            labelAnchor: new google.maps.Point(22, -18),
+            labelClass: "labels",
+            labelStyle: {opacity: 1.0},
+            id: id,
+            position: agent.getPosition(),
+            heading: agent.getHeading(),
+            raiseOnDrag: false,
+            zIndex: 2,
+        });
+        MapAgentController.updateAgentMarkerIcon(agent);
+    },
     onAgentChange: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         if (marker)
             MapAgentController.updateAgentMarkerIcon(agent);
         this.updateTable();
         MapTargetController.checkForReveal(agent);
+    },
+    onGhostChange: function (agent) {
+        var marker = this.$el.gmap("get", "markers")[agent.getId()];
+        if (marker)
+            MapAgentController.updateAgentMarkerIcon(agent);
+        this.updateTable();
     },
     onAgentRemove: function (agent) {
         console.log('Agent removed ' + agent.getId());
@@ -262,6 +303,9 @@ var MapAgentController = {
             if(agent.getType() === "hub") {
                 icon = this.icons.FLAG;
                 marker.setOptions({clickable: false, draggable: false})
+            } else if (agent.getType() === "ghost") {
+                icon = this.icons.UAVTimedOut;
+                marker.setOptions({clickable: false, draggable: false})
             } else if(agent.getManuallyControlled() || agent.getType() === "leader") {
                 icon = this.icons.UAVManual;
             } else if(agent.isTimedOut()) {
@@ -284,6 +328,11 @@ var MapAgentController = {
             MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
         }
 
+    },
+    updateAgentMarkerVisibility: function (agent) {
+        var marker = this.$el.gmap("get", "markers")[agent.getId()];
+        marker.setVisible(agent.isVisible());
+        console.log("set " + agent.getId() + " is now " + agent.isVisible())
     },
     updateAllAgentMarkerIcons: function () {
         this.state.agents.each(function (agent) {

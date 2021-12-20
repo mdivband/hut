@@ -230,10 +230,10 @@ App.Views.Map = Backbone.View.extend({
             this.state.agents.forEach(function (agent) {
                 var predId = agent.getId() + "_pred";
                 var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
-
                 var predPath = agent.getRoute();
 
-                if (predPath.length !== 0) {
+                // This statement later catches the invisble agent case
+                if (predPath.length !== 0 && agent.isVisible()){
                     var newPath = [];
                     newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
                     predPath.forEach(function (item, index) {
@@ -297,20 +297,26 @@ App.Views.Map = Backbone.View.extend({
             var sigma = radius; // Uncertainty radius in metres
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
 
-            if(currentCircle) {
-                currentCircle.setOptions({center: agent.getPosition()});
-                currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
+            if (agent.isVisible()) {
+                if (currentCircle) {
+                    currentCircle.setOptions({center: agent.getPosition()});
+                    currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
+                } else {
+                    self.$el.gmap("addShape", "Circle", {
+                        id: agentId + "_unc",
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 0,
+                        fillColor: "#0033ff",
+                        fillOpacity: 0.4,
+                        center: agent.getPosition(),
+                        radius: sigma,
+                    });
+                }
             } else {
-                self.$el.gmap("addShape", "Circle", {
-                    id: agentId + "_unc",
-                    strokeColor: "#FF0000",
-                    strokeOpacity: 0.8,
-                    strokeWeight: 0,
-                    fillColor: "#0033ff",
-                    fillOpacity: 0.4,
-                    center: agent.getPosition(),
-                    radius: sigma,
-                });
+                if (currentCircle) {
+                    currentCircle.setVisible(false);
+                }
             }
         })
     },

@@ -79,7 +79,6 @@ public class AgentProgrammed extends Agent {
         if(!isTimedOut())
             heartbeat();
         this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
-
         //manualCheckTaskComplete();
     }
 

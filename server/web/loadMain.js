@@ -81,6 +81,7 @@ $LAB.setOptions({
     // ----- Models -----
     .script("app/models/base.js")
     .script("app/models/agents.js")
+    .script("app/models/ghosts.js")
     .script("app/models/tasks.js")
     .script("app/models/hazards.js")
     .script("app/models/targets.js")
