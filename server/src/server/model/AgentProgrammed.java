@@ -97,7 +97,6 @@ public class AgentProgrammed extends Agent {
     }
 
     public void registerCompleteTask(Coordinate coordinate) {
-        //programmerHandler.completeTask(coordinate);
         programmerHandler.completeTask(coordinate);
     }
 

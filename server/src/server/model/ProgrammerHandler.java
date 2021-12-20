@@ -365,26 +365,29 @@ public class ProgrammerHandler implements Serializable {
      * to the set of tasks that it will report as complete from now on
      */
     protected void completeTask(){
+        // A very important check here, otherwise return home tasks mess up the propogation of completed tasks and it
+        //  stops tasks being checked properly
+        if (currentTask.size() > 0) {
+            List<Coordinate> coords = currentTask;
 
-        List<Coordinate> coords = currentTask;
+            tasks.remove(currentTask);
 
-        tasks.remove(currentTask);
+            StringBuilder sb = new StringBuilder();
+            sb.append("COMPLETED");
+            for (Coordinate c : coords) {
+                sb.append(";");
+                sb.append(c.latitude);
+                sb.append(",");
+                sb.append(c.longitude);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("COMPLETED");
-        for (Coordinate c : coords) {
-            sb.append(";");
-            sb.append(c.latitude);
-            sb.append(",");
-            sb.append(c.longitude);
-
+            }
+            broadcast(sb.toString(), SENSE_RANGE);
         }
-        broadcast(sb.toString(), SENSE_RANGE);
     }
 
-    protected void completeTask(Coordinate task){
+    protected void completeTask(Coordinate coord){
         List<Coordinate> thisTask = new ArrayList<>();
-        thisTask.add(task);
+        thisTask.add(coord);
         tasks.remove(thisTask);
 
         StringBuilder sb = new StringBuilder();
@@ -569,9 +572,9 @@ public class ProgrammerHandler implements Serializable {
      */
     private boolean checkTaskPossible(List<Coordinate> coords) {
         //Coordinate centre = Coordinate.findCentre(coords);
-
+        boolean match = true;
         for (List<Coordinate> tsk : completedTasks) {
-            boolean match = true;
+            match = true;
             for (Coordinate c : tsk) {
                 if (!coords.contains(c)) {
                     // any difference in this set means it's not in completedTasks
@@ -588,7 +591,7 @@ public class ProgrammerHandler implements Serializable {
 
         for (var entry : tasks.entrySet()) {
             //Coordinate thisTaskCentre = Coordinate.findCentre(entry.getKey());
-            boolean match = true;
+            match = true;
             for (Coordinate c : entry.getKey()) {
                 //if (centre.equals(thisTaskCentre)) {
                 if (!coords.contains(c)) {
@@ -604,8 +607,6 @@ public class ProgrammerHandler implements Serializable {
             }
         }
 
-        // TODO - once drones head home they stop receiving newly added tasks, this shouldn't be the case
-        System.out.println("CLEARED - Task at " + coords.get(0) + " not known or complete, so adding");
         return true;
     }
 
@@ -675,21 +676,18 @@ public class ProgrammerHandler implements Serializable {
                     broadcastTasks();
                 }
             } else if (message.contains("COMPLETED_WAYPOINT")) {
-                System.out.println("askhdgakjshfafafasfasdfsadf");
                 String x = message.split(";")[1].split(",")[0];
                 String y = message.split(";")[1].split(",")[1];
                 Coordinate thisCoord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
                 List<Coordinate> thisTask = new ArrayList<>();
                 thisTask.add(thisCoord);
                 if (checkTaskPossible(thisTask)) {
+                    // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
                     completedTasks.add(thisTask);
                     if (agent instanceof Hub) {
                         System.out.println("Receiving completed at: " + thisCoord);
                     }
-                    // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
                 }
-
-
             } else if (message.contains("TASK_WAYPOINT")) {
                 String x = message.split(";")[1].split(",")[0];
                 String y = message.split(";")[1].split(",")[1];
@@ -698,13 +696,7 @@ public class ProgrammerHandler implements Serializable {
                 thisTask.add(thisCoord);
                 if (checkTaskPossible(thisTask)) {
                     tasks.put(thisTask, new ArrayList<>());
-                    System.out.println("Added task: " + message);
                     // Debug to display agent knowledge of new tasks
-                    /*
-                    if (!(agent instanceof Hub)) {
-                        System.out.println(agent.getNetworkId() + ": Receiving new task from message: " + message);
-                    }
-                     */
                 }
             } else if (message.contains("TASK_REGION")) {
                 String nwX = message.split(";")[1].split(",")[0];

@@ -268,6 +268,7 @@ var MapAgentController = {
                 icon = this.icons.UAVTimedOut;
             } else
                 icon = this.icons.UAV;
+
         }
         marker.setIcon(icon.Image);
         marker.setPosition(agent.getPosition());

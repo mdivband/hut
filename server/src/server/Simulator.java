@@ -147,26 +147,6 @@ public class Simulator {
                     completedTasks.add(task);
             for(Task task : completedTasks) {
                 task.complete();
-
-                /*
-                if ((System.currentTimeMillis() - topStart) > 30000) {
-                    printBeliefs();
-                    System.out.println();
-                    System.out.println();
-                    System.out.println();
-                    System.out.println();
-                    System.out.println();
-                    System.out.println("================================Te = " + (System.currentTimeMillis() - topStart) + "=========================================");
-                    System.out.println();
-                    System.out.println();
-                    System.out.println();
-                    System.out.println();
-                    System.out.println();
-                    printStateJson();
-                } else {
-                    LOGGER.severe("Te = " + (System.currentTimeMillis() - topStart));
-                }
-                 */
             }
             //Step hazard hits
             this.state.decayHazardHits();
