@@ -3,6 +3,7 @@ package server.model;
 import server.controller.TaskController;
 import server.model.task.Task;
 
+import java.util.List;
 import java.util.Random;
 
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {
@@ -11,6 +12,7 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         super(id, position, sensor, random, taskController);
         type = "hub";
         stop();
+        visible = true;
     }
 
     public void addTaskFromUser(Task item) {
@@ -28,4 +30,7 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
     }
 
+    public boolean checkForConnection(Agent agent) {
+        return programmerHandler.checkForConnection(agent);
+    }
 }

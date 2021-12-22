@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import server.Allocator;
+import server.Simulator;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
 import server.model.task.Task;
@@ -63,6 +64,8 @@ public class State {
     private ArrayList<String> uiOptions = new ArrayList<>();
     private double uncertaintyRadius = 0;
 
+    // We could combine these, but it might be little more efficient to let them stay separate
+    private AgentHubProgrammed hub;
     private Coordinate hubLocation;
 
 
@@ -357,19 +360,23 @@ public class State {
 
     public void setHubLocation(Coordinate hubLocation) {
         this.hubLocation = hubLocation;
+
     }
 
-    public void updateAgentVisibility(int range) {
+    public void updateAgentVisibility() {
         for (Agent agent : agents) {
-            // TODO Also consider setting this to trigger a "ghost agent", which is moved around by the hub purely as a
-            //  marker with no interaction
-            //if (hubLocation.getDistance(agent.getCoordinate()) > range && agent.isVisible()) {
-            if (hubLocation.getDistance(agent.getCoordinate()) < range && !agent.isVisible()) {  // TODO this isn't needed here if adjusted in ghost mthds
-                agent.setVisible(true);
-            } else if (hubLocation.getDistance(agent.getCoordinate()) > range && agent.isVisible()){
-                // Has left the range
-                agent.setVisible(false);
-                addGhost(agent);
+            if (!(agent instanceof Hub)) {
+
+                //if (hubLocation.getDistance(agent.getCoordinate()) > range && agent.isVisible()) {
+                boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
+
+                if (connected && !agent.isVisible()) {  // TODO this isn't needed here if adjusted in ghost mthds
+                    agent.setVisible(true);
+                } else if (!connected && agent.isVisible()) {
+                    // Has left the range
+                    agent.setVisible(false);
+                    //addGhost(agent);
+                }
             }
         }
     }
@@ -379,10 +386,14 @@ public class State {
         System.out.println("Ghosting " + agent.getId());
     }
 
-    public void updateGhosts(int range) {
+    public void updateGhosts() {
         ArrayList<AgentGhost> ghostsToRemove = new ArrayList<>();
         for (AgentGhost ghost : ghosts) {
-            if (hubLocation.getDistance(ghost.getCoordinate()) < range) {
+            String baseId = ghost.getId().split("_")[0];
+            Agent equivalentAgent = agents.stream().filter(agent -> agent.getId().equals(baseId)).findFirst().get();
+            boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, equivalentAgent);
+
+            if (connected) {
                 // Has re-entered the range. We must kill this ghost and reinstate the real agent
                 ghostsToRemove.add(ghost);
             }
@@ -406,6 +417,10 @@ public class State {
             ghost.step(false);
         }
 
+    }
+
+    public void attachHub(Agent hub) {
+        this.hub = (AgentHubProgrammed) hub;
     }
 
     private class HazardHit {

@@ -140,9 +140,9 @@ public class Simulator {
             for (Agent agent : state.getAgents()) {
                 agent.step(state.isFlockingEnabled());
             }
-            state.updateAgentVisibility(200);  // TODO pass this value in with scenario file
-            state.updateGhosts(200);
-            state.moveGhosts();
+            state.updateAgentVisibility();
+            //state.updateGhosts();
+            //state.moveGhosts();
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
