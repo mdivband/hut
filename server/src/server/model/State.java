@@ -107,6 +107,11 @@ public class State {
 
     @Override
     public synchronized String toString() {
+        try {
+            String a = GsonUtils.toJson(this);
+        } catch (Exception e) {
+            int b = 2;
+        }
         return GsonUtils.toJson(this);
     }
 
@@ -366,16 +371,13 @@ public class State {
     public void updateAgentVisibility() {
         for (Agent agent : agents) {
             if (!(agent instanceof Hub)) {
-
-                //if (hubLocation.getDistance(agent.getCoordinate()) > range && agent.isVisible()) {
                 boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
-
-                if (connected && !agent.isVisible()) {  // TODO this isn't needed here if adjusted in ghost mthds
+                if (connected && !agent.isVisible()) {
                     agent.setVisible(true);
                 } else if (!connected && agent.isVisible()) {
                     // Has left the range
                     agent.setVisible(false);
-                    //addGhost(agent);
+                    addGhost(agent);
                 }
             }
         }
@@ -383,7 +385,7 @@ public class State {
 
     private void addGhost(Agent agent) {
         ghosts.add(new AgentGhost(agent));
-        System.out.println("Ghosting " + agent.getId());
+        //System.out.println("Ghosting " + agent.getId());
     }
 
     public void updateGhosts() {
@@ -405,7 +407,7 @@ public class State {
                 // Line below just finds first (and only) agent with this ID. Shouldn't ever fail if everything else is correct
                 Agent agentToReinstate = agents.stream().filter(agent -> agent.getId().equals(baseId)).findFirst().get();
                 agentToReinstate.setVisible(true);
-                System.out.println("Reinstating: " + agentToReinstate.getId());
+                //System.out.println("Reinstating: " + agentToReinstate.getId());
             }
         } catch (Exception e) {
             System.out.println("Error reinstating agent: " + e);
@@ -414,9 +416,28 @@ public class State {
 
     public void moveGhosts() {
         for (AgentGhost ghost : ghosts) {
-            ghost.step(false);
+            ghost.step(true);  // The argument here allows us to get ghosts to try to simulate flocking too
+            if (ghost.isAtHome() && ghost.isVisible()) {
+                // It's returned to the Hub and we now know nothing about it, so let's hide it, otherwise it clutters
+                //  and confuses the interface
+                ghost.setVisible(false);
+            } else if (!ghost.isAtHome() && !ghost.isVisible()) {
+                // For if we rediscover this agent away from home
+                ghost.setVisible(true);
+                ghost.setAtHome(false);
+            }  // Otherwise leave it be, it's either: Visible and not home yet, or At home and invisible
         }
+    }
 
+    public List<Agent> senseNeighbouringGhosts(AgentGhost ghostToSense, int radius) {
+        List<Agent> neighbours = new ArrayList<>();
+        for (AgentGhost ghost : ghosts) {
+            if (ghostToSense.getCoordinate().getDistance(ghost.getCoordinate()) < radius || !ghostToSense.getId().equals(ghost.getId())) {
+                // This ghost is close enough
+                neighbours.add(ghost);
+            }
+        }
+        return neighbours;
     }
 
     public void attachHub(Agent hub) {

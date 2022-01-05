@@ -283,7 +283,15 @@ public class AgentProgrammed extends Agent {
 
             for (Agent neighbour : neighbours) {
                 double multiplier = 1;
-                if (neighbour.getTask() != null) {
+                boolean isLeader = false;
+                // This line below works for the programmed mode, checking if it's a leader
+                if (neighbour instanceof AgentProgrammed) {
+                    AgentProgrammed ap = (AgentProgrammed) neighbour;
+                    if (ap.getType().equals("leader")) {
+                        isLeader = true;
+                    }
+                }
+                if (neighbour.getTask() != null || isLeader) {
                     multiplier = 100;
                 }
                 else {
@@ -347,8 +355,27 @@ public class AgentProgrammed extends Agent {
         return true;
     }
 
+    private String getType() {
+        return type;
+    }
+
     public String getBelievedModel() {
         return programmerHandler.getModel();
     }
 
+    public boolean isLeader() {
+        return programmerHandler.isLeader();
+    }
+
+    public Coordinate getHubLocation() {
+        return programmerHandler.getHubPosition();
+    }
+
+    public double getSenseRange() {
+        return programmerHandler.getSenseRange();
+    }
+
+    public double getNextRandom() {
+        return random.nextDouble();
+    }
 }

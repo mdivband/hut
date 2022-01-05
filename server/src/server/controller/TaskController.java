@@ -39,7 +39,7 @@ public class TaskController extends AbstractController {
                 throw new IllegalArgumentException("Unable to create task of type " + taskType);
         }
         simulator.getState().add(task);
-        LOGGER.info("Created new task " + id + " at " + lat + ", " + lng);
+        //LOGGER.info("Created new task " + id + " at " + lat + ", " + lng);
         return task;
     }
 
@@ -104,7 +104,7 @@ public class TaskController extends AbstractController {
         }
 
         simulator.getState().remove(task);
-        LOGGER.info("Removed task " + id);
+        //LOGGER.info("Removed task " + id);
 
         if(completed)
             simulator.getState().addCompletedTask(task);
@@ -114,9 +114,11 @@ public class TaskController extends AbstractController {
     public void deleteTaskByCoords(List<Coordinate> coords) {
         try {
             if (coords.size() == 1) {
-                deleteTask(findTaskByCoord(coords.get(0)).getId(), true);
+                //deleteTask(findTaskByCoord(coords.get(0)).getId(), true);
+                findTaskByCoord(coords.get(0)).setStatus(Task.STATUS_DONE);
             } else {
-                deleteTask(findTaskByCoord(Coordinate.findCentre(coords)).getId(), true);
+                //deleteTask(findTaskByCoord(Coordinate.findCentre(coords)).getId(), true);
+                findTaskByCoord(Coordinate.findCentre(coords)).setStatus(Task.STATUS_DONE);
             }
 
         } catch (Exception e){

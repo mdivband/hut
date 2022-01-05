@@ -22,6 +22,7 @@ public abstract class Task extends MObject implements Serializable {
     public static final int STATUS_TODO = 0;
     public static final int STATUS_DOING = 1;
     public static final int STATUS_DONE = 2;
+    public static final int STATUS_DONE_PENDING = 3;  // For a completed task that needs to be reported when info gets to the HUB
 
     public static final int TASK_WAYPOINT = 0;
     public static final int TASK_MONITOR = 1;
@@ -73,6 +74,9 @@ public abstract class Task extends MObject implements Serializable {
                 }
             }
         }
+        Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+        //LOGGER.info("Task " + this.getId() + " has been completed");
+
     }
 
     private ArrayList<Agent> tempGetArrivedAgents(){
@@ -94,9 +98,19 @@ public abstract class Task extends MObject implements Serializable {
      * @return True if the task has been completed, false otherwise.
      */
     public boolean step() {
+        if (status == STATUS_DONE_PENDING) {
+            // Completed, but not yet reported to HUB
+            return false;
+        }
+
         ArrayList<Agent> arrivedAgents = tempGetArrivedAgents();
         if (arrivedAgents.size() > 0) {
-            setStatus(Task.STATUS_DONE);
+            if (arrivedAgents.get(0) instanceof AgentProgrammed) {
+                // We assume they are all the same for now
+                setStatus(Task.STATUS_DONE_PENDING);
+            } else {
+                setStatus(Task.STATUS_DONE);
+            }
             return status == Task.STATUS_DONE;
         }
 

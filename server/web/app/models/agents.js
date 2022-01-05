@@ -64,6 +64,7 @@ App.Models.Agent = App.Models.MObject.extend({
         return this.get("type");
     },
     isVisible: function () {
+        //return true;
         return this.get("visible");
     }
 });

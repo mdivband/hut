@@ -141,15 +141,20 @@ public class Simulator {
                 agent.step(state.isFlockingEnabled());
             }
             state.updateAgentVisibility();
-            //state.updateGhosts();
-            //state.moveGhosts();
+            state.updateGhosts();
+            state.moveGhosts();
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
-            for (Task task : state.getTasks())
-                if(task.step())
+            for (Task task : state.getTasks()) {
+                if (task.step()) {
+                    // If it's already tagged by a programmed agent, or if it gets completed by the step command
                     completedTasks.add(task);
+                    // TODO The first task is often erroneously completed here
+                }
+            }
             for(Task task : completedTasks) {
+                //System.out.println("COMPLETING: " + task.getId() + " c = " + task.getCoordinate());
                 task.complete();
             }
             //Step hazard hits

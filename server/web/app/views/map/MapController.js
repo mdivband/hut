@@ -199,6 +199,7 @@ var MapController = {
         this.updateAllocationRendering();
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);
+            this.drawPredictedGhostPath(MapController.predictionLength);
         } else {
             this.clearPredictions();
         }

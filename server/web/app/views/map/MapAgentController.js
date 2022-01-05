@@ -58,6 +58,9 @@ var MapAgentController = {
         this.state.agents.on("change:visible", function (agent) {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
+        this.state.ghosts.on("change:visible", function (agent) {
+            MapAgentController.updateAgentMarkerVisibility(agent)
+        });
 
     },
     onAgentAdd: function (agent) {

@@ -9,7 +9,7 @@ public class AgentProgrammer {
         a = programmerHandler;
     }
 
-    private boolean leader = false;
+    //private boolean leader = false;
     private int strandedCounter = 0;
     private boolean hasNearbyLeader = false;
 
@@ -21,11 +21,13 @@ public class AgentProgrammer {
     public void setup() {
         if (a.isHub()) {
             LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
-            leader = true;
-        } else if (Math.random() > 0.65) {
+            a.setLeader(true);
+        } else if (a.getNextRandomDouble() > 0.65) {
             LOGGER.severe("Sv: Agent with GLOBAL ID " + a.agent.getId() + " randomly assigned leadership");
-            leader = true;
+            a.setLeader(true);
             a.setVisual("leader");
+        } else {
+            a.setLeader(false);
         }
     }
 
@@ -33,37 +35,65 @@ public class AgentProgrammer {
      * Called at every time step (currently 200ms)
      */
     public void step(){
-        if (leader) {
-            if (a.isStopped()) {
-                if (Math.random() < 0.9) {
-                    if (a.getCompletedTasks().size() > 0) {
-                        // temp pass to add a delay. Flock 1 step, then stop again so this gets recalled (as a leader)
-                        a.flockWithAttractionRepulsion();
-                        a.moveAlongHeading(1);
-                        a.stop();
+        if (a.getTasks().size() == 0) {
+            // WAIT; Only begin executing if we have tasks added now (so they don't fly off at the start)
+        } else {
+            if (a.isLeader()) {
+                if (a.isStopped()) {
+                    if (a.getCompletedTasks().size() == 0) {
+                        // Get first task
+                        List<Coordinate> task = a.getNearestEmptyTask();
+                        if (task != null) {
+                            a.setTask(task);
+                            a.resume();
+                        }
                     }
+                    if (a.getNextRandomDouble() < 0.9) {
+                        if (a.getCompletedTasks().size() > 0) {
+                            // WAIT - To make task clashes less likely
+                        }
+                    } else {
+                        try {
+                            if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) < a.getSenseRange()) {
+                                // At home
+                                List<Coordinate> task = a.getNearestEmptyTask();
+                                if (task != null) {
+                                    a.setTask(task);
+                                    a.resume();
+                                } else {
+                                    a.goHome();
+                                }
+                            } else {
+                                a.goHome();
+                            }
+                        } catch (Exception e) {
+                            System.out.println("Excep: Should be due to start conditions");
+                        }
 
-                } else {
+                    /*
                     List<Coordinate> task = a.getNearestEmptyTask();
                     if (task != null) {
                         a.setTask(task);
                         a.resume();
 
                     } else {
-                        if (a.getCompletedTasks().size() > 0) {
-                            // Tasks have been completed,AND we can't get a new task. This means we're in session and
-                            // have done everything known
+                        if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) > 150) {
+                            // Tasks have been completed, AND we can't get a new task, AND we aren't at home currently.
+                            // This means we're in session and have done everything known
+                            System.out.println("Issuing home order for stopped=" + a.isStopped() + "; " + a.getId() + ", tasks.size = " + a.getTasks().size());
                             a.goHome();
                         }
 
                         // Otherwise,probably the start of the session. Wait for something to happen
                     }
+                     */
+                    }
+                } else {
+                    a.followRoute();
                 }
             } else {
-                a.followRoute();
+                flock();
             }
-        } else {
-            flock();
         }
     }
 
@@ -94,7 +124,8 @@ public class AgentProgrammer {
                 a.goHome();
             }
         } else {
-            if (a.getPosition().getDistance(a.getHome()) > 150) {
+            if (a.getPosition().getDistance(a.getHome()) > a.getSenseRange()) {
+                //System.out.println("here");
                 //a.resume();   //TODO stopping here fixes the stranded problem but causes new ones
                 a.followRoute();
             } else {
@@ -107,15 +138,8 @@ public class AgentProgrammer {
     }
 
     private void pingLeaders() {
-        //hasNearbyLeader = false;
-        //a.sendCustomMessage("PING_LEADERS_SEND", a.getId());  // Use id as return address
-
-        hasNearbyLeader = true;
-
-
-        if (!hasNearbyLeader) {
-            //LOGGER.severe("Failed to find a nearby leader for agent: " + a.getId());
-        }
+        hasNearbyLeader = false;
+        a.sendCustomMessage("PING_LEADERS_SEND", a.getId());  // Use id as return address
     }
 
 
@@ -126,7 +150,7 @@ public class AgentProgrammer {
      */
     public void onMessageReceived(String opCode, String payload) {
         if (opCode.equals("PING_LEADERS_SEND")) {
-            if (leader && !a.isHub()) {  // Check that we are a leader, and are not the hub
+            if (a.isLeader() && !a.isHub()) {  // Check that we are a leader, and are not the hub
                 //LOGGER.severe(a.getId() + " has been pinged, and is a leader, returning confirmation");
                 a.sendCustomMessage("PING_LEADERS_RECEIVE", payload);
             }

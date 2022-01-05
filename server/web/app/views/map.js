@@ -284,6 +284,54 @@ App.Views.Map = Backbone.View.extend({
             }
         });
     },
+    drawPredictedGhostPath: function (predDepth){
+        try {
+            self = this;
+            this.state.ghosts.forEach(function (agent) {
+                var predId = agent.getId() + "_pred";
+                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
+                var predPath = agent.getRoute();
+
+                // This statement later catches the invisible agent case
+                if (predPath.length !== 0 && agent.isVisible()){
+                    var newPath = [];
+                    newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
+                    predPath.forEach(function (item, index) {
+                        if (index < predDepth) {
+                            newPath[index + 1] = {lat: item.latitude, lng: item.longitude}
+                        }
+                    });
+
+                    if (polyline) {
+                        // We found a path line we've already drawn, let's update it
+                        polyline.setOptions({path: newPath})
+                        polyline.setOptions({visible: true}) // In case it was hidden by the clearUncertainties() method
+                    } else {
+                        // Otherwise make a new one
+                        self.$el.gmap("addShape", "Polyline", {
+                            path: newPath,
+                            id: predId,
+                            icons: [self.polylineIcon],
+                            strokeOpacity: 0.8,
+                            strokeColor: 'rgba(19,18,18,0.78)',
+                            strokeWeight: 0.7,
+                            zIndex: 2,
+                            visible: true,
+                        });
+
+                    }
+                } else {
+                    if (polyline) {
+                        // Hide the old line, as no route planned. It will be revealed again if it is updated
+                        polyline.setOptions({visible: false});
+                    }
+                }
+            });
+        } catch (e) {
+            alert("Prediction drawing error: " + e)
+        }
+    },
+
     /***
      * A function to draw the circles for uncertainty.
      * Currently these are of a constant size (proof of concept)

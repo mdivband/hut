@@ -17,8 +17,8 @@ public class ProgrammerHandler implements Serializable {
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
     private static final double TARGET_SENSE_RANGE = 50;  // Number of metres around that the agent can detect targets
     private static final int AGENT_TIMEOUT = 6; // (6x200ms = every 1.2 second) ~= 1 real-life seconds
-    private static final int SENSE_RANGE = 200; // The max (and default) radius used for sensing neighbours etc
-    private static final int pingTimeout = 6; // (6x200ms = every 1.2 second) ~= 1 real-life seconds
+    private static final int SENSE_RANGE = 250; // The max (and default) radius used for sensing neighbours etc
+    private static final int pingTimeout = 3; // (6x200ms = every 1.2 second) ~= 1 real-life seconds
 
     protected transient AgentProgrammed agent;
     private final transient AgentProgrammer agentProgrammer;  // Link to the user's code
@@ -28,8 +28,9 @@ public class ProgrammerHandler implements Serializable {
     private final HashMap<List<Coordinate>, List<String>> tasks;
     private final List<List<Coordinate>> completedTasks;
     private final List<Coordinate> foundTargets;
-
-    private Coordinate home = new Coordinate(50.9295, -1.409); // TODO make this inferred from a hub announcement
+    
+    private Coordinate home;
+    private boolean leader = false;
 
     private boolean isGoingHome = false;
     private int stepCounter = 0;
@@ -75,7 +76,7 @@ public class ProgrammerHandler implements Serializable {
      */
     private void checkForTargets() {
         for (Target t : Simulator.instance.getState().getTargets()) {
-            if (t.getCoordinate().getDistance(getPosition()) < TARGET_SENSE_RANGE) {
+            if (t.getCoordinate().getDistance(getPosition()) < TARGET_SENSE_RANGE && !foundTargets.contains(t.getCoordinate())) {
                 foundTargets.add(t.getCoordinate());
             }
         }
@@ -104,7 +105,8 @@ public class ProgrammerHandler implements Serializable {
         if (agent.getNetworkId().equals("")) {
             agent.type = "hub";
             // Must perform setup on the first step, otherwise they can't find each other
-            agent.setNetworkID(agent.generateRandomTag());
+            //agent.setNetworkID(agent.generateRandomTag());
+            agent.setNetworkID("HUB");
             declareSelf(SENSE_RANGE);
             agentProgrammer.setup();
         } else if (pingCounter >= pingTimeout) {
@@ -114,14 +116,12 @@ public class ProgrammerHandler implements Serializable {
             pingCounter = 0;
         }
         pingCounter++;
-
         stepCounter++;
-
     }
 
     /**
      * Getter for the attached agent's coordinate
-     * @return
+     * @return Coordinate for this agent's position
      */
     protected Coordinate getPosition(){
         return agent.getCoordinate();
@@ -215,6 +215,9 @@ public class ProgrammerHandler implements Serializable {
         agent.resume();
     }
 
+    /**
+     * Cancels the current task this agent is doing
+     */
     protected void cancel(){
         tasks.get(currentTask).remove(getId());
         currentTask = new ArrayList<>();
@@ -327,10 +330,13 @@ public class ProgrammerHandler implements Serializable {
         agent.setRoute(coords);
     }
 
+    /**
+     * Sets the temp route for this agent (not normally used)
+     * @param coords The coordinates for this agent's temp route
+     */
     private void setTempRoute(List<Coordinate> coords) {
         agent.setTempRoute(coords);
     }
-
 
     /***
      * Adds the given coordinate to the route planned for this agent
@@ -366,7 +372,6 @@ public class ProgrammerHandler implements Serializable {
         //  stops tasks being checked properly
         if (currentTask.size() > 0) {
             List<Coordinate> coords = currentTask;
-
             tasks.remove(currentTask);
 
             StringBuilder sb = new StringBuilder();
@@ -379,6 +384,8 @@ public class ProgrammerHandler implements Serializable {
 
             }
             broadcast(sb.toString(), SENSE_RANGE);
+
+            completedTasks.add(coords);
         }
     }
 
@@ -398,7 +405,6 @@ public class ProgrammerHandler implements Serializable {
             sb.append(c.latitude);
             sb.append(",");
             sb.append(c.longitude);
-
         }
         broadcast(sb.toString(), SENSE_RANGE);
     }
@@ -409,6 +415,7 @@ public class ProgrammerHandler implements Serializable {
      */
     private void receiveCompleteTask(List<Coordinate> coords){
         if (!completedTasks.contains(coords)) {
+            //System.out.println(agent.getId() + " Receiving new complete task at " + coords.get(0));
             completedTasks.add(coords);
         }
 
@@ -419,7 +426,9 @@ public class ProgrammerHandler implements Serializable {
         tasks.remove(coords);
         if (currentTask.equals(coords)) {
             currentTask = new ArrayList<>();
+            // Not sure if stopping or returning fixes the halting bug
             stop();
+            //goHome();
         }
     }
 
@@ -432,7 +441,6 @@ public class ProgrammerHandler implements Serializable {
         Target t = Simulator.instance.getTargetController().findTargetByCoord(coords);
         Simulator.instance.getTargetController().setTargetVisibility(t.getId(), true);
     }
-
 
     /***
      * Senses all other agents within the given radius, and returns their locations
@@ -459,7 +467,6 @@ public class ProgrammerHandler implements Serializable {
         for(Agent n : neighbours) {
             double relLat = n.getCoordinate().getLatitude() - agent.getCoordinate().getLatitude();
             double relLng = n.getCoordinate().getLongitude() - agent.getCoordinate().getLongitude();
-
             coords.add(new Coordinate(relLat, relLng));
         }
         return coords;
@@ -647,6 +654,12 @@ public class ProgrammerHandler implements Serializable {
                         , stepCounter);
 
                 neighbours.put(id, newPos);
+
+                // Registers hub location manually
+                if (id.equals("HUB")) {
+                    home = new Coordinate(Double.parseDouble(locX), Double.parseDouble(locY));
+                }
+
                 if (neighbours.containsKey(id)) {
                     broadcast("GET_TASKS;" + id, SENSE_RANGE);
                 }
@@ -701,11 +714,18 @@ public class ProgrammerHandler implements Serializable {
                         //  or we consider it connected, but it was last updated directly too long ago. Disconnect but
                         //  record as inherited
                         neighbours.put(id, neighbourNewPos);
+                        // Registers hub location manually
+                        if (id.equals("HUB")) {
+                            home = new Coordinate(Double.parseDouble(locX), Double.parseDouble(locY));
+                        }
                     } else if (!neighbours.get(id).getDirectlyConnected()) {
                         // We are working on inherited connections for this record, so update
                         neighbours.put(id, neighbourNewPos);
+                        // Registers hub location manually
+                        if (id.equals("HUB")) {
+                            home = new Coordinate(Double.parseDouble(locX), Double.parseDouble(locY));
+                        }
                     } // Otherwise, we have a good recent direct connection
-
                 }
 
             } else if (message.contains("GET_TASKS")) {
@@ -809,7 +829,6 @@ public class ProgrammerHandler implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     /***
@@ -927,7 +946,6 @@ public class ProgrammerHandler implements Serializable {
             agent.setRoute(taskCoords);
             resume();
         }
-
     }
 
     /***
@@ -946,7 +964,6 @@ public class ProgrammerHandler implements Serializable {
      * @param coords Task's coordinate
      */
     protected void tempPlaceNewTask(String type, List<Coordinate> coords) {
-        //agent.tempPlaceNewTask(type, coords);
         tasks.put(coords, new ArrayList<>());
     }
 
@@ -1028,7 +1045,6 @@ public class ProgrammerHandler implements Serializable {
         return false;
     }
 
-
     /**
      * Allows the programmer to handle custom messages that may be passed through normally
      * @param opCode A code to allow you to differentiate messages for different functionalities
@@ -1085,9 +1101,39 @@ public class ProgrammerHandler implements Serializable {
      */
     public void goHome(){
         agent.clearRoute();
-        setRoute(Collections.singletonList(home));
+        // TODO this doesn't seem to update properly
+        setRoute(Collections.singletonList(calculateNearestHomeLocation()));
         isGoingHome = true;
         resume();
+    }
+
+    /**
+     * Finds the nearest edge of the communication radius of the hub and goes a little way into the circle there
+     * @return Coordinate to go to
+     */
+    private Coordinate calculateNearestHomeLocation() {
+        double xDist = agent.getCoordinate().getLongitude() - home.longitude;
+        double yDist = agent.getCoordinate().getLatitude() - home.latitude;
+        // using tan rule to find angle from hub to agent
+        double theta = Math.atan(yDist / xDist);
+        //double radius = 0.8 * (((double) SENSE_RANGE /1000)/6379.1);  // 20% into the radius of the hub (includes metre to
+        //  latlng calc
+
+        // approx 111,111m = 1deg latlng
+        double radius = 0.8 * (double) SENSE_RANGE / 111111;
+
+        // x,y = rcos(theta), rsin(theta); If in the negative x, we must invert (=== adding pi rads)
+        double xRes;
+        double yRes;
+        if (xDist < 0) {
+            xRes = home.longitude - (radius * Math.cos(theta));
+            yRes = home.latitude - (radius * Math.sin(theta));
+        } else {
+            xRes = home.longitude + (radius * Math.cos(theta));
+            yRes = home.latitude + (radius * Math.sin(theta));
+        }
+
+        return new Coordinate(yRes, xRes);
     }
 
     /**
@@ -1124,7 +1170,7 @@ public class ProgrammerHandler implements Serializable {
     }
 
     /**
-     * Returns a complete model of this PH as josn
+     * Returns a complete model of this PH as json
      * @return Object as Json
      */
     public String getModel(){
@@ -1164,6 +1210,22 @@ public class ProgrammerHandler implements Serializable {
         }
         // This is for if it is completely unknown
         return false;
+    }
+
+    public boolean isLeader() {
+        return leader;
+    }
+
+    public void setLeader(boolean leaderStatus) {
+        leader = leaderStatus;
+    }
+
+    public Coordinate getHubPosition() {
+        return home;
+    }
+
+    public double getNextRandomDouble() {
+        return agent.getNextRandom();
     }
 
     /***
