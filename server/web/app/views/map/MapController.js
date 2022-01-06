@@ -1,7 +1,9 @@
 var MapController = {
     predictionLength: 0,
     showUncertainties: false,
+    showRanges: false,
     uncertaintyRadius: 10,
+    communicationRange: 100,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -92,6 +94,10 @@ var MapController = {
             MapController.toggleUncertainties( $(this).is(":checked"));
         });
 
+        $('#ranges_toggle').change(function () {
+            MapController.toggleRanges( $(this).is(":checked"));
+        });
+
         //State listeners
         this.state.on("change:time", function () {
             MapController.onTick();
@@ -138,6 +144,9 @@ var MapController = {
     },
     toggleUncertainties: function (setting) {
         MapController.showUncertainties = setting;
+    },
+    toggleRanges: function (setting) {
+        MapController.showRanges = setting;
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");
@@ -207,6 +216,11 @@ var MapController = {
             this.drawUncertainties(MapController.uncertaintyRadius);
         } else {
             this.clearUncertainties();
+        }
+        if (MapController.showRanges) {
+            this.drawRanges(MapController.communicationRange);
+        } else {
+            this.clearRanges();
         }
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
@@ -298,10 +312,12 @@ var MapController = {
                 $("#prediction_wrapper_div").show();
             } else if (option === "uncertainties") {
                 $("#uncertainties_wrapper_div").show();
+            } else if (option === "ranges") {
+                $("#ranges_wrapper_div").show();
             }
         });
         try {
-            MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
+            MapController.communicationRange = this.state.getCommunicationRange();
         } catch (e) {
             alert(e);
         }

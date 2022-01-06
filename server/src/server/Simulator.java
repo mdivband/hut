@@ -127,7 +127,6 @@ public class Simulator {
     }
 
     private void mainLoop() {
-        long topStart = System.currentTimeMillis();
         final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
         int sleepTime;
         do {
@@ -150,12 +149,13 @@ public class Simulator {
                 if (task.step()) {
                     // If it's already tagged by a programmed agent, or if it gets completed by the step command
                     completedTasks.add(task);
-                    // TODO The first task is often erroneously completed here
+                    // TODO The first task is often erroneously completed here, due to switching views
                 }
             }
             for(Task task : completedTasks) {
-                //System.out.println("COMPLETING: " + task.getId() + " c = " + task.getCoordinate());
                 task.complete();
+                //printHubBelief();
+                //printStateJson();
             }
             //Step hazard hits
             this.state.decayHazardHits();
@@ -257,6 +257,26 @@ public class Simulator {
                 }
             }
 
+            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
+            if (uiJson != null) {
+                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
+                    state.addUIOption("predictions");
+                }
+                if (GsonUtils.getValue(uiJson, "ranges") != null && (boolean) GsonUtils.getValue(uiJson, "ranges")) {
+                    state.addUIOption("ranges");
+                }
+                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
+                    state.addUIOption("uncertainties");
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
+                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            }
+            if(GsonUtils.hasKey(obj,"communicationRange")) {
+                this.state.setCommunicationRange(GsonUtils.getValue(obj, "communicationRange"));
+            }
+
             // Now we just set programmed globally, it's simpler and prevents issues.
             //  In future we could reconfigure to allow both
             boolean programmed = false;
@@ -266,7 +286,6 @@ public class Simulator {
                     programmed = (Boolean) progSetting;
                 }
             }
-
 
             Object hub = GsonUtils.getValue(obj, "hub");
             if(hub != null) {
@@ -326,22 +345,6 @@ public class Simulator {
                 }
             }
 
-            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
-            if (uiJson != null) {
-                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
-                    state.addUIOption("predictions");
-                }
-                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
-                    state.addUIOption("uncertainties");
-                }
-            }
-
-            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
-                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
-            }
-
-
-
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -381,6 +384,14 @@ public class Simulator {
         }
     }
 
+    private void printHubBelief() {
+        ArrayList<String> beliefs = agentController.getHubBelief();
+        System.out.println("===========HUB Belief===========");
+        for (String b : beliefs) {
+            System.out.println(b);
+            System.out.println();
+        }
+    }
 
     private void printStateJson() {
         String stateJson = GsonUtils.toJson(state);

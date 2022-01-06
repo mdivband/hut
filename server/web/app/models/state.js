@@ -26,7 +26,8 @@ App.Models.State  = Backbone.Model.extend({
             '1': []
         },
         uiOptions: {},
-        uncertaintyRadius: 0
+        uncertaintyRadius: 0,
+        communicationRange: 0
 
     },
     url: function() {
@@ -129,5 +130,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getUncertaintyRadius: function () {
         return this.get("uncertaintyRadius");
+    },
+    getCommunicationRange: function () {
+        return this.get("communicationRange")
     }
 });

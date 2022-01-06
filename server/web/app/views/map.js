@@ -338,11 +338,10 @@ App.Views.Map = Backbone.View.extend({
      *      The "radius" value can be imported based on real values live if required, as this is called with each time step
      *      Colour or opacity could also be modulated
      */
-    drawUncertainties: function (radius) {
+    drawUncertainties: function (sigma) {
         var self = this;
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
-            var sigma = radius; // Uncertainty radius in metres
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
 
             if (agent.isVisible()) {
@@ -355,7 +354,7 @@ App.Views.Map = Backbone.View.extend({
                         strokeColor: "#FF0000",
                         strokeOpacity: 0.8,
                         strokeWeight: 0,
-                        fillColor: "#0033ff",
+                        fillColor: "#00ff2a",
                         fillOpacity: 0.4,
                         center: agent.getPosition(),
                         radius: sigma,
@@ -376,6 +375,55 @@ App.Views.Map = Backbone.View.extend({
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_unc"];
+            if (currentCircle) {
+                currentCircle.setOptions({visible: false});
+            }
+        });
+    },
+
+    /***
+     * A function to draw the circles for communication range
+     * Currently these are of a constant size (proof of concept)
+     *      The "radius" value can be imported based on real values live if required, as this is called with each time step
+     *      Colour or opacity could also be modulated
+     */
+    drawRanges: function (range) {
+        var self = this;
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_rng"];
+
+            if (agent.isVisible()) {
+                if (currentCircle) {
+                    currentCircle.setOptions({center: agent.getPosition()});
+                    currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
+                } else {
+                    self.$el.gmap("addShape", "Circle", {
+                        id: agentId + "_rng",
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 0,
+                        fillColor: "#0033ff",
+                        fillOpacity: 0.2,
+                        center: agent.getPosition(),
+                        radius: range,
+                    });
+                }
+            } else {
+                if (currentCircle) {
+                    currentCircle.setVisible(false);
+                }
+            }
+        })
+    },
+    /**
+     * To clear the existing circles from the UI
+     */
+    clearRanges: function () {
+        self = this
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_rng"];
             if (currentCircle) {
                 currentCircle.setOptions({visible: false});
             }

@@ -13,6 +13,8 @@ public class AgentProgrammer {
     private int strandedCounter = 0;
     private boolean hasNearbyLeader = false;
 
+    private boolean returner = false;
+
 
     /***
      * The setup function. Called once, when the agent is first called (not when it is created).
@@ -26,16 +28,23 @@ public class AgentProgrammer {
             LOGGER.severe("Sv: Agent with GLOBAL ID " + a.agent.getId() + " randomly assigned leadership");
             a.setLeader(true);
             a.setVisual("leader");
+            if (a.getNextRandomDouble() > 0.5) {
+                LOGGER.severe("---- and set as a returning agent");
+                returner = true;
+            } else {
+                LOGGER.severe("---- and set as a non-returning agent");
+            }
         } else {
             a.setLeader(false);
         }
+
     }
 
     /***
      * Called at every time step (currently 200ms)
      */
     public void step(){
-        if (a.getTasks().size() == 0) {
+        if (a.getTasks().size() == 0 && a.getCompletedTasks().size() == 0) {
             // WAIT; Only begin executing if we have tasks added now (so they don't fly off at the start)
         } else {
             if (a.isLeader()) {
@@ -54,6 +63,33 @@ public class AgentProgrammer {
                         }
                     } else {
                         try {
+                            if (returner || a.getNextRandomDouble() > 0.8) {
+                                // If this agent has selected the returner strategy then it always heads home after a
+                                // task completion
+                                // Otherwise, there is still a 20% chance to return anyway
+                                if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) < a.getSenseRange()) {
+                                    // At home
+                                    List<Coordinate> task = a.getNearestEmptyTask();
+                                    if (task != null) {
+                                        a.setTask(task);
+                                        a.resume();
+                                    } else {
+                                        a.goHome();
+                                    }
+                                } else {
+                                    a.goHome();
+                                }
+                            } else {
+                                List<Coordinate> task = a.getNearestEmptyTask();
+                                if (task != null) {
+                                    a.setTask(task);
+                                    a.resume();
+                                } else {
+                                    a.goHome();
+                                }
+                            }
+
+                            /* RETURNING
                             if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) < a.getSenseRange()) {
                                 // At home
                                 List<Coordinate> task = a.getNearestEmptyTask();
@@ -66,6 +102,18 @@ public class AgentProgrammer {
                             } else {
                                 a.goHome();
                             }
+                             */
+
+                            /* NON RETURNING
+                            List<Coordinate> task = a.getNearestEmptyTask();
+                            if (task != null) {
+                                a.setTask(task);
+                                a.resume();
+                            } else {
+                                a.goHome();
+                            }
+                             */
+
                         } catch (Exception e) {
                             System.out.println("Excep: Should be due to start conditions");
                         }

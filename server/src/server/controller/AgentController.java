@@ -56,7 +56,8 @@ public class AgentController extends AbstractController {
 
     public synchronized Agent addHubProgrammedAgent(double lat, double lng, Random random, TaskController taskController) {
         // We assume just one HUB, so this is a unique ID
-        Agent agent = new AgentHubProgrammed("HUB", new Coordinate(lat, lng), sensor, random, taskController);
+        AgentProgrammed agent = new AgentHubProgrammed("HUB", new Coordinate(lat, lng), sensor, random, taskController);
+        agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         simulator.getState().add(agent);
         simulator.getState().attachHub(agent);
         return agent;
@@ -168,10 +169,21 @@ public class AgentController extends AbstractController {
                 models.add(((AgentProgrammed) a).getBelievedModel());
             }
         }
-
         return models;
 
     }
+
+    public ArrayList<String> getHubBelief() {
+        ArrayList<String> models = new ArrayList<>(1);
+        for (Agent a : simulator.getState().getAgents()) {
+            if (a instanceof Hub){
+                models.add(((AgentProgrammed) a).getBelievedModel());
+            }
+        }
+        return models;
+
+    }
+
 
     public boolean checkHubConnection(AgentHubProgrammed hub, Agent agent) {
         return hub.checkForConnection(agent);

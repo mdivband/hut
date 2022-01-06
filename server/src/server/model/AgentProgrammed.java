@@ -378,4 +378,8 @@ public class AgentProgrammed extends Agent {
     public double getNextRandom() {
         return random.nextDouble();
     }
+
+    public void setCommunicationRange(double communicationRange) {
+        programmerHandler.setCommunicationRange(communicationRange);
+    }
 }

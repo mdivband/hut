@@ -12,9 +12,15 @@ Scenarios can be loaded from a JSON file. The application looks for scenario fil
 |gameId|The name of the scenario, doesn't have to match the file name but should be unique.|-|-|
 |gameDescription|The text that is showed to the user before they begin the scenario. Should give a clear overview of the objectives of the task.|-|-|
 |gameCentre|The position at the centre of the map at the beginning of the scenario.|lat, lng|-
+|programmed|A boolean value for whether the agents are all programmed (currently a mixture is not supported).|-|-|
+|uncertaintyRadius|The number of metres radius for the c
+
 |agents|A JSON array composed of the agent objects available in the scenario.|-|-|
 |hazards|A JSON array composed of the hazard objects present in the scenario.|-|-|
 |targets|A JSON array composed of the target objects present in the scenario.|-|-|
+
+
+
 
 ### Optional Fields
 

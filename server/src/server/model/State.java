@@ -63,6 +63,7 @@ public class State {
 
     private ArrayList<String> uiOptions = new ArrayList<>();
     private double uncertaintyRadius = 0;
+    private double communicationRange = 0;
 
     // We could combine these, but it might be little more efficient to let them stay separate
     private AgentHubProgrammed hub;
@@ -318,6 +319,14 @@ public class State {
 
     public void setUncertaintyRadius(double uncertaintyRadius) {
         this.uncertaintyRadius = uncertaintyRadius;
+    }
+
+    public void setCommunicationRange(double communicationRange) {
+        this.communicationRange = communicationRange;
+    }
+
+    public double getCommunicationRange() {
+        return communicationRange;
     }
 
     public synchronized void addHazardHit(int type, Coordinate location) {

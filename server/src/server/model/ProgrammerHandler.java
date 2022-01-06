@@ -17,11 +17,11 @@ public class ProgrammerHandler implements Serializable {
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
     private static final double TARGET_SENSE_RANGE = 50;  // Number of metres around that the agent can detect targets
     private static final int AGENT_TIMEOUT = 6; // (6x200ms = every 1.2 second) ~= 1 real-life seconds
-    private static final int SENSE_RANGE = 250; // The max (and default) radius used for sensing neighbours etc
     private static final int pingTimeout = 3; // (6x200ms = every 1.2 second) ~= 1 real-life seconds
 
     protected transient AgentProgrammed agent;
     private final transient AgentProgrammer agentProgrammer;  // Link to the user's code
+    private int communicationRange = 250; // The max (and default) radius used for sensing neighbours etc
 
     private HashMap<String, Position> neighbours;  // Stores the known other agents (including non-neighbours)
     private List<Coordinate> currentTask = new ArrayList<>();
@@ -56,12 +56,12 @@ public class ProgrammerHandler implements Serializable {
         if (agent.getNetworkId().equals("")) {
             // Must perform setup on the first step, otherwise they can't find each other
             agent.setNetworkID(agent.generateRandomTag());
-            declareSelf(SENSE_RANGE);
+            declareSelf(communicationRange);
             agentProgrammer.setup();
         } else if (pingCounter >= pingTimeout) {
-            declareSelf(SENSE_RANGE);
+            declareSelf(communicationRange);
             checkForTargets();
-            declareTargets(SENSE_RANGE);
+            declareTargets(communicationRange);
             pingCounter = 0;
         }
         pingCounter++;
@@ -107,12 +107,12 @@ public class ProgrammerHandler implements Serializable {
             // Must perform setup on the first step, otherwise they can't find each other
             //agent.setNetworkID(agent.generateRandomTag());
             agent.setNetworkID("HUB");
-            declareSelf(SENSE_RANGE);
+            declareSelf(communicationRange);
             agentProgrammer.setup();
         } else if (pingCounter >= pingTimeout) {
-            declareSelf(SENSE_RANGE); // This must be separate, as order matters for the first case
+            declareSelf(communicationRange); // This must be separate, as order matters for the first case
             broadcastTasks();
-            declareTargets(SENSE_RANGE);
+            declareTargets(communicationRange);
             pingCounter = 0;
         }
         pingCounter++;
@@ -152,7 +152,7 @@ public class ProgrammerHandler implements Serializable {
                     sb.append(",");
                     sb.append(c.longitude);
                 }
-                broadcast(sb.toString(), SENSE_RANGE);
+                broadcast(sb.toString(), communicationRange);
             }
 
             for (List<Coordinate> tsk : completedTasks) {
@@ -170,7 +170,7 @@ public class ProgrammerHandler implements Serializable {
                     sb.append(",");
                     sb.append(c.longitude);
                 }
-                broadcast(sb.toString(), SENSE_RANGE);
+                broadcast(sb.toString(), communicationRange);
             }
 
         } catch (Exception e) {
@@ -383,7 +383,7 @@ public class ProgrammerHandler implements Serializable {
                 sb.append(c.longitude);
 
             }
-            broadcast(sb.toString(), SENSE_RANGE);
+            broadcast(sb.toString(), communicationRange);
 
             completedTasks.add(coords);
         }
@@ -406,7 +406,7 @@ public class ProgrammerHandler implements Serializable {
             sb.append(",");
             sb.append(c.longitude);
         }
-        broadcast(sb.toString(), SENSE_RANGE);
+        broadcast(sb.toString(), communicationRange);
     }
 
     /***
@@ -661,7 +661,7 @@ public class ProgrammerHandler implements Serializable {
                 }
 
                 if (neighbours.containsKey(id)) {
-                    broadcast("GET_TASKS;" + id, SENSE_RANGE);
+                    broadcast("GET_TASKS;" + id, communicationRange);
                 }
                 // Note that we should only register neighbours based on messages. This includes coordinates, just in
                 // case we want to model error etc
@@ -837,7 +837,7 @@ public class ProgrammerHandler implements Serializable {
      * @param message The message to send
      */
     protected void sendDiagnosticMessage(String targetID, String message){
-        List<Agent> neighbours = agent.senseNeighbours(SENSE_RANGE);
+        List<Agent> neighbours = agent.senseNeighbours(communicationRange);
         for (Agent n : neighbours) {
             try {
                 // For now, we just cast it to a programmed agent. In future, we may need to implement message handling
@@ -1051,7 +1051,7 @@ public class ProgrammerHandler implements Serializable {
      * @param payload The useful part of the message you want to handle
      */
     public void sendCustomMessage(String opCode, String payload) {
-        broadcast("CUSTOM;"+opCode+";"+payload, SENSE_RANGE);
+        broadcast("CUSTOM;"+opCode+";"+payload, communicationRange);
     }
 
     /**
@@ -1120,7 +1120,7 @@ public class ProgrammerHandler implements Serializable {
         //  latlng calc
 
         // approx 111,111m = 1deg latlng
-        double radius = 0.8 * (double) SENSE_RANGE / 111111;
+        double radius = 0.8 * (double) communicationRange / 111111;
 
         // x,y = rcos(theta), rsin(theta); If in the negative x, we must invert (=== adding pi rads)
         double xRes;
@@ -1190,7 +1190,7 @@ public class ProgrammerHandler implements Serializable {
      * @return SENSE_RANGE
      */
     public double getSenseRange() {
-        return SENSE_RANGE;
+        return communicationRange;
     }
 
     /**
@@ -1226,6 +1226,10 @@ public class ProgrammerHandler implements Serializable {
 
     public double getNextRandomDouble() {
         return agent.getNextRandom();
+    }
+
+    public void setCommunicationRange(double communicationRange) {
+        this.communicationRange = (int) Math.round(communicationRange);
     }
 
     /***
