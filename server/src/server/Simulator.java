@@ -272,14 +272,19 @@ public class Simulator {
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            } else {
+                this.state.setUncertaintyRadius(10.0);
             }
             if(GsonUtils.hasKey(obj,"communicationRange")) {
                 this.state.setCommunicationRange(GsonUtils.getValue(obj, "communicationRange"));
+            } else {
+                this.state.setCommunicationRange(250);
             }
 
             // Now we just set programmed globally, it's simpler and prevents issues.
             //  In future we could reconfigure to allow both
             boolean programmed = false;
+            // TODO allow both types together
             if(GsonUtils.hasKey(obj,"programmed")) {
                 Object progSetting = GsonUtils.getValue(obj, "programmed");
                 if (progSetting.getClass() == Boolean.class) {

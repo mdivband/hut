@@ -1,33 +1,33 @@
 # DJI Hut Server - Scenario Files
 ### University of Southampton
-##### Last Updated: 03/10/2021, Ashley Pare
+##### Last Updated: 06/01/2022, Will Hunt
 ------
 
 Scenarios can be loaded from a JSON file. The application looks for scenario files in the [scenarios folder][1]. The following document outlines the format of those files. Fields are the base keys in the JSON file (list in the [Fields](#fields) section); some of them are composed of objects which are outlined in the [Objects](#objects) section. [Optional Fields](#optional-fields) are base keys that have default values so can be left blank. 
 
 ### Fields
 
-|Field|Description|Required Parameters|Optional Parameters|
-|:---:|:---:|:---:|:---:|
-|gameId|The name of the scenario, doesn't have to match the file name but should be unique.|-|-|
-|gameDescription|The text that is showed to the user before they begin the scenario. Should give a clear overview of the objectives of the task.|-|-|
-|gameCentre|The position at the centre of the map at the beginning of the scenario.|lat, lng|-
-|programmed|A boolean value for whether the agents are all programmed (currently a mixture is not supported).|-|-|
-|uncertaintyRadius|The number of metres radius for the c
-
-|agents|A JSON array composed of the agent objects available in the scenario.|-|-|
-|hazards|A JSON array composed of the hazard objects present in the scenario.|-|-|
-|targets|A JSON array composed of the target objects present in the scenario.|-|-|
-
-
-
+|       Field        |                                                           Description                                                           | Required Parameters | Optional Parameters |
+|:------------------:|:-------------------------------------------------------------------------------------------------------------------------------:|:-------------------:|:-------------------:|
+|       gameId       |                       The name of the scenario, doesn't have to match the file name but should be unique.                       |          -          |          -          |
+|  gameDescription   | The text that is showed to the user before they begin the scenario. Should give a clear overview of the objectives of the task. |          -          |          -          |
+|     gameCentre     |                             The position at the centre of the map at the beginning of the scenario.                             |      lat, lng       |          -          |
+|       agents       |                              A JSON array composed of the agent objects available in the scenario.                              |          -          |          -          |
+|      hazards       |                              A JSON array composed of the hazard objects present in the scenario.                               |          -          |          -          |
+|      targets       |                              A JSON array composed of the target objects present in the scenario.                               |          -          |          -          |
+|        hub         |                                                  The position of the hub agent                                                  |      lat, lng       |          -          |
 
 ### Optional Fields
 
-|Field|Description|Possible Values|Default Values|
-|:---:|:---:|:---:|:---:|
-|allocationMethod|Sets the method used for allocating tasks to agents.|maxsum, random|maxsum|
-|flockingEnabled|Turns flocking of agents on or off. If on, any agents not assigned to a task will follow their neighbours based on average speed and heading of neighbours. If off, any agents without tasks remain stationary.|true, false|false|
+|       Field        |                                                                                                   Description                                                                                                   |          Possible Values           |   Default Values    |
+|:------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------:|:-------------------:|
+|  allocationMethod  |                                                                              Sets the method used for allocating tasks to agents.                                                                               |           maxsum, random           |       maxsum        |
+|  flockingEnabled   | Turns flocking of agents on or off. If on, any agents not assigned to a task will follow their neighbours based on average speed and heading of neighbours. If off, any agents without tasks remain stationary. |            true, false             |        false        |
+|     programmed     |                                                        A boolean value for whether the agents are all programmed (currently a mixture is not supported).                                                        |            true, false             |        false        |
+| communicationRange |                                                                          The number of metres radius for communication between drones                                                                           |      (Double precision float)      |         250         |
+| uncertaintyRadius  |                                                                       The radius of a the circles denoting uncertainty in drone location                                                                        |      (Double precision float)      |         10          |
+| extendedUIOptions  |                                                               A set of boolean parameters denoting which additional UI options should be enabled                                                                | predictions, uncertainties, ranges | false, false, false |
+
 
 ### Objects
 

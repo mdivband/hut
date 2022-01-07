@@ -66,7 +66,7 @@ public class State {
     private double communicationRange = 0;
 
     // We could combine these, but it might be little more efficient to let them stay separate
-    private AgentHubProgrammed hub;
+    private Hub hub;
     private Coordinate hubLocation;
 
 
@@ -380,14 +380,24 @@ public class State {
     public void updateAgentVisibility() {
         for (Agent agent : agents) {
             if (!(agent instanceof Hub)) {
-                boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
-                if (connected && !agent.isVisible()) {
+                if (!(agent instanceof AgentProgrammed)) {
+                    // Not a programmed agent, so we keep it globally visible for now
+                    // TODO Make this work for a mixed initiative system (programmed and non-programmed agents)
                     agent.setVisible(true);
-                } else if (!connected && agent.isVisible()) {
-                    // Has left the range
-                    agent.setVisible(false);
-                    addGhost(agent);
+                } else {
+                    // Is programmed, see if it's connected
+                    boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
+                    if (connected && !agent.isVisible()) {
+                        agent.setVisible(true);
+                    } else if (!connected && agent.isVisible()) {
+                        // Has left the range
+                        agent.setVisible(false);
+                        addGhost(agent);
+                    }
                 }
+            } else if (!agent.isVisible()) {
+                // To make sure the hub is always visible
+                agent.setVisible(true);
             }
         }
     }
@@ -450,7 +460,8 @@ public class State {
     }
 
     public void attachHub(Agent hub) {
-        this.hub = (AgentHubProgrammed) hub;
+        this.hub = (Hub) hub;
+        System.out.println("hb: " + hub);
     }
 
     private class HazardHit {

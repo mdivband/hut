@@ -51,6 +51,7 @@ public class AgentController extends AbstractController {
         // We assume just one HUB, so this is a unique ID
         Agent agent = new AgentHub("HUB", new Coordinate(lat, lng), sensor);
         simulator.getState().add(agent);
+        simulator.getState().attachHub(agent);
         return agent;
     }
 
@@ -185,7 +186,7 @@ public class AgentController extends AbstractController {
     }
 
 
-    public boolean checkHubConnection(AgentHubProgrammed hub, Agent agent) {
-        return hub.checkForConnection(agent);
+    public boolean checkHubConnection(Hub hub, Agent agent) {
+        return ((AgentHubProgrammed) hub).checkForConnection(agent);
     }
 }
