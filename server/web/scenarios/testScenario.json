@@ -1,37 +1,24 @@
 {
-  "gameId": "Basic Programmer Test",
-  "gameDescription": "A copy of the fire test, but using programmable drones",
+  "gameId": "Test Scenario",
+  "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
   },
   "agents": [
     {
-      "lat": 50.9295,
-      "lng": -1.409,
-      "programmed": true,
-      "receiver": true,
-      "stationary": false
+      "lat": 50.92880002299894,
+      "lng": -1.4094788872327502
     },
     {
-      "lat": 50.93,
-      "lng": -1.4125,
-      "programmed": true
+      "lat": 50.929378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 0.5
     },
     {
-      "lat": 50.9302,
-      "lng": -1.40975,
-      "programmed": true
-    },
-    {
-      "lat": 50.9304,
-      "lng": -1.40925,
-      "programmed": true
-    },
-    {
-      "lat": 50.9306,
-      "lng": -1.40875,
-      "programmed": true
+      "lat": 50.93008636656946,
+      "lng": -1.4065928983124234,
+      "battery": 0.75
     }
   ],
   "hazards": [

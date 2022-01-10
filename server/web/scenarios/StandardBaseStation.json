@@ -1,6 +1,6 @@
 {
   "gameId": "Standard Base Station",
-  "gameDescription": "A copy of the fire test, but using programmable drones",
+  "gameDescription": "Non programmed drones, to demonstrate the default configuration",
   "extendedUIOptions": {
     "predictions": true,
     "uncertainties": true

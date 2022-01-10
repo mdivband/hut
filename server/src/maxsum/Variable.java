@@ -1,7 +1,7 @@
 package maxsum;
 
 import maxsum.Domain.State;
-import server.model.Agent;
+import server.model.agents.Agent;
 
 import java.util.ArrayList;
 import java.util.HashMap;

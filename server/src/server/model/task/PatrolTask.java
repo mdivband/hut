@@ -3,7 +3,7 @@ package server.model.task;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import server.Simulator;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.Coordinate;
 
 import java.util.*;

@@ -1,6 +1,8 @@
-package server.model;
+package server.model.agents;
 
 import server.controller.TaskController;
+import server.model.Coordinate;
+import server.model.Sensor;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 
@@ -115,7 +117,7 @@ public class AgentProgrammed extends Agent {
                 this.getRoute().remove(0);
         }
 
-        if (isCurrentDestinationReached() && !isStopped()) {
+        if (isFinalDestinationReached() && !isStopped()) {
             stop();
             programmerHandler.completeTask();
         }
@@ -161,7 +163,7 @@ public class AgentProgrammed extends Agent {
         // the user will probably directly create these tasks from the main view
         if (taskController.findTaskByCoord(Coordinate.findCentre(coords)) == null) {
             if (type.equals("waypoint")) {
-                taskController.createTask(Task.TASK_WAYPOINT, coords.get(0).latitude, coords.get(0).longitude);
+                taskController.createTask(Task.TASK_WAYPOINT, coords.get(0).getLatitude(), coords.get(0).getLongitude());
             } else if (type.equals("region")) {
                 taskController.createRegionTask(coords.get(0), coords.get(1), coords.get(2), coords.get(3));
             }

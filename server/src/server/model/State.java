@@ -6,6 +6,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import server.Allocator;
 import server.Simulator;
+import server.model.agents.*;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
 import server.model.task.Task;
@@ -64,6 +65,7 @@ public class State {
     private ArrayList<String> uiOptions = new ArrayList<>();
     private double uncertaintyRadius = 0;
     private double communicationRange = 0;
+    private boolean communicationConstrained = false;
 
     // We could combine these, but it might be little more efficient to let them stay separate
     private Hub hub;
@@ -108,11 +110,6 @@ public class State {
 
     @Override
     public synchronized String toString() {
-        try {
-            String a = GsonUtils.toJson(this);
-        } catch (Exception e) {
-            int b = 2;
-        }
         return GsonUtils.toJson(this);
     }
 
@@ -380,20 +377,16 @@ public class State {
     public void updateAgentVisibility() {
         for (Agent agent : agents) {
             if (!(agent instanceof Hub)) {
-                if (!(agent instanceof AgentProgrammed)) {
-                    // Not a programmed agent, so we keep it globally visible for now
-                    // TODO Make this work for a mixed initiative system (programmed and non-programmed agents)
+
+                // Is programmed/communicating, see if it's connected
+                boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
+                if (connected && !agent.isVisible()) {
                     agent.setVisible(true);
-                } else {
-                    // Is programmed, see if it's connected
-                    boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
-                    if (connected && !agent.isVisible()) {
-                        agent.setVisible(true);
-                    } else if (!connected && agent.isVisible()) {
-                        // Has left the range
-                        agent.setVisible(false);
-                        addGhost(agent);
-                    }
+                } else if (!connected && agent.isVisible()) {
+                    // Has left the range
+                    agent.setVisible(false);
+                    addGhost(agent);
+
                 }
             } else if (!agent.isVisible()) {
                 // To make sure the hub is always visible
@@ -462,6 +455,14 @@ public class State {
     public void attachHub(Agent hub) {
         this.hub = (Hub) hub;
         System.out.println("hb: " + hub);
+    }
+
+    public boolean isCommunicationConstrained() {
+        return communicationConstrained;
+    }
+
+    public void setCommunicationConstrained(Boolean communicationConstrained) {
+        this.communicationConstrained = communicationConstrained;
     }
 
     private class HazardHit {

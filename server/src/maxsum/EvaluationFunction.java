@@ -3,7 +3,7 @@ package maxsum;
 
 import maxsum.Domain.State;
 import maxsum.Maximizer.MultiKeyMap;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.task.Task;
 
 import java.util.ArrayList;

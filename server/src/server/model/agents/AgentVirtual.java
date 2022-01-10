@@ -1,14 +1,15 @@
-package server.model;
+package server.model.agents;
+
+import server.model.Coordinate;
+import server.model.Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class AgentVirtual extends Agent {
-
-    private transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-
-    private transient Sensor sensor;
+    protected transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
+    protected transient Sensor sensor;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -42,7 +43,7 @@ public class AgentVirtual extends Agent {
      * Adjust heading of agent towards the heading that will take it towards its goal.
      * @return isAligned - Whether the agent is aligned or needs to continue rotating.
      */
-    private boolean adjustHeadingTowardsGoal() {
+    protected boolean adjustHeadingTowardsGoal() {
         double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
         double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
         double lat2 = Math.toRadians(this.getCurrentDestination().getLatitude());
@@ -189,7 +190,7 @@ public class AgentVirtual extends Agent {
      * Move agent in direction it is currently facing.
       * @param distance - Distance to move in m.
      */
-    private void moveAlongHeading(double distance) {
+    protected void moveAlongHeading(double distance) {
         double r = 6379.1; //Radius of earth in km
         double d = (distance/1000)/r;
         double hdg = Math.toRadians(this.heading);

@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import server.Simulator;
 import server.controller.AgentController;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.State;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;

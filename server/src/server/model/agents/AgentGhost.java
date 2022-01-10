@@ -1,6 +1,7 @@
-package server.model;
+package server.model.agents;
 
 import server.Simulator;
+import server.model.Coordinate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +34,9 @@ public class AgentGhost extends Agent{
             leader = ap.isLeader();
             hubLocation = ap.getHubLocation();
             communicationRange = ap.getSenseRange();
+        } else if (agent instanceof AgentCommunicating ac){
+            hubLocation = ac.getHubLocation();
+            communicationRange = ac.getSenseRange();
         }
         type = "ghost";
     }
@@ -68,8 +72,8 @@ public class AgentGhost extends Agent{
     }
 
     private Coordinate calculateNearestHomeLocation() {
-        double xDist = getCoordinate().getLongitude() - hubLocation.longitude;
-        double yDist = getCoordinate().getLatitude() - hubLocation.latitude;
+        double xDist = getCoordinate().getLongitude() - hubLocation.getLongitude();
+        double yDist = getCoordinate().getLatitude() - hubLocation.getLatitude();
         // using tan rule to find angle from hub to agent
         double theta = Math.atan(yDist / xDist);
         //double radius = 0.8 * (((double) SENSE_RANGE /1000)/6379.1);  // 20% into the radius of the hub (includes metre to
@@ -82,11 +86,11 @@ public class AgentGhost extends Agent{
         double xRes;
         double yRes;
         if (xDist < 0) {
-            xRes = hubLocation.longitude - (radius * Math.cos(theta));
-            yRes = hubLocation.latitude - (radius * Math.sin(theta));
+            xRes = hubLocation.getLongitude() - (radius * Math.cos(theta));
+            yRes = hubLocation.getLatitude() - (radius * Math.sin(theta));
         } else {
-            xRes = hubLocation.longitude + (radius * Math.cos(theta));
-            yRes = hubLocation.latitude + (radius * Math.sin(theta));
+            xRes = hubLocation.getLongitude() + (radius * Math.cos(theta));
+            yRes = hubLocation.getLatitude() + (radius * Math.sin(theta));
         }
 
         return new Coordinate(yRes, xRes);

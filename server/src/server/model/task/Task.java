@@ -3,6 +3,9 @@ package server.model.task;
 import com.google.gson.*;
 import server.Simulator;
 import server.model.*;
+import server.model.agents.Agent;
+import server.model.agents.AgentCommunicating;
+import server.model.agents.AgentProgrammed;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -56,21 +59,15 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
-        boolean allProgrammed = true;  // We assume they aren't all the same, in case later we implement it
-        for (Agent agent : getAgents()) {
-            agent.setWorking(false);
-            agent.setSearching(false);
-            if (!(agent instanceof AgentProgrammed)) {
-                allProgrammed = false;
-            }
-        }
-        if (!allProgrammed) {
+        if (!Simulator.instance.getState().isCommunicationConstrained()) {  // If we can instantly complete
             Simulator.instance.getTaskController().deleteTask(this.getId(), true);
             LOGGER.info("Task " + this.getId() + " has been completed");
         } else {
             for (Agent agent : getAgents()) {
-                if (agent instanceof AgentProgrammed) {  // Always true under current assumptions
-                    ((AgentProgrammed) agent).registerCompleteTask(getCoordinate());
+                if (agent instanceof AgentProgrammed ap) {
+                    ap.registerCompleteTask(getCoordinate());
+                } else if (agent instanceof AgentCommunicating ac) {
+                    ac.registerCompleteTask(getCoordinate());
                 }
             }
         }
@@ -84,10 +81,9 @@ public abstract class Task extends MObject implements Serializable {
         for (Agent a : Simulator.instance.getState().getAgents()) {
             if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
                 arrivedAgents.add(a);
-                if (a instanceof AgentProgrammed ap && !(a instanceof Hub)) {
-                    //ap.tempManualPushCompletedTask(this.getCoordinate());
-                    ap.registerCompleteTask(this.getCoordinate());
-                }
+                //if (a instanceof AgentProgrammed ap && !(a instanceof Hub)) {
+                 //   ap.registerCompleteTask(this.getCoordinate());
+                //}
             }
         }
         return arrivedAgents;
@@ -101,17 +97,20 @@ public abstract class Task extends MObject implements Serializable {
         if (status == STATUS_DONE_PENDING) {
             // Completed, but not yet reported to HUB
             return false;
+        } else if (status == STATUS_DONE) {
+            // Completed and should be reported
+            return true;
         }
 
         ArrayList<Agent> arrivedAgents = tempGetArrivedAgents();
         if (arrivedAgents.size() > 0) {
-            if (arrivedAgents.get(0) instanceof AgentProgrammed) {
-                // We assume they are all the same for now
+            // An agent has found this task
+            if (Simulator.instance.getState().isCommunicationConstrained()) {
+                // It is NOT programmed or communicating
                 setStatus(Task.STATUS_DONE_PENDING);
             } else {
                 setStatus(Task.STATUS_DONE);
             }
-            return status == Task.STATUS_DONE;
         }
 
         if (status == STATUS_TODO) {

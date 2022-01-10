@@ -6,10 +6,11 @@ import maxsum.Constraint;
 import maxsum.Domain;
 import maxsum.MaxSum;
 import maxsum.Variable;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.Coordinate;
 import server.model.Hub;
 import server.model.MObject;
+import server.model.agents.AgentCommunicating;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 import server.model.task.WaypointTask;
@@ -74,6 +75,13 @@ public class Allocator {
                     agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
                 else
                     agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+
+                if (agent instanceof AgentCommunicating ac) {
+                    if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
+                        ac.setCurrentTask(Collections.singletonList(Coordinate.findCentre(((PatrolTask) task).getPoints())));
+                    else
+                        ac.setCurrentTask(Collections.singletonList(task.getCoordinate()));
+                }
             }
             else
                 agent.setTempRoute(new ArrayList<>());

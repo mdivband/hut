@@ -1,6 +1,7 @@
 package server.model;
 
 import server.Simulator;
+import server.model.agents.Agent;
 
 import java.util.ArrayList;
 import java.util.List;

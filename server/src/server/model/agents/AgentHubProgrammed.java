@@ -1,9 +1,11 @@
-package server.model;
+package server.model.agents;
 
 import server.controller.TaskController;
+import server.model.Coordinate;
+import server.model.Hub;
+import server.model.Sensor;
 import server.model.task.Task;
 
-import java.util.List;
 import java.util.Random;
 
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {

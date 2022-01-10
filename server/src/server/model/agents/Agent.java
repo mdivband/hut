@@ -1,6 +1,8 @@
-package server.model;
+package server.model.agents;
 
 import server.Simulator;
+import server.model.Coordinate;
+import server.model.MObject;
 import server.model.hazard.Hazard;
 import server.model.task.Task;
 
@@ -38,7 +40,7 @@ public abstract class Agent extends MObject implements Serializable {
     private boolean working;
 
     protected String type;
-    protected boolean visible = false;
+    protected boolean visible = true;
 
     //Used in server but not in client
     private transient long lastHeartbeat;

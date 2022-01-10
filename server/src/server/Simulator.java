@@ -6,6 +6,7 @@ import server.controller.TaskController;
 import server.controller.TargetController;
 import server.controller.HazardController;
 import server.model.*;
+import server.model.agents.Agent;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -116,9 +117,11 @@ public class Simulator {
         File scenarioDir = new File(SCENARIO_DIR_PATH);
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
-                String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
-                if(scenarioName != null)
-                    scenarios.put(file.getName(), scenarioName);
+                if (!file.isDirectory()) {
+                    String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
+                    if (scenarioName != null)
+                        scenarios.put(file.getName(), scenarioName);
+                }
             }
         }
         else
@@ -139,10 +142,12 @@ public class Simulator {
             for (Agent agent : state.getAgents()) {
                 agent.step(state.isFlockingEnabled());
             }
-            state.updateAgentVisibility();
-            state.updateGhosts();
-            state.moveGhosts();
 
+            if (state.isCommunicationConstrained()) {
+                state.updateAgentVisibility();
+                state.updateGhosts();
+                state.moveGhosts();
+            }
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
             for (Task task : state.getTasks()) {
@@ -153,6 +158,7 @@ public class Simulator {
                 }
             }
             for(Task task : completedTasks) {
+                System.out.println("COMP: " + task);
                 task.complete();
                 //printHubBelief();
                 //printStateJson();
@@ -281,6 +287,18 @@ public class Simulator {
                 this.state.setCommunicationRange(250);
             }
 
+            if(GsonUtils.hasKey(obj,"communicationConstrained")){
+                Object communicationConstrained = GsonUtils.getValue(obj, "communicationConstrained");
+                if(communicationConstrained.getClass() == Boolean.class) {
+                    this.state.setCommunicationConstrained((Boolean)communicationConstrained);
+                } else {
+                    LOGGER.warning("Expected boolean value for communicationConstrained in scenario file. Received: '" +
+                            communicationConstrained.toString() + "'. Set to false.");
+                    // state.flockingEnabled initialised with default value of false
+                }
+            }
+
+            /*
             // Now we just set programmed globally, it's simpler and prevents issues.
             //  In future we could reconfigure to allow both
             boolean programmed = false;
@@ -291,36 +309,48 @@ public class Simulator {
                     programmed = (Boolean) progSetting;
                 }
             }
-
-            Object hub = GsonUtils.getValue(obj, "hub");
-            if(hub != null) {
-                Double lat = GsonUtils.getValue(hub, "lat");
-                Double lng = GsonUtils.getValue(hub, "lng");
-                if (programmed) {
-                    agentController.addHubProgrammedAgent(lat, lng, random, taskController);
-                } else {
-                    agentController.addHubAgent(lat, lng);
-                }
-
-                state.setHubLocation(new Coordinate(lat, lng));
-            }
-
+             */
+            boolean containsProgrammed = false;
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");
             if (agentsJson != null) {
                 for (Object agentJSon : agentsJson) {
                     Double lat = GsonUtils.getValue(agentJSon, "lat");
                     Double lng = GsonUtils.getValue(agentJSon, "lng");
-
+                    Boolean programmed = false;
+                    if(GsonUtils.hasKey(agentJSon,"programmed")){
+                        programmed = GsonUtils.getValue(agentJSon, "programmed");
+                    }
                     Agent agent;
                     if (programmed) {
+                        // This means the agent is a programmed one, and the Hub is set up for this
                         agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
+                        containsProgrammed = true;
+                    } else if (this.state.isCommunicationConstrained()) {
+                        // This means the agent is a non-programmed one, but there is communication required for the network
+                        agent = agentController.addVirtualCommunicatingAgent(lat, lng, random);
                     } else {
+                        // Neither programmed or communication-required
                         agent = agentController.addVirtualAgent(lat, lng, 0);
                     }
                     Double battery = GsonUtils.getValue(agentJSon, "battery");
                     if(battery != null)
                         agent.setBattery(battery);
                 }
+            }
+
+            Object hub = GsonUtils.getValue(obj, "hub");
+            if(hub != null) {
+                Double lat = GsonUtils.getValue(hub, "lat");
+                Double lng = GsonUtils.getValue(hub, "lng");
+
+                if (this.state.isCommunicationConstrained() || containsProgrammed) {
+                    // Even if it's not constrained, if there are programmed agents then we need to provide hub communication
+                    agentController.addHubProgrammedAgent(lat, lng, random, taskController);
+                } else {
+                    agentController.addHubAgent(lat, lng);
+                }
+
+                state.setHubLocation(new Coordinate(lat, lng));
             }
 
             List<Object> hazards = GsonUtils.getValue(obj, "hazards");

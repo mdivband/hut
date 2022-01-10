@@ -1,7 +1,7 @@
 package server.controller;
 
 import server.Simulator;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.Coordinate;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
@@ -116,9 +116,11 @@ public class TaskController extends AbstractController {
             if (coords.size() == 1) {
                 //deleteTask(findTaskByCoord(coords.get(0)).getId(), true);
                 findTaskByCoord(coords.get(0)).setStatus(Task.STATUS_DONE);
+                System.out.println("Set " + findTaskByCoord(coords.get(0)).getId() + " to status done");
             } else {
                 //deleteTask(findTaskByCoord(Coordinate.findCentre(coords)).getId(), true);
                 findTaskByCoord(Coordinate.findCentre(coords)).setStatus(Task.STATUS_DONE);
+                System.out.println("Set " + findTaskByCoord(Coordinate.findCentre(coords)).getId() + " to status done");
             }
 
         } catch (Exception e){

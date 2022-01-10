@@ -1,6 +1,8 @@
-package server.model;
+package server.model.agents;
 
 import server.Simulator;
+import server.model.Coordinate;
+import server.model.Hub;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -91,9 +93,9 @@ public class ProgrammerHandler implements Serializable {
         sb.append("TARGETS");
         for (Coordinate tgt : foundTargets) {
             sb.append(";");
-            sb.append(tgt.latitude);
+            sb.append(tgt.getLatitude());
             sb.append(",");
-            sb.append(tgt.longitude);
+            sb.append(tgt.getLongitude());
         }
         broadcast(sb.toString(), radius);
     }
@@ -117,6 +119,7 @@ public class ProgrammerHandler implements Serializable {
         }
         pingCounter++;
         stepCounter++;
+
     }
 
     /**
@@ -148,9 +151,9 @@ public class ProgrammerHandler implements Serializable {
                 List<Coordinate> coords = entry.getKey();
                 for (Coordinate c : coords) {
                     sb.append(";");
-                    sb.append(c.latitude);
+                    sb.append(c.getLatitude());
                     sb.append(",");
-                    sb.append(c.longitude);
+                    sb.append(c.getLongitude());
                 }
                 broadcast(sb.toString(), communicationRange);
             }
@@ -166,9 +169,9 @@ public class ProgrammerHandler implements Serializable {
 
                 for (Coordinate c : tsk) {
                     sb.append(";");
-                    sb.append(c.latitude);
+                    sb.append(c.getLatitude());
                     sb.append(",");
-                    sb.append(c.longitude);
+                    sb.append(c.getLongitude());
                 }
                 broadcast(sb.toString(), communicationRange);
             }
@@ -378,9 +381,9 @@ public class ProgrammerHandler implements Serializable {
             sb.append("COMPLETED");
             for (Coordinate c : coords) {
                 sb.append(";");
-                sb.append(c.latitude);
+                sb.append(c.getLatitude());
                 sb.append(",");
-                sb.append(c.longitude);
+                sb.append(c.getLongitude());
 
             }
             broadcast(sb.toString(), communicationRange);
@@ -402,9 +405,9 @@ public class ProgrammerHandler implements Serializable {
         sb.append("COMPLETED");
         for (Coordinate c : thisTask) {
             sb.append(";");
-            sb.append(c.latitude);
+            sb.append(c.getLatitude());
             sb.append(",");
-            sb.append(c.longitude);
+            sb.append(c.getLongitude());
         }
         broadcast(sb.toString(), communicationRange);
     }
@@ -416,12 +419,14 @@ public class ProgrammerHandler implements Serializable {
     private void receiveCompleteTask(List<Coordinate> coords){
         if (!completedTasks.contains(coords)) {
             //System.out.println(agent.getId() + " Receiving new complete task at " + coords.get(0));
+
             completedTasks.add(coords);
         }
 
         if (agent instanceof Hub) {
             agent.tempRemoveTask(coords);
         }
+
 
         tasks.remove(coords);
         if (currentTask.equals(coords)) {
@@ -545,9 +550,9 @@ public class ProgrammerHandler implements Serializable {
         if (currentTask.size() > 0) {
             for (Coordinate c : currentTask) {
                 sb.append(";");
-                sb.append(c.latitude);
+                sb.append(c.getLatitude());
                 sb.append(",");
-                sb.append(c.longitude);
+                sb.append(c.getLongitude());
             }
         }
 
@@ -555,8 +560,8 @@ public class ProgrammerHandler implements Serializable {
         sb.append(";AGENTS");
         for (var entry : neighbours.entrySet()) {
             sb.append(";").append(entry.getKey()).append(",").
-                    append(entry.getValue().getLocation().latitude).append(",").
-                    append(entry.getValue().getLocation().longitude).append(",").
+                    append(entry.getValue().getLocation().getLatitude()).append(",").
+                    append(entry.getValue().getLocation().getLongitude()).append(",").
                     append(entry.getValue().getHeading()).append(",").
                     append(entry.getValue().isStopped()).append(",").
                     append(entry.getValue().getLastUpdateTime());
@@ -573,12 +578,13 @@ public class ProgrammerHandler implements Serializable {
     protected void broadcast(String message, int radius) {
         List<Agent> neighbours = agent.senseNeighbours(radius);
         for (Agent n : neighbours) {
-            try {
-                // For now, we just cast it to a programmed agent. In future, we may need to implement message handling for all agents
-                AgentProgrammed ap = (AgentProgrammed) n;
+            if (n instanceof AgentProgrammed ap) {
                 ap.receiveMessage(message);
-            } catch (Exception e) {
+            } else if (n instanceof AgentCommunicating ac) {
+                ac.receiveMessage(message);
+            } else {
                 LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
+                System.out.println(n.getClass());
             }
         }
     }
@@ -693,6 +699,7 @@ public class ProgrammerHandler implements Serializable {
                         }
                     } else if (tasks.get(thisTask) == null) {
                         tasks.put(thisTask, new ArrayList<>());
+                        // TODO make this cope with larger tasks
                         tasks.get(thisTask).add(id);
                     }
                 }
@@ -941,6 +948,7 @@ public class ProgrammerHandler implements Serializable {
         } catch (Exception e) {
             // Failed to do this, probably due to incorrect information. We have to allow this mistake to happen,
             // as otherwise we are letting globally known information leak into the process
+            System.out.println("TASK SETTING EXCEP!");
             tempPlaceNewTask("waypoint", taskCoords);
             currentTask = taskCoords;
             agent.setRoute(taskCoords);
@@ -1112,8 +1120,8 @@ public class ProgrammerHandler implements Serializable {
      * @return Coordinate to go to
      */
     private Coordinate calculateNearestHomeLocation() {
-        double xDist = agent.getCoordinate().getLongitude() - home.longitude;
-        double yDist = agent.getCoordinate().getLatitude() - home.latitude;
+        double xDist = agent.getCoordinate().getLongitude() - home.getLongitude();
+        double yDist = agent.getCoordinate().getLatitude() - home.getLatitude();
         // using tan rule to find angle from hub to agent
         double theta = Math.atan(yDist / xDist);
         //double radius = 0.8 * (((double) SENSE_RANGE /1000)/6379.1);  // 20% into the radius of the hub (includes metre to
@@ -1126,11 +1134,11 @@ public class ProgrammerHandler implements Serializable {
         double xRes;
         double yRes;
         if (xDist < 0) {
-            xRes = home.longitude - (radius * Math.cos(theta));
-            yRes = home.latitude - (radius * Math.sin(theta));
+            xRes = home.getLongitude() - (radius * Math.cos(theta));
+            yRes = home.getLatitude() - (radius * Math.sin(theta));
         } else {
-            xRes = home.longitude + (radius * Math.cos(theta));
-            yRes = home.latitude + (radius * Math.sin(theta));
+            xRes = home.getLongitude() + (radius * Math.cos(theta));
+            yRes = home.getLatitude() + (radius * Math.sin(theta));
         }
 
         return new Coordinate(yRes, xRes);
@@ -1201,9 +1209,15 @@ public class ProgrammerHandler implements Serializable {
      * @return If it is connected to this agent
      */
     public boolean checkForConnection(Agent agent) {
-        AgentProgrammed ap = (AgentProgrammed) agent;
+        String id = "";
+        if (agent instanceof AgentProgrammed ap) {
+            id = ap.getNetworkId();
+        } else if (agent instanceof AgentCommunicating ac) {
+            id = ac.getNetworkId();
+        }
+
         for (var entry : neighbours.entrySet()) {
-            if (entry.getKey().equals(ap.getNetworkId())) {
+            if (entry.getKey().equals(id)) {
                 // Return true if the record of this is sufficiently recent
                 return entry.getValue().getLastUpdateTime() + AGENT_TIMEOUT > stepCounter;
             }

@@ -1,8 +1,12 @@
-package server.model;
+package server.model.agents;
+
+import server.model.Coordinate;
+import server.model.Hub;
+import server.model.Sensor;
 
 import java.util.logging.Logger;
 
-public class AgentHub extends Agent implements Hub{
+public class AgentHub extends Agent implements Hub {
     private transient Logger LOGGER = Logger.getLogger(AgentHub.class.getName());
     private transient Sensor sensor;
 

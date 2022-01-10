@@ -1,4 +1,6 @@
-package server.model;
+package server.model.agents;
+import server.model.Coordinate;
+
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -117,24 +119,6 @@ public class AgentProgrammer {
                         } catch (Exception e) {
                             System.out.println("Excep: Should be due to start conditions");
                         }
-
-                    /*
-                    List<Coordinate> task = a.getNearestEmptyTask();
-                    if (task != null) {
-                        a.setTask(task);
-                        a.resume();
-
-                    } else {
-                        if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) > 150) {
-                            // Tasks have been completed, AND we can't get a new task, AND we aren't at home currently.
-                            // This means we're in session and have done everything known
-                            System.out.println("Issuing home order for stopped=" + a.isStopped() + "; " + a.getId() + ", tasks.size = " + a.getTasks().size());
-                            a.goHome();
-                        }
-
-                        // Otherwise,probably the start of the session. Wait for something to happen
-                    }
-                     */
                     }
                 } else {
                     a.followRoute();

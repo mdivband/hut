@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rabbitmq.client.*;
 import com.rabbitmq.client.AMQP.Queue.DeclareOk;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.Coordinate;
 import server.model.task.Task;
 
