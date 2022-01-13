@@ -122,9 +122,26 @@ public class AgentController extends AbstractController {
             agent.stop();
     }
 
+    public synchronized void stopAllNonProgrammedAgents() {
+        for(Agent agent : simulator.getState().getAgents()) {
+            if (!(agent instanceof AgentProgrammed || agent instanceof AgentGhost)) {
+                agent.stop();
+            }
+        }
+
+    }
+
     public synchronized void updateAgentsTempRoutes() {
         for(Agent agent : simulator.getState().getAgents())
             agent.setTempRoute(agent.getRoute());
+    }
+
+    public synchronized void updateNonProgrammedAgentsTempRoutes() {
+        for(Agent agent : simulator.getState().getAgents()) {
+            if (!(agent instanceof AgentProgrammed || agent instanceof AgentGhost)) {
+                agent.setTempRoute(agent.getRoute());
+            }
+        }
     }
 
     public synchronized void updateAgentSpeed(String agentId, double speed) {

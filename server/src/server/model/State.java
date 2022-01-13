@@ -152,8 +152,14 @@ public class State {
     public void remove(IdObject item) {
         if(item instanceof Target)
             remove(targets, (Target) item);
-        else if(item instanceof  Task)
+        else if(item instanceof  Task) {
             remove(tasks, (Task) item);
+            for (Agent a : agents) {
+                if (a instanceof AgentHubProgrammed abs) {
+                    abs.removeTaskFromUser((Task) item);
+                }
+            }
+        }
         else if(item instanceof  Agent)
             remove(agents, (Agent) item);
         else
@@ -335,6 +341,7 @@ public class State {
     }
 
     public Task getTaskByCoordinate(Coordinate coordinate) {
+        int a = 2;
         for (Task t : tasks) {
             if(t.getCoordinate().equals(coordinate)) {
                 return t;

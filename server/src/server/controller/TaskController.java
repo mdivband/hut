@@ -111,18 +111,9 @@ public class TaskController extends AbstractController {
         return true;
     }
 
-    public void deleteTaskByCoords(List<Coordinate> coords) {
+    public void deleteTaskByCoords(Coordinate coord) {
         try {
-            if (coords.size() == 1) {
-                //deleteTask(findTaskByCoord(coords.get(0)).getId(), true);
-                findTaskByCoord(coords.get(0)).setStatus(Task.STATUS_DONE);
-                System.out.println("Set " + findTaskByCoord(coords.get(0)).getId() + " to status done");
-            } else {
-                //deleteTask(findTaskByCoord(Coordinate.findCentre(coords)).getId(), true);
-                findTaskByCoord(Coordinate.findCentre(coords)).setStatus(Task.STATUS_DONE);
-                System.out.println("Set " + findTaskByCoord(Coordinate.findCentre(coords)).getId() + " to status done");
-            }
-
+            findTaskByCoord(coord).setStatus(Task.STATUS_DONE);
         } catch (Exception e){
             // For now we leave this. It's rare, but when deleting an already completed task this throws an error
             // It doesn't matter that we let this through, because it was already gone

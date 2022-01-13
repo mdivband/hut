@@ -13,6 +13,8 @@ public class AgentProgrammer {
 
     //private boolean leader = false;
     private int strandedCounter = 0;
+    private int dupeCounter = 0;
+    private int dupeLimit;
     private boolean hasNearbyLeader = false;
 
     private boolean returner = false;
@@ -40,6 +42,10 @@ public class AgentProgrammer {
             a.setLeader(false);
         }
 
+        // Sets a random wait interval from 5-15
+        dupeLimit = (int) Math.floor((a.getNextRandomDouble() * 10) + 5);
+        LOGGER.severe("---- and set timeout to " + dupeLimit);
+
     }
 
     /***
@@ -48,6 +54,7 @@ public class AgentProgrammer {
     public void step(){
         if (a.getTasks().size() == 0 && a.getCompletedTasks().size() == 0) {
             // WAIT; Only begin executing if we have tasks added now (so they don't fly off at the start)
+            System.out.println("WAITING");
         } else {
             if (a.isLeader()) {
                 if (a.isStopped()) {
@@ -91,37 +98,24 @@ public class AgentProgrammer {
                                 }
                             }
 
-                            /* RETURNING
-                            if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) < a.getSenseRange()) {
-                                // At home
-                                List<Coordinate> task = a.getNearestEmptyTask();
-                                if (task != null) {
-                                    a.setTask(task);
-                                    a.resume();
-                                } else {
-                                    a.goHome();
-                                }
-                            } else {
-                                a.goHome();
-                            }
-                             */
-
-                            /* NON RETURNING
-                            List<Coordinate> task = a.getNearestEmptyTask();
-                            if (task != null) {
-                                a.setTask(task);
-                                a.resume();
-                            } else {
-                                a.goHome();
-                            }
-                             */
-
                         } catch (Exception e) {
                             System.out.println("Excep: Should be due to start conditions");
                         }
                     }
                 } else {
-                    a.followRoute();
+
+                    if (dupeCounter < dupeLimit) {
+                        a.followRoute();
+                        dupeCounter += 1;
+                    } else {
+                        dupeCounter = 0;
+                        if (a.checkForDuplicateAssignment()) {
+                            System.out.println(a.getId() + " reset");
+                            a.cancel();
+                            a.stop();
+                        }
+                    }
+
                 }
             } else {
                 flock();
@@ -138,14 +132,14 @@ public class AgentProgrammer {
             if (strandedCounter == 0) {
                 // wait and check
                 if (a.checkForNeighbourMovement()) {
-                    a.flockWithAttractionRepulsion();
+                    a.flockWithAttractionRepulsion(100, 20);
                     a.moveAlongHeading(1);
                     strandedCounter++;
                 }
             } else if (strandedCounter < 30) {
                 pingLeaders();  // This updates the nearby leaders by use of custom messages
                 if (a.checkForNeighbourMovement() && hasNearbyLeader) {
-                    a.flockWithAttractionRepulsion();
+                    a.flockWithAttractionRepulsion(100, 20);
                     a.moveAlongHeading(1);
                     strandedCounter = 1;
                 } else {

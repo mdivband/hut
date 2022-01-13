@@ -19,7 +19,10 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
 
     public void addTaskFromUser(Task item) {
         programmerHandler.addTask(item);
-        //System.out.println("Adding task from user at: " + item.getCoordinate());
+    }
+
+    public void removeTaskFromUser(Task item) {
+        programmerHandler.removeTask(item);
     }
 
     // Called by the Simulator, we will use this to call the Programmer

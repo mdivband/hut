@@ -11,6 +11,7 @@ import server.model.Coordinate;
 import server.model.Hub;
 import server.model.MObject;
 import server.model.agents.AgentCommunicating;
+import server.model.agents.AgentProgrammed;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 import server.model.task.WaypointTask;
@@ -53,7 +54,7 @@ public class Allocator {
     public void runAutoAllocation() {
         Map<String, String> allocation = new HashMap<>();
         List<Agent> agentsToAllocate = new ArrayList<>(simulator.getState().getAgents());
-        agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || agent instanceof Hub);
+        agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || agent instanceof Hub || agent instanceof AgentProgrammed);
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 

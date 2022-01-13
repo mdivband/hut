@@ -1,5 +1,6 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
 import server.model.Sensor;
@@ -113,17 +114,30 @@ public class AgentProgrammed extends Agent {
 
                 incrementTimeInAir();
             }
-            if (isCurrentDestinationReached() && this.getRoute().size() > 1)
+            if (isCurrentDestinationReached() && this.getRoute().size() > 1) {
                 this.getRoute().remove(0);
+            }
         }
 
         if (isFinalDestinationReached() && !isStopped()) {
             stop();
             programmerHandler.completeTask();
         }
+    }
 
-
-
+    public void moveAlongPatrol() {
+        if (isCurrentDestinationReached() && !isStopped()) {
+            // Progress to next
+            List<Coordinate> newRoute = new ArrayList<>(getRoute().size());
+            // Skips the start item, so shifts all items left by one
+            newRoute.addAll(getRoute().subList(1, getRoute().size()));
+            newRoute.add(getRoute().get(0));
+            setRoute(newRoute);
+        } else {
+            //Align agent, if aligned then moved towards target
+            if(!isStopped() && this.adjustHeadingTowardsGoal())
+                this.moveAlongHeading(1);
+        }
     }
 
     @Override
@@ -133,7 +147,7 @@ public class AgentProgrammed extends Agent {
     }
 
     /***
-     * Finds teh task with these coordinates, and assigns it to this agent
+     * Finds the task with these coordinates, and assigns it to this agent
      * @param coords
      */
     public void setAllocatedTaskByCoords(List<Coordinate> coords) {
@@ -151,10 +165,11 @@ public class AgentProgrammed extends Agent {
             }
         } else {
             // Region or patrol task, represented by its vertices
-            coordToUse = Coordinate.findCentre(coords);
-            setTempRoute(Collections.singletonList(((PatrolTask) taskController.findTaskByCoord(coordToUse)).getNearestPointAbsolute(this)));
+            coordToUse = Coordinate.findCentre(coords.subList(0, coords.size() - 1));
+            setTempRoute(coords);
+            // TODO this may need to be reworked with a "going home" ID so others know what's happening and can predict from this
         }
-        // TODO this may need to be reworked with a "going home" ID so others know what's happening and can predict from this
+
         setAllocatedTaskId(taskController.findTaskByCoord(coordToUse).getId());
     }
 
@@ -171,8 +186,8 @@ public class AgentProgrammed extends Agent {
 
     }
 
-    public void tempRemoveTask(List<Coordinate> coords){
-        taskController.deleteTaskByCoords(coords);
+    public void tempRemoveTask(Coordinate coord){
+        taskController.deleteTaskByCoords(coord);
     }
 
     /**
@@ -266,7 +281,7 @@ public class AgentProgrammed extends Agent {
      * Adjust heading of agent towards the average heading of its neighbours.
      * @return isAligned - Whether the agent is aligned or needs to continue rotating.
      */
-    protected boolean adjustFlockingHeading() {
+    protected boolean adjustFlockingHeading(double senseRadius, double tooCloseRadius) {
         // I lifted this straight out of the AgentVirtual
         double xSum = 0.0;
         double ySum = 0.0;
@@ -279,7 +294,7 @@ public class AgentProgrammed extends Agent {
         double yAttract = 0.0;
         double targetHeading = Math.toRadians(this.heading);
 
-        List<Agent> neighbours = this.sensor.senseNeighbours(this, 50.0);
+        List<Agent> neighbours = this.sensor.senseNeighbours(this, senseRadius);
 
         if (neighbours.size() > 0) {
 
@@ -307,7 +322,7 @@ public class AgentProgrammed extends Agent {
             xAlign = xSum/magnitude;
             yAlign = ySum/magnitude;
 
-            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 15.0);
+            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, tooCloseRadius);
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
             if (tooCloseNeighbours.size() > 0) {

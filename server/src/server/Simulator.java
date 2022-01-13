@@ -158,7 +158,7 @@ public class Simulator {
                 }
             }
             for(Task task : completedTasks) {
-                System.out.println("COMP: " + task);
+                //System.out.println("COMP: " + task);
                 task.complete();
                 //printHubBelief();
                 //printStateJson();
@@ -191,8 +191,10 @@ public class Simulator {
 
     public void changeView(boolean toEdit) {
         if (toEdit) {
-            agentController.stopAllAgents();
-            agentController.updateAgentsTempRoutes();
+            //agentController.stopAllAgents();
+            //agentController.updateAgentsTempRoutes();
+            agentController.stopAllNonProgrammedAgents();
+            agentController.updateNonProgrammedAgentsTempRoutes();
             allocator.copyRealAllocToTempAlloc();
             allocator.clearAllocationHistory();
             state.setEditMode(true);

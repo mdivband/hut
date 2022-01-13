@@ -4,7 +4,9 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.Hub;
 import server.model.target.Target;
+import server.model.task.PatrolTask;
 import server.model.task.Task;
+import server.model.task.WaypointTask;
 import tool.GsonUtils;
 
 import java.io.Serializable;
@@ -28,7 +30,7 @@ public class ProgrammerHandler implements Serializable {
     private HashMap<String, Position> neighbours;  // Stores the known other agents (including non-neighbours)
     private List<Coordinate> currentTask = new ArrayList<>();
     private final HashMap<List<Coordinate>, List<String>> tasks;
-    private final List<List<Coordinate>> completedTasks;
+    private final List<Coordinate> completedTasks;
     private final List<Coordinate> foundTargets;
     
     private Coordinate home;
@@ -57,7 +59,8 @@ public class ProgrammerHandler implements Serializable {
     public void step() {
         if (agent.getNetworkId().equals("")) {
             // Must perform setup on the first step, otherwise they can't find each other
-            agent.setNetworkID(agent.generateRandomTag());
+            //agent.setNetworkID(agent.generateRandomTag());
+            agent.setNetworkID(agent.getId());
             declareSelf(communicationRange);
             agentProgrammer.setup();
         } else if (pingCounter >= pingTimeout) {
@@ -145,8 +148,9 @@ public class ProgrammerHandler implements Serializable {
                 if (entry.getKey().size() == 1) {
                     sb.append("TASK_WAYPOINT");
                 } else {
-                    sb.append("TASK_REGION");
+                    sb.append("TASK_PATROL");
                 }
+                // TODO To handle region tasks, we will need to provide a different format, maybe (TL, BR, 0) so it can be identified
 
                 List<Coordinate> coords = entry.getKey();
                 for (Coordinate c : coords) {
@@ -158,22 +162,15 @@ public class ProgrammerHandler implements Serializable {
                 broadcast(sb.toString(), communicationRange);
             }
 
-            for (List<Coordinate> tsk : completedTasks) {
-                StringBuilder sb = new StringBuilder();
+            for (Coordinate tsk : completedTasks) {
 
-                if (tsk.size() == 1) {
-                    sb.append("COMPLETED");
-                } else {
-                    sb.append("COMPLETED");
-                }
+                String sb = "COMPLETED" +
+                        ";" +
+                        tsk.getLatitude() +
+                        "," +
+                        tsk.getLongitude();
 
-                for (Coordinate c : tsk) {
-                    sb.append(";");
-                    sb.append(c.getLatitude());
-                    sb.append(",");
-                    sb.append(c.getLongitude());
-                }
-                broadcast(sb.toString(), communicationRange);
+                broadcast(sb, communicationRange);
             }
 
         } catch (Exception e) {
@@ -222,7 +219,9 @@ public class ProgrammerHandler implements Serializable {
      * Cancels the current task this agent is doing
      */
     protected void cancel(){
-        tasks.get(currentTask).remove(getId());
+        if (!currentTask.isEmpty()) {
+            tasks.get(currentTask).remove(getId());
+        }
         currentTask = new ArrayList<>();
     }
 
@@ -363,7 +362,23 @@ public class ProgrammerHandler implements Serializable {
      * Makes the agent follow the route that is currently set
      */
     public void followRoute() {
-        agent.moveTowardsDestination();
+        if (currentTask.size() > 1) {
+            // Patrol (or region, NYI)
+            agent.moveAlongPatrol();
+        } else {
+            agent.moveTowardsDestination();
+        }
+
+    }
+
+    private Coordinate calculateRepresentativeCoordinate(List<Coordinate> coords) {
+        if (coords.size() == 1) {
+            return coords.get(0);
+        } else if (coords.size() > 1) {
+            return Coordinate.findCentre(coords.subList(0, coords.size() - 1));
+        } else {
+            return null;
+        }
     }
 
     /***
@@ -373,20 +388,19 @@ public class ProgrammerHandler implements Serializable {
     protected void completeTask(){
         // A very important check here, otherwise return home tasks mess up the propagation of completed tasks and it
         //  stops tasks being checked properly
-        if (currentTask.size() > 0) {
-            List<Coordinate> coords = currentTask;
+        Coordinate coords = calculateRepresentativeCoordinate(currentTask);
+
+        if (coords != null) {
             tasks.remove(currentTask);
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("COMPLETED");
-            for (Coordinate c : coords) {
-                sb.append(";");
-                sb.append(c.getLatitude());
-                sb.append(",");
-                sb.append(c.getLongitude());
+            String sb = "COMPLETED" +
+                    ";" +
+                    coords.getLatitude() +
+                    "," +
+                    coords.getLongitude();
 
-            }
-            broadcast(sb.toString(), communicationRange);
+
+            broadcast(sb, communicationRange);
 
             completedTasks.add(coords);
         }
@@ -414,26 +428,39 @@ public class ProgrammerHandler implements Serializable {
 
     /***
      * Handles a completion message. Adds this task to the completed list
-     * @param coords Coordinate of the task
+     * @param coord Coordinate of the task
      */
-    private void receiveCompleteTask(List<Coordinate> coords){
-        if (!completedTasks.contains(coords)) {
+    private void receiveCompleteTask(Coordinate coord){
+        if (!completedTasks.contains(coord)) {
             //System.out.println(agent.getId() + " Receiving new complete task at " + coords.get(0));
-
-            completedTasks.add(coords);
+            completedTasks.add(coord);
         }
 
         if (agent instanceof Hub) {
-            agent.tempRemoveTask(coords);
+            agent.tempRemoveTask(coord);
         }
 
+        //searchAndDelete(coords);
 
-        tasks.remove(coords);
-        if (currentTask.equals(coords)) {
+        // This will work if it's a waypoint task
+        tasks.remove(Collections.singletonList(coord));
+
+
+        // Complicated statement to cover singleton currentTask exact match or non-singleton centre reference match with
+        //  or without patrol allowance. Order of statements prevents errors
+        //if ((currentTask.size() == 1 && coords.equals(currentTask))
+        //||  ((currentTask.size() > 1) && (coords.contains(Coordinate.findCentre(currentTask)) ||
+        //        coords.contains(Coordinate.findCentre(currentTask.subList(0, currentTask.size() - 1)))))) {
+        if (coord.equals(calculateRepresentativeCoordinate(currentTask))) {
+            //System.out.println(getId() + ": Our task is done");
+            //System.out.println("    current: " + currentTask);
+            //System.out.println("    del:     " + coord);
+            // TODO this isn't completed properly, so needs to be fixed
+            //System.out.println();
+            tasks.remove(currentTask); // To make sure, it doesn't always remove right otherwise
             currentTask = new ArrayList<>();
-            // Not sure if stopping or returning fixes the halting bug
+            agent.clearRoute();
             stop();
-            //goHome();
         }
     }
 
@@ -543,8 +570,9 @@ public class ProgrammerHandler implements Serializable {
         } else if (currentTask.size() == 1) {
             sb.append("TASK_WAYPOINT");
         } else {
-            sb.append("TASK_REGION");
+            sb.append("TASK_PATROL");
         }
+        // TODO To handle region tasks, we will need to provide a different format, maybe (TL, BR, 0) so it can be identified
 
         // In theory this should work; it will pass by and won't add any coord
         if (currentTask.size() > 0) {
@@ -584,7 +612,7 @@ public class ProgrammerHandler implements Serializable {
                 ac.receiveMessage(message);
             } else {
                 LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
-                System.out.println(n.getClass());
+                //System.out.println(n.getClass());
             }
         }
     }
@@ -596,19 +624,9 @@ public class ProgrammerHandler implements Serializable {
      */
     private boolean checkTaskPossible(List<Coordinate> coords) {
         boolean match;
-        for (List<Coordinate> tsk : completedTasks) {
-            match = true;
-            for (Coordinate c : tsk) {
-                if (!coords.contains(c)) {
-                    // any difference in this set means it's not in completedTasks
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                // Complete match, so already done
-                return false;
-            }
+        Coordinate thisRep = calculateRepresentativeCoordinate(coords);
+        if (completedTasks.contains(thisRep)) {
+            return false;
         }
 
         for (var entry : tasks.entrySet()) {
@@ -691,6 +709,8 @@ public class ProgrammerHandler implements Serializable {
                     next = msgIt.next();
                 }
 
+                // Remove the current record of this id for any task other than the reported one
+                pruneTaskForReset(id, thisTask);
                 if (thisTask.size() != 0) {  // Checks it wasn't a TASK_NONE
                     if (tasks.get(thisTask) != null && !tasks.get(thisTask).contains(id)) {
                         tasks.get(thisTask).add(id);
@@ -748,9 +768,9 @@ public class ProgrammerHandler implements Serializable {
                 Coordinate thisCoord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
                 List<Coordinate> thisTask = new ArrayList<>();
                 thisTask.add(thisCoord);
-                if (checkTaskPossible(thisTask)) {
+                if (checkTaskPossible(thisTask)) {  // TODO check this, it shouldn't be needed?
                     // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
-                    completedTasks.add(thisTask);
+                    completedTasks.add(calculateRepresentativeCoordinate(thisTask));
                     if (agent instanceof Hub) {
                         System.out.println("Receiving completed at: " + thisCoord);
                     }
@@ -765,7 +785,28 @@ public class ProgrammerHandler implements Serializable {
                     tasks.put(thisTask, new ArrayList<>());
                     // Debug to display agent knowledge of new tasks
                 }
-            } else if (message.contains("TASK_REGION")) {
+            } else if (message.contains("TASK_PATROL")) {
+                String[] msgArray = message.split(";");
+                Iterator<String> msgIt = Arrays.stream(msgArray).iterator();
+                String next;
+                msgIt.next();  // Pass over the "TASK" line
+                List<Coordinate> thisTask = new ArrayList<>();
+                // Discards each part until we hit the "AGENTS" line
+                while (msgIt.hasNext()) {
+                    next = msgIt.next();
+                    String x = next.split(",")[0];
+                    String y = next.split(",")[1];
+                    Coordinate coord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
+                    thisTask.add(coord);
+                }
+                if (checkTaskPossible(thisTask)) {
+                    // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
+                    tasks.put(thisTask, new ArrayList<>());
+                }
+            }
+
+
+            else if (message.contains("TASK_REGION")) {
                 String nwX = message.split(";")[1].split(",")[0];
                 String nwY = message.split(";")[1].split(",")[1];
                 String neX = message.split(";")[2].split(",")[0];
@@ -799,14 +840,16 @@ public class ProgrammerHandler implements Serializable {
                     thisTask.add(coord);
                 }
 
+                // TODO the above loop isn't needed any more as we only use the rep
+
                 // Debug to display hub knowledge of task completion
-                if (!completedTasks.contains(thisTask)) {
+                if (!completedTasks.contains(calculateRepresentativeCoordinate(thisTask))) {
                     if (agent instanceof Hub) {
                         System.out.println("HUB:        Receiving completed task from message: " + message);
                     }
                 }
 
-                receiveCompleteTask(thisTask);
+                receiveCompleteTask(calculateRepresentativeCoordinate(thisTask));
 
             } else if (message.contains("TARGETS")) {
                 String[] msgArray = message.split(";");
@@ -835,6 +878,20 @@ public class ProgrammerHandler implements Serializable {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Searches through the task list and removes the agent from that task assignment
+     * @param id
+     * @param thisTask
+     */
+    private void pruneTaskForReset(String id, List<Coordinate> thisTask) {
+        for (var entry : tasks.entrySet()) {
+            if (!entry.getKey().equals(thisTask) && entry.getValue().contains(id)) {
+                entry.getValue().remove(id);
+                System.out.println("Removing id " + id + " from task " + entry.getKey());
+            }
         }
     }
 
@@ -893,21 +950,60 @@ public class ProgrammerHandler implements Serializable {
      * Get the nearest known task that has no agents assigned to it yet
      * @return The nearest task with no agents assigned
      */
-    public List<Coordinate> getNearestEmptyTask(){
+    public List<Coordinate> getNearestEmptyWaypointTask(){
         List<Coordinate> bestTask = null;
         double shortestDist = 100000;
         for (var entry : tasks.entrySet()) {
-            if (entry.getValue().isEmpty()) {
-                for (Coordinate c : entry.getKey()) {
-                    double dist = agent.getCoordinate().getDistance(c);
-                    if (dist < shortestDist) {
-                        shortestDist = dist;
-                        bestTask = entry.getKey();
-                    }
+            if (entry.getKey().size() == 1 && entry.getValue().isEmpty()) {
+                // It's a waypoint task with no agents assigned
+                double dist = agent.getCoordinate().getDistance(entry.getKey().get(0));
+                if (dist < shortestDist) {
+                    shortestDist = dist;
+                    bestTask = entry.getKey();
                 }
             }
         }
         return bestTask;
+    }
+
+    /***
+     * Get the nearest known task that has no agents assigned to it yet
+     * @return The nearest task with no agents assigned
+     */
+    public List<Coordinate> getNearestEmptyTask() {
+        List<Coordinate> bestTask = null;
+        double shortestDist = 100000;
+        for (var entry : tasks.entrySet()) {
+            if (entry.getKey().size() == 1 && entry.getValue().isEmpty()) {
+                // It's a waypoint task with no agents assigned
+                double dist = agent.getCoordinate().getDistance(entry.getKey().get(0));
+                if (dist < shortestDist) {
+                    shortestDist = dist;
+                    bestTask = entry.getKey();
+                }
+            } else if (entry.getKey().size() > 1 && entry.getValue().isEmpty()) {
+                // It's a patrol (or region) with noting assigned
+                Coordinate nearestPoint = safeGetNearestPoint(entry.getKey());
+                double dist = agent.getCoordinate().getDistance(nearestPoint);
+                if (dist < shortestDist) {
+                    shortestDist = dist;
+                    bestTask = entry.getKey();
+                }
+            }
+        }
+        if (bestTask == null) {
+            //System.out.println("Best is null");
+        } else {
+            //System.out.println("Best is: " + bestTask);
+        }
+
+
+        return bestTask;
+    }
+
+    private Coordinate safeGetNearestPoint(List<Coordinate> coords) {
+        PatrolTask pt = new PatrolTask("temp", Task.TASK_PATROL, coords, Coordinate.findCentre(coords));
+        return pt.getNearestPointAbsolute(agent);
     }
 
     /***
@@ -943,14 +1039,17 @@ public class ProgrammerHandler implements Serializable {
         try {
             agent.setAllocatedTaskByCoords(taskCoords);
             currentTask = taskCoords;
+            tasks.get(taskCoords).add(getId());  // must add ourselves
             agent.setRoute(taskCoords);
             resume();
         } catch (Exception e) {
             // Failed to do this, probably due to incorrect information. We have to allow this mistake to happen,
             // as otherwise we are letting globally known information leak into the process
-            System.out.println("TASK SETTING EXCEP!");
-            tempPlaceNewTask("waypoint", taskCoords);
+            // System.out.println("For the sake of fairness and realism we must allow the agent to make this mistake");
+
+            tempPlaceNewTask(taskCoords);
             currentTask = taskCoords;
+            tasks.get(taskCoords).add(getId());  // must add ourselves
             agent.setRoute(taskCoords);
             resume();
         }
@@ -968,10 +1067,9 @@ public class ProgrammerHandler implements Serializable {
     /***
      * Unused currently; This is a clumsy way of adding tasks from the programmer. It does work, but the receiver method
      * is better
-     * @param type Type of task
      * @param coords Task's coordinate
      */
-    protected void tempPlaceNewTask(String type, List<Coordinate> coords) {
+    protected void tempPlaceNewTask(List<Coordinate> coords) {
         tasks.put(coords, new ArrayList<>());
     }
 
@@ -998,24 +1096,54 @@ public class ProgrammerHandler implements Serializable {
         neighbours = new HashMap<>();
     }
 
-    /***
+    /**
      * This shouldn't be used by controller, as it handles Task objects. You can create tasks as coordinate lists and
      * use the TempPlaceTask, or you can set a route for an agent, but probably best not to use this.
      * Adds a task to this agent. Passed through to receivers, when adding tasks from the user
      * @param item Task to add
      */
     protected void addTask(Task item) {
-        // For now, assume it's a waypoint task. In future we may need to check what type of task (instanceof) and go from there
-        List<Coordinate> thisTask = new ArrayList<>();
-        thisTask.add(item.getCoordinate());
+        List<Coordinate> thisTask;
+        if (item instanceof WaypointTask wt) {
+            thisTask = Collections.singletonList(wt.getCoordinate());
+        } else if (item instanceof PatrolTask pt) {
+            thisTask = pt.getPoints();
+        } else {
+            // We don't know how to handl;e this task type
+            return;
+        }
         tasks.put(thisTask, new ArrayList<>());
     }
 
-    /***
+    /**
+     * This shouldn't be used by controller, as it handles Task objects.
+     * Removes a task for this agent. Passed through to receivers, when removing tasks by the user
+     * @param item Task to add
+     */
+    protected void removeTask(Task item) {
+        // For now we just treat this as a normal completion, which may be ambiguous
+        //  However, it is hard to distinguish a completed or deleted patrol task without additional context
+        //  i.e: did the user cancel it because it wasn't useful or because it did its job?
+        Coordinate thisCoord = item.getCoordinate();
+        completedTasks.add(thisCoord);
+
+        if (agent instanceof Hub) {
+            agent.tempRemoveTask(thisCoord);
+        }
+
+        if (item instanceof PatrolTask pt) {
+            tasks.remove(pt.getPoints());
+        } else {
+            tasks.remove(Collections.singletonList(thisCoord));
+        }
+
+    }
+
+    /**
      * Uses the pre-existing flocking algorithm based on attraction and repulsion
      */
-    protected void flockWithAttractionRepulsion(){
-        agent.adjustFlockingHeading();
+    protected void flockWithAttractionRepulsion(double senseRadius, double tooCloseRadius){
+        agent.adjustFlockingHeading(senseRadius, tooCloseRadius);
     }
 
     /***
@@ -1156,7 +1284,7 @@ public class ProgrammerHandler implements Serializable {
      * Gets list of completed tasks
      * @return List of completed tasks
      */
-    public List<List<Coordinate>> getCompletedTasks() {
+    public List<Coordinate> getCompletedTasks() {
         return completedTasks;
     }
 
@@ -1244,6 +1372,20 @@ public class ProgrammerHandler implements Serializable {
 
     public void setCommunicationRange(double communicationRange) {
         this.communicationRange = (int) Math.round(communicationRange);
+    }
+
+    public boolean checkForDuplicateAssignment() {
+        try {
+            if (currentTask != null && !currentTask.isEmpty()) {
+                // This means more than 1 user assigned
+                //System.out.println(agent.getNetworkId() + ": Checking ct = " + currentTask + ", tsks = " + tasks.get(currentTask));
+                return tasks.get(currentTask).size() > 1;
+            }
+            return false;
+        } catch (Exception e) {
+            // Task not found
+            return false;
+        }
     }
 
     /***
