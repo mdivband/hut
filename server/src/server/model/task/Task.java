@@ -72,18 +72,18 @@ public abstract class Task extends MObject implements Serializable {
             }
         }
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-        //LOGGER.info("Task " + this.getId() + " has been completed");
 
     }
 
-    private ArrayList<Agent> tempGetArrivedAgents(){
+    /**
+     * Gets all agents within [10m] of this agent
+     * @return ArrayList of arrived agents
+     */
+    private ArrayList<Agent> getArrivedAgents(){
         ArrayList<Agent> arrivedAgents = new ArrayList<>();
         for (Agent a : Simulator.instance.getState().getAgents()) {
             if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
                 arrivedAgents.add(a);
-                //if (a instanceof AgentProgrammed ap && !(a instanceof Hub)) {
-                 //   ap.registerCompleteTask(this.getCoordinate());
-                //}
             }
         }
         return arrivedAgents;
@@ -102,7 +102,7 @@ public abstract class Task extends MObject implements Serializable {
             return true;
         }
 
-        ArrayList<Agent> arrivedAgents = tempGetArrivedAgents();
+        ArrayList<Agent> arrivedAgents = getArrivedAgents();
         if (arrivedAgents.size() > 0) {
             // An agent has found this task
             if (Simulator.instance.getState().isCommunicationConstrained()) {
@@ -146,7 +146,7 @@ public abstract class Task extends MObject implements Serializable {
     }
 
     public void addAgent(Agent agent) {
-        //Only add agent if none of the existing agents have the same id.
+        // Only add agent if none of the existing agents have the same id.
         if (agents.stream().noneMatch(o -> o.getId().equalsIgnoreCase(agent.getId())))
             agents.add(agent);
     }

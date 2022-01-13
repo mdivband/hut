@@ -137,7 +137,7 @@ public class Simulator {
 
             state.incrementTime(0.2);
 
-            //Step agents
+            // Step agents
             checkAgentsForTimeout();
             for (Agent agent : state.getAgents()) {
                 agent.step(state.isFlockingEnabled());
@@ -148,22 +148,18 @@ public class Simulator {
                 state.updateGhosts();
                 state.moveGhosts();
             }
-            //Step tasks - requires completed tasks array to avoid concurrent modification.
-            List<Task> completedTasks = new ArrayList<Task>();
+            // Step tasks - requires completed tasks array to avoid concurrent modification.
+            List<Task> completedTasks = new ArrayList<>();
             for (Task task : state.getTasks()) {
                 if (task.step()) {
                     // If it's already tagged by a programmed agent, or if it gets completed by the step command
                     completedTasks.add(task);
-                    // TODO The first task is often erroneously completed here, due to switching views
                 }
             }
             for(Task task : completedTasks) {
-                //System.out.println("COMP: " + task);
                 task.complete();
-                //printHubBelief();
-                //printStateJson();
             }
-            //Step hazard hits
+            // Step hazard hits
             this.state.decayHazardHits();
 
             long endTime = System.currentTimeMillis();
@@ -191,8 +187,6 @@ public class Simulator {
 
     public void changeView(boolean toEdit) {
         if (toEdit) {
-            //agentController.stopAllAgents();
-            //agentController.updateAgentsTempRoutes();
             agentController.stopAllNonProgrammedAgents();
             agentController.updateNonProgrammedAgentsTempRoutes();
             allocator.copyRealAllocToTempAlloc();
@@ -241,7 +235,7 @@ public class Simulator {
                         .toString()
                         .toLowerCase();
 
-                List<String> possibleMethods = new ArrayList<String>(Arrays.asList(
+                List<String> possibleMethods = new ArrayList<>(Arrays.asList(
                         "random",
                         "maxsum"
                 ));
@@ -250,7 +244,7 @@ public class Simulator {
                     this.state.setAllocationMethod(allocationMethod);
                 } else {
                     LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'maxsum'.");
-                    //state.allocationMethod initialised with default value of 'maxsum'
+                    // state.allocationMethod initialised with default value of 'maxsum'
                 }
             }
 
@@ -260,7 +254,7 @@ public class Simulator {
                     this.state.setFlockingEnabled((Boolean)flockingEnabled);
                 } else {
                     LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
-                            flockingEnabled.toString() + "'. Set to false.");
+                            flockingEnabled + "'. Set to false.");
                     // state.flockingEnabled initialised with default value of false
                 }
             }
@@ -295,23 +289,11 @@ public class Simulator {
                     this.state.setCommunicationConstrained((Boolean)communicationConstrained);
                 } else {
                     LOGGER.warning("Expected boolean value for communicationConstrained in scenario file. Received: '" +
-                            communicationConstrained.toString() + "'. Set to false.");
-                    // state.flockingEnabled initialised with default value of false
+                            communicationConstrained + "'. Set to false.");
+                    // state.communicationConstrained initialised with default value of false
                 }
             }
 
-            /*
-            // Now we just set programmed globally, it's simpler and prevents issues.
-            //  In future we could reconfigure to allow both
-            boolean programmed = false;
-            // TODO allow both types together
-            if(GsonUtils.hasKey(obj,"programmed")) {
-                Object progSetting = GsonUtils.getValue(obj, "programmed");
-                if (progSetting.getClass() == Boolean.class) {
-                    programmed = (Boolean) progSetting;
-                }
-            }
-             */
             boolean containsProgrammed = false;
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");
             if (agentsJson != null) {
@@ -335,8 +317,9 @@ public class Simulator {
                         agent = agentController.addVirtualAgent(lat, lng, 0);
                     }
                     Double battery = GsonUtils.getValue(agentJSon, "battery");
-                    if(battery != null)
+                    if(battery != null) {
                         agent.setBattery(battery);
+                    }
                 }
             }
 
@@ -377,7 +360,7 @@ public class Simulator {
                     Double lng = GsonUtils.getValue(targetJson, "lng");
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
                     Target target = targetController.addTarget(lat, lng, type);
-                    //Hide all targets initially - they must be found!!
+                    // Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), false);
                 }
             }
@@ -412,6 +395,9 @@ public class Simulator {
         }
     }
 
+    /**
+     * Prints the complete belief for each programmed agent
+     */
     private void printBeliefs() {
         ArrayList<String> beliefs = agentController.getBelievedModels();
         System.out.println("===========Beliefs===========");
@@ -421,6 +407,9 @@ public class Simulator {
         }
     }
 
+    /**
+     * Prints the complete belief for the programmed hub
+     */
     private void printHubBelief() {
         ArrayList<String> beliefs = agentController.getHubBelief();
         System.out.println("===========HUB Belief===========");
@@ -430,11 +419,12 @@ public class Simulator {
         }
     }
 
+    /**
+     * Prints the state as a JSON
+     */
     private void printStateJson() {
         String stateJson = GsonUtils.toJson(state);
         System.out.println(stateJson);
-
-
     }
 
     public synchronized String getStateAsString() {

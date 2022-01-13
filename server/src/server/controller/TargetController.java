@@ -56,9 +56,13 @@ public class TargetController extends AbstractController {
         return true;
     }
 
+    /**
+     * Searches for any target with the given coordinate
+     * @param coordinate The coordinate to check
+     * @return The Target with that coordinate
+     */
     public Target findTargetByCoord(Coordinate coordinate) {
         return simulator.getState().getTargetByCoordinate(coordinate);
     }
-
 
 }

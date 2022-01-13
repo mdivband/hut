@@ -1,18 +1,18 @@
 package server.model.agents;
 
-import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
 import server.model.Sensor;
-import server.model.task.PatrolTask;
 import server.model.task.Task;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+/**
+ * Programmed agent that enacts behaviours as programmed by the user
+ */
 public class AgentProgrammed extends Agent {
     private transient String networkID = "";
     private transient Random random;
@@ -85,19 +85,21 @@ public class AgentProgrammed extends Agent {
         //manualCheckTaskComplete();
     }
 
+    /**
+     * Manually searches for nearby tasks to register as complete
+     */
     private void manualCheckTaskComplete(){
         Coordinate completeNearbyTask = taskController.checkIfNearbyTaskComplete(getCoordinate(), getEPS());
         if (completeNearbyTask != null) {
             // We have checked, and found a task near to this drone, so we will complete it
             programmerHandler.completeTask(completeNearbyTask);
         }
-
     }
 
-    public void tempManualPushCompletedTask(Coordinate coordinate) {
-        programmerHandler.completeTask(coordinate);
-    }
-
+    /**
+     * Register a task completion when the task triggers it.
+     * @param coordinate Coordinate of the completed task
+     */
     public void registerCompleteTask(Coordinate coordinate) {
         programmerHandler.completeTask(coordinate);
     }
@@ -125,6 +127,9 @@ public class AgentProgrammed extends Agent {
         }
     }
 
+    /**
+     * Progresses agent movement along a patrol task
+     */
     public void moveAlongPatrol() {
         if (isCurrentDestinationReached() && !isStopped()) {
             // Progress to next
@@ -158,8 +163,6 @@ public class AgentProgrammed extends Agent {
             try {
                 setTempRoute(Collections.singletonList(taskController.findTaskByCoord(coordToUse).getCoordinate()));
             } catch (Exception e) {
-                //LOGGER.severe("ERROR TRYING TO PERFORM A COMPLETED TASK. RE-ADDING");
-                //tempPlaceNewTask("waypoint", coords);
                 setRoute(coords);
                 return;
             }
@@ -167,25 +170,14 @@ public class AgentProgrammed extends Agent {
             // Region or patrol task, represented by its vertices
             coordToUse = Coordinate.findCentre(coords.subList(0, coords.size() - 1));
             setTempRoute(coords);
-            // TODO this may need to be reworked with a "going home" ID so others know what's happening and can predict from this
         }
-
         setAllocatedTaskId(taskController.findTaskByCoord(coordToUse).getId());
     }
 
-    public void tempPlaceNewTask(String type, List<Coordinate> coords) {
-        // TODO this is temporary and is a bit messy. It allows us to create tasks from the programmer, but in future
-        // the user will probably directly create these tasks from the main view
-        if (taskController.findTaskByCoord(Coordinate.findCentre(coords)) == null) {
-            if (type.equals("waypoint")) {
-                taskController.createTask(Task.TASK_WAYPOINT, coords.get(0).getLatitude(), coords.get(0).getLongitude());
-            } else if (type.equals("region")) {
-                taskController.createRegionTask(coords.get(0), coords.get(1), coords.get(2), coords.get(3));
-            }
-        }
-
-    }
-
+    /**
+     * Allows an agent (Hub only) to remove a task from the programmer
+     * @param coord Coordinate of the task to remove
+     */
     public void tempRemoveTask(Coordinate coord){
         taskController.deleteTaskByCoords(coord);
     }

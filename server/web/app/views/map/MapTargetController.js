@@ -63,7 +63,9 @@ var MapTargetController = {
             MapTargetController.popupTargetFound(target);
         marker.setVisible(target.isVisible());
     },
+
     checkForReveal: function (agent) {
+        // Only check for this reveal if it's not a programmed agent (it shouldn't report yet)
         if (agent.getType() !== "programmed" && agent.getType() !== "leader") {
             this.state.targets.each(function (target) {
                 if (!target.isVisible()) {

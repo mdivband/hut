@@ -134,4 +134,5 @@ App.Models.State  = Backbone.Model.extend({
     getCommunicationRange: function () {
         return this.get("communicationRange")
     }
+
 });

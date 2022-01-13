@@ -432,7 +432,6 @@ public class ProgrammerHandler implements Serializable {
      */
     private void receiveCompleteTask(Coordinate coord){
         if (!completedTasks.contains(coord)) {
-            //System.out.println(agent.getId() + " Receiving new complete task at " + coords.get(0));
             completedTasks.add(coord);
         }
 
@@ -440,23 +439,13 @@ public class ProgrammerHandler implements Serializable {
             agent.tempRemoveTask(coord);
         }
 
-        //searchAndDelete(coords);
-
         // This will work if it's a waypoint task
         tasks.remove(Collections.singletonList(coord));
 
 
         // Complicated statement to cover singleton currentTask exact match or non-singleton centre reference match with
         //  or without patrol allowance. Order of statements prevents errors
-        //if ((currentTask.size() == 1 && coords.equals(currentTask))
-        //||  ((currentTask.size() > 1) && (coords.contains(Coordinate.findCentre(currentTask)) ||
-        //        coords.contains(Coordinate.findCentre(currentTask.subList(0, currentTask.size() - 1)))))) {
         if (coord.equals(calculateRepresentativeCoordinate(currentTask))) {
-            //System.out.println(getId() + ": Our task is done");
-            //System.out.println("    current: " + currentTask);
-            //System.out.println("    del:     " + coord);
-            // TODO this isn't completed properly, so needs to be fixed
-            //System.out.println();
             tasks.remove(currentTask); // To make sure, it doesn't always remove right otherwise
             currentTask = new ArrayList<>();
             agent.clearRoute();
@@ -612,7 +601,6 @@ public class ProgrammerHandler implements Serializable {
                 ac.receiveMessage(message);
             } else {
                 LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
-                //System.out.println(n.getClass());
             }
         }
     }
@@ -772,7 +760,7 @@ public class ProgrammerHandler implements Serializable {
                     // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
                     completedTasks.add(calculateRepresentativeCoordinate(thisTask));
                     if (agent instanceof Hub) {
-                        System.out.println("Receiving completed at: " + thisCoord);
+                        System.out.println("HUB:        Receiving completed task at " + thisCoord);
                     }
                 }
             } else if (message.contains("TASK_WAYPOINT")) {
@@ -845,7 +833,7 @@ public class ProgrammerHandler implements Serializable {
                 // Debug to display hub knowledge of task completion
                 if (!completedTasks.contains(calculateRepresentativeCoordinate(thisTask))) {
                     if (agent instanceof Hub) {
-                        System.out.println("HUB:        Receiving completed task from message: " + message);
+                        System.out.println("HUB:        Receiving completed task at " + thisTask);
                     }
                 }
 
@@ -890,7 +878,6 @@ public class ProgrammerHandler implements Serializable {
         for (var entry : tasks.entrySet()) {
             if (!entry.getKey().equals(thisTask) && entry.getValue().contains(id)) {
                 entry.getValue().remove(id);
-                System.out.println("Removing id " + id + " from task " + entry.getKey());
             }
         }
     }
@@ -991,12 +978,6 @@ public class ProgrammerHandler implements Serializable {
                 }
             }
         }
-        if (bestTask == null) {
-            //System.out.println("Best is null");
-        } else {
-            //System.out.println("Best is: " + bestTask);
-        }
-
 
         return bestTask;
     }
@@ -1045,8 +1026,6 @@ public class ProgrammerHandler implements Serializable {
         } catch (Exception e) {
             // Failed to do this, probably due to incorrect information. We have to allow this mistake to happen,
             // as otherwise we are letting globally known information leak into the process
-            // System.out.println("For the sake of fairness and realism we must allow the agent to make this mistake");
-
             tempPlaceNewTask(taskCoords);
             currentTask = taskCoords;
             tasks.get(taskCoords).add(getId());  // must add ourselves
@@ -1378,7 +1357,6 @@ public class ProgrammerHandler implements Serializable {
         try {
             if (currentTask != null && !currentTask.isEmpty()) {
                 // This means more than 1 user assigned
-                //System.out.println(agent.getNetworkId() + ": Checking ct = " + currentTask + ", tsks = " + tasks.get(currentTask));
                 return tasks.get(currentTask).size() > 1;
             }
             return false;

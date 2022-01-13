@@ -6,10 +6,12 @@ import server.model.Sensor;
 
 import java.util.logging.Logger;
 
+/**
+ * Non-programmed Hub agent
+ */
 public class AgentHub extends Agent implements Hub {
     private transient Logger LOGGER = Logger.getLogger(AgentHub.class.getName());
     private transient Sensor sensor;
-
 
     public AgentHub(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -23,9 +25,6 @@ public class AgentHub extends Agent implements Hub {
         //Simulate things that would be done by a real drone
         if(!isTimedOut())
             heartbeat();
-
-        // TODO code to see a drone with a returning flag, finish its task, and trigger the image controller to send
-
     }
 
     @Override
@@ -35,6 +34,7 @@ public class AgentHub extends Agent implements Hub {
 
     @Override
     void performFlocking() {
-        //pass
+        // pass
     }
+
 }

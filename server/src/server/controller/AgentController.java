@@ -128,7 +128,6 @@ public class AgentController extends AbstractController {
                 agent.stop();
             }
         }
-
     }
 
     public synchronized void updateAgentsTempRoutes() {
@@ -157,7 +156,7 @@ public class AgentController extends AbstractController {
         List<Coordinate> tempRoute = agent.getTempRoute();
         tempRoute.add(index, coordinate);
 
-        //If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
+        // If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
         String taskId = simulator.getState().getTempAllocation().get(agentId);
         Task tempAllocatedTask = simulator.getState().getTask(taskId);
         if(tempAllocatedTask.getType() == Task.TASK_PATROL || tempAllocatedTask.getType() == Task.TASK_REGION)
@@ -169,7 +168,7 @@ public class AgentController extends AbstractController {
         List<Coordinate> tempRoute = agent.getTempRoute();
         tempRoute.set(index, coordinate);
 
-        //If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
+        // If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
         String taskId = simulator.getState().getTempAllocation().get(agentId);
         Task tempAllocatedTask = simulator.getState().getTask(taskId);
         if(tempAllocatedTask.getType() == Task.TASK_PATROL || tempAllocatedTask.getType() == Task.TASK_REGION)
@@ -190,6 +189,10 @@ public class AgentController extends AbstractController {
         return true;
     }
 
+    /**
+     * Gets the beliefs of every programmed agent (as JSON strings)
+     * @return ArrayList of Json model strings
+     */
     public ArrayList<String> getBelievedModels() {
         ArrayList<String> models = new ArrayList<>(8);
         for (Agent a : simulator.getState().getAgents()) {
@@ -198,22 +201,31 @@ public class AgentController extends AbstractController {
             }
         }
         return models;
-
     }
 
+    /**
+     * Gets the belief of the programmed Hub
+     * @return String Json of the model
+     */
     public ArrayList<String> getHubBelief() {
         ArrayList<String> models = new ArrayList<>(1);
         for (Agent a : simulator.getState().getAgents()) {
-            if (a instanceof Hub){
-                models.add(((AgentProgrammed) a).getBelievedModel());
+            if (a instanceof AgentHubProgrammed ahp){
+                models.add(ahp.getBelievedModel());
             }
         }
         return models;
 
     }
 
-
+    /**
+     * Checks whether the given agent is connected to the Hub. Uses records in the ProgrammerHandler
+     * @param hub The hub agent
+     * @param agent The agent to check
+     * @return Boolean  value for whether it is connected
+     */
     public boolean checkHubConnection(Hub hub, Agent agent) {
         return ((AgentHubProgrammed) hub).checkForConnection(agent);
     }
+
 }

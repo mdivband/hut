@@ -206,6 +206,11 @@ var MapTaskController = {
         }
         task.destroy();
     },
+    /**
+     * This is redundant now, as the reporting of a completed task is handled later. I will leave it for now in case of
+     *  rollback
+     * @param task
+     */
     onTaskCompleted: function (task) {
         /*
         console.log("Task completed " + task.getId());

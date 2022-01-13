@@ -8,6 +8,9 @@ import server.model.task.Task;
 
 import java.util.Random;
 
+/**
+ * Programmed version of the hub
+ */
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {
 
     public AgentHubProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
@@ -17,10 +20,18 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         visible = true;
     }
 
+    /**
+     * Passes through an added task so the hub can add this to its programmer and distribute this information
+     * @param item Task added by the user
+     */
     public void addTaskFromUser(Task item) {
         programmerHandler.addTask(item);
     }
 
+    /**
+     * Passes through a deleted task so the hub can add this deletion to its programmer and distribute this information
+     * @param item Task removed by the user
+     */
     public void removeTaskFromUser(Task item) {
         programmerHandler.removeTask(item);
     }
@@ -38,4 +49,5 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
     public boolean checkForConnection(Agent agent) {
         return programmerHandler.checkForConnection(agent);
     }
+
 }

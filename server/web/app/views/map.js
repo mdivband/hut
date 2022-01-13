@@ -224,6 +224,10 @@ App.Views.Map = Backbone.View.extend({
         //     });
         // }
     },
+    /**
+     * Draws the predicted route of this agent as an arrow on the map
+     * @param predDepth The maximum number of points of the route to draw
+     */
     drawPredictedPath: function (predDepth){
         try {
             self = this;
@@ -284,6 +288,10 @@ App.Views.Map = Backbone.View.extend({
             }
         });
     },
+    /**
+     * Draws the predicted route of this ghost as an arrow on the map. Uses a black transparent line
+     * @param predDepth The maximum number of points of the route to draw
+     */
     drawPredictedGhostPath: function (predDepth){
         try {
             self = this;
@@ -331,7 +339,6 @@ App.Views.Map = Backbone.View.extend({
             alert("Prediction drawing error: " + e)
         }
     },
-
     /***
      * A function to draw the circles for uncertainty.
      * Currently these are of a constant size (proof of concept)
@@ -380,7 +387,6 @@ App.Views.Map = Backbone.View.extend({
             }
         });
     },
-
     /***
      * A function to draw the circles for communication range
      * Currently these are of a constant size (proof of concept)

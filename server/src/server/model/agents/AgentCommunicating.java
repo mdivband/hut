@@ -7,9 +7,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+/**
+ * Acts like the AgentVirtual, but also communicates in the same way as the AgentProgrammed. This means it can be used
+ *  manually together with programmed agents.
+ *
+ *  This does contain some redundancy, probably should be replaced with a static library or more inheritance in future
+ */
 public class AgentCommunicating extends AgentVirtual {
     private String networkID = "";
-    private transient Random random;
+    private final transient Random random;
 
     private final transient CommunicationHandler communicationHandler;
 
@@ -111,4 +117,5 @@ public class AgentCommunicating extends AgentVirtual {
     public void registerCompleteTask(Coordinate coordinate) {
         communicationHandler.completeTask(coordinate);
     }
+
 }

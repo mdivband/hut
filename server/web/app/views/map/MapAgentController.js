@@ -100,6 +100,10 @@ var MapAgentController = {
             MapAgentController.onAgentMarkerDragEnd(marker);
         });
     },
+    /**
+     * Adds a ghost agent marker to the map
+     * @param agent
+     */
     onGhostAdd: function (agent) {
         console.log('Ghost added ' + agent.getId());
         var id = agent.getId();

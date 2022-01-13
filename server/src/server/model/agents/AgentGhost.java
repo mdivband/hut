@@ -30,7 +30,7 @@ public class AgentGhost extends Agent{
         this.setRoute(agent.getTempRoute());
         this.speed = agent.getSpeed();
         this.heading = agent.getHeading();
-        if (agent instanceof AgentProgrammed ap) {  // Should always be true
+        if (agent instanceof AgentProgrammed ap) {
             leader = ap.isLeader();
             hubLocation = ap.getHubLocation();
             communicationRange = ap.getSenseRange();
@@ -54,13 +54,11 @@ public class AgentGhost extends Agent{
             // Try to flock based on other ghosts. Only if enabled, has neighbours to flock with and isn't a leader
             performFlocking();
         } else {
-            //System.out.println(getId() + " returning home");
             // Nothing near and no tasks in route, head home because this is theoretically an isolated task (in practise
             //  it may not be, but we can't assume it will jump to the next nearest task due to there being so much
             //  uncertainty
             if (!goingHome && !atHome) {
                 // TODO when we have a route queue this will step differently
-                //setRoute(Collections.singletonList(Simulator.instance.getState().getHubLocation()));
                 setRoute(Collections.singletonList(calculateNearestHomeLocation()));
                 goingHome = true;
             } else {
@@ -71,15 +69,18 @@ public class AgentGhost extends Agent{
         }
     }
 
+    /**
+     * Finds the nearest part of the communication radius of the hub, and returns a point 20% of the way into it
+     * Means that agents will move and park just within range of it
+     * @return A Coordinate 20% of the way into the hub's radius
+     */
     private Coordinate calculateNearestHomeLocation() {
         double xDist = getCoordinate().getLongitude() - hubLocation.getLongitude();
         double yDist = getCoordinate().getLatitude() - hubLocation.getLatitude();
         // using tan rule to find angle from hub to agent
         double theta = Math.atan(yDist / xDist);
-        //double radius = 0.8 * (((double) SENSE_RANGE /1000)/6379.1);  // 20% into the radius of the hub (includes metre to
-        //  latlng calc
 
-        // approx 111,111m = 1deg latlng
+        // Using approximation of 111,111m ~= 1deg latlng
         double radius =  0.8 * communicationRange / 111111;
 
         // x,y = rcos(theta), rsin(theta); If in the negative x, we must invert (=== adding pi rads)
@@ -92,7 +93,6 @@ public class AgentGhost extends Agent{
             xRes = hubLocation.getLongitude() + (radius * Math.cos(theta));
             yRes = hubLocation.getLatitude() + (radius * Math.sin(theta));
         }
-
         return new Coordinate(yRes, xRes);
     }
 
@@ -310,4 +310,5 @@ public class AgentGhost extends Agent{
     public void setAtHome(boolean atHome) {
         this.atHome = atHome;
     }
+
 }

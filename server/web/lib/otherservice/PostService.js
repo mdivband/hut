@@ -89,7 +89,6 @@ var PostService = function(){
 			// 	);
 	/// end of commnet out for logging with provenence ///
 	/// dammy log id
-	console.log("pos 2");
 	$.post("/provdoc", { id: "operation" });
 		},
 		postTaskPROV: function(api, game_id, prov_doc, task_id, coordinate, waypoints, agent, group, priority, version, isNew){
@@ -218,7 +217,6 @@ var PostService = function(){
 	    			// instead of commander, use "Game13 UAV Controller" as the name
 	    			api.submitDocument(commander, bundle, true,
 		               	function(new_document_id) {
-							console.log("pos 2");
 		                     $.post("/provdoc", { id: new_document_id });
 		                     console.log("OK new prov_doc id is " +new_document_id)
 		                },

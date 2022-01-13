@@ -30,5 +30,4 @@ public abstract class Target extends MObject implements Serializable {
         this.visible = visible;
     }
 
-
 }

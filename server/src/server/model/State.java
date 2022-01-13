@@ -316,18 +316,34 @@ public class State {
         this.inProgress = inProgress;
     }
 
+    /**
+     * Adds the given option to the ui settings
+     * @param option String enumerated option
+     */
     public void addUIOption(String option) {
         uiOptions.add(option);
     }
 
+    /**
+     * Setter for the uncertainty radius of agents
+     * @param uncertaintyRadius Radius for uncertainty of agent position
+     */
     public void setUncertaintyRadius(double uncertaintyRadius) {
         this.uncertaintyRadius = uncertaintyRadius;
     }
 
+    /**
+     * Setter for the communication range of agents
+     * @param communicationRange Radius for communication between agents
+     */
     public void setCommunicationRange(double communicationRange) {
         this.communicationRange = communicationRange;
     }
 
+    /**
+     * Getter for the communication range of agents
+     * @return Radius for communication between agents
+     */
     public double getCommunicationRange() {
         return communicationRange;
     }
@@ -340,8 +356,12 @@ public class State {
         hazardHits.decayAll();
     }
 
+    /**
+     * Searches and gets the task with the given coordinate
+     * @param coordinate The coordinate to check
+     * @return the Task if found (null otherwise)
+     */
     public Task getTaskByCoordinate(Coordinate coordinate) {
-        int a = 2;
         for (Task t : tasks) {
             if(t.getCoordinate().equals(coordinate)) {
                 return t;
@@ -350,6 +370,11 @@ public class State {
         return null;
     }
 
+    /**
+     * Searches and gets the target with the given coordinate
+     * @param coordinate The coordinate to check
+     * @return the Target if found (null otherwise)
+     */
     public Target getTargetByCoordinate(Coordinate coordinate) {
         for (Target t : targets) {
             if(t.getCoordinate().equals(coordinate)) {
@@ -359,32 +384,28 @@ public class State {
         return null;
     }
 
-    /*
-    public Task getTaskByCentreCoordinate(Coordinate coordinate) {
-        for (Task t : tasks) {
-            PatrolTask
-            if(t.getCoordinate().equals(coordinate)) {
-                return t;
-            }
-        }
-        return null;
-    }
-
+    /**
+     * Getter for Hub location
+     * @return Coordinate of hub (can be null if not set)
      */
-
     public Coordinate getHubLocation() {
         return hubLocation;
     }
 
+    /**
+     * Setter for Hub location
+     * @param hubLocation Coordinate of hub (can be null)
+     */
     public void setHubLocation(Coordinate hubLocation) {
         this.hubLocation = hubLocation;
-
     }
 
+    /**
+     * Updates the visibility of all Agents
+     */
     public void updateAgentVisibility() {
         for (Agent agent : agents) {
             if (!(agent instanceof Hub)) {
-
                 // Is programmed/communicating, see if it's connected
                 boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
                 if (connected && !agent.isVisible()) {
@@ -393,7 +414,6 @@ public class State {
                     // Has left the range
                     agent.setVisible(false);
                     addGhost(agent);
-
                 }
             } else if (!agent.isVisible()) {
                 // To make sure the hub is always visible
@@ -402,11 +422,17 @@ public class State {
         }
     }
 
+    /**
+     * Adds a ghost marker for the given agent
+     * @param agent The Agent to replace (copies this position, heading, route)
+     */
     private void addGhost(Agent agent) {
         ghosts.add(new AgentGhost(agent));
-        //System.out.println("Ghosting " + agent.getId());
     }
 
+    /**
+     * Updates, and removes if required, all ghost agents
+     */
     public void updateGhosts() {
         ArrayList<AgentGhost> ghostsToRemove = new ArrayList<>();
         for (AgentGhost ghost : ghosts) {
@@ -426,18 +452,20 @@ public class State {
                 // Line below just finds first (and only) agent with this ID. Shouldn't ever fail if everything else is correct
                 Agent agentToReinstate = agents.stream().filter(agent -> agent.getId().equals(baseId)).findFirst().get();
                 agentToReinstate.setVisible(true);
-                //System.out.println("Reinstating: " + agentToReinstate.getId());
             }
         } catch (Exception e) {
             System.out.println("Error reinstating agent: " + e);
         }
     }
 
+    /**
+     * Moves all ghost markers based on believed route
+     */
     public void moveGhosts() {
         for (AgentGhost ghost : ghosts) {
             ghost.step(true);  // The argument here allows us to get ghosts to try to simulate flocking too
             if (ghost.isAtHome() && ghost.isVisible()) {
-                // It's returned to the Hub and we now know nothing about it, so let's hide it, otherwise it clutters
+                // It has returned to the Hub and we now know nothing about it, so let's hide it, otherwise it clutters
                 //  and confuses the interface
                 ghost.setVisible(false);
             } else if (!ghost.isAtHome() && !ghost.isVisible()) {
@@ -448,6 +476,12 @@ public class State {
         }
     }
 
+    /**
+     * Senses all ghosts near to the given ghost. Used to model ghost flocking
+     * @param ghostToSense AgentGhost to check around
+     * @param radius Radius distance to search within
+     * @return List of all neighbouring ghosts
+     */
     public List<Agent> senseNeighbouringGhosts(AgentGhost ghostToSense, int radius) {
         List<Agent> neighbours = new ArrayList<>();
         for (AgentGhost ghost : ghosts) {
@@ -459,15 +493,26 @@ public class State {
         return neighbours;
     }
 
+    /**
+     * Sets the hub to this given AgentHub
+     * @param hub The hub to set
+     */
     public void attachHub(Agent hub) {
         this.hub = (Hub) hub;
-        System.out.println("hb: " + hub);
     }
 
+    /**
+     * Getter for whether the simulation is communication constrained
+     * @return boolean value for whether simulation is communication constrained
+     */
     public boolean isCommunicationConstrained() {
         return communicationConstrained;
     }
 
+    /**
+     * Setter for whether the simulation is communication constrained
+     * @param communicationConstrained boolean value for whether simulation is communication constrained
+     */
     public void setCommunicationConstrained(Boolean communicationConstrained) {
         this.communicationConstrained = communicationConstrained;
     }

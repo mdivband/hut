@@ -4,6 +4,9 @@ import server.model.Coordinate;
 import java.util.List;
 import java.util.logging.Logger;
 
+/**
+ * Here is where the user should program agent behaviour to be run on each programmed agent
+ */
 public class AgentProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
     ProgrammerHandler a;
@@ -11,12 +14,11 @@ public class AgentProgrammer {
         a = programmerHandler;
     }
 
-    //private boolean leader = false;
+    // These are example member variables
     private int strandedCounter = 0;
     private int dupeCounter = 0;
     private int dupeLimit;
     private boolean hasNearbyLeader = false;
-
     private boolean returner = false;
 
 
@@ -54,7 +56,6 @@ public class AgentProgrammer {
     public void step(){
         if (a.getTasks().size() == 0 && a.getCompletedTasks().size() == 0) {
             // WAIT; Only begin executing if we have tasks added now (so they don't fly off at the start)
-            System.out.println("WAITING");
         } else {
             if (a.isLeader()) {
                 if (a.isStopped()) {
@@ -110,7 +111,6 @@ public class AgentProgrammer {
                     } else {
                         dupeCounter = 0;
                         if (a.checkForDuplicateAssignment()) {
-                            System.out.println(a.getId() + " reset");
                             a.cancel();
                             a.stop();
                         }
@@ -151,11 +151,8 @@ public class AgentProgrammer {
             }
         } else {
             if (a.getPosition().getDistance(a.getHome()) > a.getSenseRange()) {
-                //System.out.println("here");
-                //a.resume();   //TODO stopping here fixes the stranded problem but causes new ones
                 a.followRoute();
             } else {
-                //LOGGER.severe("GOT HOME");
                 strandedCounter = 1;
                 a.stopGoingHome();
             }
@@ -177,7 +174,6 @@ public class AgentProgrammer {
     public void onMessageReceived(String opCode, String payload) {
         if (opCode.equals("PING_LEADERS_SEND")) {
             if (a.isLeader() && !a.isHub()) {  // Check that we are a leader, and are not the hub
-                //LOGGER.severe(a.getId() + " has been pinged, and is a leader, returning confirmation");
                 a.sendCustomMessage("PING_LEADERS_RECEIVE", payload);
             }
         } else if (opCode.equals("PING_LEADERS_RECEIVE") && payload.equals(a.getId())) {
@@ -186,4 +182,5 @@ public class AgentProgrammer {
         }
 
     }
+
 }
