@@ -104,6 +104,7 @@ public class Simulator {
     }
 
     public void startSimulation() {
+        state.setScenarioEndTime();
         //Heart beat all virtual agents to prevent time out when user is reading the description.
         for(Agent agent : this.state.getAgents())
             if(agent.isSimulated())
@@ -137,7 +138,7 @@ public class Simulator {
             long startTime = System.currentTimeMillis();
 
             state.incrementTime(0.2);
-            if (state.getTimeLimit() !=0 && state.getTime() >= state.getTimeLimit() * gameSpeed) {
+            if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
                 this.reset();
             }
 
