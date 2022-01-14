@@ -32,6 +32,7 @@ public class State {
     private Boolean flockingEnabled;
     private double time;
     private double timeLimit;
+    private long scenarioEndTime;
     private boolean editMode;
 
     private String prov_doc;
@@ -95,6 +96,7 @@ public class State {
         // Define defaults
         time = 0;
         timeLimit = 0;    // 0 means no time limit
+        scenarioEndTime = 0; // 0 means no time limit
         editMode = false;
         inProgress = false;
         allocationMethod = "maxsum";
@@ -216,10 +218,32 @@ public class State {
 
     public synchronized void setTimeLimit(double timeLimit) {
         this.timeLimit = timeLimit;
+        this.setScenarioEndTime(timeLimit);
     }
 
     public synchronized void incrementTimeLimit(double increment) {
         setTimeLimit(this.timeLimit + increment);
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized long getScenarioEndTime() {
+        return scenarioEndTime;
+    }
+
+    public synchronized void setScenarioEndTime() {
+        if (this.timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
+        }
+    }
+
+    private synchronized void setScenarioEndTime(double timeLimit) {
+        if (timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
+        }
     }
 
     public synchronized boolean isEditMode() {
