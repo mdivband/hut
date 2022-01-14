@@ -35,6 +35,7 @@ public class State {
     private double timeLimit;
     private long scenarioEndTime;
     private boolean editMode;
+    private boolean passthrough = false;
 
     private String prov_doc;
 
@@ -335,6 +336,14 @@ public class State {
 
     public void decayHazardHits() {
         hazardHits.decayAll();
+    }
+
+    public void setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
+    }
+
+    public boolean isPassthrough() {
+        return passthrough;
     }
 
     private class HazardHit {

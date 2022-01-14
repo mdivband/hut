@@ -24,7 +24,8 @@ App.Models.State  = Backbone.Model.extend({
             '-1': [],
             '0': [],
             '1': []
-        }
+        },
+        hasPassthrough: false
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -117,5 +118,8 @@ App.Models.State  = Backbone.Model.extend({
 		 	$("#map_title").html("Edit Mode");
 		 else
 		 	$("#map_title").html("Monitor Mode");
-	}
+	},
+    isPassthrough: function () {
+        return this.get("passthrough");
+    }
 });
