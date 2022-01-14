@@ -1,21 +1,44 @@
 ## DJI Hut Server - Documentation
 ### University of Southampton
-##### Last Updated: 13/09/2018, Joe Early
+##### Last Updated: 04/11/21, William Hunt
 ------
-The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][1]). 
+The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][1]).
 
 ### Table of Contents
 
-1. [Repository Structure](#repository-structure)
-2. [Project Architecture](#project-architecture)
-3. [Setup Guide](#setup-guide)
-4. [Setup Troubleshooting](#setup-troubleshooting)
-5. [Server Architecture](#server-architecture)
-5. [Allocation Process](#allocation-process)
+1. [Running and Using](#running-and-using)
+2. [Repository Structure](#repository-structure)
+3. [Project Architecture](#project-architecture)
+4. [Setup Guide](#setup-guide)
+5. [Setup Troubleshooting](#setup-troubleshooting)
+6. [Drone Controller Guide](#drone-controller-guide)
+7. [Server Architecture](#server-architecture)
+8. [Allocation Process](#allocation-process)
+
+### Running and Using
+
+#### Running Locally
+
+1. Clone this repository to your machine.
+2. Setup a project in Intellij (recommended) or Eclipse from the repository code.
+3. Run the Simulator class, and open http://localhost:8000/ in a browser to connect to the client application.
+
+#### Hosting the Server Online
+
+1. Clone this repository to your machine.
+2. Setup a project in Intellij (recommended) or Eclipse from the repository code.
+3. Run the Simulator class with the desired port as an argument
+4. Connect from a different PC with IP:Port in your browser
+
+#### Alternative: Run the .jar from command line
+
+1. Take the hut_server.jar file, and the web/ folder into a directory together (or as they are in the repo)
+2. Run the .jar with the following command: ```java -jar hut_server.jar [PORT]```
+3. Connect from a different PC with IP:Port in your browser
 
 ### Repository Structure
 
-The repository has two main directories: [src][2] is for the server code and [web][3] is for the client (browser) code. 
+The repository has two main directories: [src][2] is for the server code and [web][3] is for the client (browser) code.
 
 Within the src directory, there are three packages: [maxsum][4], [server][5] and [tool][6]. The maxsum package contains the code to execute the maxsum algorithm that is used to assign agents to tasks. The server package contains the server code, which is further split into controller and model packages. Finally, the tool package contains a utility class for JSON serialisation using [GSON][7], as well as [Java Lightweight HTTP Server][8] class that actually handles the web server's HTTP connections (meaning Apache or equivalent is not required). For a more in-dept overview of the code, see the file tree documentation [here][34].
 
@@ -31,16 +54,16 @@ The client application that runs in the browser communicates with the server via
 
 ### Setup Guide
 
-There are several steps required to setup a working version of the mobile application and server:  
+There are several steps required to setup a working version of the mobile application and server:
 
-1. Clone this repository to your machine.  
-2. Setup a project in Intellij (recommended) or Eclipse from the repository code.  
-3. Run the [Simulator][14] class, and open http://localhost:8000/ in a browswer to connect to the client application.  
-4. (Optional) Configuration for connecting drones via the mobile app:  
-    * Configure a [VPN via Global Protect][11] if running the server locally on the University network.  
-    * Find the IP of the server (check the Global Protect settings if using the VPN).  
-    * Check that port 8000 is open on the server machine.  
-    * Follow the mobile app setup guide, found [here][1].  
+1. Clone this repository to your machine.
+2. Setup a project in Intellij (recommended) or Eclipse from the repository code.
+3. Run the [Simulator][14] class, and open http://localhost:8000/ in a browswer to connect to the client application.
+4. (Optional) Configuration for connecting drones via the mobile app:
+   * Configure a [VPN via Global Protect][11] if running the server locally on the University network.
+   * Find the IP of the server (check the Global Protect settings if using the VPN).
+   * Check that port 8000 is open on the server machine.
+   * Follow the mobile app setup guide, found [here][1].
 
 ### Setup Troubleshooting
 
@@ -48,13 +71,45 @@ There are several steps required to setup a working version of the mobile applic
 | ----------- | ----------- |
 | `Calling invokeAndWait from read-action leads to possible deadlock`      | Select *Run*, *Edit Configurations...*, then change the *JDK or JRE* version to whichever version says "*SDK of 'hut-server' module*".       |
 
+### Drone Controller Guide
+
+Go to the class ```server/src/server/model/AgentProgrammer.java```
+
+This provides code that will run on each AgentProgrammed (drones that have the programmed trait in the scenario file). In doing so, we enable our drones to perform emergent behaviour
+
+```setup()``` Is run only once, on the first step for this agent
+
+```step()``` Is run at every time step, by default this is every 200ms
+
+The ProgrammerHandler (called with a.SOMETHING in the programmer) acts as a library for most of the functionality you want
+
+Each Agent holds this information, gleaned from the messages it receives (so this information is not globally known, and may be out of date):
+
+| Variable or Method      | Purpose |
+| ----------- | ----------- |
+| ```HashMap<String, Position> neighbours``` | Stores neighbours by their random NetworkID, and the Position, as an object that contains their Coordinate, heading, and whether they have stopped |
+| ```List<Coordinate> currentTask``` | Stores the current task this agent is performing (can be null), as a list of the Coordinates (currently always a singleton, as only waypoints are properly implemented) |
+| ```HashMap<List<Coordinate>, List<String>> tasks``` | Stores the list of known tasks, by list of coordinates in the task, mapped to a List of the NetworkIDs of the agents assigned to it |
+| ```List<List<Coordinate>> completedTasks``` | Stores all known tasks that have been reported as complete (as lists of coordinates) |
+| ```setTask(Coordinate)``` | Assigns this task to the agent. Currently only supports waypoint tasks |
+| ```followRoute()``` | Tells the agent to progress with its current task |
+| ```stop()``` | Halts the agent. Does NOT cancel its current task, unless that task is complete |
+| ```resume()``` | Tells the agent to resume movement |
+| ```cancel()``` | Cancels the agent’s current task. They will continue along their route unless stopped, or are assigned a new task |
+
+The current library only has handlers for the messages used internally to exchange information between drones. If you want to do something more complex, such as negotiating between drones, you may want to create your own custom messages, and handle them yourself. You could do this in the ProgrammerHandler, but I have provided a passthrough method to allow you to keep everything you’ve done in the AgentProgrammer
+To do this, use the sendCustomMessage() method, providing an “opCode”, which lets you define and identify whichever types of message you would like to define (“ELECT”), and also provide the payload for the message as a string (which you can use for any purpose)
+Then use the OnMessageReceived() method to handle this specific case. We have to handle this as a String, but this still means we could cast Booleans, integers e.tc to string, and back again.
+
+[JavaDoc here](docs/ProgrammerHandler.html) (docs/ProgrammerHandler.html)
+
 ### Server Architecture
 
-The server application has a model component and a controller componment, as represented by the package structure. Parts of the model are exposed through the server's REST API, with connections to the client broswer application and mobile application handled by the [ConnectionController][15] and the [QueueManager][16] respectively. The ConnectionController uses different handlers for processing REST requests: [AgentHandler][29], [TaskHandler][30], [TargetHandler][31] and [RootHandler][32]. The first three handlers correspond with equivalent controller classes ([AgentController][17], [TargetController][18], [TaskController][19]), while the RootHandler is responsible for all other endpoints that don't fall under the first three categories. The REST endpoints exposed by the server are summarised [here][28].
+The server application has a model component and a controller component, as represented by the package structure. Parts of the model are exposed through the server's REST API, with connections to the client broswer application and mobile application handled by the [ConnectionController][15] and the [QueueManager][16] respectively. The ConnectionController uses different handlers for processing REST requests: [AgentHandler][29], [TaskHandler][30], [TargetHandler][31] and [RootHandler][32]. The first three handlers correspond with equivalent controller classes ([AgentController][17], [TargetController][18], [TaskController][19]), while the RootHandler is responsible for all other endpoints that don't fall under the first three categories. The REST endpoints exposed by the server are summarised [here][28].
 
 The model component of the server is fully encapsulated in the [State][21] class - this is the central class that references the other models classes such as [Agent][22], [Schedule][23], [Target][24] and [Task][25]. The single state instance is created by the [Simulator][14] class (the entry point for the server application), and updated & maintained by the various controller classes, with each controller class reponsbile for a different component of the state.
 
-In addition to the model and controller components, the server is also reponsbile for the allocation of agents to tasks and creating a schedule for performing the tasks given by the user (via the browser application). The allocation is handled by the [Allocator][26] class, which uses the algorithm contained in the [maxsum package][27] to actually compute the allocation. The architecture is designed so that the allocation algorithm is not deeply integrated into the code - it can easily be substitued for an alternative planning algorithm if required.
+In addition to the model and controller components, the server is also responsible for the allocation of agents to tasks and creating a schedule for performing the tasks given by the user (via the browser application). The allocation is handled by the [Allocator][26] class, which uses the algorithm contained in the [maxsum package][27] to actually compute the allocation. The architecture is designed so that the allocation algorithm is not deeply integrated into the code - it can easily be substitued for an alternative planning algorithm if required.
 
 An overview of the server architecture is given below:
 
@@ -62,9 +117,9 @@ An overview of the server architecture is given below:
 
 ### Allocation Process
 
-The allocation process is the mechanism for assigning agents to tasks. An allocation is simply a mapping from agents to tasks - an agent can only be assigned to one task, but multiple agents can be assigned to same task. The server maintains two allocations - one that is the current, main allocation and another that is a temporary, work-in-progress allocation. When the user changes the assignment of agents to tasks, they are altering the temporary allocation. Once they confirm their changes, the main allocation is updated to match the temporary allocation. 
+The allocation process is the mechanism for assigning agents to tasks. An allocation is simply a mapping from agents to tasks - an agent can only be assigned to one task, but multiple agents can be assigned to same task. The server maintains two allocations - one that is the current, main allocation and another that is a temporary, work-in-progress allocation. When the user changes the assignment of agents to tasks, they are altering the temporary allocation. Once they confirm their changes, the main allocation is updated to match the temporary allocation.
 
-The browser app operates in two modes: monitor and edit. In monitor mode, the user can see an overview of the current allocation and the progress of the agents on their various tasks. In edit mode, the user can edit the allocation (which alters the temporary allocation, see above), as well as add new tasks and move existing tasks. There are two methods for assigning agents to tasks. The first uses an automated allocation algorithm (currently Maxsum) to assign each agent to a task. This is triggered by pressing the 'Run Auto Allocation' button in edit mode. The second method is used to assign a single agent to a specific task: a user can drag an allocation arrow from an agent to a task to assign the agent to that task. Once the user presses 'Confirm Allocation', the temporary allocation becomes the main allocation and the agents begin carrying out their assigned tasks. 
+The browser app operates in two modes: monitor and edit. In monitor mode, the user can see an overview of the current allocation and the progress of the agents on their various tasks. In edit mode, the user can edit the allocation (which alters the temporary allocation, see above), as well as add new tasks and move existing tasks. There are two methods for assigning agents to tasks. The first uses an automated allocation algorithm (currently Maxsum) to assign each agent to a task. This is triggered by pressing the 'Run Auto Allocation' button in edit mode. The second method is used to assign a single agent to a specific task: a user can drag an allocation arrow from an agent to a task to assign the agent to that task. Once the user presses 'Confirm Allocation', the temporary allocation becomes the main allocation and the agents begin carrying out their assigned tasks.
 
 An overview of the allocation process is given below:
 

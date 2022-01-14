@@ -1,8 +1,9 @@
-package server.model;
+package server.model.agents;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import server.QueueManager.MessagePublisher;
+import server.model.Coordinate;
 
 public class AgentReal extends Agent {
 

@@ -2,9 +2,10 @@ package server.model.task;
 
 import com.google.gson.*;
 import server.Simulator;
-import server.model.Agent;
-import server.model.Coordinate;
-import server.model.MObject;
+import server.model.*;
+import server.model.agents.Agent;
+import server.model.agents.AgentCommunicating;
+import server.model.agents.AgentProgrammed;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -24,6 +25,7 @@ public abstract class Task extends MObject implements Serializable {
     public static final int STATUS_TODO = 0;
     public static final int STATUS_DOING = 1;
     public static final int STATUS_DONE = 2;
+    public static final int STATUS_DONE_PENDING = 3;  // For a completed task that needs to be reported when info gets to the HUB
 
     public static final int TASK_WAYPOINT = 0;
     public static final int TASK_MONITOR = 1;
@@ -57,12 +59,34 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
-        for (Agent agent : getAgents()) {
-            agent.setWorking(false);
-            agent.setSearching(false);
+        if (!Simulator.instance.getState().isCommunicationConstrained()) {  // If we can instantly complete
+            Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+            LOGGER.info("Task " + this.getId() + " has been completed");
+        } else {
+            for (Agent agent : getAgents()) {
+                if (agent instanceof AgentProgrammed ap) {
+                    ap.registerCompleteTask(getCoordinate());
+                } else if (agent instanceof AgentCommunicating ac) {
+                    ac.registerCompleteTask(getCoordinate());
+                }
+            }
         }
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-        LOGGER.info("Task " + this.getId() + " has been completed");
+
+    }
+
+    /**
+     * Gets all agents within [10m] of this agent
+     * @return ArrayList of arrived agents
+     */
+    private ArrayList<Agent> getArrivedAgents(){
+        ArrayList<Agent> arrivedAgents = new ArrayList<>();
+        for (Agent a : Simulator.instance.getState().getAgents()) {
+            if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+                arrivedAgents.add(a);
+            }
+        }
+        return arrivedAgents;
     }
 
     /**
@@ -70,6 +94,25 @@ public abstract class Task extends MObject implements Serializable {
      * @return True if the task has been completed, false otherwise.
      */
     public boolean step() {
+        if (status == STATUS_DONE_PENDING) {
+            // Completed, but not yet reported to HUB
+            return false;
+        } else if (status == STATUS_DONE) {
+            // Completed and should be reported
+            return true;
+        }
+
+        ArrayList<Agent> arrivedAgents = getArrivedAgents();
+        if (arrivedAgents.size() > 0) {
+            // An agent has found this task
+            if (Simulator.instance.getState().isCommunicationConstrained()) {
+                // It is NOT programmed or communicating
+                setStatus(Task.STATUS_DONE_PENDING);
+            } else {
+                setStatus(Task.STATUS_DONE);
+            }
+        }
+
         if (status == STATUS_TODO) {
             boolean hasAnyAgentArrived = false;
             for (Agent agent : getAgents()) {
@@ -103,7 +146,7 @@ public abstract class Task extends MObject implements Serializable {
     }
 
     public void addAgent(Agent agent) {
-        //Only add agent if none of the existing agents have the same id.
+        // Only add agent if none of the existing agents have the same id.
         if (agents.stream().noneMatch(o -> o.getId().equalsIgnoreCase(agent.getId())))
             agents.add(agent);
     }

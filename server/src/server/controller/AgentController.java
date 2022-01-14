@@ -1,16 +1,16 @@
 package server.controller;
 
 import server.Simulator;
-import server.model.Agent;
-import server.model.AgentVirtual;
-import server.model.Coordinate;
-import server.model.Sensor;
+import server.model.*;
+import server.model.agents.*;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
-import server.model.AgentReal;
+import tool.GsonUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class AgentController extends AbstractController {
 
@@ -38,6 +38,38 @@ public class AgentController extends AbstractController {
     public synchronized Agent addVirtualAgent(double lat, double lng, double heading) {
         Agent agent = new AgentVirtual(generateUID(), new Coordinate(lat, lng), sensor);
         agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController) {
+        AgentProgrammed agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, random, taskController);
+        agent.setCommunicationRange(simulator.getState().getCommunicationRange());
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    public synchronized Agent addHubAgent(double lat, double lng) {
+        // We assume just one HUB, so this is a unique ID
+        Agent agent = new AgentHub("HUB", new Coordinate(lat, lng), sensor);
+        simulator.getState().add(agent);
+        simulator.getState().attachHub(agent);
+        return agent;
+    }
+
+    public synchronized Agent addHubProgrammedAgent(double lat, double lng, Random random, TaskController taskController) {
+        // We assume just one HUB, so this is a unique ID
+        AgentProgrammed agent = new AgentHubProgrammed("HUB", new Coordinate(lat, lng), sensor, random, taskController);
+        agent.setCommunicationRange(simulator.getState().getCommunicationRange());
+        simulator.getState().add(agent);
+        simulator.getState().attachHub(agent);
+        return agent;
+    }
+
+    public synchronized Agent addVirtualCommunicatingAgent(double lat, double lng, Random random) {
+        AgentCommunicating agent = new AgentCommunicating(generateUID(), new Coordinate(lat, lng), sensor, random);
+        agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         simulator.getState().add(agent);
         return agent;
     }
@@ -90,9 +122,25 @@ public class AgentController extends AbstractController {
             agent.stop();
     }
 
+    public synchronized void stopAllNonProgrammedAgents() {
+        for(Agent agent : simulator.getState().getAgents()) {
+            if (!(agent instanceof AgentProgrammed || agent instanceof AgentGhost)) {
+                agent.stop();
+            }
+        }
+    }
+
     public synchronized void updateAgentsTempRoutes() {
         for(Agent agent : simulator.getState().getAgents())
             agent.setTempRoute(agent.getRoute());
+    }
+
+    public synchronized void updateNonProgrammedAgentsTempRoutes() {
+        for(Agent agent : simulator.getState().getAgents()) {
+            if (!(agent instanceof AgentProgrammed || agent instanceof AgentGhost)) {
+                agent.setTempRoute(agent.getRoute());
+            }
+        }
     }
 
     public synchronized void updateAgentSpeed(String agentId, double speed) {
@@ -108,7 +156,7 @@ public class AgentController extends AbstractController {
         List<Coordinate> tempRoute = agent.getTempRoute();
         tempRoute.add(index, coordinate);
 
-        //If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
+        // If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
         String taskId = simulator.getState().getTempAllocation().get(agentId);
         Task tempAllocatedTask = simulator.getState().getTask(taskId);
         if(tempAllocatedTask.getType() == Task.TASK_PATROL || tempAllocatedTask.getType() == Task.TASK_REGION)
@@ -120,7 +168,7 @@ public class AgentController extends AbstractController {
         List<Coordinate> tempRoute = agent.getTempRoute();
         tempRoute.set(index, coordinate);
 
-        //If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
+        // If region or patrol task, update the end point of the agent's route to be the closest point on the patrol.
         String taskId = simulator.getState().getTempAllocation().get(agentId);
         Task tempAllocatedTask = simulator.getState().getTask(taskId);
         if(tempAllocatedTask.getType() == Task.TASK_PATROL || tempAllocatedTask.getType() == Task.TASK_REGION)
@@ -139,6 +187,45 @@ public class AgentController extends AbstractController {
             return false;
         agent.setTimedOut(timedOut);
         return true;
+    }
+
+    /**
+     * Gets the beliefs of every programmed agent (as JSON strings)
+     * @return ArrayList of Json model strings
+     */
+    public ArrayList<String> getBelievedModels() {
+        ArrayList<String> models = new ArrayList<>(8);
+        for (Agent a : simulator.getState().getAgents()) {
+            if (a instanceof AgentProgrammed){
+                models.add(((AgentProgrammed) a).getBelievedModel());
+            }
+        }
+        return models;
+    }
+
+    /**
+     * Gets the belief of the programmed Hub
+     * @return String Json of the model
+     */
+    public ArrayList<String> getHubBelief() {
+        ArrayList<String> models = new ArrayList<>(1);
+        for (Agent a : simulator.getState().getAgents()) {
+            if (a instanceof AgentHubProgrammed ahp){
+                models.add(ahp.getBelievedModel());
+            }
+        }
+        return models;
+
+    }
+
+    /**
+     * Checks whether the given agent is connected to the Hub. Uses records in the ProgrammerHandler
+     * @param hub The hub agent
+     * @param agent The agent to check
+     * @return Boolean  value for whether it is connected
+     */
+    public boolean checkHubConnection(Hub hub, Agent agent) {
+        return ((AgentHubProgrammed) hub).checkForConnection(agent);
     }
 
 }

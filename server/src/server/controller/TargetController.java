@@ -4,6 +4,7 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.HumanTarget;
 import server.model.target.Target;
+import server.model.task.Task;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,5 +56,13 @@ public class TargetController extends AbstractController {
         return true;
     }
 
+    /**
+     * Searches for any target with the given coordinate
+     * @param coordinate The coordinate to check
+     * @return The Target with that coordinate
+     */
+    public Target findTargetByCoord(Coordinate coordinate) {
+        return simulator.getState().getTargetByCoordinate(coordinate);
+    }
 
 }

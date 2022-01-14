@@ -63,15 +63,19 @@ var MapTargetController = {
             MapTargetController.popupTargetFound(target);
         marker.setVisible(target.isVisible());
     },
+
     checkForReveal: function (agent) {
-        this.state.targets.each(function (target) {
-            if (!target.isVisible()) {
-                var dist = google.maps.geometry.spherical.computeDistanceBetween(agent.getPosition(), target.getPosition());
-                if (dist < MapTargetController.revealDistance) {
-                    $.post("/targets/reveal/" + target.getId());
+        // Only check for this reveal if it's not a programmed agent (it shouldn't report yet)
+        if (agent.getType() !== "programmed" && agent.getType() !== "leader") {
+            this.state.targets.each(function (target) {
+                if (!target.isVisible()) {
+                    var dist = google.maps.geometry.spherical.computeDistanceBetween(agent.getPosition(), target.getPosition());
+                    if (dist < MapTargetController.revealDistance) {
+                        $.post("/targets/reveal/" + target.getId());
+                    }
                 }
-            }
-        });
+            });
+        }
     },
     popupTargetFound: function (target) {
         var self = this;

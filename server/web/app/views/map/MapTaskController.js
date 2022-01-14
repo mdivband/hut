@@ -206,7 +206,13 @@ var MapTaskController = {
         }
         task.destroy();
     },
+    /**
+     * This is redundant now, as the reporting of a completed task is handled later. I will leave it for now in case of
+     *  rollback
+     * @param task
+     */
     onTaskCompleted: function (task) {
+        /*
         console.log("Task completed " + task.getId());
         var self = this;
         var uid = task.getId() + "_completed";
@@ -225,6 +231,8 @@ var MapTaskController = {
             self.map.panTo(task.getPosition());
             self.map.setZoom(19);
         });
+
+         */
     },
     onTaskMarkerLeftClick: function (marker) {},
     onTaskMarkerRightClick: function (marker) {

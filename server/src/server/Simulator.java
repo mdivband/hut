@@ -5,10 +5,8 @@ import server.controller.ConnectionController;
 import server.controller.TaskController;
 import server.controller.TargetController;
 import server.controller.HazardController;
-import server.model.Agent;
-import server.model.Coordinate;
-import server.model.Sensor;
-import server.model.State;
+import server.model.*;
+import server.model.agents.Agent;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -44,6 +42,7 @@ public class Simulator {
     public static Simulator instance;
 
     private static final double gameSpeed = 6;
+    private Random random;
 
     public Simulator() {
         instance = this;
@@ -57,6 +56,7 @@ public class Simulator {
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
+        random = new Random();
 
         queueManager.initDroneDataConsumer();
     }
@@ -117,9 +117,11 @@ public class Simulator {
         File scenarioDir = new File(SCENARIO_DIR_PATH);
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
-                String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
-                if(scenarioName != null)
-                    scenarios.put(file.getName(), scenarioName);
+                if (!file.isDirectory()) {
+                    String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
+                    if (scenarioName != null)
+                        scenarios.put(file.getName(), scenarioName);
+                }
             }
         }
         else
@@ -135,20 +137,29 @@ public class Simulator {
 
             state.incrementTime(0.2);
 
-            //Step agents
+            // Step agents
             checkAgentsForTimeout();
-            for (Agent agent : state.getAgents())
+            for (Agent agent : state.getAgents()) {
                 agent.step(state.isFlockingEnabled());
+            }
 
-            //Step tasks - requires completed tasks array to avoid concurrent modification.
-            List<Task> completedTasks = new ArrayList<Task>();
-            for (Task task : state.getTasks())
-                if(task.step())
+            if (state.isCommunicationConstrained()) {
+                state.updateAgentVisibility();
+                state.updateGhosts();
+                state.moveGhosts();
+            }
+            // Step tasks - requires completed tasks array to avoid concurrent modification.
+            List<Task> completedTasks = new ArrayList<>();
+            for (Task task : state.getTasks()) {
+                if (task.step()) {
+                    // If it's already tagged by a programmed agent, or if it gets completed by the step command
                     completedTasks.add(task);
-            for(Task task : completedTasks)
+                }
+            }
+            for(Task task : completedTasks) {
                 task.complete();
-
-            //Step hazard hits
+            }
+            // Step hazard hits
             this.state.decayHazardHits();
 
             long endTime = System.currentTimeMillis();
@@ -176,8 +187,8 @@ public class Simulator {
 
     public void changeView(boolean toEdit) {
         if (toEdit) {
-            agentController.stopAllAgents();
-            agentController.updateAgentsTempRoutes();
+            agentController.stopAllNonProgrammedAgents();
+            agentController.updateNonProgrammedAgentsTempRoutes();
             allocator.copyRealAllocToTempAlloc();
             allocator.clearAllocationHistory();
             state.setEditMode(true);
@@ -224,7 +235,7 @@ public class Simulator {
                         .toString()
                         .toLowerCase();
 
-                List<String> possibleMethods = new ArrayList<String>(Arrays.asList(
+                List<String> possibleMethods = new ArrayList<>(Arrays.asList(
                         "random",
                         "maxsum"
                 ));
@@ -233,7 +244,7 @@ public class Simulator {
                     this.state.setAllocationMethod(allocationMethod);
                 } else {
                     LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'maxsum'.");
-                    //state.allocationMethod initialised with default value of 'maxsum'
+                    // state.allocationMethod initialised with default value of 'maxsum'
                 }
             }
 
@@ -243,21 +254,88 @@ public class Simulator {
                     this.state.setFlockingEnabled((Boolean)flockingEnabled);
                 } else {
                     LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
-                            flockingEnabled.toString() + "'. Set to false.");
+                            flockingEnabled + "'. Set to false.");
                     // state.flockingEnabled initialised with default value of false
                 }
             }
 
+            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
+            if (uiJson != null) {
+                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
+                    state.addUIOption("predictions");
+                }
+                if (GsonUtils.getValue(uiJson, "ranges") != null && (boolean) GsonUtils.getValue(uiJson, "ranges")) {
+                    state.addUIOption("ranges");
+                }
+                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
+                    state.addUIOption("uncertainties");
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
+                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            } else {
+                this.state.setUncertaintyRadius(10.0);
+            }
+            if(GsonUtils.hasKey(obj,"communicationRange")) {
+                this.state.setCommunicationRange(GsonUtils.getValue(obj, "communicationRange"));
+            } else {
+                this.state.setCommunicationRange(250);
+            }
+
+            if(GsonUtils.hasKey(obj,"communicationConstrained")){
+                Object communicationConstrained = GsonUtils.getValue(obj, "communicationConstrained");
+                if(communicationConstrained.getClass() == Boolean.class) {
+                    this.state.setCommunicationConstrained((Boolean)communicationConstrained);
+                } else {
+                    LOGGER.warning("Expected boolean value for communicationConstrained in scenario file. Received: '" +
+                            communicationConstrained + "'. Set to false.");
+                    // state.communicationConstrained initialised with default value of false
+                }
+            }
+
+            boolean containsProgrammed = false;
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");
             if (agentsJson != null) {
                 for (Object agentJSon : agentsJson) {
                     Double lat = GsonUtils.getValue(agentJSon, "lat");
                     Double lng = GsonUtils.getValue(agentJSon, "lng");
-                    Agent agent = agentController.addVirtualAgent(lat, lng, 0);
+                    Boolean programmed = false;
+                    if(GsonUtils.hasKey(agentJSon,"programmed")){
+                        programmed = GsonUtils.getValue(agentJSon, "programmed");
+                    }
+                    Agent agent;
+                    if (programmed) {
+                        // This means the agent is a programmed one, and the Hub is set up for this
+                        agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
+                        containsProgrammed = true;
+                    } else if (this.state.isCommunicationConstrained()) {
+                        // This means the agent is a non-programmed one, but there is communication required for the network
+                        agent = agentController.addVirtualCommunicatingAgent(lat, lng, random);
+                    } else {
+                        // Neither programmed or communication-required
+                        agent = agentController.addVirtualAgent(lat, lng, 0);
+                    }
                     Double battery = GsonUtils.getValue(agentJSon, "battery");
-                    if(battery != null)
+                    if(battery != null) {
                         agent.setBattery(battery);
+                    }
                 }
+            }
+
+            Object hub = GsonUtils.getValue(obj, "hub");
+            if(hub != null) {
+                Double lat = GsonUtils.getValue(hub, "lat");
+                Double lng = GsonUtils.getValue(hub, "lng");
+
+                if (this.state.isCommunicationConstrained() || containsProgrammed) {
+                    // Even if it's not constrained, if there are programmed agents then we need to provide hub communication
+                    agentController.addHubProgrammedAgent(lat, lng, random, taskController);
+                } else {
+                    agentController.addHubAgent(lat, lng);
+                }
+
+                state.setHubLocation(new Coordinate(lat, lng));
             }
 
             List<Object> hazards = GsonUtils.getValue(obj, "hazards");
@@ -282,7 +360,7 @@ public class Simulator {
                     Double lng = GsonUtils.getValue(targetJson, "lng");
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
                     Target target = targetController.addTarget(lat, lng, type);
-                    //Hide all targets initially - they must be found!!
+                    // Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), false);
                 }
             }
@@ -315,6 +393,38 @@ public class Simulator {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Prints the complete belief for each programmed agent
+     */
+    private void printBeliefs() {
+        ArrayList<String> beliefs = agentController.getBelievedModels();
+        System.out.println("===========Beliefs===========");
+        for (String b : beliefs) {
+            System.out.println(b);
+            System.out.println();
+        }
+    }
+
+    /**
+     * Prints the complete belief for the programmed hub
+     */
+    private void printHubBelief() {
+        ArrayList<String> beliefs = agentController.getHubBelief();
+        System.out.println("===========HUB Belief===========");
+        for (String b : beliefs) {
+            System.out.println(b);
+            System.out.println();
+        }
+    }
+
+    /**
+     * Prints the state as a JSON
+     */
+    private void printStateJson() {
+        String stateJson = GsonUtils.toJson(state);
+        System.out.println(stateJson);
     }
 
     public synchronized String getStateAsString() {

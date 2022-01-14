@@ -1,10 +1,14 @@
-package server.model;
+package server.model.agents;
 
 import server.Simulator;
+import server.model.Coordinate;
+import server.model.MObject;
 import server.model.hazard.Hazard;
 import server.model.task.Task;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -26,7 +30,7 @@ public abstract class Agent extends MObject implements Serializable {
     protected double battery;
     protected double heading;
     private boolean manuallyControlled = false;
-    private final List<Coordinate> route;
+    protected final List<Coordinate> route;
     private final List<Coordinate> tempRoute;
     protected double speed;
     private String allocatedTaskId;
@@ -34,6 +38,9 @@ public abstract class Agent extends MObject implements Serializable {
     private boolean simulated;
     private boolean timedOut;
     private boolean working;
+
+    protected String type;
+    protected boolean visible = true;
 
     //Used in server but not in client
     private transient long lastHeartbeat;
@@ -56,6 +63,7 @@ public abstract class Agent extends MObject implements Serializable {
         working = false;
         allocatedTaskId = "";
         timedOut = false;
+        type = "standard";
 
         this.lastHeartbeat = System.currentTimeMillis();
     }
@@ -108,6 +116,10 @@ public abstract class Agent extends MObject implements Serializable {
 
         //Always add 'no hazard' to track explored areas.
         Simulator.instance.getState().addHazardHit(Hazard.NONE, this.getCoordinate());
+    }
+
+    public void incrementTimeInAir(){
+        timeInAir += 0.2;
     }
 
     /**
@@ -193,6 +205,10 @@ public abstract class Agent extends MObject implements Serializable {
         return allocatedTaskId != null ? Simulator.instance.getState().getTask(this.allocatedTaskId) : null;
     }
 
+    public Collection<Task> getAllTasks(){
+        return Simulator.instance.getState().getTasks();
+    }
+
     public double getSpeed() {
         return speed;
     }
@@ -225,10 +241,27 @@ public abstract class Agent extends MObject implements Serializable {
         return route;
     }
 
+    public void addToRoute(Coordinate coord) {
+        List<Coordinate> rt;
+        if (this.route.isEmpty()) {
+            rt = new ArrayList<>();
+        } else {
+            rt = getRoute();
+        }
+        rt.add(coord);
+        setRoute(rt);
+    }
+
     public void setRoute(List<Coordinate> route) {
         synchronized (this.route) {
             this.route.clear();
             this.route.addAll(route);
+        }
+    }
+
+    public void clearRoute() {
+        synchronized (this.route) {
+            this.route.clear();
         }
     }
 
@@ -243,6 +276,16 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
+    public void clearTempRoute() {
+        synchronized (this.tempRoute) {
+            this.tempRoute.clear();
+        }
+    }
+
+    protected double getEPS(){
+        return EPS;
+    }
+
     public boolean isCurrentDestinationReached() {
         return isReached(this.getCurrentDestination());
     }
@@ -251,7 +294,7 @@ public abstract class Agent extends MObject implements Serializable {
         return isReached(this.getFinalDestination());
     }
 
-    private boolean isReached(Coordinate goal) {
+    protected boolean isReached(Coordinate goal) {
         if(goal == null)
             return true;
         Coordinate position = this.getCoordinate();
@@ -356,5 +399,17 @@ public abstract class Agent extends MObject implements Serializable {
         } else {
             return start.getDistance(goal);
         }
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 }

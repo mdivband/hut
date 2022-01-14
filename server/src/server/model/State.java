@@ -5,6 +5,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import server.Allocator;
+import server.Simulator;
+import server.model.agents.*;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
 import server.model.task.Task;
@@ -37,6 +39,7 @@ public class State {
     private String prov_doc;
 
     private final Collection<Agent> agents;
+    private final Collection<AgentGhost> ghosts;
     private final Collection<Task> tasks;
     private final Collection<Task> completedTasks;
     private final Collection<Hazard> hazards;
@@ -59,8 +62,19 @@ public class State {
 
     private HazardHitCollection hazardHits;
 
+    private ArrayList<String> uiOptions = new ArrayList<>();
+    private double uncertaintyRadius = 0;
+    private double communicationRange = 0;
+    private boolean communicationConstrained = false;
+
+    // We could combine these, but it might be little more efficient to let them stay separate
+    private Hub hub;
+    private Coordinate hubLocation;
+
+
     public State() {
         agents = new ArrayList<>();
+        ghosts = new ArrayList<>();
         tasks = new ArrayList<>();
         completedTasks = new ArrayList<>();
         targets = new ArrayList<>();
@@ -82,6 +96,7 @@ public class State {
         inProgress = false;
 
         agents.clear();
+        ghosts.clear();
         tasks.clear();
         completedTasks.clear();
         targets.clear();
@@ -117,21 +132,34 @@ public class State {
     public void add(IdObject item) {
         if(item instanceof Target)
             add(targets, (Target) item);
-        else if(item instanceof  Task)
+        else if(item instanceof  Task) {
             add(tasks, (Task) item);
-        else if(item instanceof Agent)
+            // For programmed agents:
+            for (Agent a : agents) {
+                if (a instanceof AgentHubProgrammed abs) {
+                    abs.addTaskFromUser((Task) item);
+                }
+            }
+        } else if(item instanceof Agent)
             add(agents, (Agent) item);
         else if(item instanceof Hazard)
             add(hazards, (Hazard) item);
         else
             throw new RuntimeException("Cannot add item to state, unrecognised class - " + item.getClass().getSimpleName());
+
     }
 
     public void remove(IdObject item) {
         if(item instanceof Target)
             remove(targets, (Target) item);
-        else if(item instanceof  Task)
+        else if(item instanceof  Task) {
             remove(tasks, (Task) item);
+            for (Agent a : agents) {
+                if (a instanceof AgentHubProgrammed abs) {
+                    abs.removeTaskFromUser((Task) item);
+                }
+            }
+        }
         else if(item instanceof  Agent)
             remove(agents, (Agent) item);
         else
@@ -288,12 +316,205 @@ public class State {
         this.inProgress = inProgress;
     }
 
+    /**
+     * Adds the given option to the ui settings
+     * @param option String enumerated option
+     */
+    public void addUIOption(String option) {
+        uiOptions.add(option);
+    }
+
+    /**
+     * Setter for the uncertainty radius of agents
+     * @param uncertaintyRadius Radius for uncertainty of agent position
+     */
+    public void setUncertaintyRadius(double uncertaintyRadius) {
+        this.uncertaintyRadius = uncertaintyRadius;
+    }
+
+    /**
+     * Setter for the communication range of agents
+     * @param communicationRange Radius for communication between agents
+     */
+    public void setCommunicationRange(double communicationRange) {
+        this.communicationRange = communicationRange;
+    }
+
+    /**
+     * Getter for the communication range of agents
+     * @return Radius for communication between agents
+     */
+    public double getCommunicationRange() {
+        return communicationRange;
+    }
+
     public synchronized void addHazardHit(int type, Coordinate location) {
         hazardHits.add(type, location);
     }
 
     public void decayHazardHits() {
         hazardHits.decayAll();
+    }
+
+    /**
+     * Searches and gets the task with the given coordinate
+     * @param coordinate The coordinate to check
+     * @return the Task if found (null otherwise)
+     */
+    public Task getTaskByCoordinate(Coordinate coordinate) {
+        for (Task t : tasks) {
+            if(t.getCoordinate().equals(coordinate)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Searches and gets the target with the given coordinate
+     * @param coordinate The coordinate to check
+     * @return the Target if found (null otherwise)
+     */
+    public Target getTargetByCoordinate(Coordinate coordinate) {
+        for (Target t : targets) {
+            if(t.getCoordinate().equals(coordinate)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Getter for Hub location
+     * @return Coordinate of hub (can be null if not set)
+     */
+    public Coordinate getHubLocation() {
+        return hubLocation;
+    }
+
+    /**
+     * Setter for Hub location
+     * @param hubLocation Coordinate of hub (can be null)
+     */
+    public void setHubLocation(Coordinate hubLocation) {
+        this.hubLocation = hubLocation;
+    }
+
+    /**
+     * Updates the visibility of all Agents
+     */
+    public void updateAgentVisibility() {
+        for (Agent agent : agents) {
+            if (!(agent instanceof Hub)) {
+                // Is programmed/communicating, see if it's connected
+                boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, agent);
+                if (connected && !agent.isVisible()) {
+                    agent.setVisible(true);
+                } else if (!connected && agent.isVisible()) {
+                    // Has left the range
+                    agent.setVisible(false);
+                    addGhost(agent);
+                }
+            } else if (!agent.isVisible()) {
+                // To make sure the hub is always visible
+                agent.setVisible(true);
+            }
+        }
+    }
+
+    /**
+     * Adds a ghost marker for the given agent
+     * @param agent The Agent to replace (copies this position, heading, route)
+     */
+    private void addGhost(Agent agent) {
+        ghosts.add(new AgentGhost(agent));
+    }
+
+    /**
+     * Updates, and removes if required, all ghost agents
+     */
+    public void updateGhosts() {
+        ArrayList<AgentGhost> ghostsToRemove = new ArrayList<>();
+        for (AgentGhost ghost : ghosts) {
+            String baseId = ghost.getId().split("_")[0];
+            Agent equivalentAgent = agents.stream().filter(agent -> agent.getId().equals(baseId)).findFirst().get();
+            boolean connected = Simulator.instance.getAgentController().checkHubConnection(hub, equivalentAgent);
+
+            if (connected) {
+                // Has re-entered the range. We must kill this ghost and reinstate the real agent
+                ghostsToRemove.add(ghost);
+            }
+        }
+        try {
+            for (AgentGhost ghostToRem : ghostsToRemove) {
+                ghosts.remove(ghostToRem);
+                String baseId = ghostToRem.getId().split("_")[0];  // Removes the "_ghost" part
+                // Line below just finds first (and only) agent with this ID. Shouldn't ever fail if everything else is correct
+                Agent agentToReinstate = agents.stream().filter(agent -> agent.getId().equals(baseId)).findFirst().get();
+                agentToReinstate.setVisible(true);
+            }
+        } catch (Exception e) {
+            System.out.println("Error reinstating agent: " + e);
+        }
+    }
+
+    /**
+     * Moves all ghost markers based on believed route
+     */
+    public void moveGhosts() {
+        for (AgentGhost ghost : ghosts) {
+            ghost.step(true);  // The argument here allows us to get ghosts to try to simulate flocking too
+            if (ghost.isAtHome() && ghost.isVisible()) {
+                // It has returned to the Hub and we now know nothing about it, so let's hide it, otherwise it clutters
+                //  and confuses the interface
+                ghost.setVisible(false);
+            } else if (!ghost.isAtHome() && !ghost.isVisible()) {
+                // For if we rediscover this agent away from home
+                ghost.setVisible(true);
+                ghost.setAtHome(false);
+            }  // Otherwise leave it be, it's either: Visible and not home yet, or At home and invisible
+        }
+    }
+
+    /**
+     * Senses all ghosts near to the given ghost. Used to model ghost flocking
+     * @param ghostToSense AgentGhost to check around
+     * @param radius Radius distance to search within
+     * @return List of all neighbouring ghosts
+     */
+    public List<Agent> senseNeighbouringGhosts(AgentGhost ghostToSense, int radius) {
+        List<Agent> neighbours = new ArrayList<>();
+        for (AgentGhost ghost : ghosts) {
+            if (ghostToSense.getCoordinate().getDistance(ghost.getCoordinate()) < radius || !ghostToSense.getId().equals(ghost.getId())) {
+                // This ghost is close enough
+                neighbours.add(ghost);
+            }
+        }
+        return neighbours;
+    }
+
+    /**
+     * Sets the hub to this given AgentHub
+     * @param hub The hub to set
+     */
+    public void attachHub(Agent hub) {
+        this.hub = (Hub) hub;
+    }
+
+    /**
+     * Getter for whether the simulation is communication constrained
+     * @return boolean value for whether simulation is communication constrained
+     */
+    public boolean isCommunicationConstrained() {
+        return communicationConstrained;
+    }
+
+    /**
+     * Setter for whether the simulation is communication constrained
+     * @param communicationConstrained boolean value for whether simulation is communication constrained
+     */
+    public void setCommunicationConstrained(Boolean communicationConstrained) {
+        this.communicationConstrained = communicationConstrained;
     }
 
     private class HazardHit {

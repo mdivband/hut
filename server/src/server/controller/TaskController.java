@@ -1,7 +1,7 @@
 package server.controller;
 
 import server.Simulator;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.Coordinate;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
@@ -39,7 +39,6 @@ public class TaskController extends AbstractController {
                 throw new IllegalArgumentException("Unable to create task of type " + taskType);
         }
         simulator.getState().add(task);
-        LOGGER.info("Created new task " + id + " at " + lat + ", " + lng);
         return task;
     }
 
@@ -104,11 +103,42 @@ public class TaskController extends AbstractController {
         }
 
         simulator.getState().remove(task);
-        LOGGER.info("Removed task " + id);
 
-        if(completed)
+        if(completed) {
             simulator.getState().addCompletedTask(task);
+        }
         return true;
+    }
+
+    /**
+     * Deletes the task with the given coordinates
+     * @param coord Coordinate to check
+     */
+    public void deleteTaskByCoords(Coordinate coord) {
+        try {
+            findTaskByCoord(coord).setStatus(Task.STATUS_DONE);
+        } catch (Exception e){
+            // For now we leave this. It's rare, but when deleting an already completed task this throws an error
+            // It doesn't matter that we let this through, because it was already gone
+        }
+    }
+
+    /**
+     * Searcges the nearby area for any task and returns the first match
+     * @param position Coordinate around which to check
+     * @param eps Epsilon value to search around
+     * @return The first nearby task, or null if none found
+     */
+    public Coordinate checkIfNearbyTaskComplete(Coordinate position, double eps){
+        for (Task t :simulator.getState().getTasks()) {
+            Coordinate thisPos = t.getCoordinate();
+            if(Math.abs(position.getLatitude() - thisPos.getLatitude()) < eps &&
+               Math.abs(position.getLongitude() - thisPos.getLongitude()) < eps) {
+                // The agent is close enough to this task, so we report it
+                return thisPos;
+            }
+        }
+        return null;
     }
 
     public synchronized void updateTaskGroup(String taskId, int group) {
@@ -128,4 +158,9 @@ public class TaskController extends AbstractController {
         for(String key : keysToRemove)
             allocation.remove(key);
     }
+
+    public Task findTaskByCoord(Coordinate coordinate) {
+        return simulator.getState().getTaskByCoordinate(coordinate);
+    }
+
 }
