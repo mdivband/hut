@@ -29,7 +29,13 @@ public class State {
     private String allocationMethod = "maxsum";
     private Boolean flockingEnabled = false;
     private double time;
+    private double timeLimit;
+    private long scenarioEndTime;
     private int editMode;
+    // editMode 1 = monitor
+    //          2 = edit
+    //          3 = images
+    private boolean passthrough = false;
 
     private String prov_doc;
 
@@ -180,6 +186,40 @@ public class State {
         setTime(this.time + increment);
     }
 
+    public synchronized double getTimeLimit() {
+        return timeLimit;
+    }
+
+    public synchronized void setTimeLimit(double timeLimit) {
+        this.timeLimit = timeLimit;
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized void incrementTimeLimit(double increment) {
+        setTimeLimit(this.timeLimit + increment);
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized long getScenarioEndTime() {
+        return scenarioEndTime;
+    }
+
+    public synchronized void setScenarioEndTime() {
+        if (this.timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
+        }
+    }
+
+    private synchronized void setScenarioEndTime(double timeLimit) {
+        if (timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
+        }
+    }
+
     public synchronized int getEditMode() {
         return editMode;
     }
@@ -301,6 +341,14 @@ public class State {
 
     public void decayHazardHits() {
         hazardHits.decayAll();
+    }
+
+    public void setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
+    }
+
+    public boolean isPassthrough() {
+        return passthrough;
     }
 
     public void addUIOption(String option) {

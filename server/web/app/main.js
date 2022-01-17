@@ -222,6 +222,7 @@ var simulator = {
         this.state.fetch()
             .done(function () {
                 if (!self.initialisedState) {
+                    alert("init");
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
@@ -244,17 +245,68 @@ var simulator = {
                         $('#start_scenario').on('click', function () {
                             $.post("/mode/scenario/start", {}, function () {
                                 $.unblockUI();
+                                self.run();
+                            });
+                        });
+                    }
+                } else if (!self.state.isInProgress()) {
+                    alert("not ip")
+                    var scenario_end_panel = document.createElement("div");
+                    if (!self.state.isPassthrough()) {
+                        // Return to menu
+                        scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                            title: "Scenario Ended",
+                            description: "This scenario has ended, please press close to return to the homepage."
+                        });
+                        $.blockWithContent(scenario_end_panel);
+                        $('#end_scenario').on('click', function () {
+                            $.post("/reset");
+                            window.history.back();
+                        });
+                    } else {
+                        // Has a scenario to pass through too
+                        scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                            title: "Scenario Ended",
+                            description: "This scenario has ended, please press to continue to the next experiment"
+                        });
+                        $.blockWithContent(scenario_end_panel);
+                        var endScenarioDiv = $("#end_scenario");
+
+                        endScenarioDiv.on('click', function () {
+                            $.post("/reset");
+                            $.post('/mode/scenario', {'file-name': "scalabilityTest.json"}, function () {
+                                endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
+                                endScenarioDiv[0].addEventListener("animationend", function () {
+                                    window.location = "/sandbox.html";
+                                })
+                            }).fail(function () {
+                                showError("Unable to start scenario.");
+                            });
+
+                            var description_panel = document.createElement("div");
+                            description_panel.innerHTML = _.template($("#description_panel").html(), {
+                                title: self.state.getGameId(),
+                                description: self.state.getGameDescription()
+                            });
+                            $.blockWithContent(description_panel);
+                            $('#start_scenario').on('click', function () {
+                                $.post("/mode/scenario/start", {}, function () {
+                                    $.unblockUI();
+                                    self.run();
+                                });
                             });
                         });
                     }
                 }
             })
             .always(function () {
-                var elapsedTime = ((new Date()).getTime() - startTime);
-                if (elapsedTime < waitTime)
-                    window.setTimeout(_.bind(self.run, self), waitTime - elapsedTime);
-                else
-                    _.bind(self.run, self)();
+                if (self.state.isInProgress()) {
+                    var elapsedTime = ((new Date()).getTime() - startTime);
+                    if (elapsedTime < waitTime)
+                        window.setTimeout(_.bind(self.run, self), waitTime - elapsedTime);
+                    else
+                        _.bind(self.run, self)();
+                }
             });
         $('#view_mode').buttonset().css({
             "margin-right": "0px"

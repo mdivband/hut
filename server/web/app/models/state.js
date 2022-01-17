@@ -27,8 +27,8 @@ App.Models.State  = Backbone.Model.extend({
         },
         uiOptions: {},
         uncertaintyRadius: 0,
-        storedImages : {}
-
+        storedImages : {},
+        passthrough: false
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -144,5 +144,16 @@ App.Models.State  = Backbone.Model.extend({
     },
     getStoredImages: function () {
         return this.get("storedImages")
+    },
+    toggleEdit: function(toEditMode) {
+		 this.set("editMode", toEditMode);
+		 $.post("/changeview", {edit: toEditMode});
+		 if (toEditMode)
+		 	$("#map_title").html("Edit Mode");
+		 else
+		 	$("#map_title").html("Monitor Mode");
+	},
+    isPassthrough: function () {
+        return this.get("passthrough");
     }
 });
