@@ -154,4 +154,8 @@ public class TaskController extends AbstractController {
 
        return foundTasks;
     }
+
+    public synchronized void resetTaskNumbers() {
+        this.uniqueTaskNumber = 1;
+    }
 }

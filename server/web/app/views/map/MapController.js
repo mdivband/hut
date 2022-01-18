@@ -372,9 +372,9 @@ var MapController = {
         if(sendUpdate)
             this.state.pushMode(modeFlag);
     },
-    pushImage: function (id, iRef) {
+    pushImage: function (id, iRef, update) {
         try {
-            this.views.review.displayImage(id, iRef);
+            this.views.review.displayImage(id, iRef, update);
         } catch (e) {
             alert("PI: " + e)
         }

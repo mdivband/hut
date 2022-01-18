@@ -26,8 +26,8 @@ public class State {
     private String gameId;
     private String gameDescription;
     private int gameType;
-    private String allocationMethod = "maxsum";
-    private Boolean flockingEnabled = false;
+    private String allocationMethod;
+    private Boolean flockingEnabled;
     private double time;
     private double timeLimit;
     private long scenarioEndTime;
@@ -88,9 +88,14 @@ public class State {
     }
 
     public synchronized void reset() {
+        // Define defaults
         time = 0;
+        timeLimit = 0;    // 0 means no time limit
+        scenarioEndTime = 0; // 0 means no time limit
         editMode = 1;
         inProgress = false;
+        allocationMethod = "maxsum";
+        flockingEnabled = false;
 
         agents.clear();
         tasks.clear();

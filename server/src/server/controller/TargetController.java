@@ -75,6 +75,10 @@ public class TargetController extends AbstractController {
         return true;
     }
 
+    public synchronized void resetTargetNumbers() {
+        this.uniqueTargetNumbers = new HashMap<>();
+    }
+
 
     public void adjustForTask(int taskType, double lat, double lng) {
         for (Target t : Simulator.instance.getState().getTargets()) {

@@ -24,9 +24,11 @@ App.Views.Review = Backbone.View.extend({
     update: function() {
 
     },
-    displayImage: function (id, iRef){
-        this.currentImageName = id;
-        this.currentImageRef = iRef;
+    displayImage: function (id, iRef, update){
+        if (update) {
+            this.currentImageName = id;
+            this.currentImageRef = iRef;
+        }
         var self = this;
         self.scale = 1;
         if (self.originalHeight !== 0) {
@@ -52,7 +54,7 @@ App.Views.Review = Backbone.View.extend({
                 self.canvas.height = img.height;
                 self.ctx.drawImage(img, 0, 0, img.width, img.height);
             };
-            img.src = self.currentImageRef;
+            img.src = iRef;  // Use the argument, so it works regardless of update flag
 
         } catch (e) {
             alert("update error: " + e)

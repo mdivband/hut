@@ -10,6 +10,8 @@ var MapImageController = {
         this.showImage = _.bind(this.showImage, context);
         this.classify = _.bind(this.classify, context);
         this.referDeep = _.bind(this.referDeep, context);
+        this.getCurrentImageId = _.bind(this.getCurrentImageId, context);
+        this.triggerImage = _.bind(this.triggerImage, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -35,10 +37,7 @@ var MapImageController = {
 
     },
     showImage: function (task) {
-        // TODO pass this to be handled by the ImageController, with the result to be conveyed to the
-        //  TargetController for UI changes
         var self = this;
-        //alert("si")
         try {
             var target = MapTargetController.getTargetAt(task.getPosition())
             if (target != null) {
@@ -58,9 +57,13 @@ var MapImageController = {
      * This is just a passthrough method
      * @param id
      * @param iRef
+     * @param update
      */
-    triggerImage: function (id, iRef) {
-        MapController.pushImage(id, iRef);
+    triggerImage: function (id, iRef, update) {
+        MapController.pushImage(id, iRef, update);
+    },
+    getCurrentImageId: function () {
+        return this.views.review.currentImageName;
     },
     classify: function (status) {
         var img = MapController.getCurrentImage();
@@ -85,7 +88,6 @@ var MapImageController = {
         if (!existingMarker) {
             marker.setOptions({labelContent: newId});
             MapTaskController.addDeepScanTask(marker.getPosition());
-            // MapTargetController.updateTargetMarkerIcon(target);
             var icon = self.icons.TargetDeepScan;
             marker.setIcon(icon.Image)
         } else {
@@ -93,9 +95,6 @@ var MapImageController = {
         }
 
         MapController.clearReviewImage();
-        button.focusout();
-
     }
-
 
 };

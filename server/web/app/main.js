@@ -222,7 +222,6 @@ var simulator = {
         this.state.fetch()
             .done(function () {
                 if (!self.initialisedState) {
-                    alert("init");
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
@@ -250,7 +249,6 @@ var simulator = {
                         });
                     }
                 } else if (!self.state.isInProgress()) {
-                    alert("not ip")
                     var scenario_end_panel = document.createElement("div");
                     if (!self.state.isPassthrough()) {
                         // Return to menu

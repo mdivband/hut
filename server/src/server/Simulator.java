@@ -44,6 +44,8 @@ public class Simulator {
     private static final double gameSpeed = 6;
     private String nextFileName = "";
 
+    private Thread mainLoopThread;
+
     public Simulator() {
         instance = this;
 
@@ -103,12 +105,14 @@ public class Simulator {
     }
 
     public void startSimulation() {
+        state.setScenarioEndTime();
         //Heart beat all virtual agents to prevent time out when user is reading the description.
         for(Agent agent : this.state.getAgents())
             if(agent.isSimulated())
                 agent.heartbeat();
         this.agentController.stopAllAgents();
-        new Thread(this::mainLoop).start();
+        this.mainLoopThread = new Thread(this::mainLoop);
+        mainLoopThread.start();
         this.state.setInProgress(true);
         LOGGER.info("Simulation started.");
     }
@@ -161,7 +165,8 @@ public class Simulator {
             //Step hazard hits
             this.state.decayHazardHits();
 
-
+            // Check and trigger images that are scheduled
+            imageController.checkForImages();
 
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));
@@ -178,8 +183,6 @@ public class Simulator {
 
             state.setGameId(GsonUtils.getValue(obj, "gameId"));
             state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
-            System.out.println("Setting as");
-            System.out.println(state.getGameDescription());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -226,7 +229,14 @@ public class Simulator {
     }
 
     public synchronized void reset() {
+        if (this.mainLoopThread != null) {
+            this.mainLoopThread.interrupt();
+        }
         state.reset();
+        agentController.resetAgentNumbers();
+        hazardController.resetHazardNumbers();
+        targetController.resetTargetNumbers();
+        taskController.resetTaskNumbers();
         LOGGER.info("Server reset.");
     }
 
@@ -279,6 +289,25 @@ public class Simulator {
                     LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
                             flockingEnabled.toString() + "'. Set to false.");
                     // state.flockingEnabled initialised with default value of false
+                }
+            }
+            
+            if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
+                Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
+                if(timeLimitSeconds.getClass() == Double.class) {
+                    state.incrementTimeLimit((Double)timeLimitSeconds);
+                } else {
+                    LOGGER.warning("Expected double value for timeLimitSeconds in scenario file. Received: '" +
+                            timeLimitSeconds.toString() + "'. Time limit not changed.");
+                }
+            }
+            if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
+                Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
+                if(timeLimitMinutes.getClass() == Double.class) {
+                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
+                } else {
+                    LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
+                            timeLimitMinutes.toString() + "'. Time limit not changed.");
                 }
             }
 
