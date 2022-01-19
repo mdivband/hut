@@ -36,6 +36,7 @@ public class State {
     //          2 = edit
     //          3 = images
     private boolean passthrough = false;
+    private String nextFileName = "";
 
     private String prov_doc;
 
@@ -354,6 +355,14 @@ public class State {
 
     public boolean isPassthrough() {
         return passthrough;
+    }
+
+    public String getNextFileName() {
+        return nextFileName;
+    }
+
+    public void setNextFileName(String nextFileName) {
+        this.nextFileName = nextFileName;
     }
 
     public void addUIOption(String option) {

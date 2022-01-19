@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -42,7 +43,6 @@ public class Simulator {
     public static Simulator instance;
 
     private static final double gameSpeed = 6;
-    private String nextFileName = "";
 
     private Thread mainLoopThread;
 
@@ -66,9 +66,9 @@ public class Simulator {
 
     public static void main(String[] args) {
         try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("./logging.properties"));
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
         } catch (final IOException e) {
-            Logger.getAnonymousLogger().severe("Could not load default logging.properties file");
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
             Logger.getAnonymousLogger().severe(e.getMessage());
         }
 
@@ -83,23 +83,23 @@ public class Simulator {
     public void start() {
         readConfig();
         new Thread(connectionController::start).start();
-        LOGGER.info("Server ready.");
+        LOGGER.info(String.format("%s; Server ready ", getState().getTime()));
     }
 
     public void startSandboxMode() {
         this.state.setGameType(State.GAME_TYPE_SANDBOX);
         this.state.setGameId("Sandbox");
-        LOGGER.info("Sandbox loaded.");
+        LOGGER.info(String.format("%s; Sandbox loaded ", getState().getTime()));
         this.startSimulation();
     }
 
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
         if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
-            LOGGER.info("Scenario loaded.");
+            LOGGER.info(String.format("%s; Scenario loaded ", getState().getTime()));
             return true;
         } else {
-            LOGGER.severe("Unable to start scenario from file - " + scenarioFileName);
+            LOGGER.info(String.format("%s; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -114,7 +114,7 @@ public class Simulator {
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
         this.state.setInProgress(true);
-        LOGGER.info("Simulation started.");
+        LOGGER.info(String.format("%s; Simulation started", getState().getTime()));
     }
 
     public Map<String, String> getScenarioFileListWithGameIds() {
@@ -128,7 +128,7 @@ public class Simulator {
             }
         }
         else
-            LOGGER.severe("Could not find scenario directory at " + SCENARIO_DIR_PATH);
+            LOGGER.info(String.format("%s; Could not find scenario (directory); %s ", getState().getTime(), SCENARIO_DIR_PATH));
         return scenarios;
     }
 
@@ -178,11 +178,11 @@ public class Simulator {
 
     private void updateNextValues() {
         try {
-            String json = GsonUtils.readFile("web/scenarios/" + nextFileName);
+            String json = GsonUtils.readFile("web/scenarios/" + state.getNextFileName());
             Object obj = GsonUtils.fromJson(json);
-
             state.setGameId(GsonUtils.getValue(obj, "gameId"));
             state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
+            LOGGER.info(String.format("%s; Passing through to next scenario ", getState().getTime()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -203,7 +203,7 @@ public class Simulator {
             if (agent.getMillisSinceLastHeartbeat() > 20 * 1000) {
                 if(!agent.isTimedOut()) {
                     agent.setTimedOut(true);
-                    LOGGER.info("Lost connection with agent " + agent.getId());
+                    LOGGER.info(String.format("%s; Lost connection with agent (id); %s ", getState().getTime(), agent.getId()));
                 }
             }
         }
@@ -221,6 +221,10 @@ public class Simulator {
             state.setEditMode(1);
         } else if (modeFlag == 3) {
             state.setEditMode(3);
+            //Clear agents and tasks
+            for(Agent agent : state.getAgents()) {
+                agent.resume();
+            }
         }
     }
 
@@ -237,12 +241,12 @@ public class Simulator {
         hazardController.resetHazardNumbers();
         targetController.resetTargetNumbers();
         taskController.resetTaskNumbers();
-        LOGGER.info("Server reset.");
+        LOGGER.info(String.format("%s; Server reset ", getState().getTime()));
     }
 
     private void readConfig() {
         try {
-            LOGGER.info("Reading Server Config File: " + SERVER_CONFIG_FILE);
+            LOGGER.info(String.format("%s; Reading Server Config File (directory); %s ", getState().getTime(), SERVER_CONFIG_FILE));
             String json = GsonUtils.readFile(SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
@@ -291,25 +295,6 @@ public class Simulator {
                     // state.flockingEnabled initialised with default value of false
                 }
             }
-            
-            if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
-                Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
-                if(timeLimitSeconds.getClass() == Double.class) {
-                    state.incrementTimeLimit((Double)timeLimitSeconds);
-                } else {
-                    LOGGER.warning("Expected double value for timeLimitSeconds in scenario file. Received: '" +
-                            timeLimitSeconds.toString() + "'. Time limit not changed.");
-                }
-            }
-            if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
-                Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
-                if(timeLimitMinutes.getClass() == Double.class) {
-                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
-                } else {
-                    LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
-                            timeLimitMinutes.toString() + "'. Time limit not changed.");
-                }
-            }
 
             Object hub = GsonUtils.getValue(obj, "hub");
             if(hub != null) {
@@ -341,7 +326,7 @@ public class Simulator {
                 Object nextScenarioFile = GsonUtils.getValue(obj, "nextScenarioFile");
                 if(nextScenarioFile.getClass() == String.class) {
                     this.state.setPassthrough(true);
-                    nextFileName = nextScenarioFile.toString();
+                    state.setNextFileName(nextScenarioFile.toString());
                 }
             }
 

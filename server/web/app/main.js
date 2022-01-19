@@ -272,7 +272,8 @@ var simulator = {
 
                         endScenarioDiv.on('click', function () {
                             $.post("/reset");
-                            $.post('/mode/scenario', {'file-name': "scalabilityTest.json"}, function () {
+                            self.views.map.clearAll()
+                            $.post('/mode/scenario', {'file-name': self.state.getNextFileName()}, function () {
                                 endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
                                 endScenarioDiv[0].addEventListener("animationend", function () {
                                     window.location = "/sandbox.html";

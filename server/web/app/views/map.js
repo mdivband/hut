@@ -114,6 +114,18 @@ App.Views.Map = Backbone.View.extend({
         this.setMode(this.ModeEnum.PAN);
         this.hideForGametype();
     },
+    clearAll() {
+        this.clearUncertainties();
+        this.clearPredictions();
+        MapImageController.reset();
+        var markers = this.$el.gmap("get", "markers");
+        markers.forEach(function (marker) {
+            if (marker) {
+                marker.setMap(null);
+                delete marker;
+            }
+        });
+    },
     hideForGametype() {
         var type = this.state.getGameType();
         if (type === this.state.GAME_TYPE_SCENARIO)

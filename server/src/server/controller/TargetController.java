@@ -71,7 +71,7 @@ public class TargetController extends AbstractController {
             return false;
         }
         simulator.getState().remove(target);
-        LOGGER.info("Deleted agent " + id);
+        LOGGER.info(String.format("%s; Deleted target (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, target.getCoordinate().getLatitude(), target.getCoordinate().getLongitude()));
         return true;
     }
 
@@ -82,15 +82,9 @@ public class TargetController extends AbstractController {
 
     public void adjustForTask(int taskType, double lat, double lng) {
         for (Target t : Simulator.instance.getState().getTargets()) {
-            //System.out.println("Checking : ");
-            //System.out.println("    lat: " + t.getCoordinate().getLatitude());
-           // System.out.println("    lng: " + t.getCoordinate().getLongitude());
             try {
                 if (t.getCoordinate().getLatitude() == lat && t.getCoordinate().getLongitude() == lng) {
-                    System.out.println("Located target for this task");
                     t.setType(taskType);
-                    //AdjustableTarget aT = (AdjustableTarget) t;
-                    //aT.setStatus(taskType);
                 }
             } catch (Exception e) {
                 System.out.println("Error changing sprite. Probably due to casting error");
@@ -102,7 +96,6 @@ public class TargetController extends AbstractController {
     public Target getTargetAt(Coordinate c) {
         for (Target t : Simulator.instance.getState().getTargets()) {
             if(t.getCoordinate().getDistance(c) < 1) {  // TODO work out appropriate epsilon value
-                System.out.println("Found target at " + c + " ("+t.getId()+")");
                 return t;
             }
         }
@@ -120,4 +113,5 @@ public class TargetController extends AbstractController {
     public void removeTarget(String id) {
         simulator.getState().getTargets().removeIf(tgt -> tgt.getId().equals(id));
     }
+
 }

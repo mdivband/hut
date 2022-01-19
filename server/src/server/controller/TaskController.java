@@ -45,7 +45,7 @@ public class TaskController extends AbstractController {
                 throw new IllegalArgumentException("Unable to create task of type " + taskType);
         }
         simulator.getState().add(task);
-        LOGGER.info("Created new task " + id + " at " + lat + ", " + lng);
+        LOGGER.info(String.format("%s; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
         return task;
     }
 
@@ -53,7 +53,7 @@ public class TaskController extends AbstractController {
         String id = generateUID();
         Task task = PatrolTask.createTask(id, path);
         simulator.getState().add(task);
-        LOGGER.info("Created new patrol task " + id);
+        LOGGER.info(String.format("%s; Created new patrol task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
@@ -70,7 +70,7 @@ public class TaskController extends AbstractController {
         String id = generateUID();
         Task task = RegionTask.createTask(id, nw, ne, se, sw);
         simulator.getState().add(task);
-        LOGGER.info("Created new region task " + id);
+        LOGGER.info(String.format("%s; Created new region task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
@@ -88,6 +88,7 @@ public class TaskController extends AbstractController {
         if (!task.getCoordinate().equals(new Coordinate(lat, lng))) {
             task.getCoordinate().set(lat, lng);
             LOGGER.info("Moved task " + id + " to " + lat + ", " + lng);
+            LOGGER.info(String.format("%s; Moved task to (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         }
         return task;
     }
@@ -110,7 +111,7 @@ public class TaskController extends AbstractController {
         }
 
         simulator.getState().remove(task);
-        LOGGER.info("Removed task " + id);
+        LOGGER.info(String.format("%s; Removed task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
 
         if(completed)
             simulator.getState().addCompletedTask(task);

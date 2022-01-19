@@ -31,7 +31,6 @@ public abstract class Target extends MObject implements Serializable {
     public void setType(int type) {
         //this.type = type;
         this.type = 0;
-        System.out.println("Set this target's type to " + type);
     }
 
     public int getType() {

@@ -28,7 +28,8 @@ App.Models.State  = Backbone.Model.extend({
         uiOptions: {},
         uncertaintyRadius: 0,
         storedImages : {},
-        passthrough: false
+        passthrough: false,
+        nextFileName: ""
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -155,5 +156,8 @@ App.Models.State  = Backbone.Model.extend({
 	},
     isPassthrough: function () {
         return this.get("passthrough");
+    },
+    getNextFileName: function () {
+        return this.get("nextFileName");
     }
 });

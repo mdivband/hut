@@ -62,6 +62,9 @@ public class Allocator {
             allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
         } else if(allocationMethod.equals("random")) {
             allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+        } else {
+            // No allocation possible. Do nothing
+            return;
         }
 
         simulator.getState().setTempAllocation(allocation);
@@ -282,10 +285,14 @@ public class Allocator {
 
 
     protected Map<String, String> compute(List<Agent> agents, List<Task> tasks, boolean editMode) {
-        if (!agents.isEmpty() && !tasks.isEmpty()) {
-				Map<String, String> result =  runMaxSum(agents, tasks);
+        try {
+            if (!agents.isEmpty() && !tasks.isEmpty()) {
+                Map<String, String> result = runMaxSum(agents, tasks);
                 if (!editMode) oldresult = result;
                 return result;
+            }
+        } catch (Exception e) {
+
         }
         return null;
     }

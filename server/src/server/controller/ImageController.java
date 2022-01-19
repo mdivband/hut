@@ -10,14 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
-public class ImageController {
+public class ImageController extends AbstractController {
 
     private final int SHALLOW_SCAN_TIME = 60;  // In-game seconds, so use 6*real-life seconds
     private final int DEEP_SCAN_TIME = 60;
-
-    private Simulator simulator;
 
     private final List<String> deepScannedTargets = new ArrayList<>(16);
     private final List<String> shallowScannedTargets = new ArrayList<>(16);
@@ -37,7 +34,7 @@ public class ImageController {
     private String tempHighResTP = "images/highTP.jpg";
 
     public ImageController(Simulator simulator) {
-        this.simulator = simulator;
+        super(simulator, ImageController.class.getName());
     }
 
     /**
@@ -48,34 +45,29 @@ public class ImageController {
         Target t = simulator.getTargetController().getTargetAt(coordinate);
         if (t instanceof AdjustableTarget at) {  // This also asserts that t is not null
             synchronized (simulator.getState().getStoredImages()) {
+                double timeToAdd;
+                String fileToAdd;
+
                 if (at.isReal()) {
                     // TODO filepath
                     if (isDeep) {
-                        System.out.println("Adding image for agent: " + at.getId() + ", using " + tempHighResTP + " (it's real)");
-                        //addImage(at.getId(), tempHighResTP, true);
-                        double timeToAdd = simulator.getState().getTime() + DEEP_SCAN_TIME;
-                        scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), tempHighResTP, true));
+                        fileToAdd = tempHighResTP;
                     } else {
-                        System.out.println("Adding image for agent: " + at.getId() + ", using " + tempLowResTP + " (it's real)");
-                        //addImage(at.getId(), tempLowResTP, false);
-                        double timeToAdd = simulator.getState().getTime() + DEEP_SCAN_TIME;
-                        scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), tempLowResTP, false));
+                        fileToAdd = tempLowResTP;
                     }
-
+                    timeToAdd = simulator.getState().getTime() + DEEP_SCAN_TIME;
                 } else {
                     // TODO filepath
                     if (isDeep) {
-                        System.out.println("Adding image for agent: " +at.getId() + ", using " + tempHighResFP + " (it's real)");
-                        //addImage(at.getId(), tempHighResFP, true);
-                        double timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
-                        scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), tempHighResFP, true));
+                        fileToAdd = tempHighResFP;
                     } else {
-                        System.out.println("Adding image for agent: " +at.getId() + ", using " + tempLowResFP + " (it's real)");
-                        //addImage(at.getId(), tempLowResFP, false);
-                        double timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
-                        scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), tempLowResFP, false));
+                        fileToAdd = tempLowResFP;
                     }
+                    timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
                 }
+
+                scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), fileToAdd, isDeep));
+                LOGGER.info(String.format("%s; Taking image for target of deep/shallow type with actual classification (id, filename, isDeep, isReal); %s; %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), fileToAdd, isDeep, at.isReal()));
             }
         }
     }
@@ -120,7 +112,6 @@ public class ImageController {
         }
 
         if (keyToRemove != -1) {
-            // System.out.println("Time = " + currentTime + ", triggering image of time = " + keyToRemove);
             addImage(scheduledImages.get(keyToRemove));
             scheduledImages.remove(keyToRemove);
         }
@@ -143,14 +134,18 @@ public class ImageController {
         Map<String, String> map = simulator.getState().getStoredImages();
         String id = map
                 .entrySet()
-                .stream().
-                filter(entry -> ref.equals(entry.getValue()))
+                .stream()
+                .filter(entry -> ref.equals(entry.getValue()))
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .get();
 
         // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
         decisions.put(id, status);
+
+        boolean isDeep = deepScannedTargets.contains(id);
+        boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
+
         deepScannedTargets.remove(id);
         shallowScannedTargets.remove(id);
         map.remove(id);
@@ -161,9 +156,7 @@ public class ImageController {
         }
         simulator.getTargetController().deleteTarget(id);
 
-        System.out.println("=====DIAG=====");
-        decisions.entrySet().forEach(System.out::println);
-        System.out.println();
+        LOGGER.info(String.format("%s; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
     }
 
     public Map<String, Boolean> getDecisions() {

@@ -24,6 +24,17 @@ App.Views.Review = Backbone.View.extend({
     update: function() {
 
     },
+    reset: function () {
+        this.currentImageName = "";
+        this.currentImageRef = "";
+
+        this.originalWidth = 0;
+        this.originalHeight = 0;
+
+        this.scale = 1;
+        this.clearImage();
+        this.render();
+    },
     displayImage: function (id, iRef, update){
         if (update) {
             this.currentImageName = id;

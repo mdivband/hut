@@ -12,6 +12,7 @@ var MapImageController = {
         this.referDeep = _.bind(this.referDeep, context);
         this.getCurrentImageId = _.bind(this.getCurrentImageId, context);
         this.triggerImage = _.bind(this.triggerImage, context);
+        this.reset = _.bind(this.reset, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -26,6 +27,9 @@ var MapImageController = {
         $("#rev_deep").on('click', function () {
             MapImageController.referDeep();
         });
+    },
+    reset: function () {
+        this.views.review.reset();
     },
 
     /**
@@ -51,7 +55,6 @@ var MapImageController = {
         } catch (e) {
             alert("er: " + e)
         }
-
     },
     /**
      * This is just a passthrough method

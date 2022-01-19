@@ -1,5 +1,5 @@
 {
-  "gameId": "Small Experiment Test",
+  "gameId": "Small Experiment Test 2",
   "gameDescription": "Test for the experiment",
   "extendedUIOptions": {
     "predictions": true,
@@ -11,7 +11,6 @@
   },
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 200,
-  "nextScenarioFile": "smallExperimentTest2.json",
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285

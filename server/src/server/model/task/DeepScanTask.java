@@ -36,17 +36,7 @@ public class DeepScanTask extends Task {
 
     @Override
     public boolean step() {
-        for (Agent agent : getAgents()) {
-            if (agent.isReached(targetToScan) && !imageTaken) {
-                //System.out.println("================");
-                //System.out.println("DEEP SCAN IMAGE TAKEN HERE");
-                //System.out.println("TODO - Here we will send a request to he controller to prepare the image");
-                //Simulator.instance.getImageController().takeImage(agent.getCoordinate(), true);
-                //imageTaken = true;
-            }
-        }
         return super.step();
-
     }
 
     /**
@@ -62,8 +52,6 @@ public class DeepScanTask extends Task {
 
             if(agent.isWorking()) {
                 if(agent.isFinalDestinationReached()) {
-                    System.out.println("    ----------");
-                    System.out.println("TODO - Here we will show the DEEP SCAN image");
                     Simulator.instance.getImageController().takeImage(targetToScan, true);
                     imageTaken = true;
                     return true;
