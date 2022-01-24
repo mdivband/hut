@@ -24,18 +24,14 @@ var simulator = {
             views: this.views
         });
 
-        try {
-            this.views.review = new App.Views.Review({
-                el: $("#image_review"),
-                state: this.state,
-                views: this.views,
-                ctx: $("#image_review_canvas").get(0).getContext("2d"),
-                canvas: $("#image_review_canvas").get(0),
-                forEditMode: true
-            });
-        } catch (e) {
-            alert("error creating review: " + e)
-        }
+        this.views.review = new App.Views.Review({
+            el: $("#image_review"),
+            state: this.state,
+            views: this.views,
+            ctx: $("#image_review_canvas").get(0).getContext("2d"),
+            canvas: $("#image_review_canvas").get(0),
+            forEditMode: true
+        });
 
         this.views.camera = new App.Views.Camera({
             el: $("#camera"),
@@ -64,18 +60,14 @@ var simulator = {
             forEditMode: true
         });
 
-        try {
-            this.views.images = new App.Views.Images({
-                el: $("#scans_list"),
-                state: this.state,
-                views: this.views,
-                //ctx: $("#scans_button_panel").get(0).getContext("2d"),
-                //canvas: $("#scans_button_panel").get(0),
-                forEditMode: true
-            });
-        } catch (e) {
-            alert("error creating images.js: " + e)
-        }
+        this.views.images = new App.Views.Images({
+            el: $("#scans_list"),
+            state: this.state,
+            views: this.views,
+            //ctx: $("#scans_button_panel").get(0).getContext("2d"),
+            //canvas: $("#scans_button_panel").get(0),
+            forEditMode: true
+        });
 
         /*
         try {
@@ -133,10 +125,9 @@ var simulator = {
                     ui.position.left = maxleft;
                 }
             }
-
         });
 
-        // 0.5 scale per
+        // This defines the zoom and pan function including restriction of view
         var self = this
         $("#image_review_canvas").bind('mousewheel', function(e) {
             var cursorX = e.pageX;
@@ -194,8 +185,8 @@ var simulator = {
             }
 
             $(this).css({top: newT, left: newL, position:'relative'});
-
         });
+
         this.views.control = new App.Views.Control({
             el: $("#control"),
             state: this.state,
@@ -249,6 +240,7 @@ var simulator = {
                         });
                     }
                 } else if (!self.state.isInProgress()) {
+                    self.views.map.clearAll()
                     var scenario_end_panel = document.createElement("div");
                     if (!self.state.isPassthrough()) {
                         // Return to menu
@@ -271,9 +263,9 @@ var simulator = {
                         var endScenarioDiv = $("#end_scenario");
 
                         endScenarioDiv.on('click', function () {
-                            $.post("/reset");
-                            self.views.map.clearAll()
-                            $.post('/mode/scenario', {'file-name': self.state.getNextFileName()}, function () {
+                            var fileName = self.state.getNextFileName();
+                            //$.post("/reset");
+                            $.post('/mode/scenario', {'file-name': fileName}, function () {
                                 endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
                                 endScenarioDiv[0].addEventListener("animationend", function () {
                                     window.location = "/sandbox.html";

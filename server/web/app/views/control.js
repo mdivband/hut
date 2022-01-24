@@ -24,6 +24,7 @@ App.Views.Control = Backbone.View.extend({
 				this.setup_ardrone(model);
 			}
 			this.set_mode(model.getMode());
+			// TODO getmode() is not a function error
 			
 			$("#canvas_small_info_agentid").text(id);
 			

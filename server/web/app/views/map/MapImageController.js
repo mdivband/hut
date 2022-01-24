@@ -30,6 +30,7 @@ var MapImageController = {
     },
     reset: function () {
         this.views.review.reset();
+        this.views.images.reset()
     },
 
     /**

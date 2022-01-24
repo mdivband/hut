@@ -21,48 +21,36 @@ public class ImageController extends AbstractController {
     private final Map<String, Boolean> decisions = new HashMap<>(16);
     private HashMap<Double, ScheduledImage> scheduledImages = new HashMap<>(16);
 
-    // Filenames of high and low resolution true and false positives
-    private ArrayList<String> highResTrue;
-    private ArrayList<String> lowResTrue;
-    private ArrayList<String> highResFalse;
-    private ArrayList<String> LowResFalse;
-
-    //private String tempLowResFP = "images/image_gmaps_no_globe_320x240.jpg";
-    private String tempLowResFP = "images/lowFP.jpg";
-    private String tempLowResTP = "images/lowTP.jpg";
-    private String tempHighResFP = "images/highFP.jpg";
-    private String tempHighResTP = "images/highTP.jpg";
 
     public ImageController(Simulator simulator) {
         super(simulator, ImageController.class.getName());
+    }
+
+    public void reset() {
+        deepScannedTargets.clear();
+        shallowScannedTargets.clear();
+        decisions.clear();
+        scheduledImages.clear();
     }
 
     /**
      * This finds the target, checks if it's a TP or FP, "takes an image", and stores it in the hashmap for inspection
      */
     public void takeImage(Coordinate coordinate, boolean isDeep) {
-        // TODO distinguish deep and shallow with above flag
         Target t = simulator.getTargetController().getTargetAt(coordinate);
         if (t instanceof AdjustableTarget at) {  // This also asserts that t is not null
             synchronized (simulator.getState().getStoredImages()) {
                 double timeToAdd;
                 String fileToAdd;
 
+                if (isDeep) {
+                    fileToAdd = "images/" + at.getHighResFileName();
+                } else {
+                    fileToAdd = "images/" + at.getLowResFileName();
+                }
                 if (at.isReal()) {
-                    // TODO filepath
-                    if (isDeep) {
-                        fileToAdd = tempHighResTP;
-                    } else {
-                        fileToAdd = tempLowResTP;
-                    }
                     timeToAdd = simulator.getState().getTime() + DEEP_SCAN_TIME;
                 } else {
-                    // TODO filepath
-                    if (isDeep) {
-                        fileToAdd = tempHighResFP;
-                    } else {
-                        fileToAdd = tempLowResFP;
-                    }
                     timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
                 }
 
@@ -131,32 +119,36 @@ public class ImageController extends AbstractController {
      * @param status Whether it was classified P or N
      */
     public void classify(String ref, boolean status) {
-        Map<String, String> map = simulator.getState().getStoredImages();
-        String id = map
-                .entrySet()
-                .stream()
-                .filter(entry -> ref.equals(entry.getValue()))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .get();
+        try {
+            Map<String, String> map = simulator.getState().getStoredImages();
+            String id = map
+                    .entrySet()
+                    .stream()
+                    .filter(entry -> ref.equals(entry.getValue()))
+                    .map(Map.Entry::getKey)
+                    .findFirst()
+                    .get();
 
-        // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
-        decisions.put(id, status);
+            // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
+            decisions.put(id, status);
 
-        boolean isDeep = deepScannedTargets.contains(id);
-        boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
+            boolean isDeep = deepScannedTargets.contains(id);
+            boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
 
-        deepScannedTargets.remove(id);
-        shallowScannedTargets.remove(id);
-        map.remove(id);
+            deepScannedTargets.remove(id);
+            shallowScannedTargets.remove(id);
+            map.remove(id);
 
-        // Foreach loop automatically handles the null case (no tasks found) by not entering
-        for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
-            t.complete();
-        }
-        simulator.getTargetController().deleteTarget(id);
+            // Foreach loop automatically handles the null case (no tasks found) by not entering
+            for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
+                t.complete();
+            }
+            simulator.getTargetController().deleteTarget(id);
 
-        LOGGER.info(String.format("%s; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
+            LOGGER.info(String.format("%s; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
+
+        } catch (Exception ignored) {}
+
     }
 
     public Map<String, Boolean> getDecisions() {

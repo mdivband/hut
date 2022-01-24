@@ -32,11 +32,42 @@ public class DeepScanTask extends Task {
         //crds.add(getCoordinate());
         crds.add(Simulator.instance.getState().getHubLocation());
         agent.setTempRoute(crds);
+        System.out.println("setting coords for " + getId() + " as: ");
+        crds.forEach(System.out::println);
+        System.out.println();
     }
 
-    @Override
+    /**
+     * Step a task based on changes to its agents and progress.
+     * @return True if the task has been completed, false otherwise.
+     */
     public boolean step() {
-        return super.step();
+        if (status == STATUS_TODO) {
+            boolean hasAnyAgentArrived = false;
+            for (Agent agent : getAgents()) {
+                if (agent.isFinalDestinationReached() && agent.getRoute().size() < 2) {
+                    agent.setWorking(true);
+                    hasAnyAgentArrived = true;
+                }
+            }
+
+            if (hasAnyAgentArrived) {
+                setStatus(Task.STATUS_DOING);
+                setStartTime(Simulator.instance.getState().getTime());
+            }
+        }
+
+        if (status == Task.STATUS_DOING) {
+            for (Agent agent : getAgents())
+                if (agent.isFinalDestinationReached())
+                    agent.setWorking(true);
+            if(perform())
+                setStatus(Task.STATUS_DONE);
+            if(getAgents().isEmpty())
+                setStatus(Task.STATUS_TODO);
+        }
+
+        return status == Task.STATUS_DONE;
     }
 
     /**

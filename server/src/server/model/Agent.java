@@ -178,12 +178,16 @@ public abstract class Agent extends MObject implements Serializable {
         this.heading = heading;
     }
 
-    Coordinate getCurrentDestination() {
-        return this.route.get(0);
+    public Coordinate getCurrentDestination() {
+        if (this.route.size() > 0) {
+            return this.route.get(0);
+        } else return null;
     }
 
     Coordinate getFinalDestination() {
-        return this.route.get(this.route.size() - 1);
+        synchronized (this.route) {
+            return this.route.get(this.route.size() - 1);
+        }
     }
 
     public String getAllocatedTaskId() {
@@ -244,7 +248,7 @@ public abstract class Agent extends MObject implements Serializable {
     public void setTempRoute(List<Coordinate> route) {
         synchronized (this.tempRoute) {
             this.tempRoute.clear();
-            this.tempRoute.addAll(route);
+            this.tempRoute.addAll(route);  // This may add the same point twice but it's not a problem
         }
     }
 

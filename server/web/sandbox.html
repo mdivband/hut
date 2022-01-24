@@ -26,7 +26,7 @@
             <div id="review_panel" style="float: top; display: none">
                 <button type="button" id="rev_real" class="rev_buttons">Real Casualty</button>
                 <button type="button" id="rev_false" class="rev_buttons">False Positive</button>
-                <button type="button" id="rev_deep" class="rev_buttons">Request Deep Scan</button>
+                <button type="button" id="rev_deep" class="rev_buttons" style="display: none;">Request Deep Scan</button>
             </div>
             <div id="image_review" style="display: none;">
                     <canvas id="image_review_canvas" style="display:inline-block;"></canvas>
@@ -388,15 +388,25 @@
                     <div>
                         <div id="camera_canvas_det"></div>
                     </div>
-                    <div style="float: left;">
                         <button id="scan_shallow">shallow</button>
-                    </div>
-                    <div style="float: right;">
-                        <button id="scan_deep">DEEP</button>
                     </div>
                 </div>
             </script>
 
+            <!-- Popup window when targets are selected-->
+            <script type="text/template" id="target_scan_edit_dp">
+                <div style="margin: 0px 1px 0px 5px;">
+                    <div>
+                        <div id="camera_canvas_det_dp"></div>
+                    </div>
+                    <div style="float: left;">
+                        <button id="scan_shallow_dp">shallow</button>
+                    </div>
+                    <div style="float: right;">
+                        <button id="scan_deep_dp">DEEP</button>
+                    </div>
+                </div>
+            </script>
 
             <script type="text/template" id="agent_edit">
                 <table style="border: 1px solid #CCCCCC; margin: 5px; width: 97%; height: 98%;">

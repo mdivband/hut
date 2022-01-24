@@ -62,26 +62,34 @@ public class Allocator {
             allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
         } else if(allocationMethod.equals("random")) {
             allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
-        } else {
-            // No allocation possible. Do nothing
-            return;
         }
 
-        simulator.getState().setTempAllocation(allocation);
+        if (allocation != null) {
+            simulator.getState().setTempAllocation(allocation);
 
-        //Set temp route of each agent to task coordinate if allocated, else ensure route is empty
-        for(Agent agent : simulator.getState().getAgents()) {
-            if(allocation.containsKey(agent.getId())) {
-                Task task = simulator.getState().getTask(allocation.get(agent.getId()));
-                if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
-                    agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
-                else
-                    agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+            //Set temp route of each agent to task coordinate if allocated, else ensure route is empty
+            for (Agent agent : simulator.getState().getAgents()) {
+                if (allocation.containsKey(agent.getId())) {
+                    Task task = simulator.getState().getTask(allocation.get(agent.getId()));
+                    if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION) {
+                        boolean match = false;
+                        for (Coordinate c : ((PatrolTask) task).getPoints()) {
+                            if (agent.getTempRoute().contains(c)) {
+                                match = true;  // If we already have this route, leave it
+                                break;
+                            }
+                        }
+                        if (!match) {
+                            agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
+                        }
+                    } else {
+                        agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+                    }
+                } else
+                    agent.setTempRoute(new ArrayList<>());
             }
-            else
-                agent.setTempRoute(new ArrayList<>());
+            updateAllocationHistory();
         }
-        updateAllocationHistory();
     }
 
     /**

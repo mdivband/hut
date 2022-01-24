@@ -37,6 +37,7 @@ public class State {
     //          3 = images
     private boolean passthrough = false;
     private String nextFileName = "";
+    private boolean deepAllowed = false;
 
     private String prov_doc;
 
@@ -91,12 +92,13 @@ public class State {
     public synchronized void reset() {
         // Define defaults
         time = 0;
-        timeLimit = 0;    // 0 means no time limit
-        scenarioEndTime = 0; // 0 means no time limit
         editMode = 1;
         inProgress = false;
         allocationMethod = "maxsum";
         flockingEnabled = false;
+        uncertaintyRadius = 0;
+
+        gameCentre = null;
 
         agents.clear();
         tasks.clear();
@@ -108,8 +110,16 @@ public class State {
         hazardHits.clear();
 
         storedImages.clear();
+        uiOptions.clear();
 
         hazardHits.init();
+    }
+
+    public void resetNext() {
+        passthrough = false;
+        nextFileName = "";
+        scenarioEndTime = 0; // 0 means no time limit
+        timeLimit = 0;    // 0 means no time limit
     }
 
     @Override
@@ -387,6 +397,11 @@ public class State {
 
     public void addToStoredImages(String id, String filename) {
         storedImages.put(id, filename);
+    }
+
+    public void setDeepAllowed(Boolean deepAllowed) {
+        System.out.println("deep is allowed");
+        this.deepAllowed = deepAllowed;
     }
 
     private class HazardHit {

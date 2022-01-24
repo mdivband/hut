@@ -29,7 +29,8 @@ App.Models.State  = Backbone.Model.extend({
         uncertaintyRadius: 0,
         storedImages : {},
         passthrough: false,
-        nextFileName: ""
+        nextFileName: "",
+        deepAllowed: false
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -146,18 +147,13 @@ App.Models.State  = Backbone.Model.extend({
     getStoredImages: function () {
         return this.get("storedImages")
     },
-    toggleEdit: function(toEditMode) {
-		 this.set("editMode", toEditMode);
-		 $.post("/changeview", {edit: toEditMode});
-		 if (toEditMode)
-		 	$("#map_title").html("Edit Mode");
-		 else
-		 	$("#map_title").html("Monitor Mode");
-	},
     isPassthrough: function () {
         return this.get("passthrough");
     },
     getNextFileName: function () {
         return this.get("nextFileName");
+    },
+    getDeepAllowed: function () {
+        return this.get("deepAllowed");
     }
 });

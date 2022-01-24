@@ -5,6 +5,7 @@ import server.model.Agent;
 import server.model.Coordinate;
 import server.model.Sensor;
 import server.model.State;
+import server.model.target.AdjustableTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -96,7 +97,7 @@ public class Simulator {
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
         if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
-            LOGGER.info(String.format("%s; Scenario loaded ", getState().getTime()));
+            LOGGER.info(String.format("%s; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
             LOGGER.info(String.format("%s; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
@@ -140,7 +141,6 @@ public class Simulator {
 
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
-
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }
@@ -211,13 +211,13 @@ public class Simulator {
 
     public void changeView(int modeFlag) {
         if (modeFlag == 2) {
-            agentController.stopAllAgents();
-            agentController.updateAgentsTempRoutes();
-            allocator.copyRealAllocToTempAlloc();
-            allocator.clearAllocationHistory();
+            //agentController.stopAllAgents();
+            //agentController.updateAgentsTempRoutes();
+            //allocator.copyRealAllocToTempAlloc();
+            //allocator.clearAllocationHistory();
             state.setEditMode(2);
         } else if (modeFlag == 1){
-            allocator.confirmAllocation(state.getAllocation());
+            //allocator.confirmAllocation(state.getAllocation());
             state.setEditMode(1);
         } else if (modeFlag == 3) {
             state.setEditMode(3);
@@ -241,6 +241,8 @@ public class Simulator {
         hazardController.resetHazardNumbers();
         targetController.resetTargetNumbers();
         taskController.resetTaskNumbers();
+        imageController.reset();
+
         LOGGER.info(String.format("%s; Server reset ", getState().getTime()));
     }
 
@@ -304,6 +306,7 @@ public class Simulator {
                 state.setHubLocation(new Coordinate(lat, lng));
             }
 
+            this.state.resetNext();
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
                 if(timeLimitSeconds.getClass() == Double.class) {
@@ -327,6 +330,14 @@ public class Simulator {
                 if(nextScenarioFile.getClass() == String.class) {
                     this.state.setPassthrough(true);
                     state.setNextFileName(nextScenarioFile.toString());
+                    System.out.println("Set netFile to " + nextScenarioFile);
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"deepAllowed")) {
+                Object deepAllowed = GsonUtils.getValue(obj, "deepAllowed");
+                if (deepAllowed.getClass() == Boolean.class) {
+                    state.setDeepAllowed((Boolean) deepAllowed);
                 }
             }
 
@@ -363,6 +374,8 @@ public class Simulator {
                     Double lat = GsonUtils.getValue(targetJson, "lat");
                     Double lng = GsonUtils.getValue(targetJson, "lng");
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
+                    String highRes = GsonUtils.getValue(targetJson, "highRes");
+                    String lowRes = GsonUtils.getValue(targetJson, "lowRes");
                     Target target;
                     if (GsonUtils.hasKey(targetJson, "real")) {
                         boolean isReal = GsonUtils.getValue(targetJson, "real");
@@ -370,6 +383,7 @@ public class Simulator {
                     } else {
                         target = targetController.addTarget(lat, lng, type);
                     }
+                    ((AdjustableTarget) target).setFilenames(lowRes, highRes);
 
                     //Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), false);

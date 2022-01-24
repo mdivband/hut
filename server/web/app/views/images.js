@@ -21,12 +21,21 @@ App.Views.Images = Backbone.View.extend({
             self.checkForRemoval();
         });
 
+        this.checkAndUpdateDeepButton();
+
         this.bind("update", this.update);
     },
     setup: function() {
 
     },
+    reset: function () {
+        this.addedIds = [];
+        this.addedRefs = [];
+        this.pendingIds = [];
+        this.render();
+    },
     update: function() {
+        this.checkAndUpdateDeepButton();
         var self = this;
         try {
             var knownImages = self.state.getStoredImages();
@@ -42,17 +51,17 @@ App.Views.Images = Backbone.View.extend({
                         button.className = "image_select_buttons";
                         self.viewButtons.append(button);
 
-                        //console.log($("#rev_deep"));
-                        //console.log($("#rev_deep").css);
-
                         button.addEventListener("click", function (event) {
+                            console.log("i 1")
                             if (!self.pendingIds.includes(id)) {
+                                console.log("i 1.1")
                                 MapImageController.triggerImage(id, iRef, true);
                                 button.focus();
                                 $("#rev_deep").removeClass("rev_buttons_greyed").addClass("rev_buttons");
                                 $("#rev_deep").prop('disabled', false);
                                 self.pendingIds.push(id);
                             } else {
+                                console.log("i 1.2")
                                 // Already awaiting a deep scan, only visually update
                                 MapImageController.triggerImage(id, iRef, false);
                                 $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
@@ -66,6 +75,7 @@ App.Views.Images = Backbone.View.extend({
                         self.addedRefs.push(iRef)
                     }
                     else if (!self.addedRefs.includes(iRef)) {
+                        console.log("i 2")
                         // Update button
                         var button = document.getElementById(id);
                         button.remove()
@@ -75,9 +85,11 @@ App.Views.Images = Backbone.View.extend({
                         button.innerHTML = id;
                         button.className = "image_select_buttons";
                         self.viewButtons.append(button);
+                        self.pendingIds.remove(id)
                         // TODO pendingids remove this
 
                         button.addEventListener("click", function (event) {
+                            console.log("i 2.1")
                             MapImageController.triggerImage(id, iRef, true);
                             $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
                             button.focus();
@@ -100,21 +112,23 @@ App.Views.Images = Backbone.View.extend({
                                 console.log(4)
                             }
 
-
                         } catch (e) {
                             console.log(e)
                         }
-
-
                     }
-
                 }
-
             });
         } catch (e) {
             alert("eee : " + e)
         }
 
+    },
+    checkAndUpdateDeepButton: function () {
+        if (this.state.getDeepAllowed()) {
+            $("#rev_deep").show();
+        } else {
+            $("#rev_deep").hide();
+        }
     },
     checkForRemoval: function () {
         try {

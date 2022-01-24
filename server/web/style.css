@@ -251,7 +251,7 @@ ul.list li:hover {
 	text-align: center;
 }
 
-#camera_canvas_det{
+#camera_canvas_det, #camera_canvas_det_dp{
 	width: 200px;
 	height: 200px;
 	position: relative;
@@ -259,20 +259,6 @@ ul.list li:hover {
 	text-align: center;
 	margin: 0 auto;
 }
-
-/*
-#image_review{
-	width: 1920px;
-	height: 1440px;
-	position: sticky;
-	overflow: scroll
-}
-
-#image_review_canvas{
-	width: 1920px;
-	height: 1440px;
-}
- */
 
 .rev_buttons {
 	width: 98%;

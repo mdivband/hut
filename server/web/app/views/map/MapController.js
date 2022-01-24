@@ -189,21 +189,33 @@ var MapController = {
     },
     onMonitorModePressed: function () {
         if(this.state.getEditMode() !== 1) {
-            var mainAllocation = this.state.getAllocation();
-            var tempAllocation = this.state.getTempAllocation();
-            if(_.compareAllocations(mainAllocation, tempAllocation))
-                MapController.swapMode(1, true);
-            else
-                MapController.abortAllocation();
+            try {
+                var mainAllocation = this.state.getAllocation();
+                var tempAllocation = this.state.getTempAllocation();
+                if (_.compareAllocations(mainAllocation, tempAllocation))
+                    MapController.swapMode(1, true);
+                else
+                    MapController.abortAllocation();
+            } catch (e) {
+                console.log("MMP : " + e);
+            }
         }
     },
     onEditModePressed: function () {
         if(this.state.getEditMode() !== 2)
-            MapController.swapMode(2, true);
+            try {
+                MapController.swapMode(2, true);
+            } catch (e) {
+                console.log("EMP : " + e);
+            }
     },
     onScanModePressed: function () {
         if(this.state.getEditMode() !== 3)
-            MapController.swapMode(3, true);
+            try {
+                MapController.swapMode(3, true);
+            } catch (e) {
+                console.log("SMP : " + e);
+            }
     },
     onTick: function () {
         var time = $.fromTime(this.state.getTime());
@@ -361,6 +373,8 @@ var MapController = {
             $("#map_canvas").hide();
             $("#image_review").show();
             $("#review_panel").show();
+
+            self.views.images.checkAndUpdateDeepButton();
 
             $('#scanmode').prop("checked", true);
             $('#editmode').prop("checked", false);
