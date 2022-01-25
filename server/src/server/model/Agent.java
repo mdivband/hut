@@ -257,7 +257,9 @@ public abstract class Agent extends MObject implements Serializable {
     }
 
     public boolean isFinalDestinationReached() {
-        return isReached(this.getFinalDestination());
+        synchronized (this.route) {
+            return isReached(this.getFinalDestination());
+        }
     }
 
     public boolean isReached(Coordinate goal) {

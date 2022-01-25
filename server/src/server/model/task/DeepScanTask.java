@@ -29,12 +29,8 @@ public class DeepScanTask extends Task {
             crds.add(getCoordinate());
         }
 
-        //crds.add(getCoordinate());
         crds.add(Simulator.instance.getState().getHubLocation());
         agent.setTempRoute(crds);
-        System.out.println("setting coords for " + getId() + " as: ");
-        crds.forEach(System.out::println);
-        System.out.println();
     }
 
     /**

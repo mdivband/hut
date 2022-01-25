@@ -13,6 +13,7 @@ var MapImageController = {
         this.getCurrentImageId = _.bind(this.getCurrentImageId, context);
         this.triggerImage = _.bind(this.triggerImage, context);
         this.reset = _.bind(this.reset, context);
+        this.resetCurrentImageData = _.bind(this.resetCurrentImageData, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -40,6 +41,9 @@ var MapImageController = {
      */
     requestImage: function (type, target) {
 
+    },
+    resetCurrentImageData: function () {
+        return this.views.review.currentImageName = "";
     },
     showImage: function (task) {
         var self = this;

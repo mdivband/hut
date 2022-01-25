@@ -80,7 +80,7 @@ public class RootHandler extends RestHandler {
             return;
         //simulator.changeView(Boolean.parseBoolean(params.get("edit")));
         simulator.changeView(Integer.parseInt(params.get("edit")));
-        LOGGER.info(String.format("%s; Changing view to mode; %s ", Simulator.instance.getState().getTime(), Integer.parseInt(params.get("edit"))));
+        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), Integer.parseInt(params.get("edit"))));
         resp.sendOkay();
     }
 
@@ -210,7 +210,7 @@ public class RootHandler extends RestHandler {
         //TODO Send heading on register agent
         Agent agent = simulator.getAgentController().addRealAgent(lat, lng, 0d);
         simulator.getQueueManager().addQueue("UAV_TaskQueue_" + agent.getId());
-        LOGGER.info(String.format("%s; Registered agent (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), agent.getId(), agent.getCoordinate().getLatitude(), agent.getCoordinate().getLongitude()));
+        LOGGER.info(String.format("%s; RGAG; Registered agent (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), agent.getId(), agent.getCoordinate().getLatitude(), agent.getCoordinate().getLongitude()));
 
         JsonObject jsonResp = new JsonObject();
         jsonResp.addProperty("URI", simulator.getQueueManager().getCloudURI());

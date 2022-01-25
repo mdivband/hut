@@ -71,6 +71,7 @@ public class State {
 
     //                   ID->ImageName
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
+    private final List<String> deepScannedIds = new ArrayList<>(16);
 
     public State() {
         agents = new ArrayList<>();
@@ -395,12 +396,14 @@ public class State {
         return storedImages;
     }
 
-    public void addToStoredImages(String id, String filename) {
+    public void addToStoredImages(String id, String filename, boolean isDeep) {
         storedImages.put(id, filename);
+        if (isDeep) {
+            deepScannedIds.add(id);
+        }
     }
 
     public void setDeepAllowed(Boolean deepAllowed) {
-        System.out.println("deep is allowed");
         this.deepAllowed = deepAllowed;
     }
 

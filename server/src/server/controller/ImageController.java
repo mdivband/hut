@@ -55,7 +55,7 @@ public class ImageController extends AbstractController {
                 }
 
                 scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), fileToAdd, isDeep));
-                LOGGER.info(String.format("%s; Taking image for target of deep/shallow type with actual classification (id, filename, isDeep, isReal); %s; %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), fileToAdd, isDeep, at.isReal()));
+                LOGGER.info(String.format("%s; TKIMG; Taking image for target of deep/shallow type with actual classification (id, filename, isDeep, isReal); %s; %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), fileToAdd, isDeep, at.isReal()));
             }
         }
     }
@@ -69,10 +69,10 @@ public class ImageController extends AbstractController {
     private void addImage(String id, String fileName, boolean isDeep) {
         if (isDeep && !deepScannedTargets.contains(id)) {
             deepScannedTargets.add(id);
-            simulator.getState().addToStoredImages(id, fileName);
+            simulator.getState().addToStoredImages(id, fileName, true);
         } else if (!isDeep && !shallowScannedTargets.contains(id) && !deepScannedTargets.contains(id)) {
             shallowScannedTargets.add(id);
-            simulator.getState().addToStoredImages(id, fileName);
+            simulator.getState().addToStoredImages(id, fileName, false);
         }
     }
 
@@ -145,7 +145,7 @@ public class ImageController extends AbstractController {
             }
             simulator.getTargetController().deleteTarget(id);
 
-            LOGGER.info(String.format("%s; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
+            LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
 
         } catch (Exception ignored) {}
 

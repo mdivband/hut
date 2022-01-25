@@ -84,23 +84,23 @@ public class Simulator {
     public void start() {
         readConfig();
         new Thread(connectionController::start).start();
-        LOGGER.info(String.format("%s; Server ready ", getState().getTime()));
+        LOGGER.info(String.format("%s; SVRDY; Server ready ", getState().getTime()));
     }
 
     public void startSandboxMode() {
         this.state.setGameType(State.GAME_TYPE_SANDBOX);
         this.state.setGameId("Sandbox");
-        LOGGER.info(String.format("%s; Sandbox loaded ", getState().getTime()));
+        LOGGER.info(String.format("%s; SBXLD; Sandbox loaded ", getState().getTime()));
         this.startSimulation();
     }
 
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
         if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
-            LOGGER.info(String.format("%s; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
+            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
-            LOGGER.info(String.format("%s; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
+            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -115,7 +115,7 @@ public class Simulator {
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
         this.state.setInProgress(true);
-        LOGGER.info(String.format("%s; Simulation started", getState().getTime()));
+        LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
     }
 
     public Map<String, String> getScenarioFileListWithGameIds() {
@@ -129,7 +129,7 @@ public class Simulator {
             }
         }
         else
-            LOGGER.info(String.format("%s; Could not find scenario (directory); %s ", getState().getTime(), SCENARIO_DIR_PATH));
+            LOGGER.info(String.format("%s; SCNF; Could not find scenario (directory); %s ", getState().getTime(), SCENARIO_DIR_PATH));
         return scenarios;
     }
 
@@ -182,7 +182,7 @@ public class Simulator {
             Object obj = GsonUtils.fromJson(json);
             state.setGameId(GsonUtils.getValue(obj, "gameId"));
             state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
-            LOGGER.info(String.format("%s; Passing through to next scenario ", getState().getTime()));
+            LOGGER.info(String.format("%s; SCPS; Passing through to next scenario ", getState().getTime()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -203,7 +203,7 @@ public class Simulator {
             if (agent.getMillisSinceLastHeartbeat() > 20 * 1000) {
                 if(!agent.isTimedOut()) {
                     agent.setTimedOut(true);
-                    LOGGER.info(String.format("%s; Lost connection with agent (id); %s ", getState().getTime(), agent.getId()));
+                    LOGGER.info(String.format("%s; LSTCN; Lost connection with agent (id); %s ", getState().getTime(), agent.getId()));
                 }
             }
         }
@@ -243,12 +243,12 @@ public class Simulator {
         taskController.resetTaskNumbers();
         imageController.reset();
 
-        LOGGER.info(String.format("%s; Server reset ", getState().getTime()));
+        LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
     }
 
     private void readConfig() {
         try {
-            LOGGER.info(String.format("%s; Reading Server Config File (directory); %s ", getState().getTime(), SERVER_CONFIG_FILE));
+            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), SERVER_CONFIG_FILE));
             String json = GsonUtils.readFile(SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
@@ -380,10 +380,10 @@ public class Simulator {
                     if (GsonUtils.hasKey(targetJson, "real")) {
                         boolean isReal = GsonUtils.getValue(targetJson, "real");
                         target = targetController.addTarget(lat, lng, type, isReal);
+                        ((AdjustableTarget) target).setFilenames(lowRes, highRes);
                     } else {
                         target = targetController.addTarget(lat, lng, type);
                     }
-                    ((AdjustableTarget) target).setFilenames(lowRes, highRes);
 
                     //Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), false);

@@ -28,6 +28,7 @@ App.Models.State  = Backbone.Model.extend({
         uiOptions: {},
         uncertaintyRadius: 0,
         storedImages : {},
+        deepScannedIds: {},
         passthrough: false,
         nextFileName: "",
         deepAllowed: false
@@ -146,6 +147,9 @@ App.Models.State  = Backbone.Model.extend({
     },
     getStoredImages: function () {
         return this.get("storedImages")
+    },
+    getDeepScannedIds: function () {
+        return this.get("deepScannedIds");
     },
     isPassthrough: function () {
         return this.get("passthrough");

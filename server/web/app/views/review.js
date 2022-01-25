@@ -35,7 +35,7 @@ App.Views.Review = Backbone.View.extend({
         this.clearImage();
         this.render();
     },
-    displayImage: function (id, iRef, update){
+    displayImage: function (id, iRef, update) {
         if (update) {
             this.currentImageName = id;
             this.currentImageRef = iRef;
@@ -63,6 +63,7 @@ App.Views.Review = Backbone.View.extend({
 
                 self.canvas.width = img.width;
                 self.canvas.height = img.height;
+                $("#image_review_canvas").css({top: 0, left: 0, position:'relative'});
                 self.ctx.drawImage(img, 0, 0, img.width, img.height);
             };
             img.src = iRef;  // Use the argument, so it works regardless of update flag

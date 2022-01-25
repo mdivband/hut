@@ -20,7 +20,7 @@ public class PresetHandler extends RestHandler {
     @Override
     public void handlePost(Request req, Response resp) throws IOException, UnregisteredPathException {
         String rPath = parseRemainingPath(req.getPath());
-        System.out.println("Posting: " + rPath);
+        System.out.println("posintg :" + rPath);
         switch (rPath) {
             case "/scenario":
                 handlePresetScenario(req, resp);

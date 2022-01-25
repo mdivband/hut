@@ -51,9 +51,9 @@ public class AllocationHandler extends RestHandler {
     }
 
     private void handleAutoAllocate(Response resp) throws IOException {
-        LOGGER.info(String.format("%s; Running auto allocation;", Simulator.instance.getState().getTime()));
+        LOGGER.info(String.format("%s; ALRUN; Running auto allocation;", Simulator.instance.getState().getTime()));
         simulator.getAllocator().runAutoAllocation();
-        LOGGER.info(String.format("%s; Finished auto allocation;", Simulator.instance.getState().getTime()));
+        LOGGER.info(String.format("%s; FNRUN; Finished auto allocation;", Simulator.instance.getState().getTime()));
         resp.sendOkay();
     }
 

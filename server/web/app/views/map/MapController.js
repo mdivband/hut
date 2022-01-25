@@ -375,6 +375,8 @@ var MapController = {
             $("#review_panel").show();
 
             self.views.images.checkAndUpdateDeepButton();
+            MapImageController.resetCurrentImageData();
+            self.views.review.update();
 
             $('#scanmode').prop("checked", true);
             $('#editmode').prop("checked", false);
