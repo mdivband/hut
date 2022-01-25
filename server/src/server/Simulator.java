@@ -330,7 +330,6 @@ public class Simulator {
                 if(nextScenarioFile.getClass() == String.class) {
                     this.state.setPassthrough(true);
                     state.setNextFileName(nextScenarioFile.toString());
-                    System.out.println("Set netFile to " + nextScenarioFile);
                 }
             }
 

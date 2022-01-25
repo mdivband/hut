@@ -31,7 +31,8 @@ App.Models.State  = Backbone.Model.extend({
         deepScannedIds: {},
         passthrough: false,
         nextFileName: "",
-        deepAllowed: false
+        deepAllowed: false,
+        timeLimit: 0
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -159,5 +160,9 @@ App.Models.State  = Backbone.Model.extend({
     },
     getDeepAllowed: function () {
         return this.get("deepAllowed");
+    },
+    getTimeLimit: function () {
+        // TODO this doesn't use the actual gamespeed
+        return this.get("timeLimit") * 6;
     }
 });
