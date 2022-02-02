@@ -1,17 +1,39 @@
 ## DJI Hut Server - Documentation
 ### University of Southampton
-##### Last Updated: 13/09/2018, Joe Early
+##### Last Updated: 04/11/21, William Hunt
 ------
-The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][1]). 
+The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][1]).
 
 ### Table of Contents
 
-1. [Repository Structure](#repository-structure)
-2. [Project Architecture](#project-architecture)
-3. [Setup Guide](#setup-guide)
-4. [Setup Troubleshooting](#setup-troubleshooting)
-5. [Server Architecture](#server-architecture)
-5. [Allocation Process](#allocation-process)
+1. [Running and Using](#running-and-using)
+2. [Repository Structure](#repository-structure)
+3. [Project Architecture](#project-architecture)
+4. [Setup Guide](#setup-guide)
+5. [Setup Troubleshooting](#setup-troubleshooting)
+6. [Server Architecture](#server-architecture)
+7. [Allocation Process](#allocation-process)
+
+### Running and Using
+
+#### Running Locally
+
+1. Clone this repository to your machine.
+2. Setup a project in Intellij (recommended) or Eclipse from the repository code.
+3. Run the Simulator class, and open http://localhost:8000/ in a browser to connect to the client application.
+
+#### Hosting the Server Online
+
+1. Clone this repository to your machine.
+2. Setup a project in Intellij (recommended) or Eclipse from the repository code.
+3. Run the Simulator class with the desired port as an argument
+4. Connect from a different PC with IP:Port in your browser
+
+#### Alternative: Run the .jar from command line
+
+1. Take the hut_server.jar file, and the web/ folder into a directory together (or as they are in the repo)
+2. Run the .jar with the following command: ```java -jar hut_server.jar [PORT]```
+3. Connect from a different PC with IP:Port in your browser
 
 ### Repository Structure
 

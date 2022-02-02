@@ -24,9 +24,12 @@ import java.util.logging.Logger;
 /* Edited by Yuai */
 public class Simulator {
 
-    private final static String SERVER_CONFIG_FILE = "web/config/serverConfig.json";
-    private final static String SCENARIO_DIR_PATH = "web/scenarios/";
+    private String webRef ="src/web";
+
+    private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
+    private final static String SCENARIO_DIR_PATH = "/scenarios/";
     private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
+
 
     private State state;
     private Sensor sensor;
@@ -49,7 +52,6 @@ public class Simulator {
 
     public Simulator() {
         instance = this;
-
         state = new State();
         sensor = new Sensor(this);
         connectionController = new ConnectionController(this);
@@ -78,13 +80,42 @@ public class Simulator {
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
-        new Simulator().start();
+        int port;
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
+        } else {
+            port = 8000;
+        }
+        new Simulator().start(port);
     }
 
     public void start() {
+        //Setup GSON
+        GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
+        GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
+        GsonUtils.create();
+
         readConfig();
         new Thread(connectionController::start).start();
         LOGGER.info(String.format("%s; SVRDY; Server ready ", getState().getTime()));
+    }
+
+    public void start(Integer port) {
+        //Setup GSON
+        GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
+        GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
+        GsonUtils.create();
+
+        pushConfig(port);
+        new Thread(connectionController::start).start();
+        LOGGER.info("Server ready.");
+    }
+
+    public void start(int port, int webRef) {
+        this.webRef = "web"+webRef;
+        pushConfig(port);
+        new Thread(connectionController::start).start();
+        LOGGER.info("Server ready.");
     }
 
     public void startSandboxMode() {
@@ -96,7 +127,7 @@ public class Simulator {
 
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
-        if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
+        if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
             LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
@@ -120,10 +151,10 @@ public class Simulator {
 
     public Map<String, String> getScenarioFileListWithGameIds() {
         Map<String, String> scenarios = new HashMap<>();
-        File scenarioDir = new File(SCENARIO_DIR_PATH);
+        File scenarioDir = new File(webRef+SCENARIO_DIR_PATH);
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
-                String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
+                String scenarioName = getScenarioNameFromFile(webRef+SCENARIO_DIR_PATH + file.getName());
                 if(scenarioName != null)
                     scenarios.put(file.getName(), scenarioName);
             }
@@ -248,15 +279,20 @@ public class Simulator {
 
     private void readConfig() {
         try {
-            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), SERVER_CONFIG_FILE));
-            String json = GsonUtils.readFile(SERVER_CONFIG_FILE);
+            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), webRef+SERVER_CONFIG_FILE));
+            String json = GsonUtils.readFile(webRef+SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
 
-            connectionController.init((port != null) ? port.intValue() : 8080);
+            connectionController.init((port != null) ? port.intValue() : 8080, webRef);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void pushConfig(int port) {
+        webRef = webRef+port;
+        connectionController.init(port, webRef);
     }
 
     private boolean loadScenarioFromFile(String scenarioFile) {
