@@ -32,7 +32,7 @@ public class ConnectionController extends AbstractController {
         try {
             final File dir = new File(webRef);
             if (!dir.canRead())
-                throw new IOException(dir + " cannot read.");
+                throw new IOException(dir.getAbsolutePath() + " cannot read.");
             LOGGER.info("Server home: " + dir);
 
             host.addContext("/", new ContextHandler() {
@@ -44,6 +44,8 @@ public class ConnectionController extends AbstractController {
                     resp.getHeaders().add("Content-Language", "en");
                     resp.getHeaders().add("Pragma", "no-cache");
                     resp.getHeaders().add("Expires", "0");
+
+                    System.out.println("Serving port: " + port + " sim = " + Simulator.instance);
 
                     //Attempt to handle as endpoint
                     if (handleEndpoint(req, resp))

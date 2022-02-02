@@ -65,7 +65,7 @@ An overview of the allocation process is given below:
 
 [1]: https://bitbucket.org/jearly97/hut_dji_controller
 [2]: ../src
-[3]: ../web
+[3]: ../web8001
 [4]: ../src/maxsum
 [5]: ../src/server
 [6]: ../src/tool

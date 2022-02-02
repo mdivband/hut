@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 /* Edited by Yuai */
 public class Simulator {
 
-    private String webRef ="web";
+    private String webRef ="src/web";
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
@@ -50,7 +50,6 @@ public class Simulator {
 
     public Simulator() {
         instance = this;
-
         state = new State();
         sensor = new Sensor(this);
         connectionController = new ConnectionController(this);
@@ -98,6 +97,11 @@ public class Simulator {
     }
 
     public void start(Integer port) {
+        //Setup GSON
+        GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
+        GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
+        GsonUtils.create();
+
         pushConfig(port);
         new Thread(connectionController::start).start();
         LOGGER.info("Server ready.");
@@ -237,6 +241,7 @@ public class Simulator {
     }
 
     private void pushConfig(int port) {
+        webRef = webRef+port;
         connectionController.init(port, webRef);
     }
 
