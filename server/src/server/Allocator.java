@@ -80,7 +80,7 @@ public class Allocator {
                             }
                         }
                         if (!match) {
-                            agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
+                            agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getRandomPoint()));
                         }
                     } else {
                         agent.setTempRoute(Collections.singletonList(task.getCoordinate()));

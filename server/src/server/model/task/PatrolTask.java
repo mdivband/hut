@@ -180,6 +180,12 @@ public class PatrolTask extends Task {
         return nearest;
     }
 
+    public Coordinate getRandomPoint() {
+        Random rand = new Random();
+        Coordinate randomPoint = this.points.get(rand.nextInt(this.points.size()));
+        return randomPoint;
+    }
+
     /**
      * Get the point on a line between two points p1 and p2 that is closest to another point p.
      * @param p1 - Start of line
