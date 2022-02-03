@@ -19,6 +19,7 @@ public class RegionTask extends PatrolTask {
         this.ne = ne;
         this.se = se;
         this.sw = sw;
+        this.group = 10; // hard coding 10 agents to complete region task
     }
 
     public static RegionTask createTask(String id, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {

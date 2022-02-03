@@ -342,11 +342,19 @@ public class Allocator {
             }
 
             for (Task task : tasks) {
-                if (task.getAgents().size() < task.getGroup()) {
-                    int rnd = new Random().nextInt(agents.size());
-                    Agent agent = agents.get(rnd);
-                    result.put(agent.getId(), task.getId());
-                    agents.remove(agent);
+                int assigned = task.getAgents().size();
+                int group = task.getGroup();
+                if (assigned < group) {
+                    // Assigns as many agents to the task as the size of the task's group
+                    // TODO Doesn't take into account whether there are enough agents left to fulfil the other tasks
+                    // TODO Doesn't error handle for having fewer agents than group size
+                    // TODO Is not an optional change
+                    for (int i = 0; i < group - assigned; i++) {
+                        int rnd = new Random().nextInt(agents.size());
+                        Agent agent = agents.get(rnd);
+                        result.put(agent.getId(), task.getId());
+                        agents.remove(agent);
+                    }
                 }
             }
 
