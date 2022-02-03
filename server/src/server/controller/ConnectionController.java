@@ -7,6 +7,7 @@ import tool.HttpServer.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 /**
@@ -44,8 +45,6 @@ public class ConnectionController extends AbstractController {
                     resp.getHeaders().add("Content-Language", "en");
                     resp.getHeaders().add("Pragma", "no-cache");
                     resp.getHeaders().add("Expires", "0");
-
-                    System.out.println("Serving port: " + port + " sim = " + Simulator.instance);
 
                     //Attempt to handle as endpoint
                     if (handleEndpoint(req, resp))

@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 /* Edited by Yuai */
 public class Simulator {
 
-    private String webRef ="src/web";
+    private String webRef ="web";
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
@@ -89,30 +89,19 @@ public class Simulator {
         new Simulator().start(port);
     }
 
-    public void start() {
-        //Setup GSON
-        GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
-        GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
-        GsonUtils.create();
-
-        readConfig();
-        new Thread(connectionController::start).start();
-        LOGGER.info(String.format("%s; SVRDY; Server ready ", getState().getTime()));
-    }
-
     public void start(Integer port) {
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+
         //Setup GSON
         GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
-        pushConfig(port);
-        new Thread(connectionController::start).start();
-        LOGGER.info("Server ready.");
-    }
-
-    public void start(int port, int webRef) {
-        this.webRef = "web"+webRef;
         pushConfig(port);
         new Thread(connectionController::start).start();
         LOGGER.info("Server ready.");
