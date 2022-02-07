@@ -10,9 +10,7 @@ import server.model.Agent;
 import server.model.AgentHub;
 import server.model.Coordinate;
 import server.model.MObject;
-import server.model.task.PatrolTask;
-import server.model.task.Task;
-import server.model.task.WaypointTask;
+import server.model.task.*;
 import maxsum.EvaluationFunction;
 
 import java.util.*;
@@ -52,9 +50,32 @@ public class Allocator {
     public void runAutoAllocation() {
         Map<String, String> allocation = new HashMap<>();
         List<Agent> agentsToAllocate = new ArrayList<>(simulator.getState().getAgents());
-        agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub));
+
+        //agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)
+        //        || (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)));
+
+        List<Agent> newAgentsToAllocate = new ArrayList<>();
+        for (Agent agent : agentsToAllocate) {
+            if (agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)) {
+                // Remove
+            } else if (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)) {
+                // Remove, but reassign own task
+                agent.getTask().addAgent(agent);
+                agent.setWorking(true);
+            } else {
+                // Keep
+                newAgentsToAllocate.add(agent);
+            }
+        }
+
+        agentsToAllocate = newAgentsToAllocate;
+        // Last 2 conditions above filter out the case where it is a Deep scan and this agent has done it.
+        //  Note that the sequential nature of logical conjunctions protects against exceptions in this instance
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
+
+        // Remove and ignore deep scans that have been assigned
+        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) task).isBeingWorked());
 
         String allocationMethod = simulator.getState().getAllocationMethod();
 
@@ -82,6 +103,16 @@ public class Allocator {
                         if (!match) {
                             agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
                         }
+                        /*
+                    } else if (task.getType() == Task.TASK_DEEP_SCAN) {
+                        DeepScanTask dst = (DeepScanTask) task;
+                        if (dst.hasAgentScanned(agent)) {
+                            agent.setTempRoute(Collections.singletonList(simulator.getState().getHubLocation()));
+                        } else {
+                            agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+                        }
+
+                         */
                     } else {
                         agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
                     }

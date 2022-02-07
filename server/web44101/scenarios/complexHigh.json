@@ -11,7 +11,6 @@
   },
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 300,
-  "nextScenarioFile": "complexLow.json",
   "deepAllowed": true,
   "gameCentre": {
     "lat": 50.929378522204615,

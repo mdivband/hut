@@ -97,6 +97,25 @@ var MapController = {
             MapController.toggleUncertainties( $(this).is(":checked"));
         });
 
+        $('#exit_button').on('click', function () {
+            var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
+                "of the targets \n Are you sure you want to exit?");
+            if (exitConfirmed) {
+                self.views.map.clearAll()
+                var scenario_end_panel = document.createElement("div");
+                scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                    title: "Scenario Ended",
+                    description: "This scenario has ended, please press close to return to the homepage."
+                });
+                $.blockWithContent(scenario_end_panel);
+                $('#end_scenario').on('click', function () {
+                    $.post("/reset");
+                    window.history.back();
+                });
+            }
+
+        });
+
         //State listeners
         this.state.on("change:time", function () {
             MapController.onTick();

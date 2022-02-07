@@ -26,7 +26,7 @@
             <div id="review_panel" style="float: top; display: none">
                 <button type="button" id="rev_real" class="rev_buttons">Real Casualty</button>
                 <button type="button" id="rev_false" class="rev_buttons">False Positive</button>
-                <button type="button" id="rev_deep" class="rev_buttons" style="display: none;">Request Deep Scan</button>
+                <button type="button" id="rev_deep" class="rev_buttons" style="display: none;">Request Complex Scan</button>
             </div>
             <div id="image_review" style="display: none;">
                     <canvas id="image_review_canvas" style="display:inline-block;"></canvas>
@@ -288,6 +288,7 @@
 
             <!-- time goes to button -->
             <div id="game_info" style="margin: 2px;">
+                <button class="exit_button" id="exit_button">Exit Scenario</button><br>
                 <div id="game_id" class="game_info_item"></div>
                 <div id="game_time" class="game_info_item">Time: 00:00:00</div>
                 <div class="game_info_item", style="text-align: left;">
@@ -306,9 +307,9 @@
                     <div id="prediction_wrapper_div" class="edit_buttons_sub" style="display:none">
                         <input id="prediction_slider" type="range" min="0" max="20" value="0" class="slider">Path Prediction Length</input><br>
                     </div>
-
                 </div>
             </div>
+
 
             <div id="map_buttons_sub">
                 <div id="edit_buttons_sub" style="margin-bottom: 30px">
@@ -388,7 +389,7 @@
                     <div>
                         <div id="camera_canvas_det"></div>
                     </div>
-                        <button id="scan_shallow">shallow</button>
+                        <button id="scan_shallow">Quick Scan</button>
                     </div>
                 </div>
             </script>
@@ -400,10 +401,10 @@
                         <div id="camera_canvas_det_dp"></div>
                     </div>
                     <div style="float: left;">
-                        <button id="scan_shallow_dp">shallow</button>
+                        <button id="scan_shallow_dp">Quick Scan</button>
                     </div>
                     <div style="float: right;">
-                        <button id="scan_deep_dp">DEEP</button>
+                        <button id="scan_deep_dp">Complex Scan</button>
                     </div>
                 </div>
             </script>

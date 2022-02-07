@@ -75,23 +75,17 @@ var MapTargetController = {
                             MapTargetController.updateTargetMarkerIcon(target);
                             icon = self.icons.TargetShallowScan;
                             marker.setIcon(icon.Image)
+                            self.$el.gmap("closeInfoWindow");
 
-                            // TODO send instant image back (or maybe send a drone to this target?)
                         });
                         $(property).on("click", "#scan_deep_dp", function () {
-                            try {
-                                var newId = "[" + target.getId() + "]";
-                                marker.setOptions({labelContent: newId});
-                                MapTaskController.addDeepScanTask(target.getPosition());
-                                MapTargetController.updateTargetMarkerIcon(target);
-                                icon = self.icons.TargetDeepScan;
-                                marker.setIcon(icon.Image)
-
-                            } catch (e) {
-                                alert(e)
-                            }
-
-                            // TODO consider also making this now not possible to scan again
+                            var newId = "[" + target.getId() + "]";
+                            marker.setOptions({labelContent: newId});
+                            MapTaskController.addDeepScanTask(target.getPosition());
+                            MapTargetController.updateTargetMarkerIcon(target);
+                            icon = self.icons.TargetDeepScan;
+                            marker.setIcon(icon.Image)
+                            self.$el.gmap("closeInfoWindow");
                         });
                     });
 
@@ -108,8 +102,7 @@ var MapTargetController = {
                                 MapTargetController.updateTargetMarkerIcon(target);
                                 icon = self.icons.TargetShallowScan;
                                 marker.setIcon(icon.Image)
-
-                                // TODO send instant image back (or maybe send a drone to this target?)
+                                self.$el.gmap("closeInfoWindow");
                             });
                         });
                     }

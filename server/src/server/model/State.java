@@ -73,6 +73,8 @@ public class State {
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
 
+    private String userName = "";
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -405,6 +407,11 @@ public class State {
 
     public void setDeepAllowed(Boolean deepAllowed) {
         this.deepAllowed = deepAllowed;
+    }
+
+    public boolean setUserName(String userName) {
+        this.userName = userName;
+        return true;
     }
 
     private class HazardHit {

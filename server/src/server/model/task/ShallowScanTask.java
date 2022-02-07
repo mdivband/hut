@@ -7,11 +7,13 @@ import server.model.Coordinate;
 import java.util.ArrayList;
 
 public class ShallowScanTask extends Task {
+    private Coordinate targetToScan;
 
     private ArrayList<Agent> workingAgents = new ArrayList<>();
 
     public ShallowScanTask(String id, Coordinate coordinate) {
         super(id, Task.TASK_SHALLOW_SCAN, coordinate);
+        targetToScan = coordinate;
     }
 
     public void addAgent(Agent agent) {
@@ -35,17 +37,18 @@ public class ShallowScanTask extends Task {
             if (agent.isWorking() && !workingAgents.contains(agent)) {
                 workingAgents.add(agent);
             }
-
             if (agent.isWorking()) {
                 if (agent.isFinalDestinationReached()) {
                     Simulator.instance.getImageController().takeImage(agent.getCoordinate(), false);
-
                     return true;
                 }
             }
-
         }
-
         return false;
     }
+
+    public Coordinate getTargetToScan() {
+        return targetToScan;
+    }
+
 }

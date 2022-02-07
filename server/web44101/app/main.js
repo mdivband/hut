@@ -216,6 +216,17 @@ var simulator = {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
+                    if (self.state.getUserName() === "") {
+                        alert("get their name");
+                        // TODO get their name, also log it in backend
+                        $.post("/scenario/registerUser", {
+                            userName: "foo"
+                        });
+
+                    }
+
+
+
                     if (self.state.attributes.prov_doc == null) {
                         var api = new $.provStoreApi({
                             username: 'atomicorchid',

@@ -32,7 +32,8 @@ App.Models.State  = Backbone.Model.extend({
         passthrough: false,
         nextFileName: "",
         deepAllowed: false,
-        timeLimit: 0
+        timeLimit: 0,
+        userName: ""
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -164,5 +165,8 @@ App.Models.State  = Backbone.Model.extend({
     getTimeLimit: function () {
         // TODO this doesn't use the actual gamespeed
         return this.get("timeLimit") * 6;
+    },
+    getUserName: function () {
+        return this.get("userName");
     }
 });
