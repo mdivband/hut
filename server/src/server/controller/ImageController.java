@@ -56,6 +56,7 @@ public class ImageController extends AbstractController {
 
                 scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), fileToAdd, isDeep));
                 LOGGER.info(String.format("%s; TKIMG; Taking image for target of deep/shallow type with actual classification (id, filename, isDeep, isReal); %s; %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), fileToAdd, isDeep, at.isReal()));
+
             }
         }
     }
@@ -164,6 +165,15 @@ public class ImageController extends AbstractController {
             this.id = id;
             this.fileName = fileName;
             this.isDeep = isDeep;
+        }
+
+        @Override
+        public String toString() {
+            return "ScheduledImage{" +
+                    "id='" + id + '\'' +
+                    ", fileName='" + fileName + '\'' +
+                    ", isDeep=" + isDeep +
+                    '}';
         }
 
         public String getId() {

@@ -24,29 +24,31 @@ public class TaskController extends AbstractController {
     }
 
     public synchronized Task createTask(int taskType, double lat, double lng) {
-        String id = generateUID();
-        Task task;
-        switch (taskType) {
-            case Task.TASK_WAYPOINT:
-                task = new WaypointTask(id, new Coordinate(lat, lng));
-                break;
-            case Task.TASK_MONITOR:
-                task = new MonitorTask(id, new Coordinate(lat, lng));
-                break;
-            case Task.TASK_DEEP_SCAN:
-                task = new DeepScanTask(id, new Coordinate(lat, lng));
-                simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
-                break;
-            case Task.TASK_SHALLOW_SCAN:
-                task = new ShallowScanTask(id, new Coordinate(lat, lng));
-                simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
-                break;
-            default:
-                throw new IllegalArgumentException("Unable to create task of type " + taskType);
+        synchronized (simulator.getState().getTasks()) {
+            String id = generateUID();
+            Task task;
+            switch (taskType) {
+                case Task.TASK_WAYPOINT:
+                    task = new WaypointTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_MONITOR:
+                    task = new MonitorTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_DEEP_SCAN:
+                    task = new DeepScanTask(id, new Coordinate(lat, lng));
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
+                    break;
+                case Task.TASK_SHALLOW_SCAN:
+                    task = new ShallowScanTask(id, new Coordinate(lat, lng));
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unable to create task of type " + taskType);
+            }
+            simulator.getState().add(task);
+            LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
+            return task;
         }
-        simulator.getState().add(task);
-        LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
-        return task;
     }
 
     public synchronized Task createPatrolTask(List<Coordinate> path) {

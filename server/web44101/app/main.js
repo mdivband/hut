@@ -217,15 +217,16 @@ var simulator = {
                     MapController.swapMode(self.state.getEditMode(), false);
 
                     if (self.state.getUserName() === "") {
-                        alert("get their name");
                         // TODO get their name, also log it in backend
-                        $.post("/scenario/registerUser", {
-                            userName: "foo"
+                        var name = null;
+                        while (name == null || name === "") {
+                            name = prompt("Please enter your prolific ID", "");
+                        }
+                        $.post("/mode/scenario/registerUser", {
+                            userName: name
                         });
 
                     }
-
-
 
                     if (self.state.attributes.prov_doc == null) {
                         var api = new $.provStoreApi({

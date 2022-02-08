@@ -143,9 +143,11 @@ public class Simulator {
         File scenarioDir = new File(webRef+SCENARIO_DIR_PATH);
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
-                String scenarioName = getScenarioNameFromFile(webRef+SCENARIO_DIR_PATH + file.getName());
-                if(scenarioName != null)
-                    scenarios.put(file.getName(), scenarioName);
+                if (!file.isDirectory()) {
+                    String scenarioName = getScenarioNameFromFile(webRef + SCENARIO_DIR_PATH + file.getName());
+                    if (scenarioName != null)
+                        scenarios.put(file.getName(), scenarioName);
+                }
             }
         }
         else
@@ -158,7 +160,6 @@ public class Simulator {
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
                 if (state.isPassthrough()) {
@@ -264,6 +265,15 @@ public class Simulator {
         imageController.reset();
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
+        LogManager.getLogManager().reset();
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+        LOGGER = null;
+        LOGGER = Logger.getLogger(Simulator.class.getName());
     }
 
     private void readConfig() {
@@ -426,6 +436,20 @@ public class Simulator {
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            }
+
+            List<Object> markers = GsonUtils.getValue(obj, "markers");
+            if (markers != null) {
+                for (Object markerJson : markers) {
+                    String shape = GsonUtils.getValue(markerJson, "shape");
+                    Double cLat = GsonUtils.getValue(markerJson, "centreLat");
+                    Double cLng = GsonUtils.getValue(markerJson, "centreLng");
+                    Double radius = GsonUtils.getValue(markerJson, "radius");
+
+                    String shapeRep = shape+","+cLat+","+cLng+","+radius;
+
+                    this.state.getMarkers().add(shapeRep);
+                }
             }
 
 

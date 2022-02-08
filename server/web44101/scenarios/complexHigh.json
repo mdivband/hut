@@ -1,6 +1,6 @@
 {
   "gameId": "Complex - High",
-  "gameDescription": "Test for the experiment",
+  "gameDescription": "Scenario CH",
   "extendedUIOptions": {
     "predictions": true,
     "uncertainties": true

@@ -74,6 +74,7 @@ public class State {
     private final List<String> deepScannedIds = new ArrayList<>(16);
 
     private String userName = "";
+    private List<String> markers= new ArrayList<>();
 
     public State() {
         agents = new ArrayList<>();
@@ -102,6 +103,7 @@ public class State {
         uncertaintyRadius = 0;
 
         gameCentre = null;
+        userName = "";
 
         agents.clear();
         tasks.clear();
@@ -296,7 +298,9 @@ public class State {
     }
 
     public Collection<Task> getTasks() {
-        return tasks;
+        synchronized (tasks) {
+            return tasks;
+        }
     }
 
     public Collection<Agent> getAgents() {
@@ -412,6 +416,14 @@ public class State {
     public boolean setUserName(String userName) {
         this.userName = userName;
         return true;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public List<String> getMarkers() {
+        return markers;
     }
 
     private class HazardHit {

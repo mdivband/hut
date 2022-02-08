@@ -33,7 +33,8 @@ App.Models.State  = Backbone.Model.extend({
         nextFileName: "",
         deepAllowed: false,
         timeLimit: 0,
-        userName: ""
+        userName: "",
+        markers: []
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -168,5 +169,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getUserName: function () {
         return this.get("userName");
+    },
+    getMarkers: function () {
+        return this.get("markers");
     }
 });

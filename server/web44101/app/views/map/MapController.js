@@ -252,6 +252,9 @@ var MapController = {
         } else {
             this.clearUncertainties();
         }
+
+        this.drawMarkers();
+
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);

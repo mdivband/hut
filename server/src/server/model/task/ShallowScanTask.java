@@ -37,12 +37,12 @@ public class ShallowScanTask extends Task {
             if (agent.isWorking() && !workingAgents.contains(agent)) {
                 workingAgents.add(agent);
             }
-            if (agent.isWorking()) {
+            //if (agent.isWorking()) {
                 if (agent.isFinalDestinationReached()) {
                     Simulator.instance.getImageController().takeImage(agent.getCoordinate(), false);
                     return true;
                 }
-            }
+            //}
         }
         return false;
     }

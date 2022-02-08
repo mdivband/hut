@@ -84,12 +84,12 @@ public class DeepScanTask extends Task {
             if (agent.isWorking() && !workingAgents.contains(agent)) {
                 workingAgents.add(agent);
             }
-            if(agent.isWorking()) {
+            //if(agent.isWorking()) {
                 if(agent.isFinalDestinationReached()) {
                     Simulator.instance.getImageController().takeImage(targetToScan, true);
                     return true;
                 }
-            }
+            //}
         }
         return false;
     }
