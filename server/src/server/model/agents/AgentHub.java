@@ -1,5 +1,6 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.model.Coordinate;
 import server.model.Hub;
 import server.model.Sensor;

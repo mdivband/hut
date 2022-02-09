@@ -31,6 +31,7 @@ public abstract class Task extends MObject implements Serializable {
     public static final int TASK_MONITOR = 1;
     public static final int TASK_PATROL = 2;
     public static final int TASK_REGION = 3;
+    public static final int TASK_VISIT = 4;
 
     //Used in client
     private final List<Agent> agents; //Serialised to just agent ids.
@@ -71,7 +72,7 @@ public abstract class Task extends MObject implements Serializable {
                 }
             }
         }
-        Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+        //Simulator.instance.getTaskController().deleteTask(this.getId(), true);
 
     }
 
@@ -79,7 +80,7 @@ public abstract class Task extends MObject implements Serializable {
      * Gets all agents within [10m] of this agent
      * @return ArrayList of arrived agents
      */
-    private ArrayList<Agent> getArrivedAgents(){
+    protected ArrayList<Agent> getArrivedAgents(){
         ArrayList<Agent> arrivedAgents = new ArrayList<>();
         for (Agent a : Simulator.instance.getState().getAgents()) {
             if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now

@@ -25,6 +25,8 @@ public class AgentHandler extends RestHandler {
         if(rPath == null)
             handleAdd(req, resp);
         // /agents/time-out/<id>
+        else if (rPath.startsWith("/hubspawn"))
+            handleHubSpawn(req, resp);
         else if(rPath.startsWith("/time-out"))
             handleTimeout(req, resp, rPath.replace("/time-out/", ""));
         // /agents/route/add/<id>
@@ -36,6 +38,11 @@ public class AgentHandler extends RestHandler {
         // /agents/<id>
         else
             handleUpdate(req, resp, rPath.substring(1));
+    }
+
+    private void handleHubSpawn(Request req, Response resp) throws IOException {
+        Agent agent = simulator.getAgentController().addVirtualAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+        resp.send(201, "Created new agent " + agent.getId());
     }
 
     @Override

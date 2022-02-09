@@ -157,6 +157,7 @@ public class Simulator {
                 }
             }
             for(Task task : completedTasks) {
+                System.out.println("cmplete");
                 task.complete();
             }
             // Step hazard hits
@@ -187,9 +188,9 @@ public class Simulator {
 
     public void changeView(boolean toEdit) {
         if (toEdit) {
-            agentController.stopAllNonProgrammedAgents();
-            agentController.updateNonProgrammedAgentsTempRoutes();
-            allocator.copyRealAllocToTempAlloc();
+            //agentController.stopAllNonProgrammedAgents();
+            //agentController.updateNonProgrammedAgentsTempRoutes();
+            //allocator.copyRealAllocToTempAlloc();
             allocator.clearAllocationHistory();
             state.setEditMode(true);
         } else {
@@ -361,9 +362,20 @@ public class Simulator {
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
                     Target target = targetController.addTarget(lat, lng, type);
                     // Hide all targets initially - they must be found!!
-                    targetController.setTargetVisibility(target.getId(), false);
+                   // targetController.setTargetVisibility(target.getId(), false);
                 }
             }
+
+            List<Object> tasksJson = GsonUtils.getValue(obj, "tasks");
+            if (tasksJson != null) {
+                for (Object taskJson : tasksJson) {
+                    Double lat = GsonUtils.getValue(taskJson, "lat");
+                    Double lng = GsonUtils.getValue(taskJson, "lng");
+                    int type = ((Double) GsonUtils.getValue(taskJson, "type")).intValue();
+                    Task task = taskController.createTask(type, lat, lng);
+                }
+            }
+
 
             return true;
         } catch (IOException e) {

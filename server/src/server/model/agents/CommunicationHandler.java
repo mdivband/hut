@@ -464,7 +464,6 @@ public class CommunicationHandler {
     }
 
     protected void completeTask(){
-        System.out.println("Comm agent completing");
         // A very important check here, otherwise return home tasks mess up the propagation of completed tasks and it
         //  stops tasks being checked properly
         if (currentTask.size() > 0) {    // TODO this needs to get thje info properly

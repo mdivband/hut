@@ -44,7 +44,7 @@ var MapTaskController = {
     },
     onTaskAdd: function (task) {
         console.log("Task added " + task.getId());
-        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR) {
+        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
             this.$el.gmap("addMarker", {
                 bounds: false,
                 draggable: true,
@@ -212,7 +212,6 @@ var MapTaskController = {
      * @param task
      */
     onTaskCompleted: function (task) {
-        /*
         console.log("Task completed " + task.getId());
         var self = this;
         var uid = task.getId() + "_completed";
@@ -232,7 +231,14 @@ var MapTaskController = {
             self.map.setZoom(19);
         });
 
-         */
+        // TODO Determine if this is wrong to add here?
+        var marker = this.$el.gmap("get", "markers")[task.getId()];
+        if (marker) {
+            marker.setMap(null);
+            delete marker;
+        }
+
+
     },
     onTaskMarkerLeftClick: function (marker) {},
     onTaskMarkerRightClick: function (marker) {
@@ -278,8 +284,9 @@ var MapTaskController = {
         var self = this;
         if (!task)
             return;
-        if(task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_WAYPOINT)
+        if(task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_VISIT) {
             MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
+        }
         else if(task.getType() === this.state.tasks.TASK_PATROL) {
             var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];
             polyline.setOptions({
@@ -330,6 +337,7 @@ var MapTaskController = {
         var icon = this.icons.Marker;
         if(task.getType() === this.state.tasks.TASK_MONITOR)
             icon = this.icons.MarkerMonitor;
+        // TODO specific visit marker
         marker.setIcon(icon.Image);
         if (marker.icon) {
             //Add task id to end of marker url, this makes them unique.

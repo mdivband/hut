@@ -7,10 +7,7 @@ import server.model.hazard.Hazard;
 import server.model.task.Task;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -411,5 +408,16 @@ public abstract class Agent extends MObject implements Serializable {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    @Override
+    public String toString() {
+        return "Agent{" +
+                "heading=" + heading +
+                ", route=" + route +
+                ", allocatedTaskId='" + allocatedTaskId + '\'' +
+                ", working=" + working +
+                ", stopped=" + stopped +
+                '}';
     }
 }

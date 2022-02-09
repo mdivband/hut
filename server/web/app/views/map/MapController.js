@@ -77,6 +77,13 @@ var MapController = {
         $("#cancel_allocation").on('click', function () {
             MapController.onCancelAllocationClick()
         });
+        $("#add_agent").on('click', function () {
+            MapController.onAddAgentClick()
+        });
+        $("#remove_agent").on('click', function () {
+            MapController.onRemoveAgentClick()
+        });
+
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
@@ -181,6 +188,12 @@ var MapController = {
     },
     onCancelAllocationClick: function () {
         MapController.abortAllocation();
+    },
+    onAddAgentClick: function () {
+        $.post("/agents/hubspawn");
+    },
+    onRemoveAgentClick: function () {
+
     },
     onViewModePressed: function (viewModeValue) {
         if (viewModeValue === "monitor")

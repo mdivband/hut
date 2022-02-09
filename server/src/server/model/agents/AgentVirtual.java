@@ -1,15 +1,20 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.model.Coordinate;
+import server.model.Hub;
 import server.model.Sensor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class AgentVirtual extends Agent {
     protected transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
     protected transient Sensor sensor;
+
+    protected boolean goingHome = false;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -18,7 +23,18 @@ public class AgentVirtual extends Agent {
 
     @Override
     public void step(Boolean flockingEnabled) {
-        super.step(flockingEnabled);
+        if (goingHome) {
+            moveTowardsDestination();
+            for (Agent a : sensor.senseNeighbours(this, 10.0)) {
+                if (a instanceof Hub) {
+                    a.setWorking(true);
+                    goingHome = false;
+                    a.stop();
+                }
+            }
+        } else {
+            super.step(flockingEnabled);
+        }
         //Simulate things that would be done by a real drone
         if(!isTimedOut())
             heartbeat();
@@ -206,6 +222,17 @@ public class AgentVirtual extends Agent {
         latDest = Math.toDegrees(latDest);
         lngDest = Math.toDegrees(lngDest);
         this.setCoordinate(new Coordinate(latDest, lngDest));
+    }
+
+    public void goHome() {
+        setWorking(false);
+        goingHome = true;
+        setRoute(Collections.singletonList(Simulator.instance.getState().getHubLocation()));
+
+    }
+
+    public boolean isGoingHome() {
+        return goingHome;
     }
 
 }

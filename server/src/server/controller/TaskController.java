@@ -3,15 +3,12 @@ package server.controller;
 import server.Simulator;
 import server.model.agents.Agent;
 import server.model.Coordinate;
-import server.model.task.PatrolTask;
-import server.model.task.Task;
-import server.model.task.WaypointTask;
-import server.model.task.MonitorTask;
-import server.model.task.RegionTask;
+import server.model.task.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class TaskController extends AbstractController {
 
@@ -35,9 +32,13 @@ public class TaskController extends AbstractController {
             case Task.TASK_MONITOR:
                 task = new MonitorTask(id, new Coordinate(lat, lng));
                 break;
+            case Task.TASK_VISIT:
+                task = new VisitTask(id, new Coordinate(lat, lng));
+                break;
             default:
                 throw new IllegalArgumentException("Unable to create task of type " + taskType);
         }
+        LOGGER.severe("Adding task at " + lat + ", " + lng);
         simulator.getState().add(task);
         return task;
     }
@@ -103,7 +104,6 @@ public class TaskController extends AbstractController {
         }
 
         simulator.getState().remove(task);
-
         if(completed) {
             simulator.getState().addCompletedTask(task);
         }

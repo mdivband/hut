@@ -488,6 +488,25 @@ ul.list li:hover {
 	background-image: linear-gradient(to bottom, #bababa, #575757);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#bababa, endColorstr=#575757);
 }
 
+#add_agent, #remove_agent {
+	background-color: #ffaf46; background-image: -webkit-gradient(linear, left top, left bottom, from(#ffaf46), to(#e78404));
+	background-image: -webkit-linear-gradient(top, #ffaf46, #e78404);
+	background-image: -moz-linear-gradient(top, #ffaf46, #e78404);
+	background-image: -ms-linear-gradient(top, #ffaf46, #e78404);
+	background-image: -o-linear-gradient(top, #ffaf46, #e78404);
+	background-image: linear-gradient(to bottom, #ffaf46, #e78404);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#ffaf46, endColorstr=#e78404);
+
+}
+#add_agent:hover, #remove_agent:hover {
+	background-color: #ffaf46; background-image: -webkit-gradient(linear, left top, left bottom, from(#ffaf46), to(#e78404));
+	background-image: -webkit-linear-gradient(top, #fdb75a, #fc9a1d);
+	background-image: -moz-linear-gradient(top, #fdb75a, #fc9a1d);
+	background-image: -ms-linear-gradient(top, #fdb75a, #fc9a1d);
+	background-image: -o-linear-gradient(top, #fdb75a, #fc9a1d);
+	background-image: linear-gradient(to bottom,#fdb75a, #fc9a1d);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#fdb75a, endColorstr=#fc9a1d);
+
+}
+
 .edit_mode_icon_buttons {
 	border: 1px solid #000000;
 	padding: 10px;
