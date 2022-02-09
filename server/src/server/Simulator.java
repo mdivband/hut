@@ -157,7 +157,6 @@ public class Simulator {
                 }
             }
             for(Task task : completedTasks) {
-                System.out.println("cmplete");
                 task.complete();
             }
             // Step hazard hits
@@ -362,7 +361,7 @@ public class Simulator {
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
                     Target target = targetController.addTarget(lat, lng, type);
                     // Hide all targets initially - they must be found!!
-                   // targetController.setTargetVisibility(target.getId(), false);
+                    targetController.setTargetVisibility(target.getId(), false);
                 }
             }
 
@@ -467,4 +466,7 @@ public class Simulator {
         return queueManager;
     }
 
+    public Random getRandom() {
+        return random;
+    }
 }

@@ -2,7 +2,6 @@ package server.model.agents;
 
 import server.Simulator;
 import server.model.Coordinate;
-import server.model.Hub;
 import server.model.Sensor;
 
 import java.util.ArrayList;
@@ -27,9 +26,8 @@ public class AgentVirtual extends Agent {
             moveTowardsDestination();
             for (Agent a : sensor.senseNeighbours(this, 10.0)) {
                 if (a instanceof Hub) {
-                    a.setWorking(true);
+                    stop();
                     goingHome = false;
-                    a.stop();
                 }
             }
         } else {

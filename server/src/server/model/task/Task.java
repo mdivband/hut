@@ -6,6 +6,7 @@ import server.model.*;
 import server.model.agents.Agent;
 import server.model.agents.AgentCommunicating;
 import server.model.agents.AgentProgrammed;
+import server.model.agents.AgentVirtual;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -60,6 +61,7 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
+        /*
         if (!Simulator.instance.getState().isCommunicationConstrained()) {  // If we can instantly complete
             Simulator.instance.getTaskController().deleteTask(this.getId(), true);
             LOGGER.info("Task " + this.getId() + " has been completed");
@@ -71,9 +73,13 @@ public abstract class Task extends MObject implements Serializable {
                     ac.registerCompleteTask(getCoordinate());
                 }
             }
+
         }
         //Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+         */
 
+        Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+        LOGGER.info("Task " + this.getId() + " has been completed");
     }
 
     /**
@@ -99,6 +105,7 @@ public abstract class Task extends MObject implements Serializable {
             // Completed, but not yet reported to HUB
             return false;
         } else if (status == STATUS_DONE) {
+            System.out.println(getId() + " is done");
             // Completed and should be reported
             return true;
         }
@@ -109,6 +116,9 @@ public abstract class Task extends MObject implements Serializable {
             if (Simulator.instance.getState().isCommunicationConstrained()) {
                 // It is NOT programmed or communicating
                 setStatus(Task.STATUS_DONE_PENDING);
+                if (this instanceof VisitTask vt) {
+                    vt.triggerReturnHome();
+                }
             } else {
                 setStatus(Task.STATUS_DONE);
             }

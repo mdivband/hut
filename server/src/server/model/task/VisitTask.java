@@ -24,6 +24,10 @@ public class VisitTask extends Task {
     @Override
     public void complete() {
         super.complete();
+        triggerReturnHome();
+    }
+
+    public void triggerReturnHome() {
         for (Agent a : getArrivedAgents()) {
             if (a instanceof AgentVirtual av) {
                 av.goHome();

@@ -8,7 +8,7 @@ import maxsum.MaxSum;
 import maxsum.Variable;
 import server.model.agents.Agent;
 import server.model.Coordinate;
-import server.model.Hub;
+import server.model.agents.Hub;
 import server.model.MObject;
 import server.model.agents.AgentCommunicating;
 import server.model.agents.AgentProgrammed;

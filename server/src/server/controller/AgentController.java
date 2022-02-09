@@ -5,7 +5,6 @@ import server.model.*;
 import server.model.agents.*;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
-import tool.GsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +43,14 @@ public class AgentController extends AbstractController {
 
     public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController) {
         AgentProgrammed agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, random, taskController);
+        agent.setCommunicationRange(simulator.getState().getCommunicationRange());
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading) {
+        AgentProgrammed agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, simulator.getRandom(), simulator.getTaskController());
         agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         agent.setHeading(heading);
         simulator.getState().add(agent);

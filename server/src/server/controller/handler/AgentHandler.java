@@ -3,6 +3,7 @@ package server.controller.handler;
 import server.Simulator;
 import server.model.agents.Agent;
 import server.model.Coordinate;
+import server.model.agents.AgentProgrammed;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
@@ -41,7 +42,19 @@ public class AgentHandler extends RestHandler {
     }
 
     private void handleHubSpawn(Request req, Response resp) throws IOException {
-        Agent agent = simulator.getAgentController().addVirtualAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+        boolean hasProgrammed = false;
+        for (Agent a : Simulator.instance.getState().getAgents()) {
+            if (a instanceof AgentProgrammed) {
+                hasProgrammed = true;
+                break;
+            }
+        }
+        Agent agent;
+        if (hasProgrammed) {
+            agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+        } else {
+            agent = simulator.getAgentController().addVirtualAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+        }
         resp.send(201, "Created new agent " + agent.getId());
     }
 

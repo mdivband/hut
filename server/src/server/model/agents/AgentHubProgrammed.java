@@ -1,8 +1,8 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
-import server.model.Hub;
 import server.model.Sensor;
 import server.model.task.Task;
 
@@ -18,6 +18,9 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         type = "hub";
         stop();
         visible = true;
+        for (Task t : Simulator.instance.getState().getTasks()) {
+            addTaskFromUser(t);
+        }
     }
 
     /**
