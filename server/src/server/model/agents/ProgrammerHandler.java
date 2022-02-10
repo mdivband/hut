@@ -58,6 +58,7 @@ public class ProgrammerHandler implements Serializable {
      */
     public void step() {
         if (agent.getNetworkId().equals("")) {
+            agent.stop();
             // Must perform setup on the first step, otherwise they can't find each other
             //agent.setNetworkID(agent.generateRandomTag());
             agent.setNetworkID(agent.getId());

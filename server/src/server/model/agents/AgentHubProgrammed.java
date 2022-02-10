@@ -6,12 +6,15 @@ import server.model.Coordinate;
 import server.model.Sensor;
 import server.model.task.Task;
 
+import java.util.List;
 import java.util.Random;
 
 /**
  * Programmed version of the hub
  */
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {
+
+    private int scheduledRemovals = 0;
 
     public AgentHubProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
         super(id, position, sensor, random, taskController);
@@ -47,10 +50,25 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         if(!isTimedOut())
             heartbeat();
         this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
+
+        List<Agent> agents = sensor.senseNeighbours(this, programmerHandler.getSenseRange());
+        agents.removeIf(agent -> !agent.isStopped());
+        if (!agents.isEmpty()) {
+            if (scheduledRemovals > 0) {
+                Agent agentToRemove = agents.get(0);
+                System.out.println("removing " + agentToRemove.getId());
+                Simulator.instance.getState().remove(agentToRemove);
+                scheduledRemovals--;
+            }
+        }
     }
 
     public boolean checkForConnection(Agent agent) {
         return programmerHandler.checkForConnection(agent);
     }
 
+    public void scheduleRemoval(int numRemovals) {
+        scheduledRemovals += numRemovals;
+        System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
+    }
 }

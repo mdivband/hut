@@ -3,7 +3,9 @@ package server.controller.handler;
 import server.Simulator;
 import server.model.agents.Agent;
 import server.model.Coordinate;
+import server.model.agents.AgentHubProgrammed;
 import server.model.agents.AgentProgrammed;
+import server.model.agents.Hub;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
@@ -28,6 +30,8 @@ public class AgentHandler extends RestHandler {
         // /agents/time-out/<id>
         else if (rPath.startsWith("/hubspawn"))
             handleHubSpawn(req, resp);
+        else if (rPath.startsWith("/hubdespawn"))
+            handleHubDespawn(req, resp);
         else if(rPath.startsWith("/time-out"))
             handleTimeout(req, resp, rPath.replace("/time-out/", ""));
         // /agents/route/add/<id>
@@ -56,6 +60,17 @@ public class AgentHandler extends RestHandler {
             agent = simulator.getAgentController().addVirtualAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
         }
         resp.send(201, "Created new agent " + agent.getId());
+    }
+
+    private void handleHubDespawn(Request req, Response resp) throws IOException {
+        Hub hub = Simulator.instance.getState().getHub();
+        if (hub instanceof AgentHubProgrammed ahp) {
+            ahp.scheduleRemoval(1);
+        } else {
+            resp.send(201, "Can't create, not implemented");
+        }
+
+
     }
 
     @Override

@@ -350,7 +350,7 @@ var MapTaskController = {
             //         \(*_*)
             //          (  (>
             //          /  \
-            //   h = Math.random()*360;
+            // h = Math.random()*360;
 
             //Grab actual marker element by the (now unique) image src and set its colour
             $('img[src=\"' + marker.icon.url + '\"]').css({

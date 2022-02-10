@@ -61,23 +61,6 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
-        /*
-        if (!Simulator.instance.getState().isCommunicationConstrained()) {  // If we can instantly complete
-            Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-            LOGGER.info("Task " + this.getId() + " has been completed");
-        } else {
-            for (Agent agent : getAgents()) {
-                if (agent instanceof AgentProgrammed ap) {
-                    ap.registerCompleteTask(getCoordinate());
-                } else if (agent instanceof AgentCommunicating ac) {
-                    ac.registerCompleteTask(getCoordinate());
-                }
-            }
-
-        }
-        //Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-         */
-
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
         LOGGER.info("Task " + this.getId() + " has been completed");
     }

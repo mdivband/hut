@@ -161,7 +161,9 @@ public class State {
             }
         }
         else if(item instanceof  Agent)
-            remove(agents, (Agent) item);
+            synchronized (agents) {
+                remove(agents, (Agent) item);
+            }
         else
             throw new RuntimeException("Cannot remove item from state, unrecognised class - " + item.getClass().getSimpleName());
     }
@@ -515,6 +517,10 @@ public class State {
      */
     public void setCommunicationConstrained(Boolean communicationConstrained) {
         this.communicationConstrained = communicationConstrained;
+    }
+
+    public Hub getHub() {
+        return hub;
     }
 
     private class HazardHit {

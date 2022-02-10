@@ -7,6 +7,9 @@ import server.controller.TargetController;
 import server.controller.HazardController;
 import server.model.*;
 import server.model.agents.Agent;
+import server.model.agents.AgentHub;
+import server.model.agents.AgentHubProgrammed;
+import server.model.agents.Hub;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -41,7 +44,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 6;
+    private static final double gameSpeed = 2;
     private Random random;
 
     public Simulator() {
@@ -139,8 +142,20 @@ public class Simulator {
 
             // Step agents
             checkAgentsForTimeout();
-            for (Agent agent : state.getAgents()) {
-                agent.step(state.isFlockingEnabled());
+
+            Hub hub = state.getHub();
+            if (hub instanceof AgentHub ah) {
+                ah.step(state.isFlockingEnabled());
+            } else if (hub instanceof AgentHubProgrammed ahp) {
+                ahp.step(state.isFlockingEnabled());
+            }
+
+            synchronized (state.getAgents()) {
+                for (Agent agent : state.getAgents()) {
+                    if (!(agent instanceof Hub)) {
+                        agent.step(state.isFlockingEnabled());
+                    }
+                }
             }
 
             if (state.isCommunicationConstrained()) {
@@ -158,6 +173,10 @@ public class Simulator {
             }
             for(Task task : completedTasks) {
                 task.complete();
+            }
+            if (!completedTasks.isEmpty()) {
+                allocator.runAutoAllocation();
+                allocator.confirmAllocation(state.getTempAllocation());
             }
             // Step hazard hits
             this.state.decayHazardHits();

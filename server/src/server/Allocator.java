@@ -291,10 +291,15 @@ public class Allocator {
 
 
     protected Map<String, String> compute(List<Agent> agents, List<Task> tasks, boolean editMode) {
-        if (!agents.isEmpty() && !tasks.isEmpty()) {
-				Map<String, String> result =  runMaxSum(agents, tasks);
+        try {
+            if (!agents.isEmpty() && !tasks.isEmpty()) {
+                Map<String, String> result = runMaxSum(agents, tasks);
                 if (!editMode) oldresult = result;
                 return result;
+            }
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println("Allocation error + " + e);
+            System.out.println("(agents, (sz"+agents.size() + ") = " + agents);
         }
         return null;
     }
@@ -350,7 +355,7 @@ public class Allocator {
         return null;
     }
 
-    private Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) {
+    private Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
 
         MaxSum maxsum = new MaxSum();
         HashMap<Agent, Task> resultObjs = new HashMap<>(); // TEMP solution

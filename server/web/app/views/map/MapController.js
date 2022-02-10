@@ -193,7 +193,7 @@ var MapController = {
         $.post("/agents/hubspawn");
     },
     onRemoveAgentClick: function () {
-
+        $.post("/agents/hubdespawn");
     },
     onViewModePressed: function (viewModeValue) {
         if (viewModeValue === "monitor")
