@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class ImageController extends AbstractController {
 
-    private final int SHALLOW_SCAN_TIME = 60;  // In-game seconds, so use 6*real-life seconds
+    private final int SHALLOW_SCAN_TIME = 30;  // In-game seconds, so use 6*real-life seconds
     private final int DEEP_SCAN_TIME = 60;
 
     private final List<String> deepScannedTargets = new ArrayList<>(16);

@@ -1,6 +1,6 @@
 {
   "gameId": "Complex - Low",
-  "gameDescription": "Test for the experiment",
+  "gameDescription": "Scenario CL",
   "extendedUIOptions": {
     "predictions": true,
     "uncertainties": true
