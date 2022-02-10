@@ -105,7 +105,7 @@ var MapController = {
                 var scenario_end_panel = document.createElement("div");
                 scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                     title: "Scenario Ended",
-                    description: "This scenario has ended, please press close to return to the homepage."
+                    description: "This scenario has ended, please close your browser tab"
                 });
                 $.blockWithContent(scenario_end_panel);
                 $('#end_scenario').on('click', function () {
@@ -121,7 +121,8 @@ var MapController = {
             MapController.onTick();
         });
         this.state.on("change:gameId", function () {
-            $("#game_id").html("" + self.state.getGameId());
+            // We don't display this, for fairness
+            //$("#game_id").html("" + self.state.getGameId());
         });
         this.state.on("change:gameType", function () {
             var lat = self.state.getGameCentre().latitude;

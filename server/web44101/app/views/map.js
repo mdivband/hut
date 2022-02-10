@@ -326,7 +326,6 @@ App.Views.Map = Backbone.View.extend({
      * Draws persistent markers on the map for reference
      */
     drawMarkers: function () {
-
         try {
             var markers = this.state.getMarkers();
             var self = this;
@@ -346,6 +345,7 @@ App.Views.Map = Backbone.View.extend({
                             strokeColor: "#FF0000",
                             strokeOpacity: 0.8,
                             strokeWeight: 2,
+                            label: "Search here!",
                             center: new google.maps.LatLng(latX, latY),
                             radius: parseFloat(rad),
                             visible: true
@@ -356,6 +356,39 @@ App.Views.Map = Backbone.View.extend({
             }
         } catch (e) {
             alert(e);
+        }
+
+        // Clumsy, just add manually if using shapes for now. infutue should be done in the same way as above
+        if (this.state.getMarkers().length > 0) {
+            var marker = self.$el.gmap("get", "markers", [])["testMk1"];
+            if (!marker) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    clickable: false,
+                    labelContent: "search here",
+                    labelClass: "labels",
+                    labelStyle: {opacity: 1.0},
+                    label: "There are casualties in this area!",
+                    id: "testMk1",
+                    position: new google.maps.LatLng(50.93007510846366, -1.412749970031315),
+                    zIndex: 3,
+                    visible: true
+                });
+            }
+            var marker = self.$el.gmap("get", "markers", [])["testMk2"];
+            if (!marker) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    clickable: false,
+                    label: "There are casualties in this area!",
+                    labelAnchor: new google.maps.Point(50, -18),
+                    id: "testMk2",
+                    position: new google.maps.LatLng(50.93394037299629, -1.409213465112904),
+                    zIndex: 3
+                });
+            }
         }
     },
     /***

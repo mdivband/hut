@@ -1,6 +1,7 @@
 {
-  "gameId": "NonComplex - High",
-  "gameDescription": "Scenario NH",
+  "gameId": "QERI",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common",
+  "comment": "This is the Non-Complex - High scenario",
   "extendedUIOptions": {
     "predictions": true,
     "uncertainties": true

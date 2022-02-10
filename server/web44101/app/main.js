@@ -240,7 +240,7 @@ var simulator = {
                     if(self.state.getGameType() === self.state.GAME_TYPE_SCENARIO && !self.state.isInProgress()) {
                         var description_panel = document.createElement("div");
                         description_panel.innerHTML = _.template($("#description_panel").html(), {
-                            title: self.state.getGameId(),
+                            title: "Scenario " + self.state.getGameId(),
                             description: self.state.getGameDescription()
                         });
                         $.blockWithContent(description_panel);
@@ -258,7 +258,7 @@ var simulator = {
                         // Return to menu
                         scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                             title: "Scenario Ended",
-                            description: "This scenario has ended, please press close to return to the homepage."
+                            description: "This scenario has ended, please close your browser tab and continue with the MS form"
                         });
                         $.blockWithContent(scenario_end_panel);
                         $('#end_scenario').on('click', function () {
@@ -269,7 +269,7 @@ var simulator = {
                         // Has a scenario to pass through too
                         scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                             title: "Scenario Ended",
-                            description: "This scenario has ended, please press to continue to the next experiment"
+                            description: "This scenario has ended, please press close to continue to the next experiment"
                         });
                         $.blockWithContent(scenario_end_panel);
                         var endScenarioDiv = $("#end_scenario");

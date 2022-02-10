@@ -24,9 +24,9 @@
         <div class="ui-layout-center">
             <div id="map_canvas"></div>
             <div id="review_panel" style="float: top; display: none">
-                <button type="button" id="rev_real" class="rev_buttons">Real Casualty</button>
-                <button type="button" id="rev_false" class="rev_buttons">False Positive</button>
-                <button type="button" id="rev_deep" class="rev_buttons" style="display: none;">Request Complex Scan</button>
+                <button type="button" id="rev_real" class="rev_buttons">Casualty Present</button>
+                <button type="button" id="rev_false" class="rev_buttons">No Casualty</button>
+                <button type="button" id="rev_deep" class="rev_buttons" style="display: none;">Request Uncompressed Image (requires new scan)</button>
             </div>
             <div id="image_review" style="display: none;">
                     <canvas id="image_review_canvas" style="display:inline-block;"></canvas>
@@ -337,7 +337,7 @@
                 <div style="margin: 10px;">
                     <h><%= title %></h>
                     <p><%= description %></p>
-                    <button id="end_scenario" style="cursor: pointer;">Next Experiment</button>
+                    <!--<button id="end_scenario" style="cursor: pointer;">Close</button> -->
                 </div>
             </script>
 
@@ -386,7 +386,7 @@
             <!-- Popup window when targets are selected-->
             <script type="text/template" id="target_scan_edit">
                 <div style="margin: 0px 1px 0px 5px;">
-                        <button id="scan_shallow">Quick Scan</button>
+                        <button id="scan_shallow">Quick (Compressed) Scan</button>
                     </div>
                 </div>
             </script>
@@ -395,10 +395,10 @@
             <script type="text/template" id="target_scan_edit_dp">
                 <div style="margin: 0px 1px 0px 5px;">
                     <div style="float: left;">
-                        <button id="scan_shallow_dp">Quick Scan</button>
+                        <button id="scan_shallow_dp">Quick (Compressed) Scan</button>
                     </div>
                     <div style="float: right;">
-                        <button id="scan_deep_dp">Complex Scan</button>
+                        <button id="scan_deep_dp">Slow (Uncompressed) Scan</button>
                     </div>
                 </div>
             </script>
