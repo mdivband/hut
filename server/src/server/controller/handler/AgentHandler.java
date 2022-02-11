@@ -1,11 +1,8 @@
 package server.controller.handler;
 
 import server.Simulator;
-import server.model.agents.Agent;
+import server.model.agents.*;
 import server.model.Coordinate;
-import server.model.agents.AgentHubProgrammed;
-import server.model.agents.AgentProgrammed;
-import server.model.agents.Hub;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
@@ -46,31 +43,21 @@ public class AgentHandler extends RestHandler {
     }
 
     private void handleHubSpawn(Request req, Response resp) throws IOException {
-        boolean hasProgrammed = false;
-        for (Agent a : Simulator.instance.getState().getAgents()) {
-            if (a instanceof AgentProgrammed) {
-                hasProgrammed = true;
-                break;
-            }
-        }
-        Agent agent;
-        if (hasProgrammed) {
-            agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+        Agent a = simulator.getAgentController().spawnAgent();
+        if (a != null) {
+            resp.send(201, "Created new agent " + a.getId());
         } else {
-            agent = simulator.getAgentController().addVirtualAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+            resp.send(400, "Unable to place agent. The hub area may be too full");
         }
-        resp.send(201, "Created new agent " + agent.getId());
     }
 
     private void handleHubDespawn(Request req, Response resp) throws IOException {
-        Hub hub = Simulator.instance.getState().getHub();
-        if (hub instanceof AgentHubProgrammed ahp) {
-            ahp.scheduleRemoval(1);
+        Agent a = Simulator.instance.getAgentController().despawnAgent();
+        if (a != null) {
+            resp.send(201, "Removed agent " + a);
         } else {
-            resp.send(201, "Can't create, not implemented");
+            resp.send(400, "Can't remove, unspecified error");
         }
-
-
     }
 
     @Override

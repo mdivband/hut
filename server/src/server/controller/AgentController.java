@@ -6,10 +6,7 @@ import server.model.agents.*;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class AgentController extends AbstractController {
 
@@ -233,6 +230,119 @@ public class AgentController extends AbstractController {
      */
     public boolean checkHubConnection(Hub hub, Agent agent) {
         return ((AgentHubProgrammed) hub).checkForConnection(agent);
+    }
+
+    public Agent spawnAgent() {
+        boolean hasProgrammed = false;
+        for (Agent a : Simulator.instance.getState().getAgents()) {
+            if (a instanceof AgentProgrammed) {
+                hasProgrammed = true;
+                break;
+            }
+        }
+        Agent agent;
+        if (hasProgrammed) {
+            agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+        } else {
+            int counter = 10;
+            double xOffset;
+            double yOffset;
+            boolean clash = true;
+            Coordinate c = null;
+            while (clash && counter > 0) {
+                xOffset = (simulator.getRandom().nextDouble() * 0.003) - 0.0015;
+                yOffset = (simulator.getRandom().nextDouble() * 0.003) - 0.0015;
+                c = new Coordinate(simulator.getState().getHubLocation().getLatitude() + xOffset, simulator.getState().getHubLocation().getLongitude() + yOffset);
+                // Check if any agent is too close
+                Coordinate finalC = c;
+                clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0005);
+                counter--;
+            }
+
+            if (clash) {
+                // We still have a clash and can't fit it after 10 attempts
+                agent = null;
+            } else {
+                agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                simulator.getAllocator().runAutoAllocation();
+                simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
+            }
+        }
+        return agent;
+    }
+
+    public Agent despawnAgent() {
+        Hub hub = Simulator.instance.getState().getHub();
+        if (hub instanceof AgentHubProgrammed ahp) {
+            ahp.scheduleRemoval(1);
+        } else if (hub instanceof AgentHub) {
+            return removeLeastRequiredAgent();
+        }
+        return null;
+    }
+
+    public Agent removeClosestAgentToHub() {
+        synchronized (Simulator.instance.getState().getAgents()) {
+            return removeClosestAgentToHub(Simulator.instance.getState().getAgents());
+        }
+    }
+
+    public Agent removeClosestAgentToHub(Collection<Agent> agents) {
+        Agent closestAgent = getClosestAgentToHub(agents);
+        Simulator.instance.getState().getAgents().remove(closestAgent);
+        return closestAgent;
+    }
+
+    public Agent getClosestAgentToHub(Collection<Agent> agents) {
+        double minDistance = 99999.0;
+        Agent closestAgent = null;
+        for (Agent a : agents) {
+            double thisDistance = simulator.getState().getHubLocation().getDistance(a.getCoordinate());
+            if (thisDistance < minDistance && !(a instanceof Hub)) {
+                closestAgent = a;
+                minDistance = thisDistance;
+            }
+        }
+        return closestAgent;
+    }
+
+    public Agent removeLeastRequiredAgent() {
+        synchronized (Simulator.instance.getState().getAgents()) {
+            return removeLeastRequiredAgent(Simulator.instance.getState().getAgents());
+        }
+    }
+
+    public Agent removeLeastRequiredAgent(Collection<Agent> agents) {
+        double maxDistance = -1;
+        Agent leastRequiredAgent = null;
+        // We handle two cases: whether there are some unassigned agents, or whether there are zero unassigned agents
+        boolean hasNull = agents.stream().anyMatch(a -> !(a instanceof Hub) && a.getTask() == null);
+        ArrayList<Agent> agentsToConsider = new ArrayList<>();
+        for (Agent a : agents) {
+            if (hasNull && a.getTask() == null && !(a instanceof Hub)) {
+                agentsToConsider.add(a);
+            } else if (!(a instanceof Hub)) {
+                double thisDistance = a.getCoordinate().getDistance(a.getTask().getCoordinate());
+                if (thisDistance > maxDistance) {
+                    leastRequiredAgent = a;
+                    maxDistance = thisDistance;
+                }
+            }
+        }
+        Agent agentToRemove;
+        if (hasNull) {
+            // We return the closest of these to the hub as normal
+            if (agentsToConsider.size() > 1) {
+                agentToRemove = getClosestAgentToHub(agentsToConsider);
+            } else {
+                agentToRemove = agentsToConsider.get(0);
+            }
+        } else {
+            agentToRemove = leastRequiredAgent;
+        }
+        Simulator.instance.getState().getAgents().remove(agentToRemove);
+        LOGGER.severe("Removing " + agentToRemove);
+        return agentToRemove;
     }
 
 }

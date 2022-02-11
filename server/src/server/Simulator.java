@@ -112,6 +112,8 @@ public class Simulator {
         this.agentController.stopAllAgents();
         new Thread(this::mainLoop).start();
         this.state.setInProgress(true);
+        allocator.runAutoAllocation();
+        allocator.confirmAllocation(state.getTempAllocation());
         LOGGER.info("Simulation started.");
     }
 
@@ -256,7 +258,8 @@ public class Simulator {
 
                 List<String> possibleMethods = new ArrayList<>(Arrays.asList(
                         "random",
-                        "maxsum"
+                        "maxsum",
+                        "maxsumwithoverspill"
                 ));
 
                 if(possibleMethods.contains(allocationMethod)) {

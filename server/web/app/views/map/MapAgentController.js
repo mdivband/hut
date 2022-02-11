@@ -145,6 +145,15 @@ var MapAgentController = {
             delete marker;
         }
         agent.destroy();
+
+        var id = agent.getId();
+        var mainLineId = id + "main";
+        var mainMarker = this.$el.gmap("get", "overlays > Polyline", [])[mainLineId];
+        if (mainMarker) {
+            mainMarker.setMap(null);
+            mainMarker = null;
+            delete mainMarker;
+        }
     },
     onAgentTimeOut: function (agent) {
         var self = this;

@@ -1,8 +1,13 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.model.Coordinate;
 import server.model.Sensor;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**

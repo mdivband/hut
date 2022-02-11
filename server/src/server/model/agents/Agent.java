@@ -413,6 +413,7 @@ public abstract class Agent extends MObject implements Serializable {
     @Override
     public String toString() {
         return "Agent{" +
+                "id=" + getId() +
                 "heading=" + heading +
                 ", route=" + route +
                 ", allocatedTaskId='" + allocatedTaskId + '\'' +

@@ -58,10 +58,14 @@ public class Allocator {
         agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || agent instanceof Hub || agent instanceof AgentProgrammed || (agent instanceof AgentVirtual av && av.isGoingHome()));
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 
+
+
         String allocationMethod = simulator.getState().getAllocationMethod();
 
         if(allocationMethod.equals("maxsum")){
             allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        } else if(allocationMethod.equals("maxsumwithoverspill")) {
+            allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
         } else if(allocationMethod.equals("random")) {
             allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
         }
@@ -291,15 +295,46 @@ public class Allocator {
 
 
     protected Map<String, String> compute(List<Agent> agents, List<Task> tasks, boolean editMode) {
-        try {
             if (!agents.isEmpty() && !tasks.isEmpty()) {
                 Map<String, String> result = runMaxSum(agents, tasks);
-                if (!editMode) oldresult = result;
+                //if (!editMode) oldresult = result;
+                oldresult = result;
                 return result;
             }
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("Allocation error + " + e);
-            System.out.println("(agents, (sz"+agents.size() + ") = " + agents);
+        return null;
+    }
+
+    /**
+     * Tries to also reassign them to random if they aren't assigned. NOT functional at present
+     * @param agents
+     * @param tasks
+     * @param editMode
+     * @return
+     */
+    protected Map<String, String> computeWithRandomOverspil(List<Agent> agents, List<Task> tasks, boolean editMode) {
+        if (!agents.isEmpty() && !tasks.isEmpty()) {
+            Map<String, String> result = runMaxSum(agents, tasks);
+
+            // For now hardcode the account for hub
+            if (result.size() < agents.size() - 1) {
+                List<Agent> spareAgents = new ArrayList<>();
+                List<Task> spareTasks = new ArrayList<>();
+                for (Agent a : agents) {
+                    if (!result.containsKey(a.getId())) {
+                        spareAgents.add(a);
+                    }
+                }
+                for (Task t : tasks) {
+                    if (!result.containsValue(t.getId())) {
+                        spareTasks.add(t);
+                    }
+                }
+                Map<String, String> spareResult = randomCompute(spareAgents, spareTasks, editMode);
+                result.putAll(spareResult);
+            }
+
+            oldresult = result;
+            return result;
         }
         return null;
     }
@@ -441,7 +476,6 @@ public class Allocator {
         constraints[tasks.size()] = new Constraint(TASK_NONE, func);
 
         maxsum.addConstraints(constraints);
-
         for (int i = 0; i < variables.length; ++i) {
             Agent agent = agents.get(i);
 
