@@ -184,7 +184,8 @@ public class Simulator {
             }
 
             //Step hazard hits
-            this.state.decayHazardHits();
+            // Disable this for persistent hazards and exploration heatmaps
+            // this.state.decayHazardHits();
 
             // Check and trigger images that are scheduled
             imageController.checkForImages();

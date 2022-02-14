@@ -1,6 +1,7 @@
 package server.model.task;
 
 import server.Simulator;
+import server.controller.TaskController;
 import server.model.Agent;
 import server.model.Coordinate;
 
@@ -17,6 +18,8 @@ public class DeepScanTask extends Task {
     public DeepScanTask(String id, Coordinate coordinate) {
         super(id, Task.TASK_DEEP_SCAN, coordinate);
         targetToScan = coordinate;
+        //Simulator.instance.getTaskController().smartAllocForDeep();
+        Simulator.instance.getState().getPendingIds().add(Simulator.instance.getTargetController().getTargetAt(coordinate).getId());
     }
 
     public void addAgent(Agent agent) {

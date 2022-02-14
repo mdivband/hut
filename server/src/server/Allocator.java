@@ -743,6 +743,20 @@ public class Allocator {
         return false;
     }
 
+    public boolean isSaturated() {
+        // Add 1 to account for hub
+        boolean t = (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
+        System.out.println(1);
+        return (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
+    }
+
+    public void clearAllAgents() {
+        for (Agent a : simulator.getState().getAgents()) {
+            a.setAllocatedTaskId(null);
+            a.stop();
+        }
+    }
+
     //Inner class to provide generic pair of Agent-Task
     private class Edge {
 

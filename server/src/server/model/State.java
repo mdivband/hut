@@ -72,6 +72,7 @@ public class State {
     //                   ID->ImageName
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
+    private final List<String> pendingIds = new ArrayList<>(16);
 
     private String userName = "";
     private List<String> markers= new ArrayList<>();
@@ -424,6 +425,10 @@ public class State {
 
     public List<String> getMarkers() {
         return markers;
+    }
+
+    public List<String> getPendingIds() {
+        return pendingIds;
     }
 
     private class HazardHit {

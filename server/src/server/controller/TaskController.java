@@ -37,6 +37,14 @@ public class TaskController extends AbstractController {
                 case Task.TASK_DEEP_SCAN:
                     task = new DeepScanTask(id, new Coordinate(lat, lng));
                     simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
+                    //if (simulator.getAllocator().isSaturated()) {
+                    //    System.out.println("resetting");
+                    //    simulator.getAllocator().resetAllocation();
+                    //}
+                    task.setPriority(100);
+                    simulator.getAllocator().runAutoAllocation();
+                    simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
+                    System.out.println("realloced");
                     break;
                 case Task.TASK_SHALLOW_SCAN:
                     task = new ShallowScanTask(id, new Coordinate(lat, lng));

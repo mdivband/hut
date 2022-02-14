@@ -29,6 +29,7 @@ App.Models.State  = Backbone.Model.extend({
         uncertaintyRadius: 0,
         storedImages : {},
         deepScannedIds: {},
+        pendingIds: {},
         passthrough: false,
         nextFileName: "",
         deepAllowed: false,
@@ -172,5 +173,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getMarkers: function () {
         return this.get("markers");
+    },
+    getPendingIds: function () {
+        return this.get("pendingIds");
     }
 });

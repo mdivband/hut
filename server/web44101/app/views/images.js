@@ -6,15 +6,17 @@ App.Views.Images = Backbone.View.extend({
         this.state = options.state;
         this.views = options.views;
         this.viewButtons = document.getElementById("button_panel");
+        this.pendingPanel = document.getElementById("pending_scans");
         this.addedIds = [];
         this.addedRefs = [];
         this.pendingIds = [];
+        this.addedPendingIds = [];
         this.render();
 
         var self = this;
 
-        this.state.on("change", function () {
-            //self.update();
+        this.state.on("change:pendingIds", function () {
+            self.updatePendingList();
         });
 
         this.state.on("change:storedImages", function () {
@@ -33,10 +35,12 @@ App.Views.Images = Backbone.View.extend({
         this.addedIds = [];
         this.addedRefs = [];
         this.pendingIds = [];
+        this.addedPendingIds = [];
         this.render();
     },
     update: function() {
         this.checkAndUpdateDeepButton();
+        this.updatePendingList();
         var self = this;
         try {
             var knownImages = self.state.getStoredImages();
@@ -113,85 +117,6 @@ App.Views.Images = Backbone.View.extend({
                 }
             });
 
-
-/*
-                    if (!self.addedIds.includes(id) ) {
-                        // It is yet to be added
-                        var button = document.createElement("button");
-                        button.id = id;
-                        button.innerHTML = id;
-                        button.className = "image_select_buttons";
-                        self.viewButtons.append(button);
-
-                        button.addEventListener("click", function (event) {
-                            console.log("i 1")
-                            if (!self.pendingIds.includes(id)) {
-                                console.log("i 1.1")
-                                MapImageController.triggerImage(id, iRef, true);
-                                button.focus();
-                                $("#rev_deep").removeClass("rev_buttons_greyed").addClass("rev_buttons");
-                                $("#rev_deep").prop('disabled', false);
-                                self.pendingIds.push(id);
-                            } else {
-                                console.log("i 1.2")
-                                // Already awaiting a deep scan, only visually update
-                                MapImageController.triggerImage(id, iRef, false);
-                                $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
-                                button.focus();
-                                $("#rev_deep").prop('disabled', true);
-                            }
-
-                        });
-
-                        self.addedIds.push(id)
-                        self.addedRefs.push(iRef)
-                    }
-                    else if (!self.addedRefs.includes(iRef)) {
-                        console.log("i 2")
-                        // Update button
-                        var button = document.getElementById(id);
-                        button.remove()
-
-                        var button = document.createElement("button");
-                        button.id = id;
-                        button.innerHTML = id;
-                        button.className = "image_select_buttons";
-                        self.viewButtons.append(button);
-                        self.pendingIds.remove(id)
-                        // TODO pendingids remove this
-
-                        button.addEventListener("click", function (event) {
-                            console.log("i 2.1")
-                            MapImageController.triggerImage(id, iRef, true);
-                            $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
-                            button.focus();
-                            $("#rev_deep").prop('disabled', true);
-                        });
-
-                        self.addedRefs.push(iRef)
-
-                        try {
-                            // If we are currently viewing this image, update it to deep
-                            console.log(MapImageController.getCurrentImageId());
-
-                            if (MapImageController.getCurrentImageId() === id) {
-                                console.log(1)
-                                MapImageController.triggerImage(id, iRef, true);
-                                console.log(2)
-                                $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
-                                console.log(3)
-                                $("#rev_deep").prop('disabled', true);
-                                console.log(4)
-                            }
-
-                        } catch (e) {
-                            console.log(e)
-                        }
-                    }
-                }
-            });
-
- */
         } catch (e) {
             alert("eee : " + e)
         }
@@ -250,6 +175,38 @@ App.Views.Images = Backbone.View.extend({
         }
         this.addedIds = newArray;
         MapController.clearReviewImage();
+    },
+    updatePendingList: function () {
+        console.log("Pending: ")
+        var self = this;
+        var list = ""
+        for (var i = 0; i < self.state.getPendingIds().length; i++) {
+            console.log("--" + self.state.getPendingIds()[i]);
+            list = list + self.state.getPendingIds()[i] + " \n"
+        }
+        console.log(" ")
+
+        this.pendingPanel.innerHTML = list;
+
+        /*
+        console.log("=apb=");
+        var self = this;
+        var ids = this.state.getPendingIds();
+        for (var i = 0; i < ids.length; i++) {
+            if (!self.addedIds.includes(ids[i]) && !self.addedPendingIds.includes(ids[i])) {
+                console.log("Placing pending button");
+                var button = document.createElement("button");
+                button.id = ids[i];
+                button.innerHTML = ids[i] + "(pending...)";
+                button.className = "image_select_buttons_greyed";
+                $("#rev_deep").prop('disabled', true);
+                self.viewButtons.append(button);
+                self.addedPendingIds.push(ids[i]);
+            }
+        }
+
+         */
     }
+
 
 });

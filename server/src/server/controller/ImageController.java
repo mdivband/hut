@@ -13,8 +13,8 @@ import java.util.Map;
 
 public class ImageController extends AbstractController {
 
-    private final int SHALLOW_SCAN_TIME = 30;  // In-game seconds, so use 6*real-life seconds
-    private final int DEEP_SCAN_TIME = 60;
+    private final int SHALLOW_SCAN_TIME = 18;  // In-game seconds, so use 6*real-life seconds
+    private final int DEEP_SCAN_TIME = 18;
 
     private final List<String> deepScannedTargets = new ArrayList<>(16);
     private final List<String> shallowScannedTargets = new ArrayList<>(16);
@@ -31,6 +31,20 @@ public class ImageController extends AbstractController {
         shallowScannedTargets.clear();
         decisions.clear();
         scheduledImages.clear();
+    }
+
+    public void takeImageById(String id) {
+        boolean match =  false;
+        for (var entry : scheduledImages.entrySet()) {
+            if (entry.getValue().id.equals(id)) {
+                match = true;
+                break;
+            }
+        }
+        if (!match) {
+            simulator.getState().getPendingIds().add(id);
+            takeImage(simulator.getState().getTarget(id).getCoordinate(), false);
+        }
     }
 
     /**
@@ -102,7 +116,9 @@ public class ImageController extends AbstractController {
 
         if (keyToRemove != -1) {
             addImage(scheduledImages.get(keyToRemove));
+            simulator.getState().getPendingIds().remove(scheduledImages.get(keyToRemove).id);
             scheduledImages.remove(keyToRemove);
+
         }
     }
 
