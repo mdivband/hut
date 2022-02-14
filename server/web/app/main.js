@@ -1,3 +1,6 @@
+var userRole = $("body").attr('id');
+console.log(userRole)
+
 var simulator = {
     initialisedState: false,
     init: function () {

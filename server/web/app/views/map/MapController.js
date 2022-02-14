@@ -179,6 +179,8 @@ var MapController = {
         MapController.abortAllocation();
     },
     onViewModePressed: function (viewModeValue) {
+        console.log("new mode");
+        console.log(userRole);
         if (viewModeValue === "monitor")
             MapController.onMonitorModePressed();
         else if (viewModeValue === "editmode")
@@ -335,7 +337,7 @@ var MapController = {
         }
 
 
-        if(modeFlag === 2) {  // edit
+        if(modeFlag === 2 && userRole == "planner") {  // edit
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();
             $("#edit_buttons_sub").show();
@@ -365,7 +367,7 @@ var MapController = {
             $('#scanmode').prop("checked", false);
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", true);
-        } else {  // scans
+        } else if (modeFlag === 3 && userRole == "analyst") {  // scans
             $("#monitor_accordions").hide();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();
