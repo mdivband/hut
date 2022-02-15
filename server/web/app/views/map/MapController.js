@@ -117,7 +117,9 @@ var MapController = {
             MapController.onUndoRedoAvailableChange();
         });
         this.state.on("change:editMode", function () {
-            MapController.swapMode(self.state.getEditMode(), false);
+            if (userRole != "analyst") {
+                MapController.swapMode(self.state.getEditMode(), false);
+            }
         });
 
         //Map listeners
@@ -198,6 +200,12 @@ var MapController = {
                     MapController.swapMode(1, true);
                 else
                     MapController.abortAllocation();
+            } catch (e) {
+                console.log("MMP : " + e);
+            }
+        } else if (userRole == "analyst") {
+            try {
+                MapController.swapMode(1, false);
             } catch (e) {
                 console.log("MMP : " + e);
             }
@@ -337,7 +345,7 @@ var MapController = {
         }
 
 
-        if(modeFlag === 2 && userRole == "planner") {  // edit
+        if(modeFlag === 2) {  // edit
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();
             $("#edit_buttons_sub").show();
@@ -364,10 +372,11 @@ var MapController = {
             $("#image_review").hide();
             $("#review_panel").hide();
 
-            $('#scanmode').prop("checked", false);
-            $('#editmode').prop("checked", false);
-            $('#monitor').prop("checked", true);
-        } else if (modeFlag === 3 && userRole == "analyst") {  // scans
+            $("#scanmode").prop("checked", false);
+            $("#editmode").prop("checked", false);
+            $("#monitor").prop("checked", true);
+
+        } else if (modeFlag === 3) {  // scans
             $("#monitor_accordions").hide();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();
@@ -389,7 +398,7 @@ var MapController = {
 
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
-        if(sendUpdate)
+        if(sendUpdate && userRole != "analyst")
             this.state.pushMode(modeFlag);
     },
     pushImage: function (id, iRef, update) {
