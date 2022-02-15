@@ -149,9 +149,6 @@ public class Simulator {
             }
 
             state.incrementTime(0.2);
-            if (state.getTime() >= 30 * gameSpeed) {
-                this.reset();
-            }
 
             // Step agents
             checkAgentsForTimeout();
