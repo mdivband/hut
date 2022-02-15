@@ -51,13 +51,29 @@ var simulator = {
             forEditMode: true
         });
 
+        try {
+            this.views.prediction = new App.Views.Prediction({
+                el: $("#prediction_canvas"),
+                state: this.state,
+                views: this.views,
+                ctx: $("#prediction").get(0).getContext("2d"),
+                canvas: $("#prediction").get(0)
+            });
+        } catch (e) {
+            alert(e)
+        }
+
         // setup accordion for jquery ui
         $("#accordion_smallview").accordion({
-            collapsible: true
+            collapsible: true,
+            active: false,
         });
         $("#accordion_agent_schedule_m").accordion({
             collapsible: true,
             //active: false
+        });
+        $("#accordion_score").accordion({
+            collapsible: true
         });
         $("#accordion_sotp_m").accordion({
             collapsible: true
@@ -68,6 +84,13 @@ var simulator = {
         });
         $("#accordion_agent_schedule_e").accordion({
             collapsible: true,
+        });
+        $("#prediction_canvas").accordion({
+            collapsible: true,
+            heightStyle: "content"
+        });
+        $("#score_canvas").accordion({
+            collapsible: true
         });
         $("#accordion_sotp_e").accordion({
             collapsible: true,

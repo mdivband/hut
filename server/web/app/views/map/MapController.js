@@ -127,6 +127,9 @@ var MapController = {
         this.state.on("change:editMode", function () {
             MapController.swapMode(self.state.isEdit(), false);
         });
+        this.state.on("change:scoreInfo", function () {
+            self.updateScorePanel();
+        });
 
         //Map listeners
         google.maps.event.addListener(this.map, "click", function (event) {

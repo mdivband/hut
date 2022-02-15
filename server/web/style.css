@@ -208,7 +208,6 @@ ul.list li:hover {
     background-color: #C2C8CC;
 }
 
-
 #accordion_sotp_e  table {
 	width: 100%; 
 	table-layout: fixed; 
@@ -229,12 +228,25 @@ ul.list li:hover {
     background-color: #C2C8CC;
 }
 
+#prediction {
+	width: 50%;
+	height: 80px;
+	overflow: hidden;
+}
 
 #accordion_sotp_m  table {
 	width: 100%; 
 	table-layout: fixed; 
 	text-align: center; 
 	border-spacing: 0px; 
+	padding: 5px;
+}
+
+#accordion_score  table {
+	width: 100%;
+	table-layout: fixed;
+	text-align: center;
+	border-spacing: 0px;
 	padding: 5px;
 }
 

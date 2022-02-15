@@ -696,6 +696,13 @@ App.Views.Map = Backbone.View.extend({
             $("#remaining_time").html(_.convertToTime(estimatedRemainingTime, false));
         }
     },
+    updateScorePanel: function () {
+        var scoreInfo = this.state.getScoreInfo();
+        $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
+        $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
+        $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
+        $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
+    },
     updateClickedAgent: function (agent) {
         this.views.clickedAgent = agent != null ? agent.getId() : "";
         if (agent) {

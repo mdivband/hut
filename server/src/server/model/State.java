@@ -13,10 +13,7 @@ import server.model.task.Task;
 import tool.GsonUtils;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -66,6 +63,8 @@ public class State {
     private double uncertaintyRadius = 0;
     private double communicationRange = 0;
     private boolean communicationConstrained = false;
+    private double successChance;
+    private Map<String, Double> scoreInfo;
 
     // We could combine these, but it might be little more efficient to let them stay separate
     private Hub hub;
@@ -83,7 +82,8 @@ public class State {
         tempAllocation = new ConcurrentHashMap<>();
         droppedAllocation = new ConcurrentHashMap<>();
         hazardHits = new HazardHitCollection();
-
+        scoreInfo = new HashMap<>();
+        successChance = 100.00;
         allocationUndoAvailable = false;
         allocationRedoAvailable = false;
 
@@ -94,7 +94,8 @@ public class State {
         time = 0;
         editMode = false;
         inProgress = false;
-
+        successChance = 100.00;
+        scoreInfo.clear();
         agents.clear();
         ghosts.clear();
         tasks.clear();
@@ -519,8 +520,20 @@ public class State {
         this.communicationConstrained = communicationConstrained;
     }
 
+    public void setSuccessChance(double successChance) {
+        this.successChance = successChance;
+    }
+
     public Hub getHub() {
         return hub;
+    }
+
+    public void addScoreInfo(String key, double value) {
+        scoreInfo.put(key, value);
+    }
+
+    public Map<String, Double> getScoreInfo() {
+        return scoreInfo;
     }
 
     private class HazardHit {

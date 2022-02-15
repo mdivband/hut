@@ -27,7 +27,9 @@ App.Models.State  = Backbone.Model.extend({
         },
         uiOptions: {},
         uncertaintyRadius: 0,
-        communicationRange: 0
+        communicationRange: 0,
+        successChance: 100.00,
+        scoreInfo: {},
 
     },
     url: function() {
@@ -133,6 +135,13 @@ App.Models.State  = Backbone.Model.extend({
     },
     getCommunicationRange: function () {
         return this.get("communicationRange")
+    },
+    getSuccessChance: function () {
+        return this.get("successChance");
+    },
+    getScoreInfo: function () {
+        return this.get("scoreInfo");
     }
+
 
 });

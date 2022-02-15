@@ -1,10 +1,6 @@
 package server;
 
-import server.controller.AgentController;
-import server.controller.ConnectionController;
-import server.controller.TaskController;
-import server.controller.TargetController;
-import server.controller.HazardController;
+import server.controller.*;
 import server.model.*;
 import server.model.agents.Agent;
 import server.model.agents.AgentHub;
@@ -39,8 +35,10 @@ public class Simulator {
     private final TaskController taskController;
     private final TargetController targetController;
     private final ConnectionController connectionController;
+    private final ScoreController scoreController;
     private final HazardController hazardController;
     private final Allocator allocator;
+
 
     public static Simulator instance;
 
@@ -59,6 +57,7 @@ public class Simulator {
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
+        scoreController = new ScoreController(this);
         random = new Random();
 
         queueManager.initDroneDataConsumer();
@@ -140,6 +139,12 @@ public class Simulator {
         do {
             long startTime = System.currentTimeMillis();
 
+            if (state.getTasks().isEmpty()) {
+                System.out.println("END HERE");
+                state.getScoreInfo().forEach((k, v) -> System.out.println(k + " -> " + v));
+                break;
+            }
+
             state.incrementTime(0.2);
 
             // Step agents
@@ -179,7 +184,11 @@ public class Simulator {
             if (!completedTasks.isEmpty()) {
                 allocator.runAutoAllocation();
                 allocator.confirmAllocation(state.getTempAllocation());
+                state.setSuccessChance(random.nextDouble(100));
             }
+
+            scoreController.handleUpkeep();
+
             // Step hazard hits
             this.state.decayHazardHits();
 
@@ -225,6 +234,7 @@ public class Simulator {
 
     public synchronized void reset() {
         state.reset();
+        scoreController.reset();
         LOGGER.info("Server reset.");
     }
 
@@ -490,5 +500,13 @@ public class Simulator {
 
     public Random getRandom() {
         return random;
+    }
+
+    public double getGameSpeed() {
+        return gameSpeed;
+    }
+
+    public ScoreController getScoreController() {
+        return scoreController;
     }
 }
