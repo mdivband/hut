@@ -31,6 +31,7 @@ public class State {
     private String allocationMethod;
     private Boolean flockingEnabled;
     private double time;
+    private double timeLimit;
     private boolean editMode;
 
     private String prov_doc;
@@ -93,6 +94,7 @@ public class State {
     public synchronized void reset() {
         // Define defaults
         time = 0;
+        timeLimit = 0;    // 0 means no time limit
         editMode = false;
         inProgress = false;
         allocationMethod = "maxsum";
@@ -206,6 +208,18 @@ public class State {
 
     public synchronized void incrementTime(double increment) {
         setTime(this.time + increment);
+    }
+
+    public synchronized double getTimeLimit() {
+        return timeLimit;
+    }
+
+    public synchronized void setTimeLimit(double timeLimit) {
+        this.timeLimit = timeLimit;
+    }
+
+    public synchronized void incrementTimeLimit(double increment) {
+        setTimeLimit(this.timeLimit + increment);
     }
 
     public synchronized boolean isEditMode() {

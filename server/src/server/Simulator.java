@@ -149,6 +149,9 @@ public class Simulator {
             }
 
             state.incrementTime(0.2);
+            if (state.getTimeLimit() !=0 && state.getTime() >= state.getTimeLimit() * gameSpeed) {
+                this.reset();
+            }
 
             // Step agents
             checkAgentsForTimeout();
@@ -294,6 +297,25 @@ public class Simulator {
                     LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
                             flockingEnabled + "'. Set to false.");
                     // state.flockingEnabled initialised with default value of false
+                }
+            }
+            
+            if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
+                Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
+                if(timeLimitSeconds.getClass() == Double.class) {
+                    state.incrementTimeLimit((Double)timeLimitSeconds);
+                } else {
+                    LOGGER.warning("Expected double value for timeLimitSeconds in scenario file. Received: '" +
+                            timeLimitSeconds.toString() + "'. Time limit not changed.");
+                }
+            }
+            if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
+                Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
+                if(timeLimitMinutes.getClass() == Double.class) {
+                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
+                } else {
+                    LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
+                            timeLimitMinutes.toString() + "'. Time limit not changed.");
                 }
             }
 
