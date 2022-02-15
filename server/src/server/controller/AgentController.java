@@ -345,4 +345,8 @@ public class AgentController extends AbstractController {
         return agentToRemove;
     }
 
+    public synchronized void resetAgentNumbers() {
+        this.uniqueAgentNumber = 1;
+    }
+
 }

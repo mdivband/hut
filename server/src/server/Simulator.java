@@ -243,6 +243,10 @@ public class Simulator {
             this.mainLoopThread.interrupt();
         }
         state.reset();
+        agentController.resetAgentNumbers();
+        hazardController.resetHazardNumbers();
+        targetController.resetTargetNumbers();
+        taskController.resetTaskNumbers();
         scoreController.reset();
         LOGGER.info("Server reset.");
     }

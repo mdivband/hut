@@ -56,6 +56,9 @@ public class TargetController extends AbstractController {
         return true;
     }
 
+    public synchronized void resetTargetNumbers() {
+        this.uniqueTargetNumbers = new HashMap<>();
+    }
     /**
      * Searches for any target with the given coordinate
      * @param coordinate The coordinate to check
@@ -64,5 +67,6 @@ public class TargetController extends AbstractController {
     public Target findTargetByCoord(Coordinate coordinate) {
         return simulator.getState().getTargetByCoordinate(coordinate);
     }
+
 
 }

@@ -159,6 +159,10 @@ public class TaskController extends AbstractController {
             allocation.remove(key);
     }
 
+    public synchronized void resetTaskNumbers() {
+        this.uniqueTaskNumber = 1;
+    }
+
     public Task findTaskByCoord(Coordinate coordinate) {
         return simulator.getState().getTaskByCoordinate(coordinate);
     }
