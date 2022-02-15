@@ -25,11 +25,12 @@ App.Models.State  = Backbone.Model.extend({
             '0': [],
             '1': []
         },
+        hasPassthrough: false
         uiOptions: {},
         uncertaintyRadius: 0,
         communicationRange: 0,
         successChance: 100.00,
-        scoreInfo: {},
+        scoreInfo: {}
 
     },
     url: function() {
@@ -141,7 +142,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getScoreInfo: function () {
         return this.get("scoreInfo");
+    },
+    isPassthrough: function () {
+        return this.get("passthrough");
     }
-
-
 });

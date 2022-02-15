@@ -44,6 +44,7 @@ public class Simulator {
 
     private static final double gameSpeed = 2;
     private Random random;
+    private String nextFileName = "";
 
     private Thread mainLoopThread;
 
@@ -151,6 +152,10 @@ public class Simulator {
 
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+
+                if (state.isPassthrough()) {
+                    updateNextValues();
+                }
                 this.reset();
             }
 
@@ -205,6 +210,20 @@ public class Simulator {
                 sleepTime = 0;
             }
         } while (sleep(sleepTime));
+    }
+
+    private void updateNextValues() {
+        try {
+            String json = GsonUtils.readFile("web/scenarios/" + nextFileName);
+            Object obj = GsonUtils.fromJson(json);
+
+            state.setGameId(GsonUtils.getValue(obj, "gameId"));
+            state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
+            System.out.println("Setting as");
+            System.out.println(state.getGameDescription());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -321,6 +340,23 @@ public class Simulator {
                 } else {
                     LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
                             timeLimitMinutes.toString() + "'. Time limit not changed.");
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
+                Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
+                if(timeLimitMinutes.getClass() == Double.class) {
+                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
+                } else {
+                    LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
+                            timeLimitMinutes.toString() + "'. Time limit not changed.");
+                }
+            }
+            if(GsonUtils.hasKey(obj,"nextScenarioFile")){
+                Object nextScenarioFile = GsonUtils.getValue(obj, "nextScenarioFile");
+                if(nextScenarioFile.getClass() == String.class) {
+                    this.state.setPassthrough(true);
+                    nextFileName = nextScenarioFile.toString();
                 }
             }
 
@@ -466,6 +502,7 @@ public class Simulator {
             }
             return true;
         } catch (InterruptedException e) {
+            // TODO make this more graceful when state is reset
             e.printStackTrace();
             return false;
         }
