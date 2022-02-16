@@ -137,7 +137,7 @@ App.Models.State  = Backbone.Model.extend({
             $("#map_title").html("Image Review");
         }
 
-		 $.post("/changeview", {edit: modeFlag});
+		 $.post("/changeview", {edit: modeFlag, role: userRole});
 
 	},
     getUiOptions: function () {

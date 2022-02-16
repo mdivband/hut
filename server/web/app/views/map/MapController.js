@@ -205,7 +205,7 @@ var MapController = {
             }
         } else if (userRole == "analyst") {
             try {
-                MapController.swapMode(1, false);
+                MapController.swapMode(1, true);
             } catch (e) {
                 console.log("MMP : " + e);
             }
@@ -398,7 +398,7 @@ var MapController = {
 
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
-        if(sendUpdate && userRole != "analyst")
+        if(sendUpdate)
             this.state.pushMode(modeFlag);
     },
     pushImage: function (id, iRef, update) {

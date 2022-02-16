@@ -75,12 +75,15 @@ public class RootHandler extends RestHandler {
 
     private void handleChangeView(Request req, Response resp) throws IOException {
         Map<String, String> params = req.getParams();
-        List<String> expectedKeys = Collections.singletonList("edit");
+        List<String> expectedKeys = Arrays.asList("edit", "role");
         if (!checkParams(params, expectedKeys, resp))
             return;
         //simulator.changeView(Boolean.parseBoolean(params.get("edit")));
-        simulator.changeView(Integer.parseInt(params.get("edit")));
-        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), Integer.parseInt(params.get("edit"))));
+        String role = params.get("role");
+        if (role.equals("planner")) {
+            simulator.changeView(Integer.parseInt(params.get("edit")));
+        }
+        LOGGER.info(String.format("%s; CHVW; %s changing view to mode; %s ", Simulator.instance.getState().getTime(), role, Integer.parseInt(params.get("edit"))));
         resp.sendOkay();
     }
 
