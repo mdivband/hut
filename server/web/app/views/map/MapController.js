@@ -220,7 +220,8 @@ var MapController = {
     },
     onTick: function () {
         var time = $.fromTime(this.state.getTime());
-        $("#game_time").html("Time: " + time);
+        var limit = $.fromTime(this.state.getTimeLimit());
+        $("#game_time").html("Time: " + time + " / " + limit);
         this.updateAllocationRendering();
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);

@@ -144,11 +144,14 @@ public class Simulator {
         do {
             long startTime = System.currentTimeMillis();
 
+            /*
             if (state.getTasks().isEmpty()) {
                 System.out.println("END HERE");
                 state.getScoreInfo().forEach((k, v) -> System.out.println(k + " -> " + v));
                 break;
             }
+
+             */
 
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
@@ -192,11 +195,16 @@ public class Simulator {
             }
             for(Task task : completedTasks) {
                 task.complete();
+                Simulator.instance.getScoreController().incrementCompletedTask();
             }
             if (!completedTasks.isEmpty()) {
                 allocator.runAutoAllocation();
                 allocator.confirmAllocation(state.getTempAllocation());
-                state.setSuccessChance(random.nextDouble(100));
+
+                //double successChance = scoreController.tempHeuristicPredict();
+                double successChance = random.nextDouble(100);
+                state.setSuccessChance(successChance);
+
             }
 
             scoreController.handleUpkeep();
@@ -475,7 +483,6 @@ public class Simulator {
                     Task task = taskController.createTask(type, lat, lng);
                 }
             }
-
 
             return true;
         } catch (IOException e) {

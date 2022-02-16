@@ -266,6 +266,8 @@ public class AgentController extends AbstractController {
                 agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
                 simulator.getAllocator().runAutoAllocation();
                 simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
+                double successChance = simulator.getRandom().nextDouble(100);
+                simulator.getState().setSuccessChance(successChance);
             }
         }
         return agent;

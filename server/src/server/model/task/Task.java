@@ -62,7 +62,6 @@ public abstract class Task extends MObject implements Serializable {
 
     public void complete() {
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-        Simulator.instance.getScoreController().incrementCompletedTask();
         LOGGER.info("Task " + this.getId() + " has been completed");
     }
 

@@ -144,6 +144,7 @@ public class State {
             add(targets, (Target) item);
         else if(item instanceof  Task) {
             add(tasks, (Task) item);
+            Simulator.instance.getScoreController().setTotalTasks(getTasks().size());
             // For programmed agents:
             for (Agent a : agents) {
                 if (a instanceof AgentHubProgrammed abs) {
