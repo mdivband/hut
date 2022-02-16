@@ -212,7 +212,7 @@ var MapTargetController = {
                 label = "CASUALTY"
             } else {
                 icon = this.icons.TargetDismissed;
-                label = "FALSE POS"
+                label = "NO CASUALTY"
             }
 
             var thisId = targetId + "_done";

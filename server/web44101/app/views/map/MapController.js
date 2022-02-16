@@ -208,7 +208,7 @@ var MapController = {
         }
     },
     onMonitorModePressed: function () {
-        if(this.state.getEditMode() !== 1) {
+        if(this.state.getEditMode() === 2) {
             try {
                 var mainAllocation = this.state.getAllocation();
                 var tempAllocation = this.state.getTempAllocation();
@@ -219,6 +219,8 @@ var MapController = {
             } catch (e) {
                 console.log("MMP : " + e);
             }
+        } else if (this.state.getEditMode() !== 1) {
+            MapController.swapMode(1, true);
         }
     },
     onEditModePressed: function () {

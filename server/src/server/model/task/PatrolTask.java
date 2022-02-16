@@ -47,6 +47,16 @@ public class PatrolTask extends Task {
             else
                 workingAgents.remove(agent);
         }
+        Agent agentToRemove = null;
+        for (Agent w : workingAgents) {
+            if (!(w.getAllocatedTaskId().equals(getId()))) {
+                agentToRemove = w;
+                break;
+            }
+        }
+        if (agentToRemove != null) {
+            workingAgents.remove(agentToRemove);
+        }
         sortSpacing();
         return false;
     }
@@ -89,8 +99,10 @@ public class PatrolTask extends Task {
                     double dBetween = agentPositions.get(next.getId()) - agentPositions.get(agent.getId());
 
                     if(dBetween < spacing - tolerance) {
-                        if(!agent.isStopped())
+                        if(!agent.isStopped()) {
+                            System.out.println(123);
                             agent.stop();
+                        }
                     }
                     else if(agent.isStopped() && Simulator.instance.getState().getEditMode() == 1)
                         agent.resume();

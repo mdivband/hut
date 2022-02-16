@@ -2,6 +2,7 @@ package server.controller;
 
 import server.Simulator;
 import server.model.Agent;
+import server.model.AgentHub;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
 import server.model.target.Target;
@@ -37,14 +38,6 @@ public class TaskController extends AbstractController {
                 case Task.TASK_DEEP_SCAN:
                     task = new DeepScanTask(id, new Coordinate(lat, lng));
                     simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
-                    //if (simulator.getAllocator().isSaturated()) {
-                    //    System.out.println("resetting");
-                    //    simulator.getAllocator().resetAllocation();
-                    //}
-                    task.setPriority(100);
-                    simulator.getAllocator().runAutoAllocation();
-                    simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
-                    System.out.println("realloced");
                     break;
                 case Task.TASK_SHALLOW_SCAN:
                     task = new ShallowScanTask(id, new Coordinate(lat, lng));
@@ -54,7 +47,17 @@ public class TaskController extends AbstractController {
                     throw new IllegalArgumentException("Unable to create task of type " + taskType);
             }
             simulator.getState().add(task);
+
+            if (task instanceof DeepScanTask) {
+                task.setPriority(100);
+                simulator.getAllocator().dynamicReassign(task);
+            }
             LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
+            for (Agent a : simulator.getState().getAgents()) {
+                if (!(a instanceof AgentHub) && a.getTask() != null) {
+                    a.resume();
+                }
+            }
             return task;
         }
     }

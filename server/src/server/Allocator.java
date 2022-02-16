@@ -10,6 +10,7 @@ import server.model.Agent;
 import server.model.AgentHub;
 import server.model.Coordinate;
 import server.model.MObject;
+import server.model.target.HumanTarget;
 import server.model.task.*;
 import maxsum.EvaluationFunction;
 
@@ -186,7 +187,9 @@ public class Allocator {
                 }
             }
         for(Task task : simulator.getState().getTasks())
-            task.getAgents().clear();
+            if (!((task instanceof DeepScanTask) && ((DeepScanTask) task).isBeingWorked())) {
+                task.getAgents().clear();
+            }
 
         //Allocate agents to tasks
         for(Map.Entry<String, String> entry : newMainAllocation.entrySet()) {
@@ -745,16 +748,52 @@ public class Allocator {
 
     public boolean isSaturated() {
         // Add 1 to account for hub
-        boolean t = (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
-        System.out.println(1);
         return (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
     }
 
     public void clearAllAgents() {
         for (Agent a : simulator.getState().getAgents()) {
-            a.setAllocatedTaskId(null);
-            a.stop();
+            if (a.getTask() != null && !(a.getTask() instanceof DeepScanTask)) {
+                a.getTask().clearAgents();
+                a.setAllocatedTaskId(null);
+                a.stop();
+            }
         }
+    }
+
+    private Agent getClosestAgentTo(Task t) {
+        double closest = 999999;
+        Agent closestAgent = null;
+        for (Agent a : simulator.getState().getAgents()) {
+            double thisDist = a.getCoordinate().getDistance(t.getCoordinate());
+            if (thisDist < closest && !(a instanceof AgentHub)) {
+                closest = thisDist;
+                closestAgent = a;
+            }
+        }
+        return closestAgent;
+    }
+
+    public void dynamicReassign(Task t) {
+        //clearAllAgents();
+        if (isSaturated()) {
+            Agent a = getClosestAgentTo(t);
+            a.getTask().clearAgents();
+            a.setAllocatedTaskId(null);
+            //a.stop();
+            runAutoAllocation();
+            putInTempAllocation(a.getId(), t.getId());
+        } else {
+            runAutoAllocation();
+        }
+        confirmAllocation(simulator.getState().getTempAllocation());
+
+    }
+
+    public void dynamicReassign() {
+        //clearAllAgents();
+        runAutoAllocation();
+        confirmAllocation(simulator.getState().getTempAllocation());
     }
 
     //Inner class to provide generic pair of Agent-Task

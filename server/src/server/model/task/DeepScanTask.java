@@ -88,10 +88,11 @@ public class DeepScanTask extends Task {
                 workingAgents.add(agent);
             }
             //if(agent.isWorking()) {
-                if(agent.isFinalDestinationReached()) {
-                    Simulator.instance.getImageController().takeImage(targetToScan, true);
-                    return true;
-                }
+            if (agent.getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 3 && scannedAgents.contains(agent)) {
+                // Has been scanned and we are home
+                Simulator.instance.getImageController().takeImage(targetToScan, true);
+                return true;
+            }
             //}
         }
         return false;

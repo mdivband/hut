@@ -42,7 +42,7 @@ public class ImageController extends AbstractController {
             }
         }
         if (!match) {
-            simulator.getState().getPendingIds().add(id);
+            //simulator.getState().getPendingIds().add(id);
             takeImage(simulator.getState().getTarget(id).getCoordinate(), false);
         }
     }

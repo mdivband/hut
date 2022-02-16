@@ -180,6 +180,7 @@ public class Simulator {
                     completedTasks.add(task);
             for(Task task : completedTasks) {
                 task.complete();
+                Simulator.instance.getAllocator().dynamicReassign();
                 //printDiag();
             }
 

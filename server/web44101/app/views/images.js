@@ -11,6 +11,7 @@ App.Views.Images = Backbone.View.extend({
         this.addedRefs = [];
         this.pendingIds = [];
         this.addedPendingIds = [];
+        this.addedDeepIds = [];
         this.render();
 
         var self = this;
@@ -85,11 +86,14 @@ App.Views.Images = Backbone.View.extend({
                         });
                         self.addedIds.push(id)
 
-                    } else if (deepIds.includes(id)) {
+                    } else if (deepIds.includes(id) && !self.addedDeepIds.includes(id)) {
                         // An update scan from shallow to deep
                         console.log("An update scan from shallow to deep");
-                        var button = document.getElementById(id);
+                        var button = document.createElement("button");
+                        button.id = id;
                         button.innerHTML = id + "(high)";
+                        button.className = "image_select_buttons";
+                        self.viewButtons.append(button);
 
                         if (MapImageController.getCurrentImageId() === id) {
                             console.log("    -looking update");
@@ -107,6 +111,7 @@ App.Views.Images = Backbone.View.extend({
                                 $("#rev_deep").prop('disabled', true);
                             });
                         }
+                        self.addedDeepIds.push(id);
 
 
                     } else {
@@ -182,11 +187,22 @@ App.Views.Images = Backbone.View.extend({
         var list = ""
         for (var i = 0; i < self.state.getPendingIds().length; i++) {
             console.log("--" + self.state.getPendingIds()[i]);
-            list = list + self.state.getPendingIds()[i] + " \n"
+            list = list + self.state.getPendingIds()[i] + "<br />"
+            try {
+                var button = document.getElementById(self.state.getPendingIds()[i]);
+                button.remove()
+            } catch (e) {
+                
+            }
+            //button.className = "rev_buttons_greyed";
         }
         console.log(" ")
 
-        this.pendingPanel.innerHTML = list;
+        if (list === "") {
+            this.pendingPanel.innerHTML = "NONE";
+        } else {
+            this.pendingPanel.innerHTML = list;
+        }
 
         /*
         console.log("=apb=");

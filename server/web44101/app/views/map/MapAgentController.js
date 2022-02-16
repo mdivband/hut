@@ -282,7 +282,8 @@ var MapAgentController = {
             markerImgEl.css({
                 'transform': 'rotate(' + agent.getHeading() + 'deg)'
             });
-            MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
+            // Temp dioable battery readout
+            //MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
         }
 
     },
