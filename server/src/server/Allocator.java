@@ -58,8 +58,8 @@ public class Allocator {
         agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || agent instanceof Hub || agent instanceof AgentProgrammed || (agent instanceof AgentVirtual av && av.isGoingHome()));
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 
-        System.out.println("testing:");
-        agentsToAllocate.forEach(System.out::println);
+        //System.out.println("testing:");
+        //agentsToAllocate.forEach(System.out::println);
 
         String allocationMethod = simulator.getState().getAllocationMethod();
 

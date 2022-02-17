@@ -233,56 +233,61 @@ public class AgentController extends AbstractController {
     }
 
     public Agent spawnAgent() {
-        boolean hasProgrammed = false;
-        for (Agent a : Simulator.instance.getState().getAgents()) {
-            if (a instanceof AgentProgrammed) {
-                hasProgrammed = true;
-                break;
+        if (Simulator.instance.getState().getAgents().size() < 11) {
+            boolean hasProgrammed = false;
+            for (Agent a : Simulator.instance.getState().getAgents()) {
+                if (a instanceof AgentProgrammed) {
+                    hasProgrammed = true;
+                    break;
+                }
             }
-        }
-        Agent agent;
-        if (hasProgrammed) {
-            agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
-        } else {
-            int counter = 10;
-            double xOffset;
-            double yOffset;
-            boolean clash = true;
-            Coordinate c = null;
-            while (clash && counter > 0) {
-                xOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
-                yOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
-                c = new Coordinate(simulator.getState().getHubLocation().getLatitude() + xOffset, simulator.getState().getHubLocation().getLongitude() + yOffset);
-                // Check if any agent is too close
-                Coordinate finalC = c;
-                clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0002);
-                counter--;
-            }
-
-            if (clash) {
-                // We still have a clash and can't fit it after 10 attempts
-                agent = null;
+            Agent agent;
+            if (hasProgrammed) {
+                agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
             } else {
-                agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                int counter = 10;
+                double xOffset;
+                double yOffset;
+                boolean clash = true;
+                Coordinate c = null;
+                while (clash && counter > 0) {
+                    xOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
+                    yOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
+                    c = new Coordinate(simulator.getState().getHubLocation().getLatitude() + xOffset, simulator.getState().getHubLocation().getLongitude() + yOffset);
+                    // Check if any agent is too close
+                    Coordinate finalC = c;
+                    clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0002);
+                    counter--;
+                }
+
+                if (clash) {
+                    // We still have a clash and can't fit it after 10 attempts
+                    agent = null;
+                } else {
+                    agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
                 /*
                 simulator.getAllocator().runAutoAllocation();
                 simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
                 double successChance = simulator.getRandom().nextDouble(100);
                 simulator.getState().setSuccessChance(successChance);
                 */
+                }
             }
-        }
-        return agent;
-    }
-
-    public Agent despawnAgent() {
-        Hub hub = Simulator.instance.getState().getHub();
-        if (hub instanceof AgentHubProgrammed ahp) {
-            ahp.scheduleRemoval(1);
-        } else if (hub instanceof AgentHub) {
-            return removeLeastRequiredAgent();
+            return agent;
         }
         return null;
+    }
+
+    public int despawnAgent() {
+        Hub hub = Simulator.instance.getState().getHub();
+        if (hub instanceof AgentHubProgrammed ahp) {
+            return ahp.scheduleRemoval(1);
+        } else if (hub instanceof AgentHub ah) {
+            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 5)
+            //return removeLeastRequiredAgent();
+            return ah.scheduleRemoval(1);
+        }
+        return -1;
     }
 
     public Agent removeClosestAgentToHub() {

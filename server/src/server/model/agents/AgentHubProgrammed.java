@@ -67,8 +67,9 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         return programmerHandler.checkForConnection(agent);
     }
 
-    public void scheduleRemoval(int numRemovals) {
+    public int scheduleRemoval(int numRemovals) {
         scheduledRemovals += numRemovals;
         System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
+        return scheduledRemovals;
     }
 }

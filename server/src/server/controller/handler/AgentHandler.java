@@ -52,11 +52,12 @@ public class AgentHandler extends RestHandler {
     }
 
     private void handleHubDespawn(Request req, Response resp) throws IOException {
-        Agent a = Simulator.instance.getAgentController().despawnAgent();
-        if (a != null) {
-            resp.send(201, "Removed agent " + a);
-        } else {
+        System.out.println("handling " + req);
+        int res = Simulator.instance.getAgentController().despawnAgent();
+        if (res == -1) {
             resp.send(400, "Can't remove, unspecified error");
+        } else {
+            resp.send(201, "Scheduled a removal, " + res + " agents will be removed");
         }
     }
 
