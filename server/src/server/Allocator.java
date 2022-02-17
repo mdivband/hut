@@ -775,7 +775,7 @@ public class Allocator {
     }
 
     public void dynamicReassign(Task t) {
-        //clearAllAgents();
+        LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         if (isSaturated()) {
             Agent a = getClosestAgentTo(t);
             a.getTask().clearAgents();
@@ -787,11 +787,10 @@ public class Allocator {
             runAutoAllocation();
         }
         confirmAllocation(simulator.getState().getTempAllocation());
-
     }
 
     public void dynamicReassign() {
-        //clearAllAgents();
+        LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         runAutoAllocation();
         confirmAllocation(simulator.getState().getTempAllocation());
     }

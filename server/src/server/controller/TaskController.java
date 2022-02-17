@@ -51,8 +51,10 @@ public class TaskController extends AbstractController {
             if (task instanceof DeepScanTask) {
                 task.setPriority(100);
                 simulator.getAllocator().dynamicReassign(task);
+                String trgId = simulator.getTargetController().getTargetAt(new Coordinate(lat, lng)).getId();
+                LOGGER.info(String.format("%s; DPSCN; Creating a deep scan task of id and for target (id, targetId); %s; %s", Simulator.instance.getState().getTime(), id, trgId));
+
             }
-            LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
             for (Agent a : simulator.getState().getAgents()) {
                 if (!(a instanceof AgentHub) && a.getTask() != null) {
                     a.resume();
@@ -66,7 +68,12 @@ public class TaskController extends AbstractController {
         String id = generateUID();
         Task task = PatrolTask.createTask(id, path);
         simulator.getState().add(task);
-        LOGGER.info(String.format("%s; CRPT; Created new patrol task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
+        StringBuilder sb = new StringBuilder();
+        for (Coordinate c : path) {
+            sb.append(c.getLatitude()).append(";").append(c.getLongitude()).append(";");
+        }
+        LOGGER.info(String.format("%s; CRPT; Created new patrol task with points (id, lat1, lng1, lat2, lng2, ...); %s; %s", Simulator.instance.getState().getTime(), id, sb));
+        //LOGGER.info(String.format("%s; CRPT; Created new patrol task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
@@ -83,7 +90,15 @@ public class TaskController extends AbstractController {
         String id = generateUID();
         Task task = RegionTask.createTask(id, nw, ne, se, sw);
         simulator.getState().add(task);
-        LOGGER.info(String.format("%s; CRRG; Created new region task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
+        StringBuilder sb = new StringBuilder();
+        sb.append(nw.getLatitude()).append(";").append(nw.getLongitude()).append(";");
+        sb.append(ne.getLatitude()).append(";").append(ne.getLongitude()).append(";");
+        sb.append(se.getLatitude()).append(";").append(se.getLongitude()).append(";");
+        sb.append(sw.getLatitude()).append(";").append(sw.getLongitude()).append(";");
+        LOGGER.info(String.format("%s; CRRG; Created new region task with corners (id, nwlat, nwlng, nelat, nelng, selat, selng, swlat, swlng,); %s; %s", Simulator.instance.getState().getTime(), id, sb));
+
+
+        //LOGGER.info(String.format("%s; CRRG; Created new region task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
