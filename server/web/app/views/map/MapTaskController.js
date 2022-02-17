@@ -45,131 +45,133 @@ var MapTaskController = {
         });
     },
     onTaskAdd: function (task) {
-        console.log("Task added " + task.getId());
-        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR) {
-            this.$el.gmap("addMarker", {
-                bounds: false,
-                draggable: true,
-                id: task.getId(),
-                position: task.getPosition(),
-                marker: MarkerWithLabel,
-                labelContent: task.getId(),
-                labelAnchor: new google.maps.Point(25, 65),
-                labelClass: "labels",
-                labelStyle: {opacity: 1.0},
-                raiseOnDrag: false,
-                zIndex: 3
-            });
-            var marker = this.$el.gmap("get", "markers")[task.getId()];
-            MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
-            $(marker).click(function () {
-                MapTaskController.onTaskMarkerLeftClick(marker);
-            }).rightclick(function () {
-                MapTaskController.onTaskMarkerRightClick(marker);
-            }).drag(function () {
-                MapTaskController.onTaskMarkerDrag(marker);
-            }).dragend(function () {
-                MapTaskController.onTaskMarkerDragEnd(marker);
-            }).mouseover(function () {
-                MapTaskController.onTaskMarkerMouseover(marker);
-            }).mouseout(function () {
-                MapTaskController.onTaskMarkerMouseout(marker);
-            });
-        }
-        else if(task.getType() === this.state.tasks.TASK_PATROL) {
-            var path = [];
-            for (var i = 0; i < task.getPoints().length; i++) {
-                var point = task.getPoints()[i];
-                path.push(_.position(point.latitude, point.longitude));
+        if (userRole != "analyst") {
+            console.log("Task added " + task.getId());
+            if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: true,
+                    id: task.getId(),
+                    position: task.getPosition(),
+                    marker: MarkerWithLabel,
+                    labelContent: task.getId(),
+                    labelAnchor: new google.maps.Point(25, 65),
+                    labelClass: "labels",
+                    labelStyle: {opacity: 1.0},
+                    raiseOnDrag: false,
+                    zIndex: 3
+                });
+                var marker = this.$el.gmap("get", "markers")[task.getId()];
+                MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
+                $(marker).click(function () {
+                    MapTaskController.onTaskMarkerLeftClick(marker);
+                }).rightclick(function () {
+                    MapTaskController.onTaskMarkerRightClick(marker);
+                }).drag(function () {
+                    MapTaskController.onTaskMarkerDrag(marker);
+                }).dragend(function () {
+                    MapTaskController.onTaskMarkerDragEnd(marker);
+                }).mouseover(function () {
+                    MapTaskController.onTaskMarkerMouseover(marker);
+                }).mouseout(function () {
+                    MapTaskController.onTaskMarkerMouseout(marker);
+                });
             }
+            else if(task.getType() === this.state.tasks.TASK_PATROL) {
+                var path = [];
+                for (var i = 0; i < task.getPoints().length; i++) {
+                    var point = task.getPoints()[i];
+                    path.push(_.position(point.latitude, point.longitude));
+                }
 
-            this.$el.gmap("addShape", "Polyline", {
-                id: task.getId(),
-                editable: true,
-                path: path,
-                strokeOpacity: 0.8,
-                strokeColor: 'black',
-                strokeWeight: 5,
-                zIndex: 0
-            });
-            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
-            google.maps.event.addListener(polyline.getPath(), 'insert_at', function (vertex) {
-                MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
-            });
-            google.maps.event.addListener(polyline.getPath(), 'set_at', function (vertex) {
-                MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
-            });
-            google.maps.event.addListener(polyline.getPath(), 'remove_at', function (vertex) {
-                MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
-            });
-            google.maps.event.addListener(polyline, "rightclick", function (event) {
-                MapTaskController.onPatrolTaskRightClick(task.getId(), polyline, event)
-            });
+                this.$el.gmap("addShape", "Polyline", {
+                    id: task.getId(),
+                    editable: true,
+                    path: path,
+                    strokeOpacity: 0.8,
+                    strokeColor: 'black',
+                    strokeWeight: 5,
+                    zIndex: 0
+                });
+                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
+                google.maps.event.addListener(polyline.getPath(), 'insert_at', function (vertex) {
+                    MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
+                });
+                google.maps.event.addListener(polyline.getPath(), 'set_at', function (vertex) {
+                    MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
+                });
+                google.maps.event.addListener(polyline.getPath(), 'remove_at', function (vertex) {
+                    MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
+                });
+                google.maps.event.addListener(polyline, "rightclick", function (event) {
+                    MapTaskController.onPatrolTaskRightClick(task.getId(), polyline, event)
+                });
 
-            this.$el.gmap("addMarker", {
-                bounds: false,
-                draggable: false,
-                id: task.getId(),
-                position: task.getPosition(),
-                zIndex: 3
-            });
-            var marker = this.$el.gmap("get", "markers")[task.getId()];
-            $(marker).mouseover(function () {
-                MapTaskController.onTaskMarkerMouseover(marker);
-            }).mouseout(function () {
-                MapTaskController.onTaskMarkerMouseout(marker);
-            });
-        }
-        else if(task.getType() === this.state.tasks.TASK_REGION) {
-            var path = [];
-            for (var i = 0; i < task.getPoints().length; i++) {
-                var point = task.getPoints()[i];
-                path.push(_.position(point.latitude, point.longitude));
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    id: task.getId(),
+                    position: task.getPosition(),
+                    zIndex: 3
+                });
+                var marker = this.$el.gmap("get", "markers")[task.getId()];
+                $(marker).mouseover(function () {
+                    MapTaskController.onTaskMarkerMouseover(marker);
+                }).mouseout(function () {
+                    MapTaskController.onTaskMarkerMouseout(marker);
+                });
             }
-            this.$el.gmap("addShape", "Polyline", {
-                id: task.getId(),
-                editable: false,
-                clickable: false,
-                path: path,
-                strokeOpacity: 0.3,
-                strokeColor: 'black',
-                strokeWeight: 5,
-                zIndex: 0
-            });
+            else if(task.getType() === this.state.tasks.TASK_REGION) {
+                var path = [];
+                for (var i = 0; i < task.getPoints().length; i++) {
+                    var point = task.getPoints()[i];
+                    path.push(_.position(point.latitude, point.longitude));
+                }
+                this.$el.gmap("addShape", "Polyline", {
+                    id: task.getId(),
+                    editable: false,
+                    clickable: false,
+                    path: path,
+                    strokeOpacity: 0.3,
+                    strokeColor: 'black',
+                    strokeWeight: 5,
+                    zIndex: 0
+                });
 
-            var corners = task.getCorners();
-            var sw = _.position(corners[3].latitude, corners[3].longitude);
-            var ne = _.position(corners[1].latitude, corners[1].longitude);
-            this.$el.gmap("addShape", "Rectangle", {
-                id: task.getId(),
-                editable: true,
-                bounds: new google.maps.LatLngBounds(sw, ne),
-                strokeOpacity: 0.8,
-                strokeColor: 'black',
-                strokeWeight: 5,
-                zIndex: 0
-            });
-            var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
-            google.maps.event.addListener(rectangle, "bounds_changed", function() {
-                MapTaskController.processRegionTaskChange(task.getId(), rectangle)
-            });
-            google.maps.event.addListener(rectangle, "rightclick", function(event) {
-                MapTaskController.openTaskEditWindow(task, event.latLng);
-            });
+                var corners = task.getCorners();
+                var sw = _.position(corners[3].latitude, corners[3].longitude);
+                var ne = _.position(corners[1].latitude, corners[1].longitude);
+                this.$el.gmap("addShape", "Rectangle", {
+                    id: task.getId(),
+                    editable: true,
+                    bounds: new google.maps.LatLngBounds(sw, ne),
+                    strokeOpacity: 0.8,
+                    strokeColor: 'black',
+                    strokeWeight: 5,
+                    zIndex: 0
+                });
+                var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
+                google.maps.event.addListener(rectangle, "bounds_changed", function() {
+                    MapTaskController.processRegionTaskChange(task.getId(), rectangle)
+                });
+                google.maps.event.addListener(rectangle, "rightclick", function(event) {
+                    MapTaskController.openTaskEditWindow(task, event.latLng);
+                });
 
-            this.$el.gmap("addMarker", {
-                bounds: false,
-                draggable: false,
-                id: task.getId(),
-                position: task.getPosition(),
-                zIndex: 3
-            });
-            var marker = this.$el.gmap("get", "markers")[task.getId()];
-            $(marker).mouseover(function () {
-                MapTaskController.onTaskMarkerMouseover(marker);
-            }).mouseout(function () {
-                MapTaskController.onTaskMarkerMouseout(marker);
-            });
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    id: task.getId(),
+                    position: task.getPosition(),
+                    zIndex: 3
+                });
+                var marker = this.$el.gmap("get", "markers")[task.getId()];
+                $(marker).mouseover(function () {
+                    MapTaskController.onTaskMarkerMouseover(marker);
+                }).mouseout(function () {
+                    MapTaskController.onTaskMarkerMouseout(marker);
+                });
+            }
         }
     },
     onTaskChange: function (task) {
@@ -290,43 +292,45 @@ var MapTaskController = {
         this.updateAllocationRendering();
     },
     updateTaskRendering: function (taskId, colourOptions) {
-        var task = this.state.tasks.get(taskId);
-        var self = this;
-        if (!task)
-            return;
-        if(task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_WAYPOINT)
-            MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
-        else if(task.getType() === this.state.tasks.TASK_PATROL) {
-            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];
-            polyline.setOptions({
-                strokeColor: colourOptions['name'],
-                editable: (self.state.getEditMode() === 2)
-            });
-            MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
-            var marker = this.$el.gmap("get", "markers")[taskId];
-            marker.setVisible(MapAgentController.isManuallyAllocating);
-        }
-        else if(task.getType() === this.state.tasks.TASK_REGION) {
-            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];
-            var path = [];
-            for (var i = 0; i < task.getPoints().length; i++) {
-                var point = task.getPoints()[i];
-                path.push(_.position(point.latitude, point.longitude));
+        if (userRole != "analyst") {
+            var task = this.state.tasks.get(taskId);
+            var self = this;
+            if (!task)
+                return;
+            if(task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_WAYPOINT)
+                MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
+            else if(task.getType() === this.state.tasks.TASK_PATROL) {
+                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];
+                polyline.setOptions({
+                    strokeColor: colourOptions['name'],
+                    editable: (self.state.getEditMode() === 2)
+                });
+                MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
+                var marker = this.$el.gmap("get", "markers")[taskId];
+                marker.setVisible(MapAgentController.isManuallyAllocating);
             }
-            polyline.setOptions({
-                strokeColor: colourOptions['name'],
-                visible: $('#region_path_toggle').is(":checked"),
-                path: path
-            });
-            var rect = this.$el.gmap("get", "overlays > Rectangle", [])[taskId];
-            rect.setOptions({
-                fillColor: colourOptions['name'],
-                strokeColor: colourOptions['name'],
-                editable: (self.state.getEditMode() === 2)
-            });
-            MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
-            var marker = this.$el.gmap("get", "markers")[taskId];
-            marker.setVisible(MapAgentController.isManuallyAllocating);
+            else if(task.getType() === this.state.tasks.TASK_REGION) {
+                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];
+                var path = [];
+                for (var i = 0; i < task.getPoints().length; i++) {
+                    var point = task.getPoints()[i];
+                    path.push(_.position(point.latitude, point.longitude));
+                }
+                polyline.setOptions({
+                    strokeColor: colourOptions['name'],
+                    visible: $('#region_path_toggle').is(":checked"),
+                    path: path
+                });
+                var rect = this.$el.gmap("get", "overlays > Rectangle", [])[taskId];
+                rect.setOptions({
+                    fillColor: colourOptions['name'],
+                    strokeColor: colourOptions['name'],
+                    editable: (self.state.getEditMode() === 2)
+                });
+                MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
+                var marker = this.$el.gmap("get", "markers")[taskId];
+                marker.setVisible(MapAgentController.isManuallyAllocating);
+            }
         }
     },
     /**

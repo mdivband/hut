@@ -366,53 +366,55 @@ App.Views.Map = Backbone.View.extend({
         });
     },
     updateAllocationRendering: function () {
-        var self = this;
-        var mainAllocation = this.state.getAllocation();
-        var tempAllocation = this.state.getTempAllocation();
-        var droppedAllocation = this.state.getDroppedAllocation();
+        if (userRole != "analyst") {
+            var self = this;
+            var mainAllocation = this.state.getAllocation();
+            var tempAllocation = this.state.getTempAllocation();
+            var droppedAllocation = this.state.getDroppedAllocation();
 
-        //Set all task markers to red
-        this.state.tasks.each(function (task) {
-            MapTaskController.updateTaskRendering(task.getId(), self.MarkerColourEnum.RED);
-        });
+            //Set all task markers to red
+            this.state.tasks.each(function (task) {
+                MapTaskController.updateTaskRendering(task.getId(), self.MarkerColourEnum.RED);
+            });
 
-        this.state.agents.each(function (agent) {
-            var agentId = agent.getId();
-            var mainLineId = agentId + "main";
-            var tempLineId = agentId + "temp";
-            var droppedLineId = agentId + "dropped";
+            this.state.agents.each(function (agent) {
+                var agentId = agent.getId();
+                var mainLineId = agentId + "main";
+                var tempLineId = agentId + "temp";
+                var droppedLineId = agentId + "dropped";
 
-            //Draw or hide 'real' allocation.
-            if (agentId in mainAllocation) {
-                if (self.state.getEditMode() === 1)
-                    MapTaskController.updateTaskRendering(mainAllocation[agentId], self.MarkerColourEnum.GREEN);
-                if (!agent.isWorking())
-                    self.drawAllocation(mainLineId, "green", agentId, mainAllocation[agentId]);
+                //Draw or hide 'real' allocation.
+                if (agentId in mainAllocation) {
+                    if (self.state.getEditMode() === 1)
+                        MapTaskController.updateTaskRendering(mainAllocation[agentId], self.MarkerColourEnum.GREEN);
+                    if (!agent.isWorking())
+                        self.drawAllocation(mainLineId, "green", agentId, mainAllocation[agentId]);
+                    else
+                        self.hidePolyline(mainLineId);
+                }
                 else
                     self.hidePolyline(mainLineId);
-            }
-            else
-                self.hidePolyline(mainLineId);
 
-            //Draw or hide 'temp' allocation.
-            if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
-                MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
-                if((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
-                    self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
-            }
-            else
-                self.hidePolyline(tempLineId);
+                //Draw or hide 'temp' allocation.
+                if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
+                    MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
+                    if((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
+                        self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
+                }
+                else
+                    self.hidePolyline(tempLineId);
 
-            //Draw or hide 'dropped' allocation.
-            if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
-                self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
-            else
-                self.hidePolyline(droppedLineId);
-        });
+                //Draw or hide 'dropped' allocation.
+                if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
+                    self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
+                else
+                    self.hidePolyline(droppedLineId);
+            });
 
-        //Colour task marker that is being hovered over when manually allocating
-        if (MapAgentController.taskIdToAllocateManually)
-            MapTaskController.updateTaskRendering(MapAgentController.taskIdToAllocateManually, this.MarkerColourEnum.BLUE);
+            //Colour task marker that is being hovered over when manually allocating
+            if (MapAgentController.taskIdToAllocateManually)
+                MapTaskController.updateTaskRendering(MapAgentController.taskIdToAllocateManually, this.MarkerColourEnum.BLUE);
+        }
     },
     drawAllocation: function (lineId, lineColour, agentId, taskId) {
         var self = this;
