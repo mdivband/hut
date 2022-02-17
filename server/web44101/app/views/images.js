@@ -130,8 +130,10 @@ App.Views.Images = Backbone.View.extend({
     checkAndUpdateDeepButton: function () {
         if (this.state.getDeepAllowed()) {
             $("#rev_deep").show();
+            $("#pending_title").show();
         } else {
             $("#rev_deep").hide();
+            $("#pending_title").hide();
         }
     },
     checkForRemoval: function () {

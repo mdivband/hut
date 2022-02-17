@@ -1,13 +1,13 @@
 {
   "gameId": "WSGA",
-  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You do NOT have access to high-resolution scans in this mode, so you will only see the basic scans that are added to the view window automatically",
   "comment": "This is the Non-Complex - Low scenario",
   "hub": {
     "lat": 50.928955248687274,
     "lng": -1.40882186832185
   },
   "uncertaintyRadius": 20.0,
-  "timeLimitSeconds": 300,
+  "timeLimitSeconds": 480,
   "deepAllowed": false,
   "gameCentre": {
     "lat": 50.929378522204615,
