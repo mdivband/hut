@@ -250,12 +250,12 @@ public class AgentController extends AbstractController {
             boolean clash = true;
             Coordinate c = null;
             while (clash && counter > 0) {
-                xOffset = (simulator.getRandom().nextDouble() * 0.003) - 0.0015;
-                yOffset = (simulator.getRandom().nextDouble() * 0.003) - 0.0015;
+                xOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
+                yOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
                 c = new Coordinate(simulator.getState().getHubLocation().getLatitude() + xOffset, simulator.getState().getHubLocation().getLongitude() + yOffset);
                 // Check if any agent is too close
                 Coordinate finalC = c;
-                clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0005);
+                clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0002);
                 counter--;
             }
 
@@ -264,10 +264,12 @@ public class AgentController extends AbstractController {
                 agent = null;
             } else {
                 agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                /*
                 simulator.getAllocator().runAutoAllocation();
                 simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
                 double successChance = simulator.getRandom().nextDouble(100);
                 simulator.getState().setSuccessChance(successChance);
+                */
             }
         }
         return agent;

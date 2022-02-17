@@ -58,7 +58,8 @@ public class Allocator {
         agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || agent instanceof Hub || agent instanceof AgentProgrammed || (agent instanceof AgentVirtual av && av.isGoingHome()));
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 
-
+        System.out.println("testing:");
+        agentsToAllocate.forEach(System.out::println);
 
         String allocationMethod = simulator.getState().getAllocationMethod();
 
@@ -743,6 +744,20 @@ public class Allocator {
             if (x.contains(m)) return true;
         }
         return false;
+    }
+
+    public void clearAgents() {
+        for (Agent a : simulator.getState().getAgents()) {
+            if (!(a instanceof Hub)) {
+                a.setAllocatedTaskId(null);
+                a.stop();
+                a.setWorking(false);
+                a.setRoute(new ArrayList<>());
+                if (a instanceof AgentVirtual av) {
+                    av.stopGoingHome();
+                }
+            }
+        }
     }
 
     //Inner class to provide generic pair of Agent-Task

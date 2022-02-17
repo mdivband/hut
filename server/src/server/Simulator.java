@@ -42,7 +42,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 2;
+    private static final double gameSpeed = 4;
     private Random random;
     private String nextFileName = "";
 
@@ -143,7 +143,6 @@ public class Simulator {
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-
             /*
             if (state.getTasks().isEmpty()) {
                 System.out.println("END HERE");
@@ -191,6 +190,7 @@ public class Simulator {
                 if (task.step()) {
                     // If it's already tagged by a programmed agent, or if it gets completed by the step command
                     completedTasks.add(task);
+                    //System.out.println("Adding " + task.getId());
                 }
             }
             for(Task task : completedTasks) {
@@ -198,13 +198,9 @@ public class Simulator {
                 Simulator.instance.getScoreController().incrementCompletedTask();
             }
             if (!completedTasks.isEmpty()) {
-                allocator.runAutoAllocation();
-                allocator.confirmAllocation(state.getTempAllocation());
-
                 //double successChance = scoreController.tempHeuristicPredict();
                 double successChance = random.nextDouble(100);
                 state.setSuccessChance(successChance);
-
             }
 
             scoreController.handleUpkeep();
@@ -351,15 +347,6 @@ public class Simulator {
                 }
             }
 
-            if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
-                Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
-                if(timeLimitMinutes.getClass() == Double.class) {
-                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
-                } else {
-                    LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
-                            timeLimitMinutes.toString() + "'. Time limit not changed.");
-                }
-            }
             if(GsonUtils.hasKey(obj,"nextScenarioFile")){
                 Object nextScenarioFile = GsonUtils.getValue(obj, "nextScenarioFile");
                 if(nextScenarioFile.getClass() == String.class) {

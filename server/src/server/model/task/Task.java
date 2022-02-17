@@ -88,11 +88,10 @@ public abstract class Task extends MObject implements Serializable {
             // Completed, but not yet reported to HUB
             return false;
         } else if (status == STATUS_DONE) {
-            System.out.println(getId() + " is done");
+            //System.out.println(getId() + " is done");
             // Completed and should be reported
             return true;
         }
-
         ArrayList<Agent> arrivedAgents = getArrivedAgents();
         if (arrivedAgents.size() > 0) {
             // An agent has found this task
@@ -103,7 +102,7 @@ public abstract class Task extends MObject implements Serializable {
                     vt.triggerReturnHome();
                 }
             } else {
-                setStatus(Task.STATUS_DONE);
+                //setStatus(Task.STATUS_DONE);
             }
         }
 

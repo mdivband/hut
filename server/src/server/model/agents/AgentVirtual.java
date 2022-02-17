@@ -233,4 +233,21 @@ public class AgentVirtual extends Agent {
         return goingHome;
     }
 
+    public void stopGoingHome() {
+        goingHome = false;
+    }
+
+    @Override
+    public String toString() {
+        return "Agent{" +
+                "id=" + getId() +
+                "heading=" + heading +
+                ", route=" + route +
+                ", allocatedTaskId='" + getAllocatedTaskId() + '\'' +
+                ", working=" + isWorking() +
+                ", stopped=" + isStopped() +
+                ", isSearching=" + getSearching() +
+                '}';
+    }
+
 }
