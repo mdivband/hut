@@ -219,9 +219,12 @@ var MapController = {
             MapController.swapMode(true, true);
     },
     onTick: function () {
-        var time = $.fromTime(this.state.getTime());
-        var limit = $.fromTime(this.state.getTimeLimit());
-        $("#game_time").html("Time: " + time + " / " + limit);
+        // TODO this is a temp feature and should be hardcoded
+        var tempTime = this.state.getTime();
+        var tempLimit = this.state.getTimeLimit();
+        var time = $.fromTime(tempTime / 6);
+        var limit = $.fromTime(tempLimit);
+        $("#game_time").html("Time: " + time + "/" + limit);
         this.updateAllocationRendering();
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);

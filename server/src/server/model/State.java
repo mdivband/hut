@@ -102,7 +102,6 @@ public class State {
         inProgress = false;
         allocationMethod = "maxsum";
         flockingEnabled = false;
-
         successChance = 100.00;
         scoreInfo.clear();
         agents.clear();

@@ -39,10 +39,9 @@ public class Simulator {
     private final HazardController hazardController;
     private final Allocator allocator;
 
-
     public static Simulator instance;
 
-    private static final double gameSpeed = 4;
+    private static final double gameSpeed = 6;
     private Random random;
     private String nextFileName = "";
 
@@ -116,8 +115,8 @@ public class Simulator {
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
         this.state.setInProgress(true);
-        allocator.runAutoAllocation();
-        allocator.confirmAllocation(state.getTempAllocation());
+        //allocator.runAutoAllocation();
+        //allocator.confirmAllocation(state.getTempAllocation());
         LOGGER.info("Simulation started.");
     }
 
@@ -306,7 +305,8 @@ public class Simulator {
                 List<String> possibleMethods = new ArrayList<>(Arrays.asList(
                         "random",
                         "maxsum",
-                        "maxsumwithoverspill"
+                        "maxsumwithoverspill",
+                        "bestfirst"
                 ));
 
                 if(possibleMethods.contains(allocationMethod)) {

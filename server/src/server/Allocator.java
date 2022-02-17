@@ -69,6 +69,8 @@ public class Allocator {
             allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
         } else if(allocationMethod.equals("random")) {
             allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        } else if (allocationMethod.equals("bestfirst")) {
+            allocation = bestFirstCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
         }
 
         simulator.getState().setTempAllocation(allocation);
@@ -335,6 +337,43 @@ public class Allocator {
             }
 
             oldresult = result;
+            return result;
+        }
+        return null;
+    }
+
+    protected Map<String, String> bestFirstCompute(List<Agent> agents, List<Task> tasks, boolean editMode) {
+        if (!agents.isEmpty() && !tasks.isEmpty()) {
+            HashMap<String, String> result = new HashMap<>();
+
+            for (Task task : tasks) {
+                task.clearAgents();
+            }
+
+            List<String> taskIdsToAllocate = new ArrayList<>();
+
+            for (int i=0; i< agents.size(); i++) {
+                double minDist = 999999999;
+                Task closestTask = null;
+                for (Task t : tasks) {
+                    double thisDist = simulator.getState().getHubLocation().getDistance(t.getCoordinate());
+                    if (thisDist < minDist && !taskIdsToAllocate.contains(t.getId())) {
+                        minDist = thisDist;
+                        closestTask = t;
+                    }
+                }
+                taskIdsToAllocate.add(closestTask.getId());
+            }
+
+            int index = 0;
+            for (Agent a : agents) {
+                if (!(a instanceof Hub)) {
+                    result.put(a.getId(), taskIdsToAllocate.get(index));
+                    index++;
+                }
+            }
+
+            if (!editMode) oldresult = result;
             return result;
         }
         return null;

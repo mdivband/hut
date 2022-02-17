@@ -104,6 +104,35 @@ App.Views.Map = Backbone.View.extend({
         this.setMode(this.ModeEnum.PAN);
         this.hideForGametype();
     },
+    clearAll() {
+        var self = this;
+        try {
+            self.clearUncertainties();
+            self.clearPredictions();
+            var markers = self.$el.gmap("get", "markers");
+            for (var key in markers) {
+                var marker = markers[key];
+                if (marker) {
+                    console.log("deleting: " + marker);
+                    marker.setMap(null);
+                    delete marker;
+                }
+            }
+            var lines = self.$el.gmap("get", "overlays > Polyline", []);
+            for (var key in lines) {
+                var line = lines[key];
+                if (line) {
+                    console.log("deleting: " + line);
+                    line.setMap(null);
+                    delete line;
+                }
+            }
+
+            console.log("all done ");
+        } catch (e) {
+            console.log("err : " + e);
+        }
+    },
     hideForGametype() {
         var type = this.state.getGameType();
         if (type === this.state.GAME_TYPE_SCENARIO)

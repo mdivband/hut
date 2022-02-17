@@ -283,7 +283,7 @@ public class AgentController extends AbstractController {
         if (hub instanceof AgentHubProgrammed ahp) {
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
-            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 5)
+            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
             //return removeLeastRequiredAgent();
             return ah.scheduleRemoval(1);
         }
