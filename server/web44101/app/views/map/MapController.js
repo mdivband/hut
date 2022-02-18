@@ -108,10 +108,10 @@ var MapController = {
                     description: "This scenario has ended, please close your browser tab"
                 });
                 $.blockWithContent(scenario_end_panel);
-                $('#end_scenario').on('click', function () {
-                    $.post("/reset");
-                    window.history.back();
-                });
+                //$('#end_scenario').on('click', function () {
+                $.post("/reset");
+                    //window.history.back();
+                //});
             }
 
         });
