@@ -151,6 +151,10 @@ public class Simulator {
 
              */
 
+            if (state.getTasks().size() == 0 && agentController.areAllAgentsStopped()) {
+                this.reset();
+            }
+
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
 
@@ -160,46 +164,50 @@ public class Simulator {
                 this.reset();
             }
 
-            // Step agents
-            checkAgentsForTimeout();
+            if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
 
-            Hub hub = state.getHub();
-            if (hub instanceof AgentHub ah) {
-                ah.step(state.isFlockingEnabled());
-            } else if (hub instanceof AgentHubProgrammed ahp) {
-                ahp.step(state.isFlockingEnabled());
-            }
+                // Step agents
+                checkAgentsForTimeout();
 
-            synchronized (state.getAgents()) {
-                for (Agent agent : state.getAgents()) {
-                    if (!(agent instanceof Hub)) {
-                        agent.step(state.isFlockingEnabled());
+                Hub hub = state.getHub();
+                if (hub instanceof AgentHub ah) {
+                    ah.step(state.isFlockingEnabled());
+                } else if (hub instanceof AgentHubProgrammed ahp) {
+                    ahp.step(state.isFlockingEnabled());
+                }
+
+                synchronized (state.getAgents()) {
+                    for (Agent agent : state.getAgents()) {
+                        if (!(agent instanceof Hub)) {
+                            agent.step(state.isFlockingEnabled());
+                        }
                     }
                 }
-            }
 
-            if (state.isCommunicationConstrained()) {
-                state.updateAgentVisibility();
-                state.updateGhosts();
-                state.moveGhosts();
-            }
-            // Step tasks - requires completed tasks array to avoid concurrent modification.
-            List<Task> completedTasks = new ArrayList<>();
-            for (Task task : state.getTasks()) {
-                if (task.step()) {
-                    // If it's already tagged by a programmed agent, or if it gets completed by the step command
-                    completedTasks.add(task);
-                    //System.out.println("Adding " + task.getId());
+                if (state.isCommunicationConstrained()) {
+                    state.updateAgentVisibility();
+                    state.updateGhosts();
+                    state.moveGhosts();
                 }
-            }
-            for(Task task : completedTasks) {
-                task.complete();
-                Simulator.instance.getScoreController().incrementCompletedTask();
-            }
-            if (!completedTasks.isEmpty()) {
-                //double successChance = scoreController.tempHeuristicPredict();
-                double successChance = random.nextDouble(100);
-                state.setSuccessChance(successChance);
+                // Step tasks - requires completed tasks array to avoid concurrent modification.
+                List<Task> completedTasks = new ArrayList<>();
+                for (Task task : state.getTasks()) {
+                    if (task.step()) {
+                        // If it's already tagged by a programmed agent, or if it gets completed by the step command
+                        completedTasks.add(task);
+                        //System.out.println("Adding " + task.getId());
+                    }
+                }
+
+                for (Task task : completedTasks) {
+                    task.complete();
+                    Simulator.instance.getScoreController().incrementCompletedTask();
+                }
+                if (!completedTasks.isEmpty()) {
+                    //double successChance = scoreController.tempHeuristicPredict();
+                    double successChance = random.nextDouble(100);
+                    state.setSuccessChance(successChance);
+                }
             }
 
             scoreController.handleUpkeep();

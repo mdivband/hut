@@ -362,14 +362,17 @@ public class Allocator {
                         closestTask = t;
                     }
                 }
-                taskIdsToAllocate.add(closestTask.getId());
+                if (closestTask != null) {
+                    taskIdsToAllocate.add(closestTask.getId());
+                } else {
+                    System.out.println("passed agent for allocation");
+                }
             }
 
-            int index = 0;
+            Iterator<String> tasksIt = taskIdsToAllocate.iterator();
             for (Agent a : agents) {
-                if (!(a instanceof Hub)) {
-                    result.put(a.getId(), taskIdsToAllocate.get(index));
-                    index++;
+                if (!(a instanceof Hub) && tasksIt.hasNext()) {
+                    result.put(a.getId(), tasksIt.next());
                 }
             }
 

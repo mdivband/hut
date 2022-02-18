@@ -283,7 +283,8 @@ public class AgentController extends AbstractController {
         if (hub instanceof AgentHubProgrammed ahp) {
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
-            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
+            //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
+            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4)
             //return removeLeastRequiredAgent();
             return ah.scheduleRemoval(1);
         }
@@ -358,4 +359,12 @@ public class AgentController extends AbstractController {
         this.uniqueAgentNumber = 1;
     }
 
+    public boolean areAllAgentsStopped() {
+        for (Agent a : simulator.getState().getAgents()) {
+            if (!a.isStopped()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
