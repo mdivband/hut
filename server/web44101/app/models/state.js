@@ -35,7 +35,7 @@ App.Models.State  = Backbone.Model.extend({
         deepAllowed: false,
         timeLimit: 0,
         userName: "",
-        markers: []
+        markers: [],
         communicationRange: 0,
         successChance: 100.00,
         scoreInfo: {},

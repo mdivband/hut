@@ -5,8 +5,6 @@ import server.model.Coordinate;
 import server.model.Sensor;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -81,5 +79,18 @@ public class AgentHub extends Agent implements Hub {
 
     public int getScheduledRemovals() {
         return scheduledRemovals;
+    }
+
+    public boolean allAgentsNear() {
+        boolean allHome = true;
+        for (Agent a : Simulator.instance.getState().getAgents()) {
+            if (!(a instanceof Hub)) {
+                if ((a.getCoordinate().getDistance(getCoordinate()) > 100)) {
+                    allHome = false;
+                    break;
+                }
+            }
+        }
+        return allHome;
     }
 }

@@ -605,6 +605,11 @@ public class State {
         return scoreInfo;
     }
 
+    public boolean setUserName(String userName) {
+        this.userName = userName;
+        return true;
+    }
+
     private class HazardHit {
         private Coordinate location;
         private double weight;

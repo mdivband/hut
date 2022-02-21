@@ -127,7 +127,7 @@ var simulator = {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.isEdit(), false);
 
-                    /*
+
                     if (self.state.getUserName() === "") {
                         // TODO get their name, also log it in backend
                         var name = null;

@@ -286,6 +286,7 @@ public class AgentController extends AbstractController {
             //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
             if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4)
             //return removeLeastRequiredAgent();
+            simulator.getAgentController().decrementAgentNumbers();
             return ah.scheduleRemoval(1);
         }
         return -1;
@@ -359,6 +360,10 @@ public class AgentController extends AbstractController {
         this.uniqueAgentNumber = 1;
     }
 
+    public synchronized void decrementAgentNumbers() {
+        this.uniqueAgentNumber-= 1;
+    }
+
     public boolean areAllAgentsStopped() {
         for (Agent a : simulator.getState().getAgents()) {
             if (!a.isStopped()) {
@@ -366,5 +371,9 @@ public class AgentController extends AbstractController {
             }
         }
         return true;
+    }
+
+    public void modelFailure() {
+
     }
 }

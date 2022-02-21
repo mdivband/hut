@@ -171,7 +171,7 @@ public class Simulator {
 
              */
 
-            if (state.getTasks().size() == 0 && agentController.areAllAgentsStopped()) {
+            if (state.getTasks().size() == 0 && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
                 this.reset();
             }
 
@@ -231,6 +231,8 @@ public class Simulator {
             }
 
             scoreController.handleUpkeep();
+
+            agentController.modelFailure();
 
             // Step hazard hits
             this.state.decayHazardHits();
