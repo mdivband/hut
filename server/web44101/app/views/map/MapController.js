@@ -101,10 +101,8 @@ var MapController = {
             var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
                 "of the targets \n Are you sure you want to exit?");
             if (exitConfirmed) {
-                alert("Pressed, now...")
                 self.views.map.clearAll()
                 $.post("/reset");
-                alert("Resetted")
                 var scenario_end_panel = document.createElement("div");
                 scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                     title: "Scenario Ended",

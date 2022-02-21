@@ -152,7 +152,6 @@ App.Views.Map = Backbone.View.extend({
         } catch (e) {
             console.log("err : " + e);
         }
-        alert("CLEARED")
     },
     hideForGametype() {
         var type = this.state.getGameType();
