@@ -74,6 +74,9 @@ public class State {
     private Coordinate hubLocation;
 
 
+    private String userName = "";
+    private List<String> markers= new ArrayList<>();
+
     public State() {
         agents = new ArrayList<>();
         ghosts = new ArrayList<>();
@@ -104,6 +107,11 @@ public class State {
         flockingEnabled = false;
         successChance = 100.00;
         scoreInfo.clear();
+        uncertaintyRadius = 0;
+
+        gameCentre = null;
+        userName = "";
+
         agents.clear();
         ghosts.clear();
         tasks.clear();
@@ -304,7 +312,9 @@ public class State {
     }
 
     public Collection<Task> getTasks() {
-        return tasks;
+        synchronized (tasks) {
+            return tasks;
+        }
     }
 
     public Collection<Agent> getAgents() {
@@ -553,6 +563,14 @@ public class State {
      */
     public void attachHub(Agent hub) {
         this.hub = (Hub) hub;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public List<String> getMarkers() {
+        return markers;
     }
 
     /**

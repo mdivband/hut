@@ -512,6 +512,26 @@ public class Simulator {
                 }
             }
 
+            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
+                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            }
+
+            List<Object> markers = GsonUtils.getValue(obj, "markers");
+            if (markers != null) {
+                for (Object markerJson : markers) {
+                    String shape = GsonUtils.getValue(markerJson, "shape");
+                    Double cLat = GsonUtils.getValue(markerJson, "centreLat");
+                    Double cLng = GsonUtils.getValue(markerJson, "centreLng");
+                    Double radius = GsonUtils.getValue(markerJson, "radius");
+
+                    String shapeRep = shape+","+cLat+","+cLng+","+radius;
+
+                    this.state.getMarkers().add(shapeRep);
+                }
+            }
+
+
+
             return true;
         } catch (IOException e) {
             e.printStackTrace();

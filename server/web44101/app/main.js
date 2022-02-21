@@ -140,8 +140,6 @@ var simulator = {
 
                     }
 
-                     */
-
                     if (self.state.attributes.prov_doc == null) {
                         var api = new $.provStoreApi({
                             username: 'atomicorchid',

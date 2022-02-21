@@ -28,11 +28,17 @@ App.Models.State  = Backbone.Model.extend({
         hasPassthrough: false,
         uiOptions: {},
         uncertaintyRadius: 0,
+        storedImages : {},
+        deepScannedIds: {},
+        passthrough: false,
+        nextFileName: "",
+        deepAllowed: false,
+        timeLimit: 0,
+        userName: "",
+        markers: []
         communicationRange: 0,
         successChance: 100.00,
         scoreInfo: {},
-        timeLimit: 0.0
-
     },
     url: function() {
         return "state.json?" + _.time();
@@ -148,6 +154,13 @@ App.Models.State  = Backbone.Model.extend({
         return this.get("passthrough");
     },
     getTimeLimit: function () {
+        // TODO this doesn't use the actual gamespeed
         return this.get("timeLimit");
+    },
+    getUserName: function () {
+        return this.get("userName");
+    },
+    getMarkers: function () {
+        return this.get("markers");
     }
 });

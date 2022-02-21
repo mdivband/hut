@@ -368,6 +368,42 @@ App.Views.Map = Backbone.View.extend({
             alert("Prediction drawing error: " + e)
         }
     },
+    /**
+     * Draws persistent markers on the map for reference
+     */
+    drawMarkers: function () {
+
+        try {
+            var markers = this.state.getMarkers();
+            var self = this;
+            for (var i = 0; i < markers.length; i++) {
+                var thisMarker = markers[i];
+                var splitString = thisMarker.split(",")
+                if (splitString[0] === "circle") {
+                    var latX = splitString[1];
+                    var latY = splitString[2];
+                    var rad = splitString[3];
+                    var thisId = "circle" + latX + "," + latY + ", " + rad;
+                    var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[thisId];
+
+                    if (!currentCircle) {
+                        self.$el.gmap("addShape", "Circle", {
+                            id: thisId,
+                            strokeColor: "#FF0000",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 2,
+                            center: new google.maps.LatLng(latX, latY),
+                            radius: parseFloat(rad),
+                            visible: true
+                        });
+                    }
+                }
+
+            }
+        } catch (e) {
+            alert(e);
+        }
+    },
     /***
      * A function to draw the circles for uncertainty.
      * Currently these are of a constant size (proof of concept)

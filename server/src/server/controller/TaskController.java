@@ -38,7 +38,6 @@ public class TaskController extends AbstractController {
             default:
                 throw new IllegalArgumentException("Unable to create task of type " + taskType);
         }
-        LOGGER.severe("Adding task at " + lat + ", " + lng);
         simulator.getState().add(task);
         LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
         return task;

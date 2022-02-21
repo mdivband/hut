@@ -35,6 +35,21 @@ public class ModeHandler extends RestHandler {
         }
     }
 
+    private void handleRegisterUser(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Collections.singletonList("userName");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+        String userName = params.get("userName");
+        if(this.simulator.getState().setUserName(userName))
+            resp.sendOkay();
+        else
+            resp.sendError(400, "Unable to set username to " + userName);
+
+        LOGGER.info(String.format("%s; RGNAME; UserName is (name/id); %s ", simulator.getState().getTime(), simulator.getState().getUserName()));
+
+    }
+
     @Override
     public void handleGet(Request req, Response resp) throws IOException, UnregisteredPathException {
         String rPath = parseRemainingPath(req.getPath());
