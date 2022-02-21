@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 /* Edited by Yuai */
 public class Simulator {
 
-    private String webRef ="src/web";
+    private String webRef ="web";
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
@@ -84,35 +84,24 @@ public class Simulator {
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         } else {
-            port = 8000;
+            port = 44101;
         }
         new Simulator().start(port);
     }
 
-    public void start() {
-        //Setup GSON
-        GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
-        GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
-        GsonUtils.create();
-
-        readConfig();
-        new Thread(connectionController::start).start();
-        LOGGER.info("Server ready.");
-    }
-
     public void start(Integer port) {
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+
         //Setup GSON
         GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
-        pushConfig(port);
-        new Thread(connectionController::start).start();
-        LOGGER.info("Server ready.");
-    }
-
-    public void start(int port, int webRef) {
-        this.webRef = "web"+webRef;
         pushConfig(port);
         new Thread(connectionController::start).start();
         LOGGER.info("Server ready.");
@@ -121,17 +110,17 @@ public class Simulator {
     public void startSandboxMode() {
         this.state.setGameType(State.GAME_TYPE_SANDBOX);
         this.state.setGameId("Sandbox");
-        LOGGER.info("Sandbox loaded.");
+        LOGGER.info(String.format("%s; SBXLD; Sandbox loaded ", getState().getTime()));
         this.startSimulation();
     }
 
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
         if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
-            LOGGER.info("Scenario loaded.");
+            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
-            LOGGER.severe("Unable to start scenario from file - " + scenarioFileName);
+            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -148,7 +137,7 @@ public class Simulator {
         this.state.setInProgress(true);
         //allocator.runAutoAllocation();
         //allocator.confirmAllocation(state.getTempAllocation());
-        LOGGER.info("Simulation started.");
+        LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
     }
 
     public Map<String, String> getScenarioFileListWithGameIds() {
@@ -157,14 +146,14 @@ public class Simulator {
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
                 if (!file.isDirectory()) {
-                    String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
+                    String scenarioName = getScenarioNameFromFile(webRef + SCENARIO_DIR_PATH + file.getName());
                     if (scenarioName != null)
                         scenarios.put(file.getName(), scenarioName);
                 }
             }
         }
         else
-            LOGGER.severe("Could not find scenario directory at " + webRef+SCENARIO_DIR_PATH);
+            LOGGER.info(String.format("%s; SCNF; Could not find scenario (directory); %s ", getState().getTime(), SCENARIO_DIR_PATH));
         return scenarios;
     }
 
@@ -258,11 +247,9 @@ public class Simulator {
         try {
             String json = GsonUtils.readFile("web/scenarios/" + nextFileName);
             Object obj = GsonUtils.fromJson(json);
-
             state.setGameId(GsonUtils.getValue(obj, "gameId"));
             state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
-            System.out.println("Setting as");
-            System.out.println(state.getGameDescription());
+            LOGGER.info(String.format("%s; SCPS; Passing through to next scenario ", getState().getTime()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -277,7 +264,7 @@ public class Simulator {
             if (agent.getMillisSinceLastHeartbeat() > 20 * 1000) {
                 if(!agent.isTimedOut()) {
                     agent.setTimedOut(true);
-                    LOGGER.info("Lost connection with agent " + agent.getId());
+                    LOGGER.info(String.format("%s; LSTCN; Lost connection with agent (id); %s ", getState().getTime(), agent.getId()));
                 }
             }
         }
@@ -310,7 +297,17 @@ public class Simulator {
         targetController.resetTargetNumbers();
         taskController.resetTaskNumbers();
         scoreController.reset();
-        LOGGER.info("Server reset.");
+
+        LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
+        LogManager.getLogManager().reset();
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+        LOGGER = null;
+        LOGGER = Logger.getLogger(Simulator.class.getName());
     }
 
     private void readConfig() {
