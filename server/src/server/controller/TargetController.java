@@ -52,7 +52,7 @@ public class TargetController extends AbstractController {
             return false;
         }
         simulator.getState().remove(target);
-        LOGGER.info("Deleted agent " + id);
+        LOGGER.info(String.format("%s; DELTRG; Deleted target (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, target.getCoordinate().getLatitude(), target.getCoordinate().getLongitude()));
         return true;
     }
 

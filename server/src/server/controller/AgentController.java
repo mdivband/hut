@@ -117,7 +117,7 @@ public class AgentController extends AbstractController {
             oldResult.remove(id);
 
         simulator.getState().remove(agent);
-        LOGGER.info("Deleted agent " + id);
+        LOGGER.info(String.format("%s; DELAG; Deleted Agent (id); %s ", Simulator.instance.getState().getTime(), id));
         return true;
     }
 

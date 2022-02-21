@@ -24,7 +24,7 @@ public class ConnectionController extends AbstractController {
 
     public void init(int port, String webRef) {
         httpserver = new HttpServer(port);
-        LOGGER.info("Server port: " + port);
+        //LOGGER.info("Server port: " + port);
 
         final VirtualHost host = httpserver.getVirtualHost(null);
         host.setAllowGeneratedIndex(true);
@@ -45,8 +45,6 @@ public class ConnectionController extends AbstractController {
                     resp.getHeaders().add("Pragma", "no-cache");
                     resp.getHeaders().add("Expires", "0");
 
-                    System.out.println("Serving port: " + port + " sim = " + Simulator.instance);
-
                     //Attempt to handle as endpoint
                     if (handleEndpoint(req, resp))
                         return 200;
@@ -64,6 +62,8 @@ public class ConnectionController extends AbstractController {
             RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
             RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
             RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
+            RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,7 +71,7 @@ public class ConnectionController extends AbstractController {
 
     public void init(int port) {
         httpserver = new HttpServer(port);
-        LOGGER.info("Server port: " + port);
+        LOGGER.info(String.format("%s; SVPRT; Server port; %s;", Simulator.instance.getState().getTime(), port));
 
         final VirtualHost host = httpserver.getVirtualHost(null);
         host.setAllowGeneratedIndex(true);
@@ -80,7 +80,7 @@ public class ConnectionController extends AbstractController {
             final File dir = new File("web/");
             if (!dir.canRead())
                 throw new IOException(dir + " cannot read.");
-            LOGGER.info("Server home: " + dir);
+            LOGGER.info(String.format("%s; SVHM; Server home; %s;", Simulator.instance.getState().getTime(), dir));
 
             host.addContext("/", new ContextHandler() {
                 ContextHandler fileHandler = new FileContextHandler(dir, "/");
@@ -109,6 +109,7 @@ public class ConnectionController extends AbstractController {
             RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
             RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
             RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
+            RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -128,7 +129,7 @@ public class ConnectionController extends AbstractController {
             //Missing path in root handler means it's probably a request for the file context
             // so don't need to report error.
             if(!(restHandler instanceof RootHandler))
-                LOGGER.severe("Unable to handle request using handler for " + restHandler.getHandlerName() + " - unregistered path " + req.getPath() + ". " + e.getMessage());
+                LOGGER.info(String.format("%s; HNDUN; Unable to handle request using handler for %s - unregistered path %s . %s", Simulator.instance.getState().getTime(), restHandler.getHandlerName(), req.getPath(), e.getMessage()));
             return false;
         }
 

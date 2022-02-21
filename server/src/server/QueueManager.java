@@ -32,7 +32,7 @@ public class QueueManager {
 	public QueueManager(Simulator simulator) {
 		this.simulator = simulator;
 		queues = new HashMap<>();
-		LOGGER.info("QueueManager Fully Started: " + this.initConnectionFactory());
+		LOGGER.info(String.format("%s; QMST; QueueManager Fully Started; %s", Simulator.instance.getState().getTime(), this.initConnectionFactory()));
 	}
 
 	public String getCloudURI() {

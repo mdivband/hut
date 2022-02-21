@@ -104,7 +104,7 @@ public class Simulator {
 
         pushConfig(port);
         new Thread(connectionController::start).start();
-        LOGGER.info("Server ready.");
+        LOGGER.info(String.format("%s; SVRDY; Server ready ", getState().getTime()));
     }
 
     public void startSandboxMode() {
@@ -312,8 +312,8 @@ public class Simulator {
 
     private void readConfig() {
         try {
-            LOGGER.info("Reading Server Config File: " + webRef+SERVER_CONFIG_FILE);
-            String json = GsonUtils.readFile(webRef+SERVER_CONFIG_FILE);
+            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), SERVER_CONFIG_FILE));
+            String json = GsonUtils.readFile(SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
 
