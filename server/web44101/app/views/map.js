@@ -129,6 +129,15 @@ App.Views.Map = Backbone.View.extend({
                     delete marker;
                 }
             }
+            var circles = self.$el.gmap("get", "overlays > Circle");
+            for (var key in circles) {
+                var circle = circles[key];
+                if (circle) {
+                    console.log("deleting: " + circle);
+                    circle.setMap(null);
+                    delete circle;
+                }
+            }
             var lines = self.$el.gmap("get", "overlays > Polyline", []);
             for (var key in lines) {
                 var line = lines[key];
@@ -143,6 +152,7 @@ App.Views.Map = Backbone.View.extend({
         } catch (e) {
             console.log("err : " + e);
         }
+        alert("CLEARED")
     },
     hideForGametype() {
         var type = this.state.getGameType();

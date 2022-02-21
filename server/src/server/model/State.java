@@ -75,7 +75,7 @@ public class State {
     private final List<String> pendingIds = new ArrayList<>(16);
 
     private String userName = "";
-    private List<String> markers= new ArrayList<>();
+    private List<String> markers = new ArrayList<>();
 
     public State() {
         agents = new ArrayList<>();
@@ -102,6 +102,7 @@ public class State {
         allocationMethod = "maxsum";
         flockingEnabled = false;
         uncertaintyRadius = 0;
+        markers.clear();
 
         gameCentre = null;
         userName = "";
