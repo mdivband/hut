@@ -28,7 +28,7 @@ public class AgentHub extends Agent implements Hub {
         //Simulate things that would be done by a real drone
         if(!isTimedOut())
             heartbeat();
-
+        /*
         boolean allHome = true;
         double thresholdDist = 100;
         //System.out.println("Checking: " + Simulator.instance.getState().getAgents());
@@ -59,6 +59,8 @@ public class AgentHub extends Agent implements Hub {
             Simulator.instance.getAllocator().runAutoAllocation();
             Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
         }
+
+         */
     }
 
     @Override

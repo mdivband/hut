@@ -802,6 +802,27 @@ public class Allocator {
         }
     }
 
+    public boolean dynamicAssignNearest(Agent agent) {
+        double nearestDist = 99999999;
+        Task nearestTask = null;
+        for (Task t : simulator.getState().getTasks()) {
+            if (t.getAgents().isEmpty()) {
+                double thisDist = t.getCoordinate().getDistance(agent.getCoordinate());
+                if (thisDist < nearestDist) {
+                    nearestTask = t;
+                    nearestDist = thisDist;
+                }
+            }
+        }
+        if (nearestTask != null) {
+            putInTempAllocation(agent.getId(), nearestTask.getId());
+            confirmAllocation(simulator.getState().getTempAllocation());
+            return true;
+        }
+        return false;
+
+    }
+
     //Inner class to provide generic pair of Agent-Task
     private class Edge {
 

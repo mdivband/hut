@@ -8,7 +8,7 @@ App.Views.Prediction = Backbone.View.extend({
         this.state = options.state;
         this.views = options.views;
         this.canvas = options.canvas;
-        this.ctx = options.ctx;
+        //this.ctx = options.ctx;
 
         var self = this;
         this.state.on("change:successChance", function () {
@@ -18,9 +18,17 @@ App.Views.Prediction = Backbone.View.extend({
         self.update();
     },
     update: function () {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        //this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         var chance = this.state.getSuccessChance();
+        var pred = document.getElementById("prediction_text");
+        pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
 
+        var background = document.getElementById("prediction_circle");
+        background.style.background = this.getColor(chance.toFixed(0));
+        //this.$("#prediction_text").innerHTML = chance;
+
+        //this.ctx.innerHTML = chance;
+        /*
         if (chance > 90) {
             this.ctx.fillStyle = 'rgb(20,255,0)';
         } else if (chance > 80) {
@@ -43,10 +51,17 @@ App.Views.Prediction = Backbone.View.extend({
             this.ctx.fillStyle = 'rgba(255,0,0)';
         }
 
-        this.ctx.font = "Bold 80px Arial";
-        var textToFill = parseFloat(chance.toFixed(2)).toString() + "%";
-        this.ctx.fillText(textToFill, 30, 100);
+         */
+        //this.ctx.font = "Bold 80px Arial";
+        //var textToFill = parseFloat(chance.toFixed(2)).toString() + "%";
+        //this.ctx.fillText(textToFill, 30, 100);
 
+    },
+    getColor: function (p) {
+        var red = p < 50 ? 255 : Math.round(256 - (p - 50) * 5.12);
+        var green = p > 50 ? 255 : Math.round((p) * 5.12);
+        return "rgb(" + red + "," + green + ",0)";
     }
+
 
 });

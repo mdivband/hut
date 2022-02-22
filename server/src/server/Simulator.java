@@ -2,10 +2,7 @@ package server;
 
 import server.controller.*;
 import server.model.*;
-import server.model.agents.Agent;
-import server.model.agents.AgentHub;
-import server.model.agents.AgentHubProgrammed;
-import server.model.agents.Hub;
+import server.model.agents.*;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -196,13 +193,32 @@ public class Simulator {
                     ahp.step(state.isFlockingEnabled());
                 }
 
+                List<Agent> agentsToRemove = new ArrayList<>();
                 synchronized (state.getAgents()) {
                     for (Agent agent : state.getAgents()) {
-                        if (!(agent instanceof Hub)) {
-                            agent.step(state.isFlockingEnabled());
+                        if (agent instanceof AgentVirtual av) {
+                            if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
+                                av.step(state.isFlockingEnabled());
+                            } else {
+                                if (getAgentController().getScheduledRemovals() > 0) {
+                                    agentsToRemove.add(agent);
+                                    getAgentController().decrementRemoval();
+                                } else if (getTaskController().checkForFreeTasks()) {
+                                    getAllocator().dynamicAssignNearest(av);
+                                    av.stopGoingHome();
+
+                                    Simulator.instance.getScoreController().incrementCompletedTask();
+                                    double successChance = random.nextDouble(100);
+                                    state.setSuccessChance(successChance);
+                                } else {
+                                    av.heartbeat();
+                                }
+                            }
                         }
                     }
                 }
+
+                agentsToRemove.forEach(a -> getState().getAgents().remove(a));
 
                 if (state.isCommunicationConstrained()) {
                     state.updateAgentVisibility();
@@ -221,12 +237,6 @@ public class Simulator {
 
                 for (Task task : completedTasks) {
                     task.complete();
-                    Simulator.instance.getScoreController().incrementCompletedTask();
-                }
-                if (!completedTasks.isEmpty()) {
-                    //double successChance = scoreController.tempHeuristicPredict();
-                    double successChance = random.nextDouble(100);
-                    state.setSuccessChance(successChance);
                 }
             }
 

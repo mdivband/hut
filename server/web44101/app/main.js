@@ -56,7 +56,7 @@ var simulator = {
                 el: $("#prediction_canvas"),
                 state: this.state,
                 views: this.views,
-                ctx: $("#prediction").get(0).getContext("2d"),
+                //ctx: $("#prediction").get(0).getContext("2d"),
                 canvas: $("#prediction").get(0)
             });
         } catch (e) {

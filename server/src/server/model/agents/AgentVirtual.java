@@ -250,4 +250,13 @@ public class AgentVirtual extends Agent {
                 '}';
     }
 
+    public boolean isHome() {
+        if (getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 10) {
+            System.out.println("HOME");
+        }
+
+        return getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 10;
+
+    }
+
 }

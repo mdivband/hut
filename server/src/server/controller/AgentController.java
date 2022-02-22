@@ -12,6 +12,7 @@ public class AgentController extends AbstractController {
 
     public static int nextAgentAltitude = 5;
     private static int uniqueAgentNumber = 1;
+    private int scheduledRemovals = 0;
 
     private Sensor sensor;
 
@@ -21,7 +22,16 @@ public class AgentController extends AbstractController {
     }
 
     private String generateUID() {
-        return "UAV-" + uniqueAgentNumber++;
+        String nextId = "UAV-" + uniqueAgentNumber++;
+        while (isClash(nextId)) {
+            System.out.println("CLASH DETECTED. INCREMENTING ID");
+            nextId = "UAV-" + uniqueAgentNumber++;
+        }
+        return nextId;
+    }
+
+    private boolean isClash(String idToCheck) {
+        return simulator.getState().getAgents().stream().anyMatch(a -> a.getId().equals(idToCheck));
     }
 
     public synchronized Agent addRealAgent(double lat, double lng, double heading) {
@@ -233,47 +243,53 @@ public class AgentController extends AbstractController {
     }
 
     public Agent spawnAgent() {
-        if (Simulator.instance.getState().getAgents().size() < 11) {
-            boolean hasProgrammed = false;
-            for (Agent a : Simulator.instance.getState().getAgents()) {
-                if (a instanceof AgentProgrammed) {
-                    hasProgrammed = true;
-                    break;
-                }
-            }
-            Agent agent;
-            if (hasProgrammed) {
-                agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
-            } else {
-                int counter = 10;
-                double xOffset;
-                double yOffset;
-                boolean clash = true;
-                Coordinate c = null;
-                while (clash && counter > 0) {
-                    xOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
-                    yOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
-                    c = new Coordinate(simulator.getState().getHubLocation().getLatitude() + xOffset, simulator.getState().getHubLocation().getLongitude() + yOffset);
-                    // Check if any agent is too close
-                    Coordinate finalC = c;
-                    clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0002);
-                    counter--;
-                }
+        if (scheduledRemovals > 0) {
+            scheduledRemovals--;
+        } else {
 
-                if (clash) {
-                    // We still have a clash and can't fit it after 10 attempts
-                    agent = null;
+
+            if (Simulator.instance.getState().getAgents().size() < 11) {
+                boolean hasProgrammed = false;
+                for (Agent a : Simulator.instance.getState().getAgents()) {
+                    if (a instanceof AgentProgrammed) {
+                        hasProgrammed = true;
+                        break;
+                    }
+                }
+                Agent agent;
+                if (hasProgrammed) {
+                    agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
                 } else {
-                    agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                    int counter = 10;
+                    double xOffset;
+                    double yOffset;
+                    boolean clash = true;
+                    Coordinate c = null;
+                    while (clash && counter > 0) {
+                        xOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
+                        yOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
+                        c = new Coordinate(simulator.getState().getHubLocation().getLatitude() + xOffset, simulator.getState().getHubLocation().getLongitude() + yOffset);
+                        // Check if any agent is too close
+                        Coordinate finalC = c;
+                        clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0002);
+                        counter--;
+                    }
+
+                    if (clash) {
+                        // We still have a clash and can't fit it after 10 attempts
+                        agent = null;
+                    } else {
+                        agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
                 /*
                 simulator.getAllocator().runAutoAllocation();
                 simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
                 double successChance = simulator.getRandom().nextDouble(100);
                 simulator.getState().setSuccessChance(successChance);
                 */
+                    }
                 }
+                return agent;
             }
-            return agent;
         }
         return null;
     }
@@ -284,12 +300,26 @@ public class AgentController extends AbstractController {
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
             //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
-            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4)
-            //return removeLeastRequiredAgent();
-            simulator.getAgentController().decrementAgentNumbers();
-            return ah.scheduleRemoval(1);
+            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4) {
+                simulator.getAgentController().decrementAgentNumbers();
+                return simulator.getAgentController().incrementRemoval();
+                //return ah.scheduleRemoval(1);
+            }
         }
         return -1;
+    }
+
+    private int incrementRemoval() {
+        scheduledRemovals++;
+        return scheduledRemovals;
+    }
+
+    public void decrementRemoval() {
+        scheduledRemovals--;
+    }
+
+    public int getScheduledRemovals() {
+        return scheduledRemovals;
     }
 
     public Agent removeClosestAgentToHub() {

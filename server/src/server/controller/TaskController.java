@@ -169,4 +169,7 @@ public class TaskController extends AbstractController {
         return simulator.getState().getTaskByCoordinate(coordinate);
     }
 
+    public boolean checkForFreeTasks() {
+        return simulator.getState().getTasks().stream().anyMatch(a -> a.getAgents().isEmpty());
+    }
 }

@@ -228,12 +228,6 @@ ul.list li:hover {
     background-color: #C2C8CC;
 }
 
-#prediction {
-	width: 50%;
-	height: 80px;
-	overflow: hidden;
-}
-
 #accordion_sotp_m  table {
 	width: 100%; 
 	table-layout: fixed; 
@@ -545,6 +539,41 @@ ul.list li:hover {
 	background-image: -ms-linear-gradient(top, #333333, #333333);
 	background-image: -o-linear-gradient(top, #333333, #333333);
 	background-image: linear-gradient(to bottom, #333333, #333333);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#333333, endColorstr=#333333);
+}
+
+#prediction_circle {
+	width: 150px;
+	height: 150px;
+	position: relative;
+	text-align : center;
+}
+
+.indicator_circle {
+	width: 500px;
+	height: 500px;
+	line-height: 500px;
+	border-radius: 50%;
+	font-size: 50px;
+	color: #fff;
+	text-align: center;
+	background: #fc0000;
+	/* some position nudging to center the text area */
+	position : relative;
+	left : 30%;
+	top : 15%;
+	/* preserve 3d prevents blurring sometimes caused by the text centering in the next class */
+	transform-style : preserve-3d;
+}
+
+.indicator_text {
+	/* change font/size/etc here */
+	font: 40px "Tahoma", Arial, Serif;
+	text-align : center;
+	color: #000000;
+	/* vertical centering technique */
+	position : relative;
+	top : 50%;
+	transform : translateY(-50%);
 }
 
 
