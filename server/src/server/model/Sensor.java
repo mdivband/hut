@@ -29,4 +29,11 @@ public class Sensor {
         }
         return neighbours;
     }
+
+    public Double[] senseWind(){
+        Double[] wind = new Double[2];
+        wind[0] = this.simulator.getState().getWindSpeed();
+        wind[1] = this.simulator.getState().getWindHeading();
+        return wind;
+    }
 }

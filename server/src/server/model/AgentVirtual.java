@@ -28,14 +28,14 @@ public class AgentVirtual extends Agent {
     void moveTowardsDestination() {
         //Align agent, if aligned then moved towards target
         if(!isStopped() && this.adjustHeadingTowardsGoal())
-            this.moveAlongHeading(1);
+            this.moveAlongHeading(this.windAdjustedSpeed);
     }
 
     @Override
     void performFlocking() {
         //Align agent, if aligned then moved towards target
         if(!isStopped() && this.adjustFlockingHeading())
-            this.moveAlongHeading(1);
+            this.moveAlongHeading(this.windAdjustedSpeed);
     }
 
     /**
@@ -182,7 +182,31 @@ public class AgentVirtual extends Agent {
             hdgRad += 2*Math.PI;
 
         this.heading = Math.toDegrees(hdgRad);
+        adjustForWind();
         return isAligned;
+    }
+
+    private void adjustForWind() {
+        Double[] wind = sensor.senseWind();
+        double windSpeed = wind[0];
+        double windHeading = wind[1];
+
+        double hdgRad = Math.toRadians(this.heading);
+        double windHdgRad = Math.toRadians(windHeading);
+
+        double speedX = this.speed * Math.sin(hdgRad);
+        double speedY = this.speed * Math.cos(hdgRad);
+
+        double windSpeedX = windSpeed * Math.sin(windHdgRad);
+        double windSpeedY = windSpeed * Math.cos(windHdgRad);
+
+        double adjustedSpeed = Math.sqrt(Math.pow(speedX + windSpeedX, 2) + Math.pow(speedY + windSpeedY, 2));
+
+        if (adjustedSpeed < 0.1) {
+            adjustedSpeed = 0.1;
+        }
+
+        this.windAdjustedSpeed = adjustedSpeed;
     }
 
     /**

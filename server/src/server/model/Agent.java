@@ -29,6 +29,7 @@ public abstract class Agent extends MObject implements Serializable {
     private final List<Coordinate> route;
     private final List<Coordinate> tempRoute;
     protected double speed;
+    protected double windAdjustedSpeed;
     private String allocatedTaskId;
     private double timeInAir;
     private boolean simulated;
@@ -46,7 +47,8 @@ public abstract class Agent extends MObject implements Serializable {
 
         this.simulated = simulated;
 
-        speed = 6.0;
+        speed = 1.0;
+        windAdjustedSpeed = speed;
         heading = 0.0;
         battery = 1.0;
         altitude = 3.0;

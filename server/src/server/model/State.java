@@ -73,6 +73,9 @@ public class State {
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
 
+    private Double windSpeed;
+    private Double windHeading;
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -98,6 +101,8 @@ public class State {
         allocationMethod = "maxsum";
         flockingEnabled = false;
         uncertaintyRadius = 0;
+        windSpeed = 1.0;
+        windHeading = 0.0;
 
         gameCentre = null;
 
@@ -405,6 +410,14 @@ public class State {
 
     public void setDeepAllowed(Boolean deepAllowed) {
         this.deepAllowed = deepAllowed;
+    }
+
+    public Double getWindSpeed() {
+        return windSpeed;
+    }
+
+    public Double getWindHeading() {
+        return windHeading;
     }
 
     private class HazardHit {
