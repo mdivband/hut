@@ -27,6 +27,9 @@ public class ModeHandler extends RestHandler {
             case "/scenario":
                 handleScenario(req, resp);
                 break;
+            case "/scenario/registerUser":
+                handleRegisterUser(req, resp);
+                break;
             case "/scenario/start":
                 handleScenarioStart(resp);
                 break;
