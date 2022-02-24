@@ -7,16 +7,21 @@ import server.model.Sensor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 public class AgentVirtual extends Agent {
     protected transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
     protected transient Sensor sensor;
 
+    private transient boolean alive = true;
     protected boolean goingHome = false;
+    private double batteryVariance;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
+        batteryVariance = 0.0001 - (Simulator.instance.getRandom().nextDouble() / 5000);
+        System.out.println("var = " + batteryVariance);
         this.sensor = sensor;
     }
 
@@ -30,13 +35,17 @@ public class AgentVirtual extends Agent {
                     goingHome = false;
                 }
             }
-        } else {
+            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
+        } else if (alive) {
             super.step(flockingEnabled);
+
+            // TEMP - Incorporate some randomness  (base 0.0005
+            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
         }
+
         //Simulate things that would be done by a real drone
-        if(!isTimedOut())
+        if (!isTimedOut())
             heartbeat();
-        this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
     }
 
     @Override
@@ -251,12 +260,39 @@ public class AgentVirtual extends Agent {
     }
 
     public boolean isHome() {
-        if (getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 10) {
-            System.out.println("HOME");
+        return getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 15;
+
+    }
+
+    public void kill() {
+        goHome();
+        if (getAllocatedTaskId() != null && !getAllocatedTaskId().equals("")) {
+            getTask().getAgents().remove(this);
         }
+        Simulator.instance.getAllocator().removeFromTempAllocation(getId());
+        setAllocatedTaskId(null);
+        setSearching(false);
+        alive = false;
+        setType("leader");
+    }
 
-        return getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 10;
+    public boolean isAlive() {
+        return alive;
+    }
 
+    public void charge() {
+        battery += unitTimeBatteryConsumption * 10;
+        if (battery >= 1) {
+            battery = 1;
+            alive = true;
+            setWorking(false);
+            //setSearching(true);
+            resume();
+            setType("standard");
+        }
+        if (isTimedOut()) {
+            heartbeat();
+        }
     }
 
 }

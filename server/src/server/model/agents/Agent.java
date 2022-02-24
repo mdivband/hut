@@ -19,7 +19,7 @@ public abstract class Agent extends MObject implements Serializable {
 
     private static final long serialVersionUID = 5561040348988016571L;
     static final float unitTurningAngle = 0.1F; //Radians
-    static final float unitTimeBatteryConsumption = 0.0001F;
+    static final float unitTimeBatteryConsumption = 0.00025F;
     private static final double EPS = 1e-5;
 
     //Used in client
@@ -303,7 +303,7 @@ public abstract class Agent extends MObject implements Serializable {
 
     private void onTimeOut() {
         Simulator.instance.getAllocator().moveToDroppedAllocation(this.getId());
-        Simulator.instance.changeView(true);
+        //Simulator.instance.changeView(true);
     }
 
     public boolean isTimedOut() {
@@ -320,6 +320,10 @@ public abstract class Agent extends MObject implements Serializable {
 
     public void setBattery(double battery) {
         this.battery = battery;
+    }
+
+    public double getBattery() {
+        return battery;
     }
 
     // This method returns an approximation of the length of a planned path
@@ -423,4 +427,5 @@ public abstract class Agent extends MObject implements Serializable {
                 ", stopped=" + stopped +
                 '}';
     }
+
 }

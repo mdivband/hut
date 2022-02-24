@@ -38,6 +38,7 @@ public class Simulator {
     private final ScoreController scoreController;
     private final HazardController hazardController;
     private final Allocator allocator;
+    private final Modeller modeller;
 
     public static Simulator instance;
 
@@ -59,6 +60,7 @@ public class Simulator {
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
+        modeller = new Modeller(this);
         random = new Random();
 
         queueManager.initDroneDataConsumer();
@@ -197,18 +199,27 @@ public class Simulator {
                 synchronized (state.getAgents()) {
                     for (Agent agent : state.getAgents()) {
                         if (agent instanceof AgentVirtual av) {
-                            if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
+                            agentController.modelFailure(av);
+
+                            if (agent.isTimedOut()) {
+                                //System.out.println("timed out, passing");
+                            } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
+                                av.charge();
+                            } else if (agent.getBattery() < 0 && av.isAlive()) {
+                                av.kill();
+                            } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
                                 av.step(state.isFlockingEnabled());
                             } else {
                                 if (getAgentController().getScheduledRemovals() > 0) {
                                     agentsToRemove.add(agent);
                                     getAgentController().decrementRemoval();
                                 } else if (getTaskController().checkForFreeTasks()) {
-                                    getAllocator().dynamicAssignNearest(av);
                                     av.stopGoingHome();
+                                    getAllocator().dynamicAssignNearest(av);
 
                                     Simulator.instance.getScoreController().incrementCompletedTask();
-                                    double successChance = random.nextDouble(100);
+                                    //double successChance = random.nextDouble(100);
+                                    double successChance = modeller.calculateAll();
                                     state.setSuccessChance(successChance);
                                 } else {
                                     av.heartbeat();
@@ -241,8 +252,6 @@ public class Simulator {
             }
 
             scoreController.handleUpkeep();
-
-            agentController.modelFailure();
 
             // Step hazard hits
             this.state.decayHazardHits();

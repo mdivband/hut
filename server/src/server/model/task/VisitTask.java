@@ -30,8 +30,6 @@ public class VisitTask extends Task {
     public void triggerReturnHome() {
         for (Agent a : getArrivedAgents()) {
             if (a instanceof AgentVirtual av && getAgents().contains(a)) {
-                System.out.println("Sending home " + a.getId() + " which has task " + a.getAllocatedTaskId() + " " + a.getTask());
-                System.out.println("This task holds : " + getAgents());
                 av.goHome();
             }
         }

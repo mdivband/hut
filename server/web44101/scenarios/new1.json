@@ -11,7 +11,7 @@
     "lat": 50.928955248687274,
     "lng": -1.40882186832185
   },
-  "timeLimitSeconds": 215,
+  "timeLimitSeconds": 240,
   "uncertaintyRadius": 200.0,
   "gameCentre": {
     "lat": 50.929378522204615,
