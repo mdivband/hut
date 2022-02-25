@@ -403,25 +403,27 @@ public class AgentController extends AbstractController {
         return true;
     }
 
-    public void modelFailure(Agent a) {
+    public boolean modelFailure(Agent a) {
         // Each agent is called every 5 seconds, and the scenario is 4 mins (at time of writing) at 6 times speed
         //  this means that to have just a few failures in a scenario typically, let's say 4*6*60*5 = 7200,
         //  and 7200*10agents max = 72000, so 3/72000 = 1/24000 per step to average three failures at 10 agents total
         //  Gives ~0.000041667, and I tweak by eye after that
 
         if (a instanceof AgentVirtual av) {
-            if (simulator.getRandom().nextDouble() < 0.00002) {
+            if (simulator.getRandom().nextDouble()  < 0.00004) {
                 av.setTimedOut(true);
                 if (av.getAllocatedTaskId() != null && !av.getAllocatedTaskId().equals("")) {
                     av.getTask().getAgents().remove(av);
                 }
                 Simulator.instance.getAllocator().removeFromTempAllocation(av.getId());
                 av.stop();
+                av.setType("ghost");
                 av.setAllocatedTaskId(null);
                 av.setSearching(false);
+                return true;
             }
         }
-
-
+        return false;
     }
+
 }

@@ -610,6 +610,10 @@ public class State {
         return true;
     }
 
+    public Collection<Task> getCompletedTasks() {
+        return completedTasks;
+    }
+
     private class HazardHit {
         private Coordinate location;
         private double weight;

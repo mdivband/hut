@@ -176,6 +176,7 @@ public class Simulator {
 
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+                modeller.outputResults();
 
                 if (state.isPassthrough()) {
                     updateNextValues();
@@ -199,13 +200,16 @@ public class Simulator {
                 synchronized (state.getAgents()) {
                     for (Agent agent : state.getAgents()) {
                         if (agent instanceof AgentVirtual av) {
-                            agentController.modelFailure(av);
+                            if (agentController.modelFailure(av)) {
+                                modeller.failRecord(agent.getAllocatedTaskId());
+                            }
 
                             if (agent.isTimedOut()) {
                                 //System.out.println("timed out, passing");
                             } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
                                 av.charge();
                             } else if (agent.getBattery() < 0 && av.isAlive()) {
+                                modeller.failRecord(agent.getAllocatedTaskId());
                                 av.kill();
                             } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
                                 av.step(state.isFlockingEnabled());
@@ -249,6 +253,15 @@ public class Simulator {
                 for (Task task : completedTasks) {
                     task.complete();
                 }
+
+                if (!completedTasks.isEmpty()) {
+                    modeller.passRecords();
+                }
+
+                if (!modeller.isStarted()) {
+                    modeller.start();
+                }
+
             }
 
             scoreController.handleUpkeep();
