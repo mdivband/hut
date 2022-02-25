@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -90,12 +91,15 @@ public class Simulator {
     }
 
     public void start(Integer port) {
+        /*
         try {
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
         } catch (final IOException e) {
             Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
             Logger.getAnonymousLogger().severe(e.getMessage());
         }
+
+         */
 
         //Setup GSON
         GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
@@ -104,7 +108,7 @@ public class Simulator {
 
         pushConfig(port);
         new Thread(connectionController::start).start();
-        LOGGER.info("Server ready.");
+        // LOGGER.info("Server ready.");
     }
 
     public void startSandboxMode() {
@@ -117,10 +121,10 @@ public class Simulator {
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
         if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
-            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
+            //LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
-            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
+            //LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -135,7 +139,7 @@ public class Simulator {
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
         this.state.setInProgress(true);
-        LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
+        // LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
     }
 
     public Map<String, String> getScenarioFileListWithGameIds() {
@@ -233,6 +237,7 @@ public class Simulator {
     }
 
     public void changeView(int modeFlag) {
+        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
         if (modeFlag == 2) {
             //agentController.stopAllAgents();
             //agentController.updateAgentsTempRoutes();
@@ -267,6 +272,7 @@ public class Simulator {
         imageController.reset();
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
+        /*
         LogManager.getLogManager().reset();
         try {
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
@@ -276,6 +282,34 @@ public class Simulator {
         }
         LOGGER = null;
         LOGGER = Logger.getLogger(Simulator.class.getName());
+
+         */
+    }
+
+    public void resetLogging(String userName) {
+        try {
+            String fileName = userName + "-" + state.getGameId() + ".log";
+            FileHandler fileHandler = new FileHandler(fileName);
+            LogManager.getLogManager().reset();
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+            LOGGER.addHandler(fileHandler);
+            state.resetLogger(fileHandler);
+            taskController.resetLogger(fileHandler);
+            queueManager.resetLogger(fileHandler);
+            agentController.resetLogger(fileHandler);
+            targetController.resetLogger(fileHandler);
+            connectionController.resetLogger(fileHandler);
+            hazardController.resetLogger(fileHandler);
+            allocator.resetLogger(fileHandler);
+            imageController.resetLogger(fileHandler);
+            LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
+
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+
+        //System.out.println("Save now as " + userName + ", " + state.getGameId());
     }
 
     private void readConfig() {
@@ -453,9 +487,6 @@ public class Simulator {
                     this.state.getMarkers().add(shapeRep);
                 }
             }
-
-
-
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -518,4 +549,5 @@ public class Simulator {
     public ImageController getImageController() {
         return imageController;
     }
+
 }

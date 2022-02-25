@@ -8,6 +8,7 @@ import tool.HttpServer.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
@@ -159,11 +160,11 @@ public class ConnectionController extends AbstractController {
      * Recursively iterates backwards through /'s until handler is found.
      */
     private RestHandler getHandlerForPath(String path) {
-        if(path == null || path.equals(""))
+        if (path == null || path.equals(""))
             return RestHandlerFactory.getRestHandler("/");
 
         RestHandler handler = RestHandlerFactory.getRestHandler(path);
-        if(handler != null)
+        if (handler != null)
             return handler;
         return getHandlerForPath(path.substring(0, path.lastIndexOf("/")));
     }

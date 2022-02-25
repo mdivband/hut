@@ -7,6 +7,7 @@ import server.model.task.Task;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class AgentController extends AbstractController {
 

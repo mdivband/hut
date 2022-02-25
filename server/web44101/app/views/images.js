@@ -25,9 +25,15 @@ App.Views.Images = Backbone.View.extend({
             self.update();
         });
 
+        this.state.on("change:editMode", function () {
+            self.checkForNonRemoved();
+            self.checkForRemoval();
+            self.update();
+        });
+
         this.checkAndUpdateDeepButton();
 
-        this.bind("update", this.update);
+        //this.bind("update", this.update);
     },
     setup: function() {
 
@@ -51,7 +57,7 @@ App.Views.Images = Backbone.View.extend({
                 var iRef = knownImages[id]
                 if (iRef !== undefined) {
                     if (!self.addedIds.includes(id) && deepIds.includes(id)) {
-                        console.log("A new scan and is deep");
+                        console.log("Adding deep: " + id);
                         // A new scan and is deep
                         var button = document.createElement("button");
                         button.id = id;
@@ -69,7 +75,7 @@ App.Views.Images = Backbone.View.extend({
                         self.addedIds.push(id)
 
                     } else if (!self.addedIds.includes(id)) {
-                        console.log("A new scan and is shallow");
+                        console.log("Adding shallow " + id);
                         // A new scan and is shallow
                         var button = document.createElement("button");
                         button.id = id;
@@ -88,7 +94,7 @@ App.Views.Images = Backbone.View.extend({
 
                     } else if (deepIds.includes(id) && !self.addedDeepIds.includes(id)) {
                         // An update scan from shallow to deep
-                        console.log("An update scan from shallow to deep");
+                        console.log("Updating to deep " + id);
                         var button = document.createElement("button");
                         button.id = id;
                         button.innerHTML = id + "(high)";
@@ -101,22 +107,67 @@ App.Views.Images = Backbone.View.extend({
                             MapImageController.triggerImage(id, iRef, true);
                             $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
                             $("#rev_deep").prop('disabled', true);
-                        } else {
-                            // Problem section
-                            button.addEventListener("click", function (event) {
-                                console.log("    case 4 pressed");
-                                MapImageController.triggerImage(id, iRef, true);
-                                $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
-                                button.focus();
-                                $("#rev_deep").prop('disabled', true);
-                            });
                         }
+                        button.addEventListener("click", function (event) {
+                            console.log("    case 4 pressed");
+                            MapImageController.triggerImage(id, iRef, true);
+                            $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
+                            button.focus();
+                            $("#rev_deep").prop('disabled', true);
+                        });
                         self.addedDeepIds.push(id);
 
 
                     } else {
                         // An update to a shallow (just switching image)
-                        //console.log("Condition 4, unexpected")
+                        console.log("Condition 4, unexpected " + id)
+                        /*
+                        var buttonForThisId = document.getElementById(id);
+                        if (buttonForThisId) {
+                            console.log(1);
+                        }
+                        if (self.addedIds.includes(id)) {
+                            console.log(2);
+                        }
+                        if (self.pendingIds.includes(id)) {
+                            console.log(3);
+                        }
+                        if (self.addedPendingIds.includes(id)) {
+                            console.log(4);
+                        }
+                        if (self.addedRefs.includes(iRef)) {
+                            console.log(5);
+                        }
+                        console.log()
+                        if (buttonForThisId && !self.addedIds.includes(id) && !self.addedRefs.includes(iRef) && !self.pendingIds.includes(id) && !self.addedPendingIds.includes(id)) {
+                            console.log("EXTRA ADD!!!")
+                            buttonForThisId.addEventListener("click", function (event) {
+                                //console.log("Selecting an image that is deep scanned - " + iRef);
+                                MapImageController.triggerImage(id, iRef, true);
+                                $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
+                                buttonForThisId.focus();
+                                $("#rev_deep").prop('disabled', true);
+                            });
+                            // self.addedIds.push(id)
+                        }
+
+                         */
+
+                        /*
+                        if (buttonForThisId) {
+                            // We have a button for this id
+                            buttonForThisId.remove()
+
+
+                        }
+
+                        if (!self.addedIds.includes(id)) {
+
+                            console.log("Not in here")
+                        }
+                        MapTargetController.checkIcon(id);
+
+                         */
                     }
 
                 }
@@ -184,11 +235,11 @@ App.Views.Images = Backbone.View.extend({
         MapController.clearReviewImage();
     },
     updatePendingList: function () {
-        console.log("Pending: ")
+        //console.log("Pending: ")
         var self = this;
         var list = ""
         for (var i = 0; i < self.state.getPendingIds().length; i++) {
-            console.log("--" + self.state.getPendingIds()[i]);
+            //console.log("--" + self.state.getPendingIds()[i]);
             list = list + self.state.getPendingIds()[i] + "<br />"
             try {
                 var button = document.getElementById(self.state.getPendingIds()[i]);
@@ -198,7 +249,7 @@ App.Views.Images = Backbone.View.extend({
             }
             //button.className = "rev_buttons_greyed";
         }
-        console.log(" ")
+        //console.log(" ")
 
         if (list === "") {
             this.pendingPanel.innerHTML = "NONE";
@@ -224,7 +275,19 @@ App.Views.Images = Backbone.View.extend({
         }
 
          */
-    }
+    },
+    checkForNonRemoved : function() {
+        try {
+            var buttons = document.getElementsByClassName('image_select_buttons');
+            for (var i = 0; i < buttons.length; i++) {
+                //console.log(buttons[i]);
+                var thisId = buttons[i].id;
+                MapTargetController.checkIcon(thisId);
+            }
+        } catch (e) {
+            alert(e);
+        }
 
+    }
 
 });

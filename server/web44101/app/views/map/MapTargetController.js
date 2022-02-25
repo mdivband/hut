@@ -1,5 +1,6 @@
 var MapTargetController = {
     revealDistance: 50,
+    classifiedIds: [],
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapAgentController.method() without
@@ -17,6 +18,7 @@ var MapTargetController = {
         this.openScanWindow = _.bind(this.openScanWindow, context);
         this.clearReviewedTarget = _.bind(this.clearReviewedTarget, context);
         this.placeEmptyTargetMarker = _.bind(this.placeEmptyTargetMarker, context);
+        this.checkIcon = _.bind(this.checkIcon, context);
     },
     bindEvents: function () {
         this.state.targets.on("add", function (target) {
@@ -116,6 +118,16 @@ var MapTargetController = {
         } catch (e) {
             alert(e)
         }
+    },
+    checkIcon : function (targetId) {
+        if (MapTargetController.classifiedIds.includes(targetId)) {
+            var marker = this.$el.gmap("get", "markers")[targetId];
+            if (marker) {
+                //console.log("problem, rmeove here")
+                alert("PROIBLEM> REMOVE HERE")
+            }
+        }
+
     },
     updateTargetMarkerIcon: function (target) {
         var marker = this.$el.gmap("get", "markers")[target.getId()];

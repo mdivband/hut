@@ -80,7 +80,6 @@ public class RootHandler extends RestHandler {
             return;
         //simulator.changeView(Boolean.parseBoolean(params.get("edit")));
         simulator.changeView(Integer.parseInt(params.get("edit")));
-        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), Integer.parseInt(params.get("edit"))));
         resp.sendOkay();
     }
 

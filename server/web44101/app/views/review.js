@@ -36,6 +36,7 @@ App.Views.Review = Backbone.View.extend({
         this.render();
     },
     displayImage: function (id, iRef, update) {
+        console.log("updating image id=" + id + ", iref=" + iRef)
         if (update) {
             this.currentImageName = id;
             this.currentImageRef = iRef;

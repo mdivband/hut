@@ -15,6 +15,7 @@ import server.model.task.*;
 import maxsum.EvaluationFunction;
 
 import java.util.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
@@ -793,6 +794,9 @@ public class Allocator {
         LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         runAutoAllocation();
         confirmAllocation(simulator.getState().getTempAllocation());
+    }
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
     //Inner class to provide generic pair of Agent-Task

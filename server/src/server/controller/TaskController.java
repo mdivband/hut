@@ -11,6 +11,7 @@ import server.model.task.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class TaskController extends AbstractController {
 
@@ -36,7 +37,9 @@ public class TaskController extends AbstractController {
                     task = new MonitorTask(id, new Coordinate(lat, lng));
                     break;
                 case Task.TASK_DEEP_SCAN:
-                    task = new DeepScanTask(id, new Coordinate(lat, lng));
+                    synchronized (simulator.getState().getTasks()) {
+                        task = new DeepScanTask(id, new Coordinate(lat, lng));
+                    }
                     simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
                     break;
                 case Task.TASK_SHALLOW_SCAN:
@@ -187,4 +190,5 @@ public class TaskController extends AbstractController {
     public synchronized void resetTaskNumbers() {
         this.uniqueTaskNumber = 1;
     }
+
 }

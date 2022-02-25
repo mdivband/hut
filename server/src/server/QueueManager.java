@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 public class QueueManager {
@@ -123,7 +124,11 @@ public class QueueManager {
 		}
 	}
 
-	public class MessagePublisher {
+    public void resetLogger(FileHandler fileHandler) {
+		LOGGER.addHandler(fileHandler);
+    }
+
+    public class MessagePublisher {
 		public boolean publishMessage(String queueName, String message){
 			QueueManager.this.publishMessage(queueName, message);
 			return true;

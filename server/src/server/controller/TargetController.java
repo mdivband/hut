@@ -8,6 +8,7 @@ import server.model.target.Target;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class TargetController extends AbstractController {
 
@@ -95,10 +96,11 @@ public class TargetController extends AbstractController {
 
     public Target getTargetAt(Coordinate c) {
         for (Target t : Simulator.instance.getState().getTargets()) {
-            if(t.getCoordinate().getDistance(c) < 1) {  // TODO work out appropriate epsilon value
+            if(t.getCoordinate().getDistance(c) < 5) {  // TODO work out appropriate epsilon value
                 return t;
             }
         }
+        System.out.println("IMAGE ERROR: No target found near coordinate: " + c);
         return null;
     }
 

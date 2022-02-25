@@ -13,6 +13,8 @@ import tool.GsonUtils;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -430,6 +432,10 @@ public class State {
 
     public List<String> getPendingIds() {
         return pendingIds;
+    }
+
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
     private class HazardHit {

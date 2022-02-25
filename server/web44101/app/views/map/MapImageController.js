@@ -1,4 +1,5 @@
 var MapImageController = {
+    requestedIds : [],
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapAgentController.method() without
@@ -74,35 +75,51 @@ var MapImageController = {
         return this.views.review.currentImageName;
     },
     classify: function (status) {
-        var img = MapController.getCurrentImage();
-        $.post("/review/classify", {
-            ref: img,
-            status: status,
-        });
-        var tgtId = this.views.review.currentImageName;
-        var marker = this.$el.gmap("get", "markers")[tgtId];
-        var position = marker.getPosition();
-        MapTargetController.clearReviewedTarget(marker);
-        MapTargetController.placeEmptyTargetMarker(position, tgtId, status);
+        var self = this;
+        try {
+            var img = MapController.getCurrentImage();
+            var tgtId = this.views.review.currentImageName;
+            if (!MapTargetController.classifiedIds.includes(tgtId)) {
+                MapTargetController.classifiedIds.push(tgtId);
+                $.post("/review/classify", {
+                    ref: img,
+                    status: status,
+                });
+            }
+            var marker = self.$el.gmap("get", "markers")[tgtId];
+            if (marker) {
+                var position = marker.getPosition();
+                MapTargetController.clearReviewedTarget(marker);
+                MapTargetController.placeEmptyTargetMarker(position, tgtId, status);
+
+            }
+        } catch (e) {
+            alert("class : " + e)
+        }
     },
     referDeep: function () {
+        var self = this;
         var tgtId = this.views.review.currentImageName;
-        var marker = this.$el.gmap("get", "markers")[tgtId];
 
-        var newId = "[" + tgtId + "]";
-        var existingMarker = this.$el.gmap("get", "markers")[newId];
+        if (!MapImageController.requestedIds.includes(tgtId)) {
+            MapImageController.requestedIds.push(tgtId);
+            var marker = self.$el.gmap("get", "markers")[tgtId];
 
-        // TODO If you reselect you can add this again, must fix
-        if (!existingMarker) {
-            marker.setOptions({labelContent: newId});
-            MapTaskController.addDeepScanTask(marker.getPosition());
-            var icon = self.icons.TargetDeepScan;
-            marker.setIcon(icon.Image)
-        } else {
-            console.log("Already pressed")
+            var newId = "[" + tgtId + "]";
+            var existingMarker = self.$el.gmap("get", "markers")[newId];
+
+            if (!existingMarker) {
+                marker.setOptions({labelContent: newId});
+                MapTaskController.addDeepScanTask(marker.getPosition());
+                var icon = self.icons.TargetDeepScan;
+                marker.setIcon(icon.Image)
+            } else {
+                console.log("Already pressed")
+            }
+
+            MapController.clearReviewImage();
         }
 
-        MapController.clearReviewImage();
     }
 
 };
