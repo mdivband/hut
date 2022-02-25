@@ -47,7 +47,6 @@ public class PatrolTask extends Task {
             else
                 workingAgents.remove(agent);
         }
-        sortSpacing();
         return false;
     }
 
