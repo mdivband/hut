@@ -25,6 +25,7 @@ public abstract class Agent extends MObject implements Serializable {
     protected double altitude;
     protected double battery;
     protected double heading;
+    protected double windAdjustedHeading;
     private boolean manuallyControlled = false;
     private final List<Coordinate> route;
     private final List<Coordinate> tempRoute;
@@ -49,6 +50,7 @@ public abstract class Agent extends MObject implements Serializable {
 
         speed = 1.0;
         windAdjustedSpeed = speed;
+        windAdjustedHeading = heading;
         heading = 0.0;
         battery = 1.0;
         altitude = 3.0;

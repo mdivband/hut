@@ -27,8 +27,10 @@ public class AgentVirtual extends Agent {
     @Override
     void moveTowardsDestination() {
         //Align agent, if aligned then moved towards target
-        if(!isStopped() && this.adjustHeadingTowardsGoal())
+        if(!isStopped()) {
+            this.adjustHeadingTowardsGoal();
             this.moveAlongHeading(this.windAdjustedSpeed);
+        }
     }
 
     @Override
@@ -206,7 +208,10 @@ public class AgentVirtual extends Agent {
             adjustedSpeed = 0.1;
         }
 
+        double adjustedHeading = Math.atan2(speedX + windSpeedX, speedY + windSpeedY);
+
         this.windAdjustedSpeed = adjustedSpeed;
+        this.windAdjustedHeading = Math.toDegrees(adjustedHeading);
     }
 
     /**
@@ -216,7 +221,7 @@ public class AgentVirtual extends Agent {
     private void moveAlongHeading(double distance) {
         double r = 6379.1; //Radius of earth in km
         double d = (distance/1000)/r;
-        double hdg = Math.toRadians(this.heading);
+        double hdg = Math.toRadians(this.windAdjustedHeading);
         double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
         double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
 
