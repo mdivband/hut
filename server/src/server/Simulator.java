@@ -201,7 +201,7 @@ public class Simulator {
                     for (Agent agent : state.getAgents()) {
                         if (agent instanceof AgentVirtual av) {
                             if (agentController.modelFailure(av)) {
-                                modeller.failRecord(agent.getAllocatedTaskId());
+                                modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                             }
 
                             if (agent.isTimedOut()) {
@@ -209,7 +209,7 @@ public class Simulator {
                             } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
                                 av.charge();
                             } else if (agent.getBattery() < 0 && av.isAlive()) {
-                                modeller.failRecord(agent.getAllocatedTaskId());
+                                modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                 av.kill();
                             } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
                                 av.step(state.isFlockingEnabled());
@@ -219,11 +219,12 @@ public class Simulator {
                                     getAgentController().decrementRemoval();
                                 } else if (getTaskController().checkForFreeTasks()) {
                                     av.stopGoingHome();
-                                    getAllocator().dynamicAssignNearest(av);
+                                    //getAllocator().dynamicAssignNearest(av);
+                                    getAllocator().dynamicAssignRandom(av);
 
                                     Simulator.instance.getScoreController().incrementCompletedTask();
                                     //double successChance = random.nextDouble(100);
-                                    double successChance = modeller.calculateAll();
+                                    double successChance = modeller.calculateAll(agent);
                                     state.setSuccessChance(successChance);
                                 } else {
                                     av.heartbeat();
@@ -255,7 +256,8 @@ public class Simulator {
                 }
 
                 if (!completedTasks.isEmpty()) {
-                    modeller.passRecords();
+                    completedTasks.forEach(t -> modeller.passRecords(t.getId()));
+
                 }
 
                 if (!modeller.isStarted()) {

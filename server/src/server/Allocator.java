@@ -820,7 +820,19 @@ public class Allocator {
             return true;
         }
         return false;
+    }
 
+    public boolean dynamicAssignRandom(Agent agent) {
+        List<Task> possibles = new ArrayList<>();
+        // Add all empty tasks to the possibles array
+        simulator.getState().getTasks().forEach(t -> {if (t.getAgents().isEmpty()) {possibles.add(t);}});
+        if (!possibles.isEmpty()) {
+            int index = simulator.getRandom().nextInt(possibles.size());
+            putInTempAllocation(agent.getId(), possibles.get(index).getId());
+            confirmAllocation(simulator.getState().getTempAllocation());
+            return true;
+        }
+        return false;
     }
 
     //Inner class to provide generic pair of Agent-Task

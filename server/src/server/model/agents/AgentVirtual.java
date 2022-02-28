@@ -20,7 +20,7 @@ public class AgentVirtual extends Agent {
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
-        batteryVariance = 0.0001 - (Simulator.instance.getRandom().nextDouble() / 5000);
+        batteryVariance = 0.0002 - (Simulator.instance.getRandom().nextDouble() / 2500);
         System.out.println("var = " + batteryVariance);
         this.sensor = sensor;
     }
