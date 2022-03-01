@@ -3,10 +3,7 @@ package server;
 import server.model.agents.Agent;
 import server.model.task.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Modeller {
     private Simulator simulator;
@@ -205,9 +202,80 @@ public class Modeller {
         System.out.println("=============================");
         System.out.println();
         printRecords();
+        System.out.println("=============================");
+        System.out.println();
+        printAgentRecords();
 
         System.out.println();
         // TODO compute precision/recall or something from these predictions and their success rate
+        int numPass = (int) loggedRecords.stream().filter(r -> r.success).count();
+        int numFail = (int) loggedRecords.stream().filter(r -> !r.success).count();
+        double passMean = loggedRecords.stream().filter(r -> r.success).mapToDouble(r -> r.totalProbability).average().getAsDouble();
+        double failMean = loggedRecords.stream().filter(r -> !r.success).mapToDouble(r -> r.totalProbability).average().getAsDouble();
+
+        double passStdDev = Math.sqrt(loggedRecords.stream().filter(r -> r.success).mapToDouble(r -> Math.pow(r.totalProbability - passMean, 2.0)).reduce(Double::sum).getAsDouble() / numPass);
+        double failStdDev = Math.sqrt(loggedRecords.stream().filter(r -> !r.success).mapToDouble(r -> Math.pow(r.totalProbability - passMean, 2.0)).reduce(Double::sum).getAsDouble() / numFail);
+
+        System.out.println("BY TOTAL: ");
+        System.out.println("Passed logs: ");
+        System.out.println("    " + numPass + " Successful Allocations");
+        System.out.println("    " + passMean + " Average prediction for passed allocations");
+        System.out.println("    " + passStdDev + " Standard deviation for passed allocations");
+        System.out.println("Failed logs: ");
+        System.out.println("    " + numFail + " Failed Allocations");
+        System.out.println("    " + failMean + " Average prediction for failed allocations");
+        System.out.println("    " + failStdDev + " Standard deviation for failed allocations");
+        System.out.println();
+
+        int agentNumPass = (int) loggedAgentRecords.stream().filter(r -> r.success).count();
+        int agentNumFail = (int) loggedAgentRecords.stream().filter(r -> !r.success).count();
+        double agentPassMean = loggedAgentRecords.stream().filter(r -> r.success).mapToDouble(r -> r.probability).average().getAsDouble();
+        double agentFailMean = loggedAgentRecords.stream().filter(r -> !r.success).mapToDouble(r -> r.probability).average().getAsDouble();
+
+        double agentPassStdDev = Math.sqrt(loggedAgentRecords.stream().filter(r -> r.success).mapToDouble(r -> Math.pow(r.probability - agentPassMean, 2.0)).reduce(Double::sum).getAsDouble() / agentNumPass);
+        double agentFailStdDev = Math.sqrt(loggedAgentRecords.stream().filter(r -> !r.success).mapToDouble(r -> Math.pow(r.probability - agentFailMean, 2.0)).reduce(Double::sum).getAsDouble() / agentNumFail);
+
+        System.out.println("BY AGENT: ");
+        System.out.println("Passed logs: ");
+        System.out.println("    " + agentNumPass + " Successful Allocations");
+        System.out.println("    " + agentPassMean + " Average prediction for passed allocations");
+        System.out.println("    " + agentPassStdDev + " Standard deviation for passed allocations");
+        System.out.println("Failed logs: ");
+        System.out.println("    " + agentNumFail + " Failed Allocations");
+        System.out.println("    " + agentFailMean + " Average prediction for failed allocations");
+        System.out.println("    " + agentFailStdDev + " Standard deviation for failed allocations");
+        System.out.println();
+
+
+        int tpCount = (int) loggedRecords.stream().filter(r -> r.totalProbability > 0.5 && r.success).count();
+        int tnCount = (int) loggedRecords.stream().filter(r -> r.totalProbability < 0.5 && !r.success).count();
+        int fpCount = (int) loggedRecords.stream().filter(r -> r.totalProbability > 0.5 && !r.success).count();
+        int fnCount = (int) loggedRecords.stream().filter(r -> r.totalProbability < 0.5 && r.success).count();
+        double precision = (double) tpCount / (tpCount + fpCount);
+        double recall = (double) tpCount / (tpCount + fnCount);
+        System.out.println("AS BINARY (total): ");
+        System.out.println("    " + tpCount + " True Positives");
+        System.out.println("    " + tnCount + " True Negatives");
+        System.out.println("    " + fpCount + " False Positives");
+        System.out.println("    " + fnCount + " False Negatives");
+        System.out.println("    " + precision + " Precision");
+        System.out.println("    " + recall + " Recall");
+
+        tpCount = (int) loggedAgentRecords.stream().filter(r -> r.probability > 0.5 && r.success).count();
+        tnCount = (int) loggedAgentRecords.stream().filter(r -> r.probability < 0.5 && !r.success).count();
+        fpCount = (int) loggedAgentRecords.stream().filter(r -> r.probability > 0.5 && !r.success).count();
+        fnCount = (int) loggedAgentRecords.stream().filter(r -> r.probability < 0.5 && r.success).count();
+        precision = (double) tpCount / (tpCount + fpCount);
+        recall = (double) tpCount / (tpCount + fnCount);
+        System.out.println("loggedAgentRecords BINARY (agent): ");
+        System.out.println("    " + tpCount + " True Positives");
+        System.out.println("    " + tnCount + " True Negatives");
+        System.out.println("    " + fpCount + " False Positives");
+        System.out.println("    " + fnCount + " False Negatives");
+        System.out.println("    " + precision + " Precision");
+        System.out.println("    " + recall + " Recall");
+
+        /*
         double totalSuccessPct = 0;
         double totalFailurePct = 0;
         int numSuccesses = 0;
@@ -223,6 +291,8 @@ public class Modeller {
                 // Failed
             }
         }
+
+
 
         double averageSuccessPrediction = totalSuccessPct / numSuccesses;
         double averageFailurePrediction = totalFailurePct / numFailures;
@@ -255,7 +325,7 @@ public class Modeller {
         System.out.println("BY AGENT: ");
         System.out.println("In " + numSuccesses + " successful allocations, the model predicted, on average, a " + averageSuccessPrediction * 100 + "% success change");
         System.out.println("In " + numFailures + " failed allocations, the model predicted, on average, a " + averageFailurePrediction * 100 + "% success change");
-
+*/
     }
 
     private class ModellerRecord {
