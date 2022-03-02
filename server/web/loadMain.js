@@ -70,6 +70,7 @@ $LAB.setOptions({
     .script("app/views/control.js")
     .script("app/views/layout.js")
     .script("app/views/graph.js")
+    .script("app/views/wind.js")
     .script("app/views/camera.js")
     .script("app/views/subcam.js")
     .script("app/views/map.js")

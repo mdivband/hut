@@ -63,6 +63,22 @@ var simulator = {
             forEditMode: true
         });
 
+        this.views.wind = new App.Views.Wind({
+            el: $("#accordion_wind_m"),
+            state: this.state,
+            views: this.views,
+            ctx: $("#wind_m").get(0).getContext("2d"),
+            canvas: $("#wind_m").get(0)
+        });
+
+        this.views.editwind = new App.Views.Wind({
+            el: $("#accordion_wind_e"),
+            state: this.state,
+            views: this.views,
+            ctx: $("#wind_e").get(0).getContext("2d"),
+            canvas: $("#wind_e").get(0)
+        });
+
         this.views.images = new App.Views.Images({
             el: $("#scans_list"),
             state: this.state,
@@ -96,6 +112,12 @@ var simulator = {
             //active: false
         });
         $("#accordion_sotp_m").accordion({
+            collapsible: true
+        });
+        $("#accordion_wind_m").accordion({
+            collapsible: true
+        });
+        $("#accordion_wind_e").accordion({
             collapsible: true
         });
         $("#accordion_otherlayer_m").accordion({
