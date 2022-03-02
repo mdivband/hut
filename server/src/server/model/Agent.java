@@ -37,6 +37,7 @@ public abstract class Agent extends MObject implements Serializable {
     private boolean timedOut;
     private boolean working;
     protected boolean hub = false;
+    protected float windAdjustedBatteryConsumption;
 
     //Used in server but not in client
     private transient long lastHeartbeat;
@@ -51,6 +52,7 @@ public abstract class Agent extends MObject implements Serializable {
         speed = 1.0;
         windAdjustedSpeed = speed;
         windAdjustedHeading = heading;
+        windAdjustedBatteryConsumption = unitTimeBatteryConsumption;
         heading = 0.0;
         battery = 1.0;
         altitude = 3.0;

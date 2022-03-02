@@ -21,7 +21,7 @@ public class AgentVirtual extends Agent {
         //Simulate things that would be done by a real drone
         if(!isTimedOut())
             heartbeat();
-        this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
+        this.battery = this.battery > 0 ? this.battery - windAdjustedBatteryConsumption : 0;
     }
 
     @Override
@@ -212,6 +212,7 @@ public class AgentVirtual extends Agent {
 
         this.windAdjustedSpeed = adjustedSpeed;
         this.windAdjustedHeading = Math.toDegrees(adjustedHeading);
+        this.windAdjustedBatteryConsumption = this.unitTimeBatteryConsumption * (float) (this.speed / this.windAdjustedSpeed);
     }
 
     /**
