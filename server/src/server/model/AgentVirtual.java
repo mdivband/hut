@@ -26,7 +26,6 @@ public class AgentVirtual extends Agent {
 
     @Override
     void moveTowardsDestination() {
-        //Align agent, if aligned then moved towards target
         if(!isStopped()) {
             this.adjustHeadingTowardsGoal();
             this.moveAlongHeading(this.windAdjustedSpeed);
@@ -196,23 +195,25 @@ public class AgentVirtual extends Agent {
         double hdgRad = Math.toRadians(this.heading);
         double windHdgRad = Math.toRadians(windHeading);
 
-        double speedX = this.speed * Math.sin(hdgRad);
-        double speedY = this.speed * Math.cos(hdgRad);
+        double speed = this.speed - 0.1; // Subtract 0.1 to prepare for first iteration of while loop
+        double adjustedSpeed = 0.0;
+        double adjustedHeading = 0.0;
+        while (adjustedSpeed < 0.1) { // Have drone speed up to overcome wind
+            speed += 0.1;
+            double speedX = speed * Math.sin(hdgRad);
+            double speedY = speed * Math.cos(hdgRad);
 
-        double windSpeedX = windSpeed * Math.sin(windHdgRad);
-        double windSpeedY = windSpeed * Math.cos(windHdgRad);
+            double windSpeedX = windSpeed * Math.sin(windHdgRad);
+            double windSpeedY = windSpeed * Math.cos(windHdgRad);
 
-        double adjustedSpeed = Math.sqrt(Math.pow(speedX + windSpeedX, 2) + Math.pow(speedY + windSpeedY, 2));
+            adjustedSpeed = Math.sqrt(Math.pow(speedX + windSpeedX, 2) + Math.pow(speedY + windSpeedY, 2));
 
-        if (adjustedSpeed < 0.1) {
-            adjustedSpeed = 0.1;
+            adjustedHeading = Math.atan2(speedX + windSpeedX, speedY + windSpeedY);
         }
-
-        double adjustedHeading = Math.atan2(speedX + windSpeedX, speedY + windSpeedY);
 
         this.windAdjustedSpeed = adjustedSpeed;
         this.windAdjustedHeading = Math.toDegrees(adjustedHeading);
-        this.windAdjustedBatteryConsumption = this.unitTimeBatteryConsumption * (float) (this.speed / this.windAdjustedSpeed);
+        this.windAdjustedBatteryConsumption = this.unitTimeBatteryConsumption * (float) (speed / this.windAdjustedSpeed);
     }
 
     /**
