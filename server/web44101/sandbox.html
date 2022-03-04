@@ -18,7 +18,7 @@
 
         <link rel="stylesheet" type="text/css" href="http://w2ui.com/src/w2ui-1.4.min.css"/>
     </head>
-    <body>
+    <body id="planner">
 
         <!-- Map Panel -->
         <div class="ui-layout-center">
@@ -58,8 +58,6 @@
                             for="monitor">Monitor</label>
                         <input type="radio" id="editmode" name="radio" value="editmode"><label
                             for="editmode">Task Edit</label>
-                        <input type="radio" id="scanmode" name="radio" value="scanmode"><label
-                            for="scanmode">View Scans</label>
                     </div>
                 </form>
                 <!-- END Y -->
@@ -121,6 +119,30 @@
                         </table>
                     </div>
 
+                    <div id="accordion_wind_m">
+                        <h3>Wind</h3>
+                        <div>
+                            <table>
+                                <tr>
+                                    <td></td>
+                                    <td align="center">N</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>W</td>
+                                    <td><img id="wind_dial_m"></td>
+                                    <td>E</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td align="center">S</td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                            <canvas id="wind_m"></canvas>
+                        </div>
+                    </div>
+
                 </div> <!-- end of monitor accordions-->
 
                 <div id="edit_contexts">
@@ -165,13 +187,38 @@
                         <button class="edit_mode_buttons" id="confirm_allocation">Confirm Allocation</button>
                         <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
                     </div>
+
+                    <div id="accordion_wind_e">
+                        <h3>Wind</h3>
+                        <div>
+                            <table>
+                                <tr>
+                                    <td></td>
+                                    <td align="center">N</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>W</td>
+                                    <td><img id="wind_dial_e"></td>
+                                    <td>E</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td align="center">S</td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                            <canvas id="wind_e"></canvas>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div id="scan_view">
                     <div id="scans_list">
                         <div id="pending_title">
-                        <h3>Pending High Resolution Scans (Agents scheduled to take images. Scan will appear soon)</h3>
-                        <div id = "pending_scans"></div>
+                            <h3>Pending High Resolution Scans (Agents scheduled to take images. Scan will appear soon)</h3>
+                            <div id = "pending_scans"></div>
                         </div>
                         <h3>Scans</h3>
                         <div id = "button_panel"></div>
@@ -355,28 +402,28 @@
                         <td colspan="2">Task</td>
                     </tr>
                     <tr>
-                    <td>Task Id:</td>
-                        <td><input type="text" value="<%= task_id %>" readonly/></td>
-                    </tr>
-                <!--<table style="border: 1px solid #CCCCCC; margin: 5px; width: 98%; height: 100px;">
-                    <tr>
-                        <td colspan="2">Task</td>
-                    </tr>
-
-                    <tr>
                         <td>Task Id:</td>
                         <td><input type="text" value="<%= task_id %>" readonly/></td>
                     </tr>
-                    <tr>
-                        <td>Priority:</td>
-                        <td><input type="text" id="task_priority" value="<%= task_priority %>"/></td>
-                    </tr>
-                    <tr>
-                        <td>Group Size:</td>
-                        <td><input type="number" min="0" max="<%= max_size %>" step="1" id="group_size"
-                                   value="<%= group_size %>"/></td>
-                    </tr>
-                    -->
+                    <!--<table style="border: 1px solid #CCCCCC; margin: 5px; width: 98%; height: 100px;">
+                        <tr>
+                            <td colspan="2">Task</td>
+                        </tr>
+
+                        <tr>
+                            <td>Task Id:</td>
+                            <td><input type="text" value="<%= task_id %>" readonly/></td>
+                        </tr>
+                        <tr>
+                            <td>Priority:</td>
+                            <td><input type="text" id="task_priority" value="<%= task_priority %>"/></td>
+                        </tr>
+                        <tr>
+                            <td>Group Size:</td>
+                            <td><input type="number" min="0" max="<%= max_size %>" step="1" id="group_size"
+                                       value="<%= group_size %>"/></td>
+                        </tr>
+                        -->
                 </table>
                 <div style="margin: 0px 1px 0px 5px;">
                     <!--

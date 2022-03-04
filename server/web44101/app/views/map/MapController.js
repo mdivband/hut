@@ -137,7 +137,9 @@ var MapController = {
             MapController.onUndoRedoAvailableChange();
         });
         this.state.on("change:editMode", function () {
-            MapController.swapMode(self.state.getEditMode(), false);
+            if (userRole != "analyst") {
+                MapController.swapMode(self.state.getEditMode(), false);
+            }
         });
 
         //Map listeners
@@ -221,6 +223,12 @@ var MapController = {
             }
         } else if (this.state.getEditMode() !== 1) {
             MapController.swapMode(1, true);
+        } else if (userRole == "analyst") {
+            try {
+                MapController.swapMode(1, true);
+            } catch (e) {
+                console.log("MMP : " + e);
+            }
         }
     },
     onEditModePressed: function () {
@@ -394,10 +402,11 @@ var MapController = {
             $("#image_review").hide();
             $("#review_panel").hide();
 
-            $('#scanmode').prop("checked", false);
-            $('#editmode').prop("checked", false);
-            $('#monitor').prop("checked", true);
-        } else {  // scans
+            $("#scanmode").prop("checked", false);
+            $("#editmode").prop("checked", false);
+            $("#monitor").prop("checked", true);
+
+        } else if (modeFlag === 3) {  // scans
             $("#monitor_accordions").hide();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();

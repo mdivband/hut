@@ -35,7 +35,9 @@ App.Models.State  = Backbone.Model.extend({
         deepAllowed: false,
         timeLimit: 0,
         userName: "",
-        markers: []
+        markers: [],
+        windSpeed: 0.0,
+        windHeading: 0.0
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -140,7 +142,7 @@ App.Models.State  = Backbone.Model.extend({
             $("#map_title").html("Image Review");
         }
 
-		 $.post("/changeview", {edit: modeFlag});
+		 $.post("/changeview", {edit: modeFlag, role: userRole});
 
 	},
     getUiOptions: function () {
@@ -176,5 +178,11 @@ App.Models.State  = Backbone.Model.extend({
     },
     getPendingIds: function () {
         return this.get("pendingIds");
+    },
+    getWindSpeed: function () {
+        return this.get("windSpeed");
+    },
+    getWindHeading: function () {
+        return this.get("windHeading");
     }
 });
