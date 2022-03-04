@@ -63,21 +63,23 @@ var simulator = {
             forEditMode: true
         });
 
-        this.views.wind = new App.Views.Wind({
-            el: $("#accordion_wind_m"),
-            state: this.state,
-            views: this.views,
-            ctx: $("#wind_m").get(0).getContext("2d"),
-            canvas: $("#wind_m").get(0)
-        });
+        if (userRole == "planner") {
+            this.views.wind = new App.Views.Wind({
+                el: $("#accordion_wind_m"),
+                state: this.state,
+                views: this.views,
+                ctx: $("#wind_m").get(0).getContext("2d"),
+                canvas: $("#wind_m").get(0)
+            });
 
-        this.views.editwind = new App.Views.Wind({
-            el: $("#accordion_wind_e"),
-            state: this.state,
-            views: this.views,
-            ctx: $("#wind_e").get(0).getContext("2d"),
-            canvas: $("#wind_e").get(0)
-        });
+            this.views.editwind = new App.Views.Wind({
+                el: $("#accordion_wind_e"),
+                state: this.state,
+                views: this.views,
+                ctx: $("#wind_e").get(0).getContext("2d"),
+                canvas: $("#wind_e").get(0)
+            });
+        }
 
         this.views.images = new App.Views.Images({
             el: $("#scans_list"),
