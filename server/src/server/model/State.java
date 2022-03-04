@@ -13,6 +13,8 @@ import tool.GsonUtils;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -72,9 +74,13 @@ public class State {
     //                   ID->ImageName
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
+    private final List<String> pendingIds = new ArrayList<>(16);
 
     private Double windSpeed;
     private Double windHeading;
+
+    private String userName = "";
+    private List<String> markers = new ArrayList<>();
 
     public State() {
         agents = new ArrayList<>();
@@ -103,8 +109,10 @@ public class State {
         uncertaintyRadius = 0;
         windSpeed = 1.0;
         windHeading = 0.0;
+        markers.clear();
 
         gameCentre = null;
+        userName = "";
 
         agents.clear();
         tasks.clear();
@@ -299,7 +307,9 @@ public class State {
     }
 
     public Collection<Task> getTasks() {
-        return tasks;
+        synchronized (tasks) {
+            return tasks;
+        }
     }
 
     public Collection<Agent> getAgents() {
@@ -410,6 +420,27 @@ public class State {
 
     public void setDeepAllowed(Boolean deepAllowed) {
         this.deepAllowed = deepAllowed;
+    }
+
+    public boolean setUserName(String userName) {
+        this.userName = userName;
+        return true;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public List<String> getMarkers() {
+        return markers;
+    }
+
+    public List<String> getPendingIds() {
+        return pendingIds;
+    }
+
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
     public Double getWindSpeed() {

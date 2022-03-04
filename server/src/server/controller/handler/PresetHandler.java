@@ -20,7 +20,6 @@ public class PresetHandler extends RestHandler {
     @Override
     public void handlePost(Request req, Response resp) throws IOException, UnregisteredPathException {
         String rPath = parseRemainingPath(req.getPath());
-        System.out.println("posintg :" + rPath);
         switch (rPath) {
             case "/scenario":
                 handlePresetScenario(req, resp);
@@ -37,7 +36,7 @@ public class PresetHandler extends RestHandler {
             return;
         String scenarioFileName = params.get("file-name");
         if(this.simulator.loadScenarioMode(scenarioFileName)) {
-            this.simulator.startSimulation();
+            //this.simulator.startSimulation();
             resp.redirect("/sandbox.html", true);
         } else {
             resp.sendError(400, "Unable to start scenario from file " + scenarioFileName);

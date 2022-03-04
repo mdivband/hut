@@ -10,12 +10,12 @@ import server.model.Agent;
 import server.model.AgentHub;
 import server.model.Coordinate;
 import server.model.MObject;
-import server.model.task.PatrolTask;
-import server.model.task.Task;
-import server.model.task.WaypointTask;
+import server.model.target.HumanTarget;
+import server.model.task.*;
 import maxsum.EvaluationFunction;
 
 import java.util.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
@@ -52,9 +52,32 @@ public class Allocator {
     public void runAutoAllocation() {
         Map<String, String> allocation = new HashMap<>();
         List<Agent> agentsToAllocate = new ArrayList<>(simulator.getState().getAgents());
-        agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub));
+
+        //agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)
+        //        || (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)));
+
+        List<Agent> newAgentsToAllocate = new ArrayList<>();
+        for (Agent agent : agentsToAllocate) {
+            if (agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)) {
+                // Remove
+            } else if (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)) {
+                // Remove, but reassign own task
+                agent.getTask().addAgent(agent);
+                agent.setWorking(true);
+            } else {
+                // Keep
+                newAgentsToAllocate.add(agent);
+            }
+        }
+
+        agentsToAllocate = newAgentsToAllocate;
+        // Last 2 conditions above filter out the case where it is a Deep scan and this agent has done it.
+        //  Note that the sequential nature of logical conjunctions protects against exceptions in this instance
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
+
+        // Remove and ignore deep scans that have been assigned
+        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) task).isBeingWorked());
 
         String allocationMethod = simulator.getState().getAllocationMethod();
 
@@ -82,6 +105,16 @@ public class Allocator {
                         if (!match) {
                             agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getRandomPoint()));
                         }
+                        /*
+                    } else if (task.getType() == Task.TASK_DEEP_SCAN) {
+                        DeepScanTask dst = (DeepScanTask) task;
+                        if (dst.hasAgentScanned(agent)) {
+                            agent.setTempRoute(Collections.singletonList(simulator.getState().getHubLocation()));
+                        } else {
+                            agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+                        }
+
+                         */
                     } else {
                         agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
                     }
@@ -155,7 +188,9 @@ public class Allocator {
                 }
             }
         for(Task task : simulator.getState().getTasks())
-            task.getAgents().clear();
+            if (!((task instanceof DeepScanTask) && ((DeepScanTask) task).isBeingWorked())) {
+                task.getAgents().clear();
+            }
 
         //Allocate agents to tasks
         for(Map.Entry<String, String> entry : newMainAllocation.entrySet()) {
@@ -718,6 +753,58 @@ public class Allocator {
             if (x.contains(m)) return true;
         }
         return false;
+    }
+
+    public boolean isSaturated() {
+        // Add 1 to account for hub
+        return (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
+    }
+
+    public void clearAllAgents() {
+        for (Agent a : simulator.getState().getAgents()) {
+            if (a.getTask() != null && !(a.getTask() instanceof DeepScanTask)) {
+                a.getTask().clearAgents();
+                a.setAllocatedTaskId(null);
+                a.stop();
+            }
+        }
+    }
+
+    private Agent getClosestAgentTo(Task t) {
+        double closest = 999999;
+        Agent closestAgent = null;
+        for (Agent a : simulator.getState().getAgents()) {
+            double thisDist = a.getCoordinate().getDistance(t.getCoordinate());
+            if (thisDist < closest && !(a instanceof AgentHub)) {
+                closest = thisDist;
+                closestAgent = a;
+            }
+        }
+        return closestAgent;
+    }
+
+    public void dynamicReassign(Task t) {
+        LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
+        if (isSaturated()) {
+            Agent a = getClosestAgentTo(t);
+            a.getTask().clearAgents();
+            a.setAllocatedTaskId(null);
+            //a.stop();
+            runAutoAllocation();
+            putInTempAllocation(a.getId(), t.getId());
+        } else {
+            runAutoAllocation();
+        }
+        confirmAllocation(simulator.getState().getTempAllocation());
+    }
+
+    public void dynamicReassign() {
+        LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
+        runAutoAllocation();
+        confirmAllocation(simulator.getState().getTempAllocation());
+    }
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
     //Inner class to provide generic pair of Agent-Task

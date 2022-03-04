@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -24,9 +25,12 @@ import java.util.logging.Logger;
 /* Edited by Yuai */
 public class Simulator {
 
-    private final static String SERVER_CONFIG_FILE = "web/config/serverConfig.json";
-    private final static String SCENARIO_DIR_PATH = "web/scenarios/";
+    private String webRef ="web";
+
+    private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
+    private final static String SCENARIO_DIR_PATH = "/scenarios/";
     private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
+
 
     private State state;
     private Sensor sensor;
@@ -49,7 +53,6 @@ public class Simulator {
 
     public Simulator() {
         instance = this;
-
         state = new State();
         sensor = new Sensor(this);
         connectionController = new ConnectionController(this);
@@ -78,13 +81,34 @@ public class Simulator {
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
-        new Simulator().start();
+        int port;
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
+        } else {
+            port = 44101;
+        }
+        new Simulator().start(port);
     }
 
-    public void start() {
-        readConfig();
+    public void start(Integer port) {
+        /*
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+
+         */
+
+        //Setup GSON
+        GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
+        GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
+        GsonUtils.create();
+
+        pushConfig(port);
         new Thread(connectionController::start).start();
-        LOGGER.info(String.format("%s; SVRDY; Server ready ", getState().getTime()));
+        // LOGGER.info("Server ready.");
     }
 
     public void startSandboxMode() {
@@ -96,11 +120,11 @@ public class Simulator {
 
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
-        if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
-            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
+        if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
+            //LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
-            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
+            //LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -115,17 +139,19 @@ public class Simulator {
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
         this.state.setInProgress(true);
-        LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
+        // LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
     }
 
     public Map<String, String> getScenarioFileListWithGameIds() {
         Map<String, String> scenarios = new HashMap<>();
-        File scenarioDir = new File(SCENARIO_DIR_PATH);
+        File scenarioDir = new File(webRef+SCENARIO_DIR_PATH);
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
-                String scenarioName = getScenarioNameFromFile(SCENARIO_DIR_PATH + file.getName());
-                if(scenarioName != null)
-                    scenarios.put(file.getName(), scenarioName);
+                if (!file.isDirectory()) {
+                    String scenarioName = getScenarioNameFromFile(webRef + SCENARIO_DIR_PATH + file.getName());
+                    if (scenarioName != null)
+                        scenarios.put(file.getName(), scenarioName);
+                }
             }
         }
         else
@@ -138,7 +164,6 @@ public class Simulator {
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
                 if (state.isPassthrough()) {
@@ -159,11 +184,13 @@ public class Simulator {
                     completedTasks.add(task);
             for(Task task : completedTasks) {
                 task.complete();
+                Simulator.instance.getAllocator().dynamicReassign();
                 //printDiag();
             }
 
             //Step hazard hits
-            this.state.decayHazardHits();
+            // Disable this for persistent hazards and exploration heatmaps
+            // this.state.decayHazardHits();
 
             // Check and trigger images that are scheduled
             imageController.checkForImages();
@@ -210,6 +237,7 @@ public class Simulator {
     }
 
     public void changeView(int modeFlag) {
+        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
         if (modeFlag == 2) {
             //agentController.stopAllAgents();
             //agentController.updateAgentsTempRoutes();
@@ -244,19 +272,62 @@ public class Simulator {
         imageController.reset();
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
+        /*
+        LogManager.getLogManager().reset();
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+        LOGGER = null;
+        LOGGER = Logger.getLogger(Simulator.class.getName());
+
+         */
+    }
+
+    public void resetLogging(String userName) {
+        try {
+            String fileName = userName + "-" + state.getGameId() + ".log";
+            FileHandler fileHandler = new FileHandler(fileName);
+            LogManager.getLogManager().reset();
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+            LOGGER.addHandler(fileHandler);
+            state.resetLogger(fileHandler);
+            taskController.resetLogger(fileHandler);
+            queueManager.resetLogger(fileHandler);
+            agentController.resetLogger(fileHandler);
+            targetController.resetLogger(fileHandler);
+            connectionController.resetLogger(fileHandler);
+            hazardController.resetLogger(fileHandler);
+            allocator.resetLogger(fileHandler);
+            imageController.resetLogger(fileHandler);
+            LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
+
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+
+        //System.out.println("Save now as " + userName + ", " + state.getGameId());
     }
 
     private void readConfig() {
         try {
-            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), SERVER_CONFIG_FILE));
-            String json = GsonUtils.readFile(SERVER_CONFIG_FILE);
+            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), webRef+SERVER_CONFIG_FILE));
+            String json = GsonUtils.readFile(webRef+SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
 
-            connectionController.init((port != null) ? port.intValue() : 8080);
+            connectionController.init((port != null) ? port.intValue() : 8080, webRef);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void pushConfig(int port) {
+        webRef = webRef+port;
+        connectionController.init(port, webRef);
     }
 
     private boolean loadScenarioFromFile(String scenarioFile) {
@@ -403,8 +474,19 @@ public class Simulator {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
             }
 
+            List<Object> markers = GsonUtils.getValue(obj, "markers");
+            if (markers != null) {
+                for (Object markerJson : markers) {
+                    String shape = GsonUtils.getValue(markerJson, "shape");
+                    Double cLat = GsonUtils.getValue(markerJson, "centreLat");
+                    Double cLng = GsonUtils.getValue(markerJson, "centreLng");
+                    Double radius = GsonUtils.getValue(markerJson, "radius");
 
+                    String shapeRep = shape+","+cLat+","+cLng+","+radius;
 
+                    this.state.getMarkers().add(shapeRep);
+                }
+            }
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -467,4 +549,5 @@ public class Simulator {
     public ImageController getImageController() {
         return imageController;
     }
+
 }

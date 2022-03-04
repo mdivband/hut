@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class AllocationHandler extends RestHandler {
 
@@ -51,7 +52,7 @@ public class AllocationHandler extends RestHandler {
     }
 
     private void handleAutoAllocate(Response resp) throws IOException {
-        LOGGER.info(String.format("%s; ALRUN; Running auto allocation;", Simulator.instance.getState().getTime()));
+        LOGGER.info(String.format("%s; ALRUN; User running auto allocation;", Simulator.instance.getState().getTime()));
         simulator.getAllocator().runAutoAllocation();
         LOGGER.info(String.format("%s; FNRUN; Finished auto allocation;", Simulator.instance.getState().getTime()));
         resp.sendOkay();
@@ -91,4 +92,5 @@ public class AllocationHandler extends RestHandler {
         simulator.getAllocator().resetAllocation();
         resp.sendOkay();
     }
+
 }

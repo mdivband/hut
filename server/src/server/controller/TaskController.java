@@ -2,6 +2,7 @@ package server.controller;
 
 import server.Simulator;
 import server.model.Agent;
+import server.model.AgentHub;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
 import server.model.target.Target;
@@ -10,6 +11,7 @@ import server.model.task.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class TaskController extends AbstractController {
 
@@ -24,36 +26,57 @@ public class TaskController extends AbstractController {
     }
 
     public synchronized Task createTask(int taskType, double lat, double lng) {
-        String id = generateUID();
-        Task task;
-        switch (taskType) {
-            case Task.TASK_WAYPOINT:
-                task = new WaypointTask(id, new Coordinate(lat, lng));
-                break;
-            case Task.TASK_MONITOR:
-                task = new MonitorTask(id, new Coordinate(lat, lng));
-                break;
-            case Task.TASK_DEEP_SCAN:
-                task = new DeepScanTask(id, new Coordinate(lat, lng));
-                simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
-                break;
-            case Task.TASK_SHALLOW_SCAN:
-                task = new ShallowScanTask(id, new Coordinate(lat, lng));
-                simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
-                break;
-            default:
-                throw new IllegalArgumentException("Unable to create task of type " + taskType);
+        synchronized (simulator.getState().getTasks()) {
+            String id = generateUID();
+            Task task;
+            switch (taskType) {
+                case Task.TASK_WAYPOINT:
+                    task = new WaypointTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_MONITOR:
+                    task = new MonitorTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_DEEP_SCAN:
+                    synchronized (simulator.getState().getTasks()) {
+                        task = new DeepScanTask(id, new Coordinate(lat, lng));
+                    }
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
+                    break;
+                case Task.TASK_SHALLOW_SCAN:
+                    task = new ShallowScanTask(id, new Coordinate(lat, lng));
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unable to create task of type " + taskType);
+            }
+            simulator.getState().add(task);
+
+            if (task instanceof DeepScanTask) {
+                task.setPriority(100);
+                simulator.getAllocator().dynamicReassign(task);
+                String trgId = simulator.getTargetController().getTargetAt(new Coordinate(lat, lng)).getId();
+                LOGGER.info(String.format("%s; DPSCN; Creating a deep scan task of id and for target (id, targetId); %s; %s", Simulator.instance.getState().getTime(), id, trgId));
+
+            }
+            for (Agent a : simulator.getState().getAgents()) {
+                if (!(a instanceof AgentHub) && a.getTask() != null) {
+                    a.resume();
+                }
+            }
+            return task;
         }
-        simulator.getState().add(task);
-        LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
-        return task;
     }
 
     public synchronized Task createPatrolTask(List<Coordinate> path) {
         String id = generateUID();
         Task task = PatrolTask.createTask(id, path);
         simulator.getState().add(task);
-        LOGGER.info(String.format("%s; CRPT; Created new patrol task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
+        StringBuilder sb = new StringBuilder();
+        for (Coordinate c : path) {
+            sb.append(c.getLatitude()).append(";").append(c.getLongitude()).append(";");
+        }
+        LOGGER.info(String.format("%s; CRPT; Created new patrol task with points (id, lat1, lng1, lat2, lng2, ...); %s; %s", Simulator.instance.getState().getTime(), id, sb));
+        //LOGGER.info(String.format("%s; CRPT; Created new patrol task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
@@ -70,7 +93,15 @@ public class TaskController extends AbstractController {
         String id = generateUID();
         Task task = RegionTask.createTask(id, nw, ne, se, sw);
         simulator.getState().add(task);
-        LOGGER.info(String.format("%s; CRRG; Created new region task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
+        StringBuilder sb = new StringBuilder();
+        sb.append(nw.getLatitude()).append(";").append(nw.getLongitude()).append(";");
+        sb.append(ne.getLatitude()).append(";").append(ne.getLongitude()).append(";");
+        sb.append(se.getLatitude()).append(";").append(se.getLongitude()).append(";");
+        sb.append(sw.getLatitude()).append(";").append(sw.getLongitude()).append(";");
+        LOGGER.info(String.format("%s; CRRG; Created new region task with corners (id, nwlat, nwlng, nelat, nelng, selat, selng, swlat, swlng,); %s; %s", Simulator.instance.getState().getTime(), id, sb));
+
+
+        //LOGGER.info(String.format("%s; CRRG; Created new region task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
@@ -159,4 +190,5 @@ public class TaskController extends AbstractController {
     public synchronized void resetTaskNumbers() {
         this.uniqueTaskNumber = 1;
     }
+
 }

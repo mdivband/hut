@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 public abstract class RestHandler {
@@ -124,6 +125,10 @@ public abstract class RestHandler {
 
     public String getHandlerName() {
         return handlerName;
+    }
+
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
 }

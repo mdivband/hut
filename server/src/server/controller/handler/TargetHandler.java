@@ -56,6 +56,7 @@ public class TargetHandler extends RestHandler {
         if (!targetExists(id, resp))
             return;
         simulator.getTargetController().setTargetVisibility(id, true);
+        simulator.getImageController().takeImageById(id);
         resp.sendOkay();
     }
 

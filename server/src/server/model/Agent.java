@@ -374,4 +374,14 @@ public abstract class Agent extends MObject implements Serializable {
             return start.getDistance(goal);
         }
     }
+
+    @Override
+    public String toString() {
+        return "Agent{" +
+                "id=" + getId() + '\'' +
+                "allocatedTaskId='" + allocatedTaskId +
+                ", working=" + working +
+                ", stopped=" + stopped +
+                '}';
+    }
 }

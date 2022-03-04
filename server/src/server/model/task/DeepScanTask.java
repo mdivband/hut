@@ -1,6 +1,7 @@
 package server.model.task;
 
 import server.Simulator;
+import server.controller.TaskController;
 import server.model.Agent;
 import server.model.Coordinate;
 
@@ -12,10 +13,13 @@ public class DeepScanTask extends Task {
     private boolean imageTaken = false;
 
     private ArrayList<Agent> workingAgents = new ArrayList<>();
+    private ArrayList<Agent> scannedAgents = new ArrayList<>();  // agents who have scanned this task (typically singleton)
 
     public DeepScanTask(String id, Coordinate coordinate) {
         super(id, Task.TASK_DEEP_SCAN, coordinate);
         targetToScan = coordinate;
+        //Simulator.instance.getTaskController().smartAllocForDeep();
+        Simulator.instance.getState().getPendingIds().add(Simulator.instance.getTargetController().getTargetAt(coordinate).getId());
     }
 
     public void addAgent(Agent agent) {
@@ -25,7 +29,7 @@ public class DeepScanTask extends Task {
 
         ArrayList<Coordinate> crds = new ArrayList<>();
 
-        if (agent.getCoordinate().getDistance(targetToScan) > 3) {  // Not yet close
+        if (!scannedAgents.contains(agent) && agent.getCoordinate().getDistance(targetToScan) > 3) {  // Not yet close
             crds.add(getCoordinate());
         }
 
@@ -44,6 +48,9 @@ public class DeepScanTask extends Task {
                 if (agent.isFinalDestinationReached() && agent.getRoute().size() < 2) {
                     agent.setWorking(true);
                     hasAnyAgentArrived = true;
+                } else if (agent.getCoordinate().getDistance(targetToScan) < 3 && !scannedAgents.contains(agent)) {
+                    // Arrived at this one
+                    scannedAgents.add(agent);
                 }
             }
 
@@ -55,8 +62,12 @@ public class DeepScanTask extends Task {
 
         if (status == Task.STATUS_DOING) {
             for (Agent agent : getAgents())
-                if (agent.isFinalDestinationReached())
+                if (agent.isFinalDestinationReached()) {
                     agent.setWorking(true);
+                } else if (agent.isCurrentDestinationReached()) {
+                    System.out.println("SCANNED");
+                    scannedAgents.add(agent);
+                }
             if(perform())
                 setStatus(Task.STATUS_DONE);
             if(getAgents().isEmpty())
@@ -76,17 +87,35 @@ public class DeepScanTask extends Task {
             if (agent.isWorking() && !workingAgents.contains(agent)) {
                 workingAgents.add(agent);
             }
-
-            if(agent.isWorking()) {
-                if(agent.isFinalDestinationReached()) {
-                    Simulator.instance.getImageController().takeImage(targetToScan, true);
-                    imageTaken = true;
-                    return true;
-                }
+            //if(agent.isWorking()) {
+            if (agent.getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 3 && scannedAgents.contains(agent)) {
+                // Has been scanned and we are home
+                Simulator.instance.getImageController().takeImage(targetToScan, true);
+                return true;
             }
-
+            //}
         }
+        return false;
+    }
 
+    public Coordinate getTargetToScan() {
+        return targetToScan;
+    }
+
+    public boolean hasAgentScanned(Agent agent) {
+        return (scannedAgents.contains(agent));
+    }
+
+    /**
+     * Ensures an agent is assigned AND has been scanned
+     * @return
+     */
+    public boolean isBeingWorked() {
+        for (Agent a : scannedAgents) {
+            if (a.getTask()!= null && a.getTask().equals(this)) {
+                return true;
+            }
+        }
         return false;
     }
 }

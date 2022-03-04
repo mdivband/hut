@@ -7,6 +7,8 @@ import tool.HttpServer.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
@@ -20,6 +22,53 @@ public class ConnectionController extends AbstractController {
 
     public ConnectionController(Simulator simulator) {
         super(simulator, ConnectionController.class.getName());
+    }
+
+    public void init(int port, String webRef) {
+        httpserver = new HttpServer(port);
+        LOGGER.info("Server port: " + port);
+
+        final VirtualHost host = httpserver.getVirtualHost(null);
+        host.setAllowGeneratedIndex(true);
+
+        try {
+            final File dir = new File(webRef);
+            if (!dir.canRead())
+                throw new IOException(dir.getAbsolutePath() + " cannot read.");
+            LOGGER.info("Server home: " + dir);
+
+            host.addContext("/", new ContextHandler() {
+                ContextHandler fileHandler = new FileContextHandler(dir, "/");
+
+                @Override
+                public int serve(Request req, Response resp) throws IOException {
+                    resp.getHeaders().add("Cache-Control", "no-cache, no-store, private, max-age=0");
+                    resp.getHeaders().add("Content-Language", "en");
+                    resp.getHeaders().add("Pragma", "no-cache");
+                    resp.getHeaders().add("Expires", "0");
+
+                    //Attempt to handle as endpoint
+                    if (handleEndpoint(req, resp))
+                        return 200;
+
+                    //If not endpoint then handle as file request.
+                    return fileHandler.serve(req, resp);
+                }
+            });
+
+            RestHandlerFactory.unregisterAllHandlers();
+            RestHandlerFactory.registerRestHandler(new RootHandler("/", this.simulator));
+            RestHandlerFactory.registerRestHandler(new AgentHandler("/agents", this.simulator));
+            RestHandlerFactory.registerRestHandler(new TaskHandler("/tasks", this.simulator));
+            RestHandlerFactory.registerRestHandler(new TargetHandler("/targets", this.simulator));
+            RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
+            RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
+            RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
+            RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator));
+            RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void init(int port) {
@@ -111,11 +160,11 @@ public class ConnectionController extends AbstractController {
      * Recursively iterates backwards through /'s until handler is found.
      */
     private RestHandler getHandlerForPath(String path) {
-        if(path == null || path.equals(""))
+        if (path == null || path.equals(""))
             return RestHandlerFactory.getRestHandler("/");
 
         RestHandler handler = RestHandlerFactory.getRestHandler(path);
-        if(handler != null)
+        if (handler != null)
             return handler;
         return getHandlerForPath(path.substring(0, path.lastIndexOf("/")));
     }

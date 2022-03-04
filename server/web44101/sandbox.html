@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="author" content="Feng Wu">
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <meta name="viewport"
+              content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width"/>
+
+        <title>Simulator</title>
+
+        <link rel="stylesheet" href="style.css"/>
+        <link rel="stylesheet" href="lib/spop/spop.css">
+
+        <script type="text/javascript"
+                src="//maps.googleapis.com/maps/api/js?key=AIzaSyApKa49vf32gNY9MgnxXsqijN7Me168GnU&sensor=true&libraries=drawing,geometry,visualization"></script>
+        <script type="text/javascript" src="lib/lab/LAB-2.0.3.min.js"></script>
+        <script type="text/javascript" src="loadMain.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="http://w2ui.com/src/w2ui-1.4.min.css"/>
+    </head>
+    <body>
+
+        <!-- Map Panel -->
+        <div class="ui-layout-center">
+            <div id="map_canvas"></div>
+            <div id="review_panel" style="float: top; display: none">
+                <button type="button" id="rev_real" class="rev_buttons">Casualty Present</button>
+                <button type="button" id="rev_false" class="rev_buttons">No Casualty</button>
+                <button type="button" id="rev_deep" class="rev_buttons" style="display: none;">Request Uncompressed Image (requires new scan)</button>
+            </div>
+            <div id="image_review" style="display: none;">
+                    <canvas id="image_review_canvas" style="display:inline-block;"></canvas>
+            </div>
+
+            <!-- <div id="camera_canvas" style="display: none;"></div> -->
+
+            <!-- Added by Y submapviews -->
+            <!-- 		<div id="smallcameraview" >
+                        <div id="smallcamera_btn"></div>
+                        <div id="smallcamera_container" style="display: none;">
+                            <ul></ul>
+                        </div>
+                    </div>
+             -->
+            <div id="optimise">
+                <button type="button" id="optimal" style="display:none">Optimise</button>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="ui-layout-east">
+            <div id="control">
+                <!--Added by Y -->
+                <!-- view mode change buttons -->
+                <form>
+                    <div id="view_mode" class="fixed-top">
+                        <input type="radio" id="monitor" name="radio" value="monitor"><label
+                            for="monitor">Monitor</label>
+                        <input type="radio" id="editmode" name="radio" value="editmode"><label
+                            for="editmode">Task Edit</label>
+                        <input type="radio" id="scanmode" name="radio" value="scanmode"><label
+                            for="scanmode">View Scans</label>
+                    </div>
+                </form>
+                <!-- END Y -->
+                <!-- camera and detail -->
+                <div id="monitor_accordions">
+                    <div id="accordion_smallview">
+                        <h3>Monitor view</h3>
+                        <div class="canvas_small">
+                            <div id="canvas_small_info">
+                                <div id="canvas_small_info_agentid"></div>
+                                <div id="canvas_small_info_tasks_box">
+                                    <span class="title">Assigned Tasks</span>
+                                    <div id="canvas_small_info_tasks">
+                                    </div>
+                                </div>
+                                <div id="canvas_small_info_speed_box">
+                                    <span class="title"> Speed </span>
+                                    <div id="canvas_small_info_speed_val"></div>
+                                </div>
+                                <div id="canvas_small_info_battery_box">
+                                    <span class="title">Battery</span>
+                                    <div id="canvas_small_info_battery">
+                                        <img id="img"/>
+                                        <span id="canvas_small_info_battery_text"></span>
+                                    </div>
+                                </div>
+
+                                <div id="canvas_small_info_mode">
+                                    <span class="title">Mode</span>
+                                    <div id="canvas_small_info_mode_val"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div id="camera_canvas_s"></div>
+                                <div id="map_canvas_s" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="accordion_agent_schedule_m">
+                        <h3>Agent Schedule</h3>
+                        <div>
+                            <canvas id="schedule"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="accordion_sotp_m">
+                        <h3>Summary of the Operation</h3>
+                        <table border="1">
+                            <tr>
+                                <td class="soho_title">Remaining Distance</td>
+                                <td><span id="remaining_dist">0.00km</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Estimated Remaining Time</td>
+                                <td><span id="remaining_time">00:00</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div> <!-- end of monitor accordions-->
+
+                <div id="edit_contexts">
+
+                    <div id="accordion_agent_schedule_e" class="edit_accordion">
+                        <h3>Agent Schedule</h3>
+                        <div>
+                            <canvas id="edit_schedule"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="accordion_sotp_e" class="edit_accordion">
+                        <h3>Summary of the Operation</h3>
+                        <table border="1">
+                            <tr>
+                                <th></th>
+                                <th>Original
+                                </td>
+                                <th>New
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Total Distance</td>
+                                <td><span id="total_dist_orig">0.00km</span></td>
+                                <td><span id="total_dist_new">0.00km</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Estimated Time</td>
+                                <td><span id="flight_time_orig">00:00</span></td>
+                                <td><span id="flight_time_new">00:00</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div style="text-align: center;" class="edit_accordion">
+                        <div style="text-align: left; width: 95%">
+                            <input title="Undo allocation change" type="image" src="icons/undo.png" class="edit_mode_icon_buttons" id="allocation_undo"/>
+                            <input title="Redo allocation change" type="image" src="icons/redo.png" class="edit_mode_icon_buttons" id="allocation_redo"/>
+                            <input title="Reset allocation" type="image" src="icons/reset.png" class="edit_mode_icon_buttons" id="allocation_reset"/>
+                        </div>
+                        <button class="edit_mode_buttons" id="run_auto_allocation">Run Auto Allocation</button>
+                        <button class="edit_mode_buttons" id="confirm_allocation">Confirm Allocation</button>
+                        <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="scan_view">
+                    <div id="scans_list">
+                        <div id="pending_title">
+                        <h3>Pending High Resolution Scans (Agents scheduled to take images. Scan will appear soon)</h3>
+                        <div id = "pending_scans"></div>
+                        </div>
+                        <h3>Scans</h3>
+                        <div id = "button_panel"></div>
+                    </div>
+                </div>
+
+                <div id="controller" style="display: none;">
+<!--                <div id="controller">-->
+                    <div>
+                        <button id="switch_view">Camera</button>
+                        <button id="change_mode">Teleoperate</button>
+                    </div>
+
+                    <br/>
+
+                    <div id="auto">
+                        <p class="ui-state-default ui-corner-all ui-helper-clearfix" style="margin-bottom: 10px;">
+                            <b>Speed:</b> <span id="speed_value">1.0</span>
+                        </p>
+                        <div id="speed_slider"></div>
+
+                        <p class="ui-state-default ui-corner-all ui-helper-clearfix" style="margin-bottom: 10px;">
+                            <b>Altitude:</b> <span id="altitude_value">3</span>
+                        </p>
+
+                        <div id="altitude_slider"></div>
+                        <p class="ui-state-default ui-corner-all ui-helper-clearfix" style="margin-bottom: 10px;">
+                            <b>Allocation</b>
+                        </p>
+                        <div>
+                            <select id="allocation_options"
+                                    style="width:100%;height:25px;text-align:center;font-size:18px;">
+                            </select>
+                        </div>
+                    </div>
+                    <div id="manual" style="display: none;">
+                        <div id="joystick"></div>
+                        <br/>
+                        <div id="ardrone_ctrl">
+                            <div id="pfdview" style="background-color: gray;"></div>
+                            <br/>
+                            <table style="text-align:left;">
+                                <tr>
+                                    <td>
+                                        <button id="takeoff_btn" style="width:150px;margin-bottom:10px;">Take Off
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button id="togglecam_btn"
+                                                style="width:150px;margin-bottom:10px;">Toggle Cam
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button id="moveup_btn"
+                                                style="width:150px;margin-bottom:10px;">Move Up
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button id="movedown_btn"
+                                                style="width:150px;margin-bottom:10px;">Move Down
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button id="turnleft_btn"
+                                                style="width:150px;margin-bottom:10px;">Turn Left
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button id="turnright_btn"
+                                                style="width:150px;margin-bottom:10px;">Turn Right
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!--
+                                <tr>
+                                <td><button id="hover_btn" style="width:150px;margin-bottom:10px;">Hover</button></td>
+                                <td><button id="reset_btn" style="width:150px;margin-bottom:10px;">Reset</button></td>
+                                </tr>
+                                -->
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="groups"></div>
+
+        </div>
+
+        <!-- map content -->
+        <div style="display: none;">
+
+            <div id="camera"></div>
+            <div id="cross" style="position: absolute; top: 50%; left: 50%;">
+                <img src='icons/cross.gif'/>
+            </div>
+
+            <div id="camerainfo" style="position: absolute; top: 0px; left: 50%; display: none;
+							font-size: 16px; padding: 5px; margin: 15px -150px;
+							background-color: rgba(0,0,0,0.3);">
+            </div>
+
+            <div id="screenshot" style="position: absolute; top: 0px; left: 0px; display: none;">
+                <img src='icons/camera.png'/>
+            </div>
+
+            <!-- time goes to button -->
+            <div id="game_info" style="margin: 2px;">
+                <button class="exit_button" id="exit_button">Exit Scenario</button><br>
+                <div id="game_id" class="game_info_item"></div>
+                <div id="game_time" class="game_info_item">Time: 00:00:00</div>
+                <div class="game_info_item", style="text-align: left;">
+                    <input id="explored_overlay_toggle" type="checkbox">Explored Overlay</input><br>
+                    <!--<input id="hazard_overlay_toggle" type="checkbox">Hazard Overlay</input><br>-->
+
+                    <!-- I think the region paths are now redundant? -WH
+                    <input id="region_path_toggle" type="checkbox">Show Region Paths</input><br>-->
+
+                    <!-- By wrapping each button/slider in a named div, they provide an opt-in specification of UI
+                         options. In future more UI can be specified this way if desired -WH-->
+                    <div id="uncertainties_wrapper_div" class="edit_buttons_sub" style="display:none">
+                        <input id="uncertainties_toggle" type="checkbox">Show Positional Uncertainties</input><br>
+                    </div>
+
+                    <div id="prediction_wrapper_div" class="edit_buttons_sub" style="display:none">
+                        <input id="prediction_slider" type="range" min="0" max="20" value="0" class="slider">Path Prediction Length</input><br>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="map_buttons_sub">
+                <div id="edit_buttons_sub" style="margin-bottom: 30px">
+                    <div id="pan_mode" class="map_sub_button"></div>
+                    <!--<div id="add_waypoint_task_mode" class="map_sub_button"></div>-->
+                    <!--<div id="add_monitor_task_mode" class="map_sub_button"></div>-->
+                    <div id="add_patrol_task_mode" class="map_sub_button"></div>
+                    <div id="add_region_task_mode" class="map_sub_button"></div>
+                </div>
+
+                <div id="sandbox_buttons_sub" class="edit_buttons_sub">
+                    <div id="add_agent_mode" class="map_sub_button"></div>
+                </div>
+            </div>
+
+            <script type="text/template" id="description_panel">
+                <div style="margin: 10px;">
+                    <h><%= title %></h>
+                    <p><%= description %></p>
+                    <button id="start_scenario" style="cursor: pointer;">Start Scenario</button>
+                </div>
+            </script>
+
+            <script type="text/template" id="scenario_end_panel">
+                <div style="margin: 10px;">
+                    <h><%= title %></h>
+                    <p><%= description %></p>
+                    <!--<button id="end_scenario" style="cursor: pointer;">Close</button> -->
+                </div>
+            </script>
+
+            <script type="text/template" id="popup_left_right">
+                <div style="margin: 0px 10px 0px 0px;">
+                    <div style="float: left;">
+                        <%= left_content %>
+                    </div>
+                    <div style="float: right;">
+                        <a id=<%= uid %> style="cursor: pointer;" data-spop="close">
+                            <%= right_content %>
+                        </a>
+                    </div>
+                </div>
+            </script>
+
+            <script type="text/template" id="task_edit">
+                <table style="border: 1px solid #CCCCCC; margin: 5px; width: 30%; height: 40px;">
+                    <tr>
+                        <td colspan="2">Task</td>
+                    </tr>
+                    <tr>
+                    <td>Task Id:</td>
+                        <td><input type="text" value="<%= task_id %>" readonly/></td>
+                    </tr>
+                <!--<table style="border: 1px solid #CCCCCC; margin: 5px; width: 98%; height: 100px;">
+                    <tr>
+                        <td colspan="2">Task</td>
+                    </tr>
+
+                    <tr>
+                        <td>Task Id:</td>
+                        <td><input type="text" value="<%= task_id %>" readonly/></td>
+                    </tr>
+                    <tr>
+                        <td>Priority:</td>
+                        <td><input type="text" id="task_priority" value="<%= task_priority %>"/></td>
+                    </tr>
+                    <tr>
+                        <td>Group Size:</td>
+                        <td><input type="number" min="0" max="<%= max_size %>" step="1" id="group_size"
+                                   value="<%= group_size %>"/></td>
+                    </tr>
+                    -->
+                </table>
+                <div style="margin: 0px 1px 0px 5px;">
+                    <!--
+                    <div style="float: left;">
+                        <button id="task_edit_update">Update</button>
+                    </div>
+                    -->
+                    <div style="float: right;">
+                        <button id="task_edit_delete">Delete</button>
+                    </div>
+                </div>
+            </script>
+
+            <!-- Popup window when targets are selected-->
+            <script type="text/template" id="target_scan_edit">
+                <div>
+                    <div> This task has been scanned, <br> a low-res image should be in the scans window </div>
+                </div>
+                <!--
+                <div style="margin: 0px 1px 0px 5px;">
+                        <button id="scan_shallow">Quick (Compressed) Scan</button>
+                    </div>
+                </div>
+                -->
+            </script>
+
+            <!-- Popup window when targets are selected-->
+            <script type="text/template" id="target_scan_edit_dp">
+
+                <div style="margin: 0px 1px 0px 5px;">
+                    <!--
+                    <div style="float: left;">
+                        <button id="scan_shallow_dp">Quick (Compressed) Scan</button>
+                    </div>
+                    -->
+                    <div>
+                        <div> This task has been scanned, <br> a low-res image should be in the scans window </div>
+                    </div>
+                    <div>
+                        <button id="scan_deep_dp">Request better scan</button>
+                    </div>
+                </div>
+            </script>
+
+            <script type="text/template" id="agent_edit">
+                <table style="border: 1px solid #CCCCCC; margin: 5px; width: 97%; height: 98%;">
+                    <tr>
+                        <td colspan="2">Agent</td>
+                    </tr>
+                    <tr>
+                        <td>Agent Id:</td>
+                        <td style="width:100px;"><%= agent_id %></td>
+                    </tr>
+                    <tr>
+                        <td>Simulated:</td>
+                        <td style="text-transform: capitalize"><%= simulated %></td>
+                    </tr>
+                </table>
+                <div style="margin: 0px 1px 0px 5px;">
+                    <div style="float: left;">
+                        <button id="agent_edit_dropout">Trigger Blackout</button>
+                    </div>
+                    <div style="float: right;">
+                        <button id="agent_edit_delete">Delete</button>
+                    </div>
+                </div>
+            </script>
+
+            <script type="text/template" id="allocation_edit">
+                <table style="border: 1px solid #CCCCCC; margin: 5px; width: 97%; height: 98%;">
+                    <tr>
+                        <td colspan="2">Allocation</td>
+                    </tr>
+                    <tr>
+                        <td>Agent Id:</td>
+                        <td style="width:100px;"><%= agent_id %></td>
+                    </tr>
+                    <tr>
+                        <td>Task Id:</td>
+                        <td style="width:100px;"><%= task_id %></td>
+                    </tr>
+                </table>
+                <div style="margin: 0px 1px 0px 5px;">
+                    <div style="float: right;">
+                        <button id="allocation_edit_delete">Delete</button>
+                    </div>
+                </div>
+            </script>
+
+            <script type="text/template" id="waypoint_remove">
+                <div>
+                    <button id="waypoint_remove_button">Remove Waypoint</button>
+                </div>
+            </script>
+
+            <script type="text/template" id="target_iw">
+                <table style="border: 1px solid #CCCCCC; margin: 5px; width: 98%; height: 100px;">
+                    <tr>
+                        <td>Choose target category:</td>
+                        <td>
+                            <select id="target_list">
+                                <option value="0">Water Source</option>
+                                <option value="1">Infrastructure damage</option>
+                                <option value="2">Medical care, Injury</option>
+                                <option value="3">Crime, Unrest</option>
+                                <option value="4">Invalid</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <div align="right" style="margin: 5px;">
+                    <button id="target_update">Update</button>
+                    <button id="target_delete" style="float: left">Remove</button>
+                </div>
+            </script>
+            <!-- End Jack -->
+        </div>
+
+        <!-- login content -->
+        <div id="login" style="display: none;">
+            <h1><font color="white">Welcome!</font></h1>
+            <div style="text-align: center;">
+                <input id="start_btn" type="button" value="Start Demo" style="margin: 2px;"/>
+            </div>
+        </div>
+
+        <div id="dialog" title="Add new target" style="display:none;">
+            <p>Do you want to add a target?</p>
+            <p style="font-size:small;">Please select the target type.</p>
+            <form id="dialog_target_list">
+                <select name="dialog_target_list_select">
+                    <option value="0">Water Source</option>
+                    <option value="1">Infrastructure damage</option>
+                    <option value="2">Medical care, Injury</option>
+                    <option value="3">Crime, Unrest</option>
+                </select>
+            </form>
+        </div>
+
+    </body>
+</html>
