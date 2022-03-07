@@ -174,18 +174,17 @@ public class Modeller {
 
     private void printRecords() {
         System.out.println("Pending:");
-        pendingRecords.forEach(System.out::println);
+        pendingRecords.forEach(r -> System.out.println(r.getCsvPrintableString()));
         System.out.println("Completed:");
-        loggedRecords.forEach(System.out::println);
+        loggedRecords.forEach(r -> System.out.println(r.getCsvPrintableString()));
         System.out.println();
-
     }
 
     private void printAgentRecords() {
         System.out.println("Agent Pending:");
-        pendingAgentRecords.forEach(System.out::println);
+        pendingAgentRecords.forEach(r -> System.out.println(r.getCsvPrintableString()));
         System.out.println("Agent Completed:");
-        loggedAgentRecords.forEach(System.out::println);
+        loggedAgentRecords.forEach(r -> System.out.println(r.getCsvPrintableString()));
         System.out.println();
 
     }
@@ -352,6 +351,11 @@ public class Modeller {
         public void printAlloc() {
             allocation.forEach((k, v) -> System.out.println(k + " -> " + v));
         }
+
+        public String getCsvPrintableString() {
+            return timeStamp + ", " + totalProbability + ", " + success;
+        }
+
     }
 
     private class ModellerAgentRecord {
@@ -378,6 +382,11 @@ public class Modeller {
                     ", success=" + success +
                     '}';
         }
+
+        public String getCsvPrintableString() {
+            return timeStamp + ", " + probability + ", " + agentId + ", " + success;
+        }
+
     }
 
 
