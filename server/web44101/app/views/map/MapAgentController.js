@@ -324,6 +324,8 @@ var MapAgentController = {
                 marker.setOptions({clickable: false, draggable: false})
             } else if(agent.getManuallyControlled() || agent.getType() === "leader") {
                 icon = this.icons.UAVManual;
+            } else if (agent.getType() === "withpack") {
+                icon = this.icons.UAVWithPack;
             } else if(agent.isTimedOut()) {
                 icon = this.icons.UAVTimedOut;
             } else

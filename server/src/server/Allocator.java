@@ -829,6 +829,7 @@ public class Allocator {
         if (!possibles.isEmpty()) {
             int index = simulator.getRandom().nextInt(possibles.size());
             putInTempAllocation(agent.getId(), possibles.get(index).getId());
+            agent.setType("withpack");
             confirmAllocation(simulator.getState().getTempAllocation());
             return true;
         }

@@ -52,6 +52,7 @@ App.Views.Map = Backbone.View.extend({
 
         this.icons = {
             UAV: $.loadIcon("icons/used/uav.png", "icons/plane.shadow.png", 30, 30),
+            UAVWithPack: $.loadIcon("icons/used/uav_with_pack.png", "icons/plane.shadow.png", 30, 30),
             UAVManual: $.loadIcon("icons/used/uav_manual.png", "icons/plane.shadow.png", 30, 30),
             UAVSelected: $.loadIcon("icons/used/uav_selected.png", "icons/plane.shadow.png", 30, 30),
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),

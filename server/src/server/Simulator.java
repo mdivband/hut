@@ -252,6 +252,7 @@ public class Simulator {
                 }
 
                 for (Task task : completedTasks) {
+                    task.getAgents().forEach(a -> a.setType("standard"));
                     task.complete();
                 }
 
