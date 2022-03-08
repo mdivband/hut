@@ -11,6 +11,7 @@ public abstract class Target extends MObject implements Serializable {
     private final int type;
     private boolean visible;
     public static final int HUMAN = 0;
+    public static final int PACKAGE = 1;
 
     public Target(String id, Coordinate coordinate, int type) {
         super(id, coordinate);

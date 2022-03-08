@@ -1,8 +1,10 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
 import server.model.Sensor;
+import server.model.hazard.Hazard;
 import server.model.task.Task;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,6 +84,15 @@ public class AgentProgrammed extends Agent {
         if(!isTimedOut())
             heartbeat();
         this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
+
+        //Check for hazard hits
+        for(Hazard hazard : Simulator.instance.getState().getHazards()) {
+            if(hazard.inRange(this.getCoordinate()))
+                Simulator.instance.getState().addHazardHit(hazard.getType(), this.getCoordinate());
+        }
+
+        //Always add 'no hazard' to track explored areas.
+        Simulator.instance.getState().addHazardHit(Hazard.NONE, this.getCoordinate());
         //manualCheckTaskComplete();
     }
 
@@ -390,5 +401,9 @@ public class AgentProgrammed extends Agent {
 
     public void setCommunicationRange(double communicationRange) {
         programmerHandler.setCommunicationRange(communicationRange);
+    }
+
+    public void pickUpPackage() {
+
     }
 }

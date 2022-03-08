@@ -1,5 +1,6 @@
 package server.model.agents;
 import server.model.Coordinate;
+import server.model.target.PackageTarget;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -19,7 +20,6 @@ public class AgentProgrammer {
     private int dupeCounter = 0;
     private int dupeLimit;
     private boolean hasNearbyLeader = false;
-    private boolean returner = false;
 
 
     /***
@@ -30,16 +30,10 @@ public class AgentProgrammer {
         if (a.isHub()) {
             LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
             a.setLeader(true);
-        } else if (a.getNextRandomDouble() > 0) { //0.65) {
+        } else if (a.getNextRandomDouble() > 0.5) { //0.65) {
             LOGGER.severe("Sv: Agent with GLOBAL ID " + a.agent.getId() + " randomly assigned leadership");
             a.setLeader(true);
             a.setVisual("leader");
-            if (a.getNextRandomDouble() > 0) { //0.5) {
-                LOGGER.severe("---- and set as a returning agent");
-                returner = true;
-            } else {
-                LOGGER.severe("---- and set as a non-returning agent");
-            }
         } else {
             a.setLeader(false);
         }
@@ -54,57 +48,42 @@ public class AgentProgrammer {
      * Called at every time step (currently 200ms)
      */
     public void step(){
-        if (a.getTasks().size() == 0 && a.getCompletedTasks().size() == 0) {
-            // WAIT; Only begin executing if we have tasks added now (so they don't fly off at the start)
+        // Leader => Scout
+        if (a.isLeader()) {
+            if (a.isStopped()) {
+                a.planSearchRoute();
+            } else {
+                a.followRoute();
+            }
+
+        // !Leader => Shuttle
         } else {
-            if (a.isLeader()) {
-                if (a.isStopped()) {
-                    if (a.getCompletedTasks().size() == 0) {
-                        // Get first task
-                        List<Coordinate> task = a.getNearestEmptyTask();
-                        if (task != null) {
-                            a.setTask(task);
-                            a.resume();
-                        }
-                    }
-                    if (a.getNextRandomDouble() < 0.9) {
-                        if (a.getCompletedTasks().size() > 0) {
-                            // WAIT - To make task clashes less likely
-                        }
-                    } else {
-                        try {
-                            if (returner || a.getNextRandomDouble() > 0.8) {
-                                // If this agent has selected the returner strategy then it always heads home after a
-                                // task completion
-                                // Otherwise, there is still a 20% chance to return anyway
-                                if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) < a.getSenseRange()) {
-                                    // At home
-                                    List<Coordinate> task = a.getNearestEmptyTask();
-                                    if (task != null) {
-                                        a.setTask(task);
-                                        a.resume();
-                                    } else {
-                                        a.goHome();
-                                    }
-                                } else {
-                                    a.goHome();
-                                }
-                            } else {
-                                List<Coordinate> task = a.getNearestEmptyTask();
-                                if (task != null) {
-                                    a.setTask(task);
-                                    a.resume();
-                                } else {
-                                    a.goHome();
-                                }
-                            }
-
-                        } catch (Exception e) {
-                            System.out.println("Excep: Should be due to start conditions");
-                        }
-                    }
+            if (a.isGoingHome()) {
+                if (a.isAtHome()) {
+                    a.deliverPack();
                 } else {
+                    a.followRoute();
+                }
+            } else if (a.isStopped()) {
+                a.planPackageCollection();
+                /*
+                if (dupeCounter > dupeLimit) {
+                    a.planPackageCollection();
+                    dupeCounter = 0;
+                } else {
+                    dupeCounter++;
+                }
 
+                 */
+            } else if (a.getPack() != null) {
+                // We have a package, keep going home
+                a.followRoute();
+            } else {
+                PackageTarget p = a.getNearbyPackage();
+                if (p != null) {
+                    a.pickupPackage(p);
+                    a.goHome();
+                } else {
                     if (dupeCounter < dupeLimit) {
                         a.followRoute();
                         dupeCounter += 1;
@@ -115,54 +94,10 @@ public class AgentProgrammer {
                             a.stop();
                         }
                     }
-
                 }
-            } else {
-                flock();
+
             }
         }
-    }
-
-    /***
-     * You don't need to use this, but I would suggest having a method to call that makes agents flock when they can't
-     * find/select a task
-     */
-    public void flock() {
-        if (!a.isGoingHome()) {
-            if (strandedCounter == 0) {
-                // wait and check
-                if (a.checkForNeighbourMovement()) {
-                    a.flockWithAttractionRepulsion(100, 20);
-                    a.moveAlongHeading(1);
-                    strandedCounter++;
-                }
-            } else if (strandedCounter < 30) {
-                pingLeaders();  // This updates the nearby leaders by use of custom messages
-                if (a.checkForNeighbourMovement() && hasNearbyLeader) {
-                    a.flockWithAttractionRepulsion(100, 20);
-                    a.moveAlongHeading(1);
-                    strandedCounter = 1;
-                } else {
-                    strandedCounter++;
-                }
-            } else {
-                strandedCounter = 1;
-                a.goHome();
-            }
-        } else {
-            if (a.getPosition().getDistance(a.getHome()) > a.getSenseRange()) {
-                a.followRoute();
-            } else {
-                strandedCounter = 1;
-                a.stopGoingHome();
-            }
-
-        }
-    }
-
-    private void pingLeaders() {
-        hasNearbyLeader = false;
-        a.sendCustomMessage("PING_LEADERS_SEND", a.getId());  // Use id as return address
     }
 
 

@@ -3,6 +3,7 @@ package server;
 import server.controller.*;
 import server.model.*;
 import server.model.agents.*;
+import server.model.target.PackageTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -161,14 +162,6 @@ public class Simulator {
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-            /*
-            if (state.getTasks().isEmpty()) {
-                System.out.println("END HERE");
-                state.getScoreInfo().forEach((k, v) -> System.out.println(k + " -> " + v));
-                break;
-            }
-
-             */
 
             if (state.getTasks().size() == 0 && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
                 this.reset();
@@ -196,45 +189,13 @@ public class Simulator {
                     ahp.step(state.isFlockingEnabled());
                 }
 
-                List<Agent> agentsToRemove = new ArrayList<>();
                 synchronized (state.getAgents()) {
                     for (Agent agent : state.getAgents()) {
-                        if (agent instanceof AgentVirtual av) {
-                            if (agentController.modelFailure(av)) {
-                                modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                            }
-
-                            if (agent.isTimedOut()) {
-                                //System.out.println("timed out, passing");
-                            } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
-                                av.charge();
-                            } else if (agent.getBattery() < 0 && av.isAlive()) {
-                                modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                                av.kill();
-                            } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
-                                av.step(state.isFlockingEnabled());
-                            } else {
-                                if (getAgentController().getScheduledRemovals() > 0) {
-                                    agentsToRemove.add(agent);
-                                    getAgentController().decrementRemoval();
-                                } else if (getTaskController().checkForFreeTasks()) {
-                                    av.stopGoingHome();
-                                    //getAllocator().dynamicAssignNearest(av);
-                                    getAllocator().dynamicAssignRandom(av);
-
-                                    Simulator.instance.getScoreController().incrementCompletedTask();
-                                    //double successChance = random.nextDouble(100);
-                                    double successChance = modeller.calculateAll(agent);
-                                    state.setSuccessChance(successChance);
-                                } else {
-                                    av.heartbeat();
-                                }
-                            }
-                        }
+                        agent.step(state.isFlockingEnabled());
                     }
                 }
 
-                agentsToRemove.forEach(a -> getState().getAgents().remove(a));
+                
 
                 if (state.isCommunicationConstrained()) {
                     state.updateAgentVisibility();
@@ -255,21 +216,12 @@ public class Simulator {
                     task.complete();
                 }
 
-                if (!completedTasks.isEmpty()) {
-                    completedTasks.forEach(t -> modeller.passRecords(t.getId()));
-
-                }
-
-                if (!modeller.isStarted()) {
-                    modeller.start();
-                }
-
             }
 
             scoreController.handleUpkeep();
 
             // Step hazard hits
-            this.state.decayHazardHits();
+            //this.state.decayHazardHits();
 
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));

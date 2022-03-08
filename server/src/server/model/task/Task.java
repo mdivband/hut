@@ -33,6 +33,7 @@ public abstract class Task extends MObject implements Serializable {
     public static final int TASK_PATROL = 2;
     public static final int TASK_REGION = 3;
     public static final int TASK_VISIT = 4;
+    public static final int TASK_PACKAGE = 4;
 
     //Used in client
     private final List<Agent> agents; //Serialised to just agent ids.

@@ -2,6 +2,7 @@ package server.model.agents;
 
 import server.Simulator;
 import server.model.Coordinate;
+import server.model.target.PackageTarget;
 import server.model.target.Target;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
@@ -39,6 +40,7 @@ public class ProgrammerHandler implements Serializable {
     private boolean isGoingHome = false;
     private int stepCounter = 0;
     private int pingCounter = 0;
+    private PackageTarget pack = null;
 
     /***
      * Constructor. Connects the agent to the programmer s.t. this class behaves akin to an MVC controller
@@ -223,6 +225,7 @@ public class ProgrammerHandler implements Serializable {
         if (!currentTask.isEmpty()) {
             tasks.get(currentTask).remove(getId());
         }
+        agent.getRoute().clear();
         currentTask = new ArrayList<>();
     }
 
@@ -363,11 +366,19 @@ public class ProgrammerHandler implements Serializable {
      * Makes the agent follow the route that is currently set
      */
     public void followRoute() {
-        if (currentTask.size() > 1) {
-            // Patrol (or region, NYI)
-            agent.moveAlongPatrol();
+        if (currentTask != null) {
+            if (currentTask.size() > 1) {
+                // Patrol (or region, NYI)
+                agent.moveAlongPatrol();
+            } else {
+                agent.moveTowardsDestination();
+            }
         } else {
-            agent.moveTowardsDestination();
+            if (agent.getRoute().size() > 0) {
+                agent.moveTowardsDestination();
+            } else {
+                agent.stop();
+            }
         }
 
     }
@@ -447,6 +458,7 @@ public class ProgrammerHandler implements Serializable {
         // Complicated statement to cover singleton currentTask exact match or non-singleton centre reference match with
         //  or without patrol allowance. Order of statements prevents errors
         if (coord.equals(calculateRepresentativeCoordinate(currentTask))) {
+            System.out.println(getId() + " RECEIVING OWN TASK (" + currentTask + ")");
             tasks.remove(currentTask); // To make sure, it doesn't always remove right otherwise
             currentTask = new ArrayList<>();
             agent.clearRoute();
@@ -461,7 +473,9 @@ public class ProgrammerHandler implements Serializable {
      */
     private void receiveTarget(Coordinate coords){
         Target t = Simulator.instance.getTargetController().findTargetByCoord(coords);
-        Simulator.instance.getTargetController().setTargetVisibility(t.getId(), true);
+        try {
+            Simulator.instance.getTargetController().setTargetVisibility(t.getId(), true);
+        } catch (Exception ignored) {}
     }
 
     /***
@@ -1221,7 +1235,8 @@ public class ProgrammerHandler implements Serializable {
     public void goHome(){
         agent.clearRoute();
         // TODO this doesn't seem to update properly
-        setRoute(Collections.singletonList(calculateNearestHomeLocation()));
+        //setRoute(Collections.singletonList(calculateNearestHomeLocation()));
+        setRoute(Collections.singletonList(getHubPosition()));
         isGoingHome = true;
         resume();
     }
@@ -1369,6 +1384,60 @@ public class ProgrammerHandler implements Serializable {
             return false;
         }
     }
+
+    public void planSearchRoute() {
+        double d = 2 * (double) communicationRange / 111111;
+        Coordinate c = new Coordinate(getHubPosition().getLatitude() + (Simulator.instance.getRandom().nextDouble() * (2*d)), getHubPosition().getLongitude() + (Simulator.instance.getRandom().nextDouble() * 4*d) - (2*d));
+        setRoute(Collections.singletonList(c));
+        resume();
+    }
+
+    // TODO make this based on internal model
+    public void planPackageCollection() {
+        for (Target t : Simulator.instance.getState().getTargets()) {
+            if (t.isVisible() && t instanceof PackageTarget p && (tasks.get(Collections.singletonList(p.getCoordinate())) == null || tasks.get(Collections.singletonList(p.getCoordinate())).isEmpty())) {
+                setTask(Collections.singletonList(p.getCoordinate()));
+                // TODO make the agent plan around hazards
+                //setRoute(Collections.singletonList(p.getCoordinate()));
+                //resume();
+                return;
+            }
+        }
+    }
+
+    public PackageTarget getNearbyPackage() {
+        for (Target t : Simulator.instance.getState().getTargets()) {
+            if (t instanceof PackageTarget p && p.getCoordinate().getDistance(getPosition()) < 25) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    public void pickupPackage(PackageTarget p) {
+        pack = p;
+        Simulator.instance.getState().remove(p);
+    }
+
+    public PackageTarget getPack() {
+        return pack;
+    }
+
+    public void deliverPack() {
+        pack = null;
+        System.out.println("TODO DELIVER THE BACK IN BACKEND");
+        tasks.remove(currentTask); // To make sure, it doesn't always remove right otherwise
+        currentTask = new ArrayList<>();
+        agent.clearRoute();
+        stopGoingHome();
+        stop();
+    }
+
+    public boolean isAtHome() {
+        return getPosition().getDistance(getHubPosition()) < 25;
+    }
+
+
 
     /***
      * We use an internal class to make handling positional information easier. Holds location, heading, and whether it

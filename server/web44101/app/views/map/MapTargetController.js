@@ -13,12 +13,15 @@ var MapTargetController = {
         this.updateTargetMarkerVisibility = _.bind(this.updateTargetMarkerVisibility, context);
         this.checkForReveal = _.bind(this.checkForReveal, context);
         this.popupTargetFound = _.bind(this.popupTargetFound, context);
+        this.onTargetRemove = _.bind(this.onTargetRemove, context)
     },
     bindEvents: function () {
         this.state.targets.on("add", function (target) {
             MapTargetController.onTargetAdd(target);
         });
-
+        this.state.targets.on("remove", function (task) {
+            MapTargetController.onTargetRemove(task);
+        });
         this.state.targets.on("change:visible", function (target) {
             MapTargetController.updateTargetMarkerVisibility(target);
         });
@@ -41,6 +44,15 @@ var MapTargetController = {
 
         MapTargetController.updateTargetMarkerIcon(target);
         MapTargetController.updateTargetMarkerVisibility(target);
+    },
+    onTargetRemove: function (target) {
+        console.log('Target removed ' + target.getId());
+        var marker = this.$el.gmap("get", "markers")[target.getId()];
+        if (marker) {
+            marker.setMap(null);
+            delete marker;
+        }
+        target.destroy();
     },
     updateTargetMarkerIcon: function (target) {
         var marker = this.$el.gmap("get", "markers")[target.getId()];

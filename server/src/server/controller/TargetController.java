@@ -3,6 +3,7 @@ package server.controller;
 import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.HumanTarget;
+import server.model.target.PackageTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 
@@ -32,6 +33,9 @@ public class TargetController extends AbstractController {
         switch(type) {
             case Target.HUMAN:
                 target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
+                break;
+            case Target.PACKAGE:
+                target = new PackageTarget(generateUID("Package"), new Coordinate(lat, lng));
                 break;
             default:
                 throw new RuntimeException("Unrecognized target type - " + type);
