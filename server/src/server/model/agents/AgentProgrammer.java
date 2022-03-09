@@ -9,6 +9,7 @@ import java.util.logging.Logger;
  * Here is where the user should program agent behaviour to be run on each programmed agent
  */
 public class AgentProgrammer {
+    private static int alternator = 0;
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
     ProgrammerHandler a;
     public AgentProgrammer(ProgrammerHandler programmerHandler) {
@@ -30,12 +31,15 @@ public class AgentProgrammer {
         if (a.isHub()) {
             LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
             a.setLeader(true);
-        } else if (a.getNextRandomDouble() > 0.5) { //0.65) {
+            //} else if (a.getNextRandomDouble() > 0.5) { //0.65) {
+        } else if (alternator == 0) {
             LOGGER.severe("Sv: Agent with GLOBAL ID " + a.agent.getId() + " randomly assigned leadership");
             a.setLeader(true);
             a.setVisual("leader");
+            alternator = 1;
         } else {
             a.setLeader(false);
+            alternator = 0;
         }
 
         // Sets a random wait interval from 5-15
@@ -65,16 +69,9 @@ public class AgentProgrammer {
                     a.followRoute();
                 }
             } else if (a.isStopped()) {
-                a.planPackageCollection();
-                /*
-                if (dupeCounter > dupeLimit) {
+                if (a.getNextRandomDouble() > 0.9) {
                     a.planPackageCollection();
-                    dupeCounter = 0;
-                } else {
-                    dupeCounter++;
                 }
-
-                 */
             } else if (a.getPack() != null) {
                 // We have a package, keep going home
                 a.followRoute();
@@ -95,7 +92,6 @@ public class AgentProgrammer {
                         }
                     }
                 }
-
             }
         }
     }

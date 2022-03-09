@@ -38,11 +38,13 @@ public abstract class Agent extends MObject implements Serializable {
 
     protected String type;
     protected boolean visible = true;
+    protected double hazardDetectionRange;
 
     //Used in server but not in client
     private transient long lastHeartbeat;
     private transient boolean startSearching;
     private transient boolean stopped;
+
 
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
@@ -61,6 +63,7 @@ public abstract class Agent extends MObject implements Serializable {
         allocatedTaskId = "";
         timedOut = false;
         type = "standard";
+        hazardDetectionRange = 60;
 
         this.lastHeartbeat = System.currentTimeMillis();
     }

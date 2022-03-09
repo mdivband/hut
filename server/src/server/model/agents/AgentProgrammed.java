@@ -87,13 +87,37 @@ public class AgentProgrammed extends Agent {
 
         //Check for hazard hits
         for(Hazard hazard : Simulator.instance.getState().getHazards()) {
-            if(hazard.inRange(this.getCoordinate()))
-                Simulator.instance.getState().addHazardHit(hazard.getType(), this.getCoordinate());
+            //if(hazard.inRange(this.getCoordinate(), hazardDetectionRange)) {
+                /*
+                Simulator.instance.getState().addHazardHit(hazard.getType(), hazard.getCoordinate().getCoordinate(hazard.getSize(), hazard.getCoordinate().getAngle(getCoordinate())));
+                if (hazard.agentIn(this, hazardDetectionRange)) {
+                    Simulator.instance.getState().addHazardHit(hazard.getType(), getCoordinate());
+                }
+                 */
+            //}
+            hazard.revealAround(this, hazardDetectionRange);
+            if (hazard.agentIn(this)) {
+                triggerHazardEffect();
+            }
         }
 
         //Always add 'no hazard' to track explored areas.
         Simulator.instance.getState().addHazardHit(Hazard.NONE, this.getCoordinate());
         //manualCheckTaskComplete();
+    }
+
+    public void registerHazard(Coordinate hit) {
+        programmerHandler.registerHazard(hit);
+    }
+
+    private void triggerHazardEffect() {
+        clearRoute();
+        // TODO this doesn't seem to update properly
+        //setRoute(Collections.singletonList(calculateNearestHomeLocation()));
+        setRoute(Collections.singletonList(getHubLocation()));
+        //agent.setRoute(Collections.singletonList(getHubPosition()));
+        programmerHandler.setGoingHome(true);
+        resume();
     }
 
     /**
@@ -403,7 +427,5 @@ public class AgentProgrammed extends Agent {
         programmerHandler.setCommunicationRange(communicationRange);
     }
 
-    public void pickUpPackage() {
 
-    }
 }

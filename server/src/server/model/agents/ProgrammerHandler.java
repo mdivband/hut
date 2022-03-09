@@ -2,6 +2,7 @@ package server.model.agents;
 
 import server.Simulator;
 import server.model.Coordinate;
+import server.model.hazard.Hazard;
 import server.model.target.PackageTarget;
 import server.model.target.Target;
 import server.model.task.PatrolTask;
@@ -33,6 +34,7 @@ public class ProgrammerHandler implements Serializable {
     private final HashMap<List<Coordinate>, List<String>> tasks;
     private final List<Coordinate> completedTasks;
     private final List<Coordinate> foundTargets;
+    private final List<Coordinate> hazards;
     
     private Coordinate home;
     private boolean leader = false;
@@ -52,7 +54,9 @@ public class ProgrammerHandler implements Serializable {
         tasks = new HashMap<>();
         completedTasks = new ArrayList<>();
         foundTargets = new ArrayList<>();
+        hazards = new ArrayList<>();
         agentProgrammer = new AgentProgrammer(this);
+
     }
 
     /***
@@ -69,7 +73,7 @@ public class ProgrammerHandler implements Serializable {
         } else if (pingCounter >= pingTimeout) {
             declareSelf(communicationRange);
             checkForTargets();
-            declareTargets(communicationRange);
+            declareTargets(99999999);
             pingCounter = 0;
         }
         pingCounter++;
@@ -120,7 +124,7 @@ public class ProgrammerHandler implements Serializable {
         } else if (pingCounter >= pingTimeout) {
             declareSelf(communicationRange); // This must be separate, as order matters for the first case
             broadcastTasks();
-            declareTargets(communicationRange);
+            declareTargets(99999999);
             pingCounter = 0;
         }
         pingCounter++;
@@ -333,7 +337,61 @@ public class ProgrammerHandler implements Serializable {
      * @param coords The list of waypoints in the planned route
      */
     protected void setRoute(List<Coordinate> coords){
-        agent.setRoute(coords);
+        if (coords.size() == 1) {
+            ArrayList<Coordinate> rt = new ArrayList<>();
+            //rt.add(getPosition());
+            Coordinate startLocation = getPosition();
+            for (int i = 0; i < 10; i++) {
+                List<Coordinate> pointSet = generatePointSet(startLocation, coords.get(0));
+
+                if (routeHasHazard(pointSet)) {
+                    double offset = i * 25.0;
+                    double theta = 2 * getNextRandomDouble() * Math.PI;  // Angle up to 2pi
+                    startLocation = getPosition().getCoordinate(offset, theta);
+                    System.out.println(getId() + " Route had a hazard, trying with offset="+offset+", theta="+theta);
+
+                } else {
+                    System.out.println(getId() + " Found a good route, at i="+i);
+                    if (i>0) {
+                        rt.add(startLocation);
+                    }
+
+                    rt.add(coords.get(0));
+                    agent.setRoute(rt);
+                    return;
+                }
+            }
+            cancel();
+            stopGoingHome();
+
+        } else {
+            agent.setRoute(coords);
+        }
+    }
+
+    private List<Coordinate> generatePointSet(Coordinate start, Coordinate end) {
+        List<Coordinate> pointSet = new ArrayList<>();
+        double theta = start.getAngle(end);
+        double dist = start.getDistance(end);
+        double interval = 25;
+
+        double currentDist = 0;
+        while (currentDist < dist) {
+            Coordinate nextCoord = start.getCoordinate(currentDist, theta);
+            pointSet.add(nextCoord);
+            currentDist += interval;
+        }
+        return pointSet;
+    }
+
+    private boolean routeHasHazard(List<Coordinate> coords) {
+        double sigma = 30;
+        for (Coordinate c : coords) {
+            if (hazards.stream().anyMatch(h -> h.getDistance(c) < sigma)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1036,16 +1094,18 @@ public class ProgrammerHandler implements Serializable {
             agent.setAllocatedTaskByCoords(taskCoords);
             currentTask = taskCoords;
             tasks.get(taskCoords).add(getId());  // must add ourselves
-            agent.setRoute(taskCoords);
             resume();
+            setRoute(taskCoords);
+
         } catch (Exception e) {
             // Failed to do this, probably due to incorrect information. We have to allow this mistake to happen,
             // as otherwise we are letting globally known information leak into the process
             tempPlaceNewTask(taskCoords);
             currentTask = taskCoords;
             tasks.get(taskCoords).add(getId());  // must add ourselves
-            agent.setRoute(taskCoords);
             resume();
+            setRoute(taskCoords);
+
         }
     }
 
@@ -1236,9 +1296,11 @@ public class ProgrammerHandler implements Serializable {
         agent.clearRoute();
         // TODO this doesn't seem to update properly
         //setRoute(Collections.singletonList(calculateNearestHomeLocation()));
-        setRoute(Collections.singletonList(getHubPosition()));
         isGoingHome = true;
         resume();
+        setRoute(Collections.singletonList(getHubPosition()));
+        //agent.setRoute(Collections.singletonList(getHubPosition()));
+
     }
 
     /**
@@ -1386,10 +1448,10 @@ public class ProgrammerHandler implements Serializable {
     }
 
     public void planSearchRoute() {
-        double d = 2 * (double) communicationRange / 111111;
-        Coordinate c = new Coordinate(getHubPosition().getLatitude() + (Simulator.instance.getRandom().nextDouble() * (2*d)), getHubPosition().getLongitude() + (Simulator.instance.getRandom().nextDouble() * 4*d) - (2*d));
-        setRoute(Collections.singletonList(c));
+        double d = 5 * (double) communicationRange / 111111;
+        Coordinate c = new Coordinate(getHubPosition().getLatitude() + (Simulator.instance.getRandom().nextDouble() * 2*d) - d, getHubPosition().getLongitude() + (Simulator.instance.getRandom().nextDouble() * 2*d) - d);
         resume();
+        setRoute(Collections.singletonList(c));
     }
 
     // TODO make this based on internal model
@@ -1407,7 +1469,7 @@ public class ProgrammerHandler implements Serializable {
 
     public PackageTarget getNearbyPackage() {
         for (Target t : Simulator.instance.getState().getTargets()) {
-            if (t instanceof PackageTarget p && p.getCoordinate().getDistance(getPosition()) < 25) {
+            if (t instanceof PackageTarget p && p.getCoordinate().getDistance(getPosition()) < 10) {
                 return p;
             }
         }
@@ -1415,6 +1477,7 @@ public class ProgrammerHandler implements Serializable {
     }
 
     public void pickupPackage(PackageTarget p) {
+        agent.setType("withpack");
         pack = p;
         Simulator.instance.getState().remove(p);
     }
@@ -1425,6 +1488,7 @@ public class ProgrammerHandler implements Serializable {
 
     public void deliverPack() {
         pack = null;
+        agent.setType("standard");
         System.out.println("TODO DELIVER THE BACK IN BACKEND");
         tasks.remove(currentTask); // To make sure, it doesn't always remove right otherwise
         currentTask = new ArrayList<>();
@@ -1434,10 +1498,16 @@ public class ProgrammerHandler implements Serializable {
     }
 
     public boolean isAtHome() {
-        return getPosition().getDistance(getHubPosition()) < 25;
+        return getPosition().getDistance(getHubPosition()) < 15;
     }
 
+    public void registerHazard(Coordinate hit) {
+        hazards.add(hit);
+    }
 
+    public void setGoingHome(boolean goingHome) {
+        isGoingHome = goingHome;
+    }
 
     /***
      * We use an internal class to make handling positional information easier. Holds location, heading, and whether it
