@@ -343,6 +343,7 @@ public class Allocator {
     }
 
     protected Map<String, String> bestFirstCompute(List<Agent> agents, List<Task> tasks, boolean editMode) {
+        System.out.println("bfa");
         if (!agents.isEmpty() && !tasks.isEmpty()) {
             HashMap<String, String> result = new HashMap<>();
 
@@ -434,7 +435,6 @@ public class Allocator {
     }
 
     private Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
-
         MaxSum maxsum = new MaxSum();
         HashMap<Agent, Task> resultObjs = new HashMap<>(); // TEMP solution
         HashMap<String, String> result = new HashMap<>();
@@ -834,6 +834,68 @@ public class Allocator {
             return true;
         }
         return false;
+    }
+
+    public void dynamicAssign(Agent agent) {
+        if (simulator.getState().getAllocationMethod().equals("bestfirst")) {
+            dynamicAssignNearest(agent);
+        } else if (simulator.getState().getAllocationMethod().equals("maxsum")) {
+            List<Agent> readyAgents = new ArrayList<>();
+            //readyAgents.add(agent);
+            for (Agent a : simulator.getState().getAgents()) {
+                if (a instanceof AgentVirtual av && !(a instanceof Hub)) {
+                    boolean c1 = (!av.isAlive() && (!av.isGoingHome() || av.isHome()));
+                    boolean c2 = av.getTask() == null && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500;
+                    boolean c3 = av.isStopped() && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500;
+                    boolean c4 = !readyAgents.contains(a);
+
+                    System.out.println(a.getId());
+                    System.out.println(c1);
+                    System.out.println(c2);
+                    System.out.println(c3);
+                    System.out.println(c4);
+                    System.out.println();
+
+
+
+                    if (av.getTask() == null
+                    && (!av.isAlive() && (!av.isGoingHome() || av.isHome()))
+                    || (av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500)
+                    || (av.isStopped() && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500)) {
+                    //&& !readyAgents.contains(a)) {
+                        readyAgents.add(a);
+                    }
+                }
+            }
+            //System.out.println("Agents: ");
+            //readyAgents.forEach(System.out::println);
+            //runMaxSum(readyAgents, (List<Task>) simulator.getState().getTasks());
+            //Map<String, String> result = runMaxSum(agents, tasks);
+            //                //if (!editMode) oldresult = result;
+            //                oldresult = result;
+            //                return result;
+
+            List<Task> availableTasks = new ArrayList<>(simulator.getState().getTasks());
+            availableTasks.removeIf(t -> !t.getAgents().isEmpty());
+            List<AgentVirtual> homingAgents = new ArrayList<>();
+            readyAgents.forEach(a -> {
+                if (a instanceof AgentVirtual av && av.isGoingHome()) {
+                    homingAgents.add(av);
+                }
+            });
+
+            Map<String, String> alloc = compute(readyAgents, availableTasks, false);
+            alloc.forEach(this::putInTempAllocation);
+            //System.out.println(simulator.getState().getTempAllocation());
+            confirmAllocation(simulator.getState().getTempAllocation());
+            homingAgents.forEach(a -> a.prependToRoute(simulator.getState().getHubLocation()));
+
+            System.out.println("Agents (post alloc): ");
+            readyAgents.forEach(System.out::println);
+            System.out.println();
+        } else {
+            dynamicAssignRandom(agent);
+        }
     }
 
     //Inner class to provide generic pair of Agent-Task

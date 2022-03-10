@@ -256,6 +256,15 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
+    public void prependToRoute(Coordinate location) {
+        synchronized (this.route) {
+            List<Coordinate> currentRoute = new ArrayList<>(route);
+            this.route.clear();
+            this.route.add(location);
+            this.route.addAll(currentRoute);
+        }
+    }
+
     public void clearRoute() {
         synchronized (this.route) {
             this.route.clear();
@@ -427,5 +436,4 @@ public abstract class Agent extends MObject implements Serializable {
                 ", stopped=" + stopped +
                 '}';
     }
-
 }

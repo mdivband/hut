@@ -212,6 +212,7 @@ public class Simulator {
                                 modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                 av.kill();
                             } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
+                                //System.out.println(agent);
                                 av.step(state.isFlockingEnabled());
                             } else {
                                 if (getAgentController().getScheduledRemovals() > 0) {
@@ -219,11 +220,9 @@ public class Simulator {
                                     getAgentController().decrementRemoval();
                                 } else if (getTaskController().checkForFreeTasks()) {
                                     av.stopGoingHome();
-                                    //getAllocator().dynamicAssignNearest(av);
-                                    getAllocator().dynamicAssignRandom(av);
+                                    getAllocator().dynamicAssign(av);
 
                                     Simulator.instance.getScoreController().incrementCompletedTask();
-                                    //double successChance = random.nextDouble(100);
                                     double successChance = modeller.calculateAll(agent);
                                     state.setSuccessChance(successChance);
                                 } else {

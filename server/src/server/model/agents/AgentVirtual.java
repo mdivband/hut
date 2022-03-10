@@ -31,8 +31,13 @@ public class AgentVirtual extends Agent {
             moveTowardsDestination();
             for (Agent a : sensor.senseNeighbours(this, 10.0)) {
                 if (a instanceof Hub) {
-                    stop();
                     goingHome = false;
+                    a.setType("withPack");
+                    if (a.getRoute().size() <= 0) {
+                        System.out.println("Stopping at home");
+                        stop();
+                    }
+
                 }
             }
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
