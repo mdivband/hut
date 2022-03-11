@@ -56,47 +56,21 @@ var MapTargetController = {
         MapTargetController.updateTargetMarkerVisibility(target);
     },
     openScanWindow : function (target, marker) {
-        try {
-            self = this;
-            this.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
-                var property = document.createElement("div");
+        if (userRole == "analyst") {
+            try {
+                self = this;
+                this.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
+                    var property = document.createElement("div");
 
 
-                // NOTE: This is a clumsy way of doing this but I used two templates due to problems with selectively
-                //  hiding buttons. In future this should be reworked properly -WH
-                if (self.state.getDeepAllowed()) {
-                    property.innerHTML = _.template($("#target_scan_edit_dp").html(), {});
-                    google.maps.event.addListener(iw, 'domready', function () {
-                        //Update task if values changed
-
-                        $(property).on("click", "#scan_shallow_dp", function () {
-                            //alert("Scanning shallow");
-                            var newId = "(" + target.getId() + ")";
-                            marker.setOptions({labelContent: newId});
-                            MapTaskController.addShallowScanTask(target.getPosition());
-                            MapTargetController.updateTargetMarkerIcon(target);
-                            icon = self.icons.TargetShallowScan;
-                            marker.setIcon(icon.Image)
-                            self.$el.gmap("closeInfoWindow");
-
-                        });
-                        $(property).on("click", "#scan_deep_dp", function () {
-                            var newId = "[" + target.getId() + "]";
-                            marker.setOptions({labelContent: newId});
-                            MapTaskController.addDeepScanTask(target.getPosition());
-                            MapTargetController.updateTargetMarkerIcon(target);
-                            icon = self.icons.TargetDeepScan;
-                            marker.setIcon(icon.Image)
-                            self.$el.gmap("closeInfoWindow");
-                        });
-                    });
-
-                } else {
-                    property.innerHTML = _.template($("#target_scan_edit").html(), {});
+                    // NOTE: This is a clumsy way of doing this but I used two templates due to problems with selectively
+                    //  hiding buttons. In future this should be reworked properly -WH
+                    if (self.state.getDeepAllowed()) {
+                        property.innerHTML = _.template($("#target_scan_edit_dp").html(), {});
                         google.maps.event.addListener(iw, 'domready', function () {
                             //Update task if values changed
 
-                            $(property).on("click", "#scan_shallow", function () {
+                            $(property).on("click", "#scan_shallow_dp", function () {
                                 //alert("Scanning shallow");
                                 var newId = "(" + target.getId() + ")";
                                 marker.setOptions({labelContent: newId});
@@ -105,18 +79,46 @@ var MapTargetController = {
                                 icon = self.icons.TargetShallowScan;
                                 marker.setIcon(icon.Image)
                                 self.$el.gmap("closeInfoWindow");
+
+                            });
+                            $(property).on("click", "#scan_deep_dp", function () {
+                                var newId = "[" + target.getId() + "]";
+                                marker.setOptions({labelContent: newId});
+                                MapTaskController.addDeepScanTask(target.getPosition());
+                                MapTargetController.updateTargetMarkerIcon(target);
+                                icon = self.icons.TargetDeepScan;
+                                marker.setIcon(icon.Image)
+                                self.$el.gmap("closeInfoWindow");
                             });
                         });
-                    }
-                iw.setContent(property);
-                iw.setPosition(target.getPosition());
 
-                self.views.clickedTarget = target;
+                    } else {
+                        property.innerHTML = _.template($("#target_scan_edit").html(), {});
+                            google.maps.event.addListener(iw, 'domready', function () {
+                                //Update task if values changed
 
-                });
+                                $(property).on("click", "#scan_shallow", function () {
+                                    //alert("Scanning shallow");
+                                    var newId = "(" + target.getId() + ")";
+                                    marker.setOptions({labelContent: newId});
+                                    MapTaskController.addShallowScanTask(target.getPosition());
+                                    MapTargetController.updateTargetMarkerIcon(target);
+                                    icon = self.icons.TargetShallowScan;
+                                    marker.setIcon(icon.Image)
+                                    self.$el.gmap("closeInfoWindow");
+                                });
+                            });
+                        }
+                    iw.setContent(property);
+                    iw.setPosition(target.getPosition());
 
-        } catch (e) {
-            alert(e)
+                    self.views.clickedTarget = target;
+
+                    });
+
+            } catch (e) {
+                alert(e)
+            }
         }
     },
     checkIcon : function (targetId) {
