@@ -405,6 +405,11 @@
                         <td>Task Id:</td>
                         <td><input type="text" value="<%= task_id %>" readonly/></td>
                     </tr>
+                    <tr>
+                        <td>Group Size:</td>
+                        <td><input type="number" min="0" max="<%= max_size %>" step="1" id="group_size"
+                                   value="<%= group_size %>"/></td>
+                    </tr>
                     <!--<table style="border: 1px solid #CCCCCC; margin: 5px; width: 98%; height: 100px;">
                         <tr>
                             <td colspan="2">Task</td>
@@ -426,11 +431,9 @@
                         -->
                 </table>
                 <div style="margin: 0px 1px 0px 5px;">
-                    <!--
                     <div style="float: left;">
                         <button id="task_edit_update">Update</button>
                     </div>
-                    -->
                     <div style="float: right;">
                         <button id="task_edit_delete">Delete</button>
                     </div>
@@ -467,6 +470,7 @@
                     </div>
                 </div>
             </script>
+
 
             <script type="text/template" id="agent_edit">
                 <table style="border: 1px solid #CCCCCC; margin: 5px; width: 97%; height: 98%;">
