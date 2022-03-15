@@ -161,14 +161,6 @@ public class Simulator {
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-            /*
-            if (state.getTasks().isEmpty()) {
-                System.out.println("END HERE");
-                state.getScoreInfo().forEach((k, v) -> System.out.println(k + " -> " + v));
-                break;
-            }
-
-             */
 
             if (state.getTasks().size() == 0 && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
                 this.reset();
@@ -186,55 +178,64 @@ public class Simulator {
 
             if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
 
-                // Step agents
-                checkAgentsForTimeout();
+                if (state.getAllocationStyle().equals("manualwithstop") || state.getAllocationStyle().equals("manual")) {
+                    // Step agents
+                    checkAgentsForTimeout();
 
-                Hub hub = state.getHub();
-                if (hub instanceof AgentHub ah) {
-                    ah.step(state.isFlockingEnabled());
-                } else if (hub instanceof AgentHubProgrammed ahp) {
-                    ahp.step(state.isFlockingEnabled());
-                }
+                    Hub hub = state.getHub();
+                    if (hub instanceof AgentHub ah) {
+                        ah.step(state.isFlockingEnabled());
+                    } else if (hub instanceof AgentHubProgrammed ahp) {
+                        ahp.step(state.isFlockingEnabled());
+                    }
+                    // ELSE no hub
 
-                List<Agent> agentsToRemove = new ArrayList<>();
-                synchronized (state.getAgents()) {
-                    for (Agent agent : state.getAgents()) {
-                        if (agent instanceof AgentVirtual av) {
-                            if (agentController.modelFailure(av)) {
-                                modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                            }
+                    synchronized (state.getAgents()) {
+                        for (Agent agent : state.getAgents()) {
+                            agent.step(getState().isFlockingEnabled());
+                        }
+                    }
+                } else if (state.getAllocationStyle().equals("dynamic")) {
+                    List<Agent> agentsToRemove = new ArrayList<>();
+                    synchronized (state.getAgents()) {
+                        for (Agent agent : state.getAgents()) {
+                            if (agent instanceof AgentVirtual av) {
+                                if (agentController.modelFailure(av)) {
+                                    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                }
 
-                            if (agent.isTimedOut()) {
-                                //System.out.println("timed out, passing");
-                            } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
-                                av.charge();
-                            } else if (agent.getBattery() < 0 && av.isAlive()) {
-                                modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                                av.kill();
-                            } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
-                                //System.out.println(agent);
-                                av.step(state.isFlockingEnabled());
-                            } else {
-                                if (getAgentController().getScheduledRemovals() > 0) {
-                                    agentsToRemove.add(agent);
-                                    getAgentController().decrementRemoval();
-                                } else if (getTaskController().checkForFreeTasks()) {
-                                    av.stopGoingHome();
-                                    getAllocator().dynamicAssign(av);
-
-                                    Simulator.instance.getScoreController().incrementCompletedTask();
-                                    double successChance = modeller.calculateAll(agent);
-                                    state.setSuccessChance(successChance);
+                                if (agent.isTimedOut()) {
+                                    //System.out.println("timed out, passing");
+                                } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
+                                    av.charge();
+                                } else if (agent.getBattery() < 0 && av.isAlive()) {
+                                    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                    av.kill();
+                                } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
+                                    //System.out.println(agent);
+                                    av.step(state.isFlockingEnabled());
                                 } else {
-                                    av.heartbeat();
-                                    System.out.println(agent.getId() + ", heartbeat");
+                                    if (getAgentController().getScheduledRemovals() > 0) {
+                                        agentsToRemove.add(agent);
+                                        getAgentController().decrementRemoval();
+                                    } else if (getTaskController().checkForFreeTasks()) {
+                                        av.stopGoingHome();
+                                        getAllocator().dynamicAssign(av);
+
+                                        Simulator.instance.getScoreController().incrementCompletedTask();
+                                        double successChance = modeller.calculateAll(agent);
+                                        state.setSuccessChance(successChance);
+                                    } else {
+                                        av.heartbeat();
+                                        System.out.println(agent.getId() + ", heartbeat");
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                agentsToRemove.forEach(a -> getState().getAgents().remove(a));
+                    agentsToRemove.forEach(a -> getState().getAgents().remove(a));
+                }
 
                 if (state.isCommunicationConstrained()) {
                     state.updateAgentVisibility();
@@ -309,9 +310,11 @@ public class Simulator {
 
     public void changeView(boolean toEdit) {
         if (toEdit) {
-            //agentController.stopAllNonProgrammedAgents();
-            //agentController.updateNonProgrammedAgentsTempRoutes();
-            //allocator.copyRealAllocToTempAlloc();
+            if (state.getAllocationStyle().equals("manualwithstop")) {
+                agentController.stopAllNonProgrammedAgents();
+                agentController.updateNonProgrammedAgentsTempRoutes();
+                allocator.copyRealAllocToTempAlloc();
+            }
             allocator.clearAllocationHistory();
             state.setEditMode(true);
         } else {
@@ -391,6 +394,25 @@ public class Simulator {
                     this.state.setAllocationMethod(allocationMethod);
                 } else {
                     LOGGER.warning("Allocation method: '" + allocationMethod + "' not valid. Set to 'maxsum'.");
+                    // state.allocationMethod initialised with default value of 'maxsum'
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"allocationStyle")) {
+                String allocationStyle = GsonUtils.getValue(obj, "allocationStyle")
+                        .toString()
+                        .toLowerCase();
+
+                List<String> possibleMethods = new ArrayList<>(Arrays.asList(
+                        "manual",
+                        "manualwithstop",
+                        "dynamic"
+                ));
+
+                if(possibleMethods.contains(allocationStyle)) {
+                    this.state.setAllocationStyle(allocationStyle);
+                } else {
+                    LOGGER.warning("Allocation style: '" + allocationStyle + "' not valid. Set to 'manualwithstop'.");
                     // state.allocationMethod initialised with default value of 'maxsum'
                 }
             }

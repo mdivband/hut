@@ -7,6 +7,7 @@
   },
   "flockingEnabled": false,
   "allocationMethod" : "maxsum",
+  "allocationStyle": "dynamic",
   "hub": {
     "lat": 50.928955248687274,
     "lng": -1.40882186832185

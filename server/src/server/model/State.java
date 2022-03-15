@@ -29,6 +29,7 @@ public class State {
     private String gameDescription;
     private int gameType;
     private String allocationMethod;
+    private String allocationStyle;
     private Boolean flockingEnabled;
     private double time;
     private double timeLimit;
@@ -104,6 +105,7 @@ public class State {
         editMode = false;
         inProgress = false;
         allocationMethod = "maxsum";
+        allocationStyle = "manualwithstop";
         flockingEnabled = false;
         successChance = 100.00;
         scoreInfo.clear();
@@ -297,6 +299,14 @@ public class State {
 
     public synchronized String getAllocationMethod() {
         return this.allocationMethod;
+    }
+
+    public String getAllocationStyle() {
+        return allocationStyle;
+    }
+
+    public void setAllocationStyle(String allocationStyle) {
+        this.allocationStyle = allocationStyle;
     }
 
     public synchronized void setFlockingEnabled(Boolean flockingEnabled) {
