@@ -246,8 +246,6 @@ public class AgentController extends AbstractController {
         if (scheduledRemovals > 0) {
             scheduledRemovals--;
         } else {
-
-
             if (Simulator.instance.getState().getAgents().size() < 11) {
                 boolean hasProgrammed = false;
                 for (Agent a : Simulator.instance.getState().getAgents()) {
@@ -280,6 +278,7 @@ public class AgentController extends AbstractController {
                         agent = null;
                     } else {
                         agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                        //agent.stop();
                 /*
                 simulator.getAllocator().runAutoAllocation();
                 simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
@@ -418,6 +417,8 @@ public class AgentController extends AbstractController {
                 Simulator.instance.getAllocator().removeFromTempAllocation(av.getId());
                 av.stop();
                 av.setType("ghost");
+                av.clearRoute();
+                av.clearTempRoute();
                 av.setAllocatedTaskId(null);
                 av.setSearching(false);
                 return true;

@@ -45,6 +45,7 @@ public class AgentHandler extends RestHandler {
     private void handleHubSpawn(Request req, Response resp) throws IOException {
         Agent a = simulator.getAgentController().spawnAgent();
         if (a != null) {
+            a.stop();
             resp.send(201, "Created new agent " + a.getId());
         } else {
             resp.send(400, "Unable to place agent. The hub area may be too full");

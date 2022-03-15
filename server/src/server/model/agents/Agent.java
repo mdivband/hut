@@ -260,7 +260,9 @@ public abstract class Agent extends MObject implements Serializable {
         synchronized (this.route) {
             List<Coordinate> currentRoute = new ArrayList<>(route);
             this.route.clear();
-            this.route.add(location);
+            if (!currentRoute.get(0).equals(location)) {
+                this.route.add(location);
+            }
             this.route.addAll(currentRoute);
         }
     }
@@ -415,6 +417,10 @@ public abstract class Agent extends MObject implements Serializable {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public boolean isVisible() {

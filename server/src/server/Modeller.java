@@ -20,9 +20,10 @@ public class Modeller {
 
     public double calculateAll(Agent agent) {
         //OptionalDouble average = simulator.getState().getAgents().stream().filter(a -> a.getAllocatedTaskId() != null).mapToDouble(this::calculate).average();
-        pendingAgentRecords.add(new ModellerAgentRecord(simulator.getState().getTime(), calculate(agent), agent.getId(), agent.getAllocatedTaskId()));
-
-        double result = simulator.getState().getAgents().stream().filter(a -> a.getAllocatedTaskId() != null).mapToDouble(this::calculate).reduce(1, (a, b) -> a * b);
+        if (agent.getAllocatedTaskId() != null && !agent.isStopped()) {
+            pendingAgentRecords.add(new ModellerAgentRecord(simulator.getState().getTime(), calculate(agent), agent.getId(), agent.getAllocatedTaskId()));
+        }
+        double result = simulator.getState().getAgents().stream().filter(a -> a.getAllocatedTaskId() != null && !a.isStopped()).mapToDouble(this::calculate).reduce(1, (a, b) -> a * b);
         if (!started && pendingRecords.isEmpty()) {
             pendingRecords.add(new ModellerRecord(simulator.getState().getTime(), result, simulator.getState().getAllocation()));
         } else if (started) {

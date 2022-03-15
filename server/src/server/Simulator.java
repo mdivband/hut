@@ -227,6 +227,7 @@ public class Simulator {
                                     state.setSuccessChance(successChance);
                                 } else {
                                     av.heartbeat();
+                                    System.out.println(agent.getId() + ", heartbeat");
                                 }
                             }
                         }

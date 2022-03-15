@@ -152,13 +152,15 @@ public class Allocator {
         simulator.getState().setAllocation(newMainAllocation);
 
         //Clear agents and tasks
-        for(Agent agent : simulator.getState().getAgents())
-            if(!agent.isWorking()) {
+        for(Agent agent : simulator.getState().getAgents()) {
+            if (!agent.isWorking()) {
                 agent.setAllocatedTaskId(null);
-                if(simulator.getState().isFlockingEnabled()) {
+                if (simulator.getState().isFlockingEnabled()) {
                     agent.resume();
                 }
             }
+        }
+
         for(Task task : simulator.getState().getTasks())
             task.getAgents().clear();
 
@@ -176,7 +178,12 @@ public class Allocator {
 
                 //Update agent route
                 agent.setRoute(agent.getTempRoute());
-                agent.resume();
+                if (!(agent instanceof AgentVirtual av && !av.isAlive())) {
+                    agent.resume();
+                } else {
+                    System.out.println("Passing " + agent.getId());
+                }
+
             }
         }
 
@@ -829,7 +836,6 @@ public class Allocator {
         if (!possibles.isEmpty()) {
             int index = simulator.getRandom().nextInt(possibles.size());
             putInTempAllocation(agent.getId(), possibles.get(index).getId());
-            agent.setType("withpack");
             confirmAllocation(simulator.getState().getTempAllocation());
             return true;
         }
@@ -837,65 +843,53 @@ public class Allocator {
     }
 
     public void dynamicAssign(Agent agent) {
+        List<AgentVirtual> homingAgents = new ArrayList<>();
+        simulator.getState().getAgents().forEach(a -> {
+            if (a instanceof AgentVirtual av && ((av.isGoingHome() || av.isStopped()) || agent.equals(av)) && !(a instanceof Hub) ) {
+                homingAgents.add(av);
+            }
+        });
+
         if (simulator.getState().getAllocationMethod().equals("bestfirst")) {
             dynamicAssignNearest(agent);
         } else if (simulator.getState().getAllocationMethod().equals("maxsum")) {
             List<Agent> readyAgents = new ArrayList<>();
-            //readyAgents.add(agent);
             for (Agent a : simulator.getState().getAgents()) {
                 if (a instanceof AgentVirtual av && !(a instanceof Hub)) {
-                    boolean c1 = (!av.isAlive() && (!av.isGoingHome() || av.isHome()));
-                    boolean c2 = av.getTask() == null && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500;
-                    boolean c3 = av.isStopped() && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500;
-                    boolean c4 = !readyAgents.contains(a);
-
-                    System.out.println(a.getId());
-                    System.out.println(c1);
-                    System.out.println(c2);
-                    System.out.println(c3);
-                    System.out.println(c4);
-                    System.out.println();
-
-
-
-                    if (av.getTask() == null
-                    && (!av.isAlive() && (!av.isGoingHome() || av.isHome()))
+                    if ( !av.isTimedOut() && (
+                       (!av.isAlive() && (!av.isGoingHome() || av.isHome()))
                     || (av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500)
-                    || (av.isStopped() && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500)) {
-                    //&& !readyAgents.contains(a)) {
+                    || (av.isStopped() && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500)) ) {
                         readyAgents.add(a);
                     }
                 }
             }
-            //System.out.println("Agents: ");
-            //readyAgents.forEach(System.out::println);
-            //runMaxSum(readyAgents, (List<Task>) simulator.getState().getTasks());
-            //Map<String, String> result = runMaxSum(agents, tasks);
-            //                //if (!editMode) oldresult = result;
-            //                oldresult = result;
-            //                return result;
 
             List<Task> availableTasks = new ArrayList<>(simulator.getState().getTasks());
             availableTasks.removeIf(t -> !t.getAgents().isEmpty());
-            List<AgentVirtual> homingAgents = new ArrayList<>();
-            readyAgents.forEach(a -> {
-                if (a instanceof AgentVirtual av && av.isGoingHome()) {
-                    homingAgents.add(av);
-                }
-            });
 
             Map<String, String> alloc = compute(readyAgents, availableTasks, false);
             alloc.forEach(this::putInTempAllocation);
-            //System.out.println(simulator.getState().getTempAllocation());
             confirmAllocation(simulator.getState().getTempAllocation());
-            homingAgents.forEach(a -> a.prependToRoute(simulator.getState().getHubLocation()));
 
-            System.out.println("Agents (post alloc): ");
-            readyAgents.forEach(System.out::println);
-            System.out.println();
+            readyAgents.forEach(a -> {
+                if (!alloc.containsKey(a.getId()) && a.getTask() == null) {
+                    dynamicAssignNearest(a);
+                    homingAgents.add((AgentVirtual) a);
+                }
+            });
         } else {
             dynamicAssignRandom(agent);
         }
+
+        homingAgents.forEach(a -> {
+            try {
+                a.prependToRoute(simulator.getState().getHubLocation());
+                a.setGoingHome(true);
+            } catch (Exception e) {
+                System.out.println("Caught exception. This should be due to agent failure during reassignment?");
+            }
+        });
     }
 
     //Inner class to provide generic pair of Agent-Task

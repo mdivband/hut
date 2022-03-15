@@ -21,8 +21,9 @@ public class AgentVirtual extends Agent {
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
         batteryVariance = 0.0002 - (Simulator.instance.getRandom().nextDouble() / 2500);
-        System.out.println("var = " + batteryVariance);
+        //System.out.println("var = " + batteryVariance);
         this.sensor = sensor;
+        setType("standard");
     }
 
     @Override
@@ -32,9 +33,11 @@ public class AgentVirtual extends Agent {
             for (Agent a : sensor.senseNeighbours(this, 10.0)) {
                 if (a instanceof Hub) {
                     goingHome = false;
-                    a.setType("withPack");
-                    if (a.getRoute().size() <= 0) {
+                    System.out.println("Setting withpack now");
+                    setType("withpack");
+                    if (getRoute().size() <= 0) {
                         System.out.println("Stopping at home");
+                        System.out.println(this);
                         stop();
                     }
 
@@ -46,6 +49,8 @@ public class AgentVirtual extends Agent {
 
             // TEMP - Incorporate some randomness  (base 0.0005
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
+        } else {
+            System.out.println("last cond " + this);
         }
 
         //Simulate things that would be done by a real drone
@@ -240,11 +245,14 @@ public class AgentVirtual extends Agent {
         setWorking(false);
         goingHome = true;
         setRoute(Collections.singletonList(Simulator.instance.getState().getHubLocation()));
-
     }
 
     public boolean isGoingHome() {
         return goingHome;
+    }
+
+    public void setGoingHome(boolean goingHome) {
+        this.goingHome = goingHome;
     }
 
     public void stopGoingHome() {
