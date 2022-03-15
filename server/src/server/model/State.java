@@ -82,6 +82,9 @@ public class State {
     private String userName = "";
     private List<String> markers = new ArrayList<>();
 
+    private int requiredUsers;
+    private int readyUsers;
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -113,6 +116,9 @@ public class State {
 
         gameCentre = null;
         userName = "";
+
+        requiredUsers = 2;
+        readyUsers = 0;
 
         agents.clear();
         tasks.clear();
@@ -437,6 +443,14 @@ public class State {
 
     public List<String> getPendingIds() {
         return pendingIds;
+    }
+
+    public void incrementReadyUsers() {
+        this.readyUsers += 1;
+    }
+
+    public boolean usersReady() {
+        return (this.readyUsers == this.requiredUsers);
     }
 
     public void resetLogger(FileHandler fileHandler) {

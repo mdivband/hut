@@ -88,7 +88,10 @@ public class ModeHandler extends RestHandler {
     }
 
     private void handleScenarioStart(Response resp) throws IOException {
-        this.simulator.startSimulation();
+        this.simulator.getState().incrementReadyUsers();
+        if (this.simulator.getState().usersReady()) {
+            this.simulator.startSimulation();
+        }
         resp.sendOkay();
     }
 

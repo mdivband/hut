@@ -37,7 +37,9 @@ App.Models.State  = Backbone.Model.extend({
         userName: "",
         markers: [],
         windSpeed: 0.0,
-        windHeading: 0.0
+        windHeading: 0.0,
+        requiredUsers: 2,
+        readyUsers: 0
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -184,5 +186,11 @@ App.Models.State  = Backbone.Model.extend({
     },
     getWindHeading: function () {
         return this.get("windHeading");
+    },
+    getRequiredUsers: function () {
+            return this.get("requiredUsers");
+    },
+    getReadyUsers: function () {
+        return this.get("readyUsers");
     }
 });

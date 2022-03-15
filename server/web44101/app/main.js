@@ -3,6 +3,7 @@ console.log(userRole)
 
 var simulator = {
     initialisedState: false,
+    waiting: false,
     init: function () {
         this.state = new App.Models.State();
         this.views = _.extend({}, Backbone.Events);
@@ -274,10 +275,23 @@ var simulator = {
                         $('#start_scenario').on('click', function () {
                             $.post("/mode/scenario/start", {}, function () {
                                 $.unblockUI();
+                                self.waiting = true;
+                                var wait_panel = document.createElement("div");
+                                wait_panel.innerHTML = _.template($("#wait_panel").html(), {
+                                    title: "Waiting for Other User",
+                                    description: "Get ready, the scenario will begin as soon as the other user is ready."
+                                });
+                                $.blockWithContent(wait_panel);
                                 self.run();
                             });
                         });
                     }
+                } else if (self.waiting) {
+                    if (self.state.getReadyUsers() == self.state.getRequiredUsers()) {
+                        $.unblockUI();
+                        self.waiting = false;
+                    }
+                    self.run();
                 } else if (!self.state.isInProgress()) {
                     self.views.map.clearAll()
                     var scenario_end_panel = document.createElement("div");
@@ -321,6 +335,7 @@ var simulator = {
                             $.blockWithContent(description_panel);
                             $('#start_scenario').on('click', function () {
                                 $.post("/mode/scenario/start", {}, function () {
+                                    self.waiting = true;
                                     $.unblockUI();
                                     self.run();
                                 });
