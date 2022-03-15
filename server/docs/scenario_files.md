@@ -27,10 +27,11 @@ Scenarios can be loaded from a JSON file. The application looks for scenario fil
 | communicationRange |                                                                          The number of metres radius for communication between drones                                                                           |      (Double precision float)      |         250         |
 | uncertaintyRadius  |                                                                       The radius of a the circles denoting uncertainty in drone location                                                                        |      (Double precision float)      |         10          |
 | extendedUIOptions  |                                                               A set of boolean parameters denoting which additional UI options should be enabled                                                                | predictions, uncertainties, ranges | false, false, false |
-|timeLimitSeconds| Sets the time limit for the scenario in seconds. After the time limit is reached, the scenario is immediately ended. Added to the number of minutes defined in timeLimitMinutes. If both timeLimitSeconds and timeLimitMinutes are missing or set to 0, no time limit is set. | Positive numerical values | 0
-|timeLimitMinutes| Sets the time limit for the scenario in minutes. After the time limit is reached, the scenario is immediately ended. Added to the number of seconds defined in timeLimitSeconds. If both timeLimitSeconds and timeLimitMinutes are missing or set to 0, no time limit is set. | Positive numerical values | 0
-|allocationMethod|Sets the method used for allocating tasks to agents.|maxsum, random|maxsum|
-|flockingEnabled|Turns flocking of agents on or off. If on, any agents not assigned to a task will follow their neighbours based on average speed and heading of neighbours. If off, any agents without tasks remain stationary.|true, false|false|
+|  timeLimitSeconds  | Sets the time limit for the scenario in seconds. After the time limit is reached, the scenario is immediately ended. Added to the number of minutes defined in timeLimitMinutes. If both timeLimitSeconds and timeLimitMinutes are missing or set to 0, no time limit is set. | Positive numerical values | 0
+|  timeLimitMinutes  | Sets the time limit for the scenario in minutes. After the time limit is reached, the scenario is immediately ended. Added to the number of seconds defined in timeLimitSeconds. If both timeLimitSeconds and timeLimitMinutes are missing or set to 0, no time limit is set. | Positive numerical values | 0
+|  allocationMethod  |Sets the method used for allocating tasks to agents.|maxsum, random|maxsum|
+|  allocationStyle   |Sets the style of allocation for the scenario. Dictates whether the agents are dynamically assigned and whether they are paused on edit|manual, manualwithstop, dynamic|dynamicwithstop| 
+|  flockingEnabled   |Turns flocking of agents on or off. If on, any agents not assigned to a task will follow their neighbours based on average speed and heading of neighbours. If off, any agents without tasks remain stationary.|true, false|false|
 
 
 ### Objects
