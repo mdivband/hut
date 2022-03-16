@@ -244,7 +244,18 @@ var simulator = {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
-                    if (self.state.getUserName() === "") {
+                    if (userRole != "planner" && self.state.getReadyUsers() == 0) {
+                        self.waiting = true;
+                        var wait_panel = document.createElement("div");
+                        wait_panel.innerHTML = _.template($("#wait_panel").html(), {
+                            title: "Waiting for Other User",
+                            description: "The other user is setting up the scenario."
+                        });
+                        $.blockWithContent(wait_panel);
+                        _.bind(self.run, self)();
+                    }
+
+                    if (self.state.getUserName() === "" && userRole == "planner") {
                         // TODO get their name, also log it in backend
                         var name = null;
                         while (name == null || name === "") {
@@ -266,6 +277,7 @@ var simulator = {
                     }
 
                     if(self.state.getGameType() === self.state.GAME_TYPE_SCENARIO && !self.state.isInProgress()) {
+                        $.unblockUI();
                         var description_panel = document.createElement("div");
                         description_panel.innerHTML = _.template($("#description_panel").html(), {
                             title: "Scenario " + self.state.getGameId(),
@@ -287,11 +299,16 @@ var simulator = {
                         });
                     }
                 } else if (self.waiting) {
+                    if (userRole != "planner" && self.state.getReadyUsers() > 0) {
+                        $.unblockUI();
+                        self.waiting = false;
+                        self.initialisedState = false;
+                    }
                     if (self.state.getReadyUsers() == self.state.getRequiredUsers()) {
                         $.unblockUI();
                         self.waiting = false;
                     }
-                    self.run();
+                    _.bind(self.run, self)();
                 } else if (!self.state.isInProgress()) {
                     self.views.map.clearAll()
                     var scenario_end_panel = document.createElement("div");
@@ -343,6 +360,9 @@ var simulator = {
                         });
                     }
                 }
+            })
+            .fail(function () {
+                _.bind(self.run, self)();
             })
             .always(function () {
                 if (self.state.isInProgress()) {
