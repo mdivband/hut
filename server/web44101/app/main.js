@@ -4,6 +4,7 @@ console.log(userRole)
 var simulator = {
     initialisedState: false,
     waiting: false,
+    waitingForPlanner: false,
     init: function () {
         this.state = new App.Models.State();
         this.views = _.extend({}, Backbone.Events);
@@ -244,18 +245,7 @@ var simulator = {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
-                    if (userRole != "planner" && self.state.getReadyUsers() == 0) {
-                        self.waiting = true;
-                        var wait_panel = document.createElement("div");
-                        wait_panel.innerHTML = _.template($("#wait_panel").html(), {
-                            title: "Waiting for Other User",
-                            description: "The other user is setting up the scenario."
-                        });
-                        $.blockWithContent(wait_panel);
-                        _.bind(self.run, self)();
-                    }
-
-                    if (self.state.getUserName() === "" && userRole == "planner") {
+                    if (self.state.getUserNames().length == 0 && userRole == "planner") {
                         // TODO get their name, also log it in backend
                         var name = null;
                         while (name == null || name === "") {
@@ -264,7 +254,14 @@ var simulator = {
                         $.post("/mode/scenario/registerUser", {
                             userName: name
                         });
-
+                    } else if (self.state.getUserNames().length > 0 && self.state.getUserNames().length < self.state.getRequiredUsers()) {
+                        var name = null;
+                        while (name == null || name === "") {
+                            name = prompt("Please enter your prolific ID", "");
+                        }
+                        $.post("/mode/scenario/registerUser", {
+                            userName: name
+                        });
                     }
 
                     if (self.state.attributes.prov_doc == null) {
@@ -298,12 +295,23 @@ var simulator = {
                             });
                         });
                     }
-                } else if (self.waiting) {
-                    if (userRole != "planner" && self.state.getReadyUsers() > 0) {
-                        $.unblockUI();
-                        self.waiting = false;
-                        self.initialisedState = false;
+
+                    if (userRole != "planner" && self.state.getReadyUsers() == 0) {
+                        self.waitingForPlanner = true;
+                        var wait_panel = document.createElement("div");
+                        wait_panel.innerHTML = _.template($("#wait_panel").html(), {
+                            title: "Waiting for Other User",
+                            description: "The other user is setting up the scenario."
+                        });
+                        $.blockWithContent(wait_panel);
+                        _.bind(self.run, self)();
                     }
+                } else if (self.waitingForPlanner) {
+                    if (userRole != "planner" && self.state.getReadyUsers() > 0) {
+                        location.reload();
+                    }
+                    _.bind(self.run, self)();
+                } else if (self.waiting) {
                     if (self.state.getReadyUsers() == self.state.getRequiredUsers()) {
                         $.unblockUI();
                         self.waiting = false;

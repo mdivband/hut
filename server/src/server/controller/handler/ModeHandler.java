@@ -44,13 +44,13 @@ public class ModeHandler extends RestHandler {
         if (!checkParams(params, expectedKeys, resp))
             return;
         String userName = params.get("userName");
-        if(this.simulator.getState().setUserName(userName))
+        if(this.simulator.getState().addUserName(userName))
             resp.sendOkay();
         else
             resp.sendError(400, "Unable to set username to " + userName);
 
         //LOGGER.info(String.format("%s; RST; Resetting logs; ", simulator.getState().getTime()));
-        simulator.resetLogging(userName);
+        simulator.resetLogging(this.simulator.getState().getUserNames());
         //LOGGER.info(String.format("%s; RGNAME; UserName is (name/id); %s ", simulator.getState().getTime(), simulator.getState().getUserName()));
 
     }

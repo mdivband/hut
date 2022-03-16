@@ -34,7 +34,7 @@ App.Models.State  = Backbone.Model.extend({
         nextFileName: "",
         deepAllowed: false,
         timeLimit: 0,
-        userName: "",
+        userNames: [],
         markers: [],
         windSpeed: 0.0,
         windHeading: 0.0,
@@ -172,8 +172,8 @@ App.Models.State  = Backbone.Model.extend({
         // TODO this doesn't use the actual gamespeed
         return this.get("timeLimit") * 6;
     },
-    getUserName: function () {
-        return this.get("userName");
+    getUserNames: function () {
+        return this.get("userNames");
     },
     getMarkers: function () {
         return this.get("markers");

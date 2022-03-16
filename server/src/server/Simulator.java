@@ -286,9 +286,9 @@ public class Simulator {
          */
     }
 
-    public void resetLogging(String userName) {
+    public void resetLogging(List<String> userNames) {
         try {
-            String fileName = userName + "-" + state.getGameId() + ".log";
+            String fileName = String.join("-", userNames) + "-" + state.getGameId() + ".log";
             FileHandler fileHandler = new FileHandler(fileName);
             LogManager.getLogManager().reset();
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
@@ -302,7 +302,7 @@ public class Simulator {
             hazardController.resetLogger(fileHandler);
             allocator.resetLogger(fileHandler);
             imageController.resetLogger(fileHandler);
-            LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
+            LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, usernames); %s; %s ", getState().getTime(), state.getGameId(), String.join(", ", userNames)));
 
         } catch (final IOException e) {
             Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");

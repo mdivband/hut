@@ -79,7 +79,7 @@ public class State {
     private Double windSpeed;
     private Double windHeading;
 
-    private String userName = "";
+    private List<String> userNames = new ArrayList<>();
     private List<String> markers = new ArrayList<>();
 
     private int requiredUsers;
@@ -115,7 +115,7 @@ public class State {
         markers.clear();
 
         gameCentre = null;
-        userName = "";
+        userNames.clear();
 
         requiredUsers = 2;
         readyUsers = 0;
@@ -428,13 +428,13 @@ public class State {
         this.deepAllowed = deepAllowed;
     }
 
-    public boolean setUserName(String userName) {
-        this.userName = userName;
+    public boolean addUserName(String userName) {
+        this.userNames.add(userName);
         return true;
     }
 
-    public String getUserName() {
-        return userName;
+    public List<String> getUserNames() {
+        return userNames;
     }
 
     public List<String> getMarkers() {
