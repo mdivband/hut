@@ -178,24 +178,7 @@ public class Simulator {
 
             if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
 
-                if (state.getAllocationStyle().equals("manualwithstop") || state.getAllocationStyle().equals("manual")) {
-                    // Step agents
-                    checkAgentsForTimeout();
-
-                    Hub hub = state.getHub();
-                    if (hub instanceof AgentHub ah) {
-                        ah.step(state.isFlockingEnabled());
-                    } else if (hub instanceof AgentHubProgrammed ahp) {
-                        ahp.step(state.isFlockingEnabled());
-                    }
-                    // ELSE no hub
-
-                    synchronized (state.getAgents()) {
-                        for (Agent agent : state.getAgents()) {
-                            agent.step(getState().isFlockingEnabled());
-                        }
-                    }
-                } else if (state.getAllocationStyle().equals("dynamic")) {
+                if (state.getAllocationStyle().equals("dynamic")) {
                     List<Agent> agentsToRemove = new ArrayList<>();
                     synchronized (state.getAgents()) {
                         for (Agent agent : state.getAgents()) {
@@ -235,6 +218,23 @@ public class Simulator {
                     }
 
                     agentsToRemove.forEach(a -> getState().getAgents().remove(a));
+                } else {
+                    // Step agents
+                    checkAgentsForTimeout();
+
+                    Hub hub = state.getHub();
+                    if (hub instanceof AgentHub ah) {
+                        ah.step(state.isFlockingEnabled());
+                    } else if (hub instanceof AgentHubProgrammed ahp) {
+                        ahp.step(state.isFlockingEnabled());
+                    }
+                    // ELSE no hub
+
+                    synchronized (state.getAgents()) {
+                        for (Agent agent : state.getAgents()) {
+                            agent.step(getState().isFlockingEnabled());
+                        }
+                    }
                 }
 
                 if (state.isCommunicationConstrained()) {
@@ -387,7 +387,9 @@ public class Simulator {
                         "random",
                         "maxsum",
                         "maxsumwithoverspill",
-                        "bestfirst"
+                        "bestfirst",
+                        "basicbundle",
+                        "heuristicbundle"
                 ));
 
                 if(possibleMethods.contains(allocationMethod)) {
@@ -406,7 +408,8 @@ public class Simulator {
                 List<String> possibleMethods = new ArrayList<>(Arrays.asList(
                         "manual",
                         "manualwithstop",
-                        "dynamic"
+                        "dynamic",
+                        "bundle"
                 ));
 
                 if(possibleMethods.contains(allocationStyle)) {

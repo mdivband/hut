@@ -3,11 +3,11 @@ package server.model.agents;
 import server.Simulator;
 import server.model.Coordinate;
 import server.model.Sensor;
+import server.model.task.Task;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 public class AgentVirtual extends Agent {
@@ -17,6 +17,8 @@ public class AgentVirtual extends Agent {
     private transient boolean alive = true;
     protected boolean goingHome = false;
     private double batteryVariance;
+
+    private List<Task> taskQueue = new ArrayList<>();
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -308,4 +310,20 @@ public class AgentVirtual extends Agent {
         }
     }
 
+    public void addTaskToQueue(Task task) {
+        taskQueue.add(task);
+    }
+
+    public Task getNextTaskFromQueue() {
+        if (!taskQueue.isEmpty()) {
+            Task taskToReturn = taskQueue.get(0);
+            taskQueue.remove(0);
+            return taskToReturn;
+        }
+        return null;
+    }
+
+    public List<Task> getTaskQueue() {
+        return taskQueue;
+    }
 }

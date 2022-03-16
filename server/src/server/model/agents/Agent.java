@@ -87,9 +87,9 @@ public abstract class Agent extends MObject implements Serializable {
                     //TODO this is very inefficient so have removed it for now. Only need to recalculate point if task moves.
                     //route.set(route.size() - 1, ((PatrolTask) task).getNearestPointAbsolute(this));
                 }
-            }
-            else if(route.size() > 0)
+            } else if(route.size() > 0) {
                 route.set(route.size() - 1, task.getCoordinate());
+            }
 
             //Move agents
             if (!route.isEmpty() && !isCurrentDestinationReached()) {
@@ -100,8 +100,7 @@ public abstract class Agent extends MObject implements Serializable {
                 if (isCurrentDestinationReached() && this.route.size() > 1)
                     this.route.remove(0);
             }
-        }
-        else if (flockingEnabled){
+        } else if (flockingEnabled){
             performFlocking();
         }
 

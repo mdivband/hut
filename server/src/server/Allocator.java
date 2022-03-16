@@ -58,19 +58,18 @@ public class Allocator {
         agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || agent instanceof Hub || agent instanceof AgentProgrammed || (agent instanceof AgentVirtual av && av.isGoingHome()));
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 
-        //System.out.println("testing:");
-        //agentsToAllocate.forEach(System.out::println);
-
+        String allocationStyle = simulator.getState().getAllocationStyle();
         String allocationMethod = simulator.getState().getAllocationMethod();
 
-        if(allocationMethod.equals("maxsum")){
-            allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-        } else if(allocationMethod.equals("maxsumwithoverspill")) {
-            allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-        } else if(allocationMethod.equals("random")) {
-            allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-        } else if (allocationMethod.equals("bestfirst")) {
-            allocation = bestFirstCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        if (allocationStyle.equals("bundle")) {
+            allocation = computeBundle(allocationMethod, agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        } else {
+            switch (allocationMethod) {
+                case "maxsum" -> allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+                case "maxsumwithoverspill" -> allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+                case "random" -> allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+                case "bestfirst" -> allocation = bestFirstCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+            }
         }
 
         simulator.getState().setTempAllocation(allocation);
@@ -95,6 +94,122 @@ public class Allocator {
                 agent.setTempRoute(new ArrayList<>());
         }
         updateAllocationHistory();
+    }
+
+    private Map<String, String> computeBundle(String allocationMethod, List<Agent> agentsToAllocate, List<Task> tasksToAllocate, boolean editMode) {
+        HashMap<String, String> result = new HashMap<>();
+
+        //Make sure the assignments won't be modified if the agent is working
+        for (Agent agent : agentsToAllocate) {
+            if (agent.getTask() != null && agent.isWorking()) {
+                if (!tasksToAllocate.contains(agent.getTask()) && agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
+                    agent.setAllocatedTaskId(null);
+                    agent.setWorking(false);
+                    agent.setSearching(false);
+                } else {
+                    agent.getTask().addAgent(agent);
+                    result.put(agent.getId(), agent.getTask().getId());
+                    if (agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
+                        tasksToAllocate.remove(agent.getTask());
+                    }
+
+                }
+            } else {
+                agent.setAllocatedTaskId(null);
+                agent.setSearching(false);
+                agent.setWorking(false);
+            }
+        }
+
+        HashMap<String, List<String>> currentAllocation;
+        if (allocationMethod.equals("basicbundle")) {
+            currentAllocation = basicBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("heuristicbundle")) {
+            currentAllocation = heuristicBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else {
+            return null;
+        }
+
+        currentAllocation.forEach((k, v) -> {
+            Iterator<String> taskIt = v.listIterator();
+            result.put(k, taskIt.next());
+            while (taskIt.hasNext()) {
+                ((AgentVirtual) simulator.getState().getAgent(k)).addTaskToQueue(simulator.getState().getTask(taskIt.next()));
+            }
+        });
+
+        return result;
+    }
+
+    private HashMap<String, List<String>> basicBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        HashMap<String, List<String>> currentAllocation = new HashMap<>();
+
+        int numTasksPerAgent = Math.floorDiv(tasksToAllocate.size(), agentsToAllocate.size());
+        Iterator<Task> taskIt = tasksToAllocate.listIterator();
+        agentsToAllocate.forEach(a -> currentAllocation.put(a.getId(), new ArrayList<>()));
+
+        for (Agent a : agentsToAllocate) {
+            for (int i = 0; i < numTasksPerAgent; i++) {
+                if (taskIt.hasNext()) {
+                    currentAllocation.get(a.getId()).add(taskIt.next().getId());
+                }
+            }
+        }
+
+        // Add all remaining tasks one-by-one
+        Iterator<Agent> agentIterator = agentsToAllocate.listIterator();
+        while (taskIt.hasNext()) {
+            currentAllocation.get(agentIterator.next().getId()).add(taskIt.next().getId());
+        }
+        return currentAllocation;
+
+    }
+
+    private HashMap<String, List<String>> heuristicBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        HashMap<String, List<String>> currentAllocation = new HashMap<>();
+
+        HashMap<String, Double> tasksByWeight = new HashMap<>();
+        tasksToAllocate.forEach(t -> tasksByWeight.put(t.getId(), t.getCoordinate().getDistance(simulator.getState().getHubLocation())));
+        List<Task> orderedTasks = new ArrayList<>();
+
+        // Bubble sort
+        int sz = tasksByWeight.size();
+        for (int i=0; i<sz; i++) {
+            double highestDist = -1;
+            String highestId = null;
+            for (var entry : tasksByWeight.entrySet()) {
+                if (entry.getValue() > highestDist) {
+                    highestDist = entry.getValue();
+                    highestId = entry.getKey();
+                }
+            }
+            orderedTasks.add(simulator.getState().getTask(highestId));
+            tasksByWeight.remove(highestId);
+        }
+
+        // Very simple heuristic that bins into the lowest available bin each time
+        agentsToAllocate.forEach(a -> currentAllocation.put(a.getId(), new ArrayList<>()));
+        HashMap<String, Double> agentWeights = new HashMap<>();
+        agentsToAllocate.forEach(a -> agentWeights.put(a.getId(), 0.0));
+
+        for (Task t : orderedTasks) {
+            double weight = t.getCoordinate().getDistance(simulator.getState().getHubLocation());
+            double lowestWeight = 999999999;
+            String bestBin = null;
+            for (var entry : agentWeights.entrySet()) {
+                if (entry.getValue() == 0) {
+                    bestBin = entry.getKey();
+                    break;
+                } else if (entry.getValue() < lowestWeight) {
+                    lowestWeight = entry.getValue();
+                    bestBin = entry.getKey();
+                }
+            }
+            agentWeights.put(bestBin, agentWeights.get(bestBin) + weight);
+            currentAllocation.get(bestBin).add(t.getId());
+        }
+
+        return currentAllocation;
     }
 
     /**
@@ -350,7 +465,6 @@ public class Allocator {
     }
 
     protected Map<String, String> bestFirstCompute(List<Agent> agents, List<Task> tasks, boolean editMode) {
-        System.out.println("bfa");
         if (!agents.isEmpty() && !tasks.isEmpty()) {
             HashMap<String, String> result = new HashMap<>();
 
