@@ -2,6 +2,7 @@ var userRole = $("body").attr('id');
 console.log(userRole)
 
 var simulator = {
+    surveyDone: false,
     initialisedState: false,
     waiting: false,
     waitingForPlanner: false,
@@ -264,7 +265,21 @@ var simulator = {
         var startTime = (new Date()).getTime();
         this.state.fetch()
             .done(function () {
-                if (!self.initialisedState) {
+                if (!self.surveyDone) {
+                    var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
+                    $('<br>').appendTo($("#overlay_div"));
+                    var surveySource = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUQjBWRjZQUTFaOUlTVlQ2QjJHRDRKVzgxRS4u&embed=true";
+                    var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
+                    closeSurvey.on('click', function () {
+                        var isSure = confirm("Have you completed and submitted the survey?");
+                        if (isSure) {
+                            self.surveyDone = true;
+                            $("#overlay_div").empty();
+                            $("#overlay_div").hide();
+                            _.bind(self.run, self)();
+                        }
+                    });
+                } else if (!self.initialisedState) {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
