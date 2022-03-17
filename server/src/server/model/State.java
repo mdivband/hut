@@ -82,6 +82,8 @@ public class State {
     private List<String> userNames = new ArrayList<>();
     private List<String> markers = new ArrayList<>();
 
+    private List<String> chatLog = new ArrayList<>();
+
     private int requiredUsers;
     private int readyUsers;
 
@@ -116,6 +118,7 @@ public class State {
 
         gameCentre = null;
         userNames.clear();
+        chatLog.clear();
 
         requiredUsers = 2;
         readyUsers = 0;
@@ -435,6 +438,15 @@ public class State {
 
     public List<String> getUserNames() {
         return userNames;
+    }
+
+    public boolean addToChatLog(String message) {
+        this.chatLog.add(message);
+        return true;
+    }
+
+    public List<String> getChatLog() {
+        return chatLog;
     }
 
     public List<String> getMarkers() {

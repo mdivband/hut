@@ -124,6 +124,9 @@ var simulator = {
         $("#accordion_wind_e").accordion({
             collapsible: true
         });
+        $("#accordion_chat").accordion({
+            collapsible: true
+        });
         $("#accordion_otherlayer_m").accordion({
             collapsible: true,
             active: false
@@ -154,6 +157,13 @@ var simulator = {
                     ui.position.left = maxleft;
                 }
             }
+        });
+
+        $("#button_send_msg").on('click', function () {
+            $.post('/chat/send', {
+                userRole: userRole,
+                message: $("#message_box").val()
+            });
         });
 
         // This defines the zoom and pan function including restriction of view
