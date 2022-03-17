@@ -168,8 +168,19 @@ var simulator = {
             });
         });
 
+        var self = this;
+        this.state.on("change", function () {
+            $("#chat_history").empty();
+            var chatLog = self.state.getChatLog();
+            if (chatLog.length > 0) {
+                chatLog.forEach(function (item) {
+                    var newLine = $("<p>").appendTo($("#chat_history"));
+                    newLine.text(item);
+                })
+            }
+        });
+
         // This defines the zoom and pan function including restriction of view
-        var self = this
         $("#image_review_canvas").bind('mousewheel', function(e) {
             var cursorX = e.pageX;
             var cursorY = e.pageY - 167;  //TODO make general

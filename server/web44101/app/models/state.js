@@ -39,7 +39,8 @@ App.Models.State  = Backbone.Model.extend({
         windSpeed: 0.0,
         windHeading: 0.0,
         requiredUsers: 2,
-        readyUsers: 0
+        readyUsers: 0,
+        chatLog: []
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -192,5 +193,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getReadyUsers: function () {
         return this.get("readyUsers");
+    },
+    getChatLog: function () {
+        return this.get("chatLog");
     }
 });

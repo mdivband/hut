@@ -118,7 +118,9 @@ public class State {
 
         gameCentre = null;
         userNames.clear();
+
         chatLog.clear();
+        chatLog.add("Chat Connected.");
 
         requiredUsers = 2;
         readyUsers = 0;
