@@ -163,6 +163,8 @@ var simulator = {
             $.post('/chat/send', {
                 userRole: userRole,
                 message: $("#message_box").val()
+            }, function() {
+                $("#message_box").val("");
             });
         });
 
