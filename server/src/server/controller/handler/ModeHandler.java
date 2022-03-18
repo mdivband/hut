@@ -30,6 +30,9 @@ public class ModeHandler extends RestHandler {
             case "/scenario/registerUser":
                 handleRegisterUser(req, resp);
                 break;
+            case "/scenario/closeSurvey":
+                handleCloseSurvey(resp);
+                break;
             case "/scenario/start":
                 handleScenarioStart(resp);
                 break;
@@ -53,6 +56,12 @@ public class ModeHandler extends RestHandler {
         simulator.resetLogging(this.simulator.getState().getUserNames());
         //LOGGER.info(String.format("%s; RGNAME; UserName is (name/id); %s ", simulator.getState().getTime(), simulator.getState().getUserName()));
 
+    }
+
+    private void handleCloseSurvey(Response resp) throws IOException {
+        this.simulator.getState().incrementCompletedSurveys();
+        LOGGER.info(String.format("%s; SRVY; Survey Submitted; ", simulator.getState().getTime()));
+        resp.sendOkay();
     }
 
     @Override

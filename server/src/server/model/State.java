@@ -87,6 +87,8 @@ public class State {
     private int requiredUsers;
     private int readyUsers;
 
+    private int completedSurveys;
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -122,7 +124,11 @@ public class State {
         chatLog.clear();
         chatLog.add("Chat Connected.");
 
-        requiredUsers = 2;
+        if (completedSurveys == requiredUsers) {
+            completedSurveys = 0;
+        }
+
+        requiredUsers = 2; // Just for testing
         readyUsers = 0;
 
         agents.clear();
@@ -447,10 +453,6 @@ public class State {
         return true;
     }
 
-    public List<String> getChatLog() {
-        return chatLog;
-    }
-
     public List<String> getMarkers() {
         return markers;
     }
@@ -465,6 +467,10 @@ public class State {
 
     public boolean usersReady() {
         return (this.readyUsers == this.requiredUsers);
+    }
+
+    public void incrementCompletedSurveys() {
+        this.completedSurveys += 1;
     }
 
     public void resetLogger(FileHandler fileHandler) {

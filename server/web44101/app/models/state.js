@@ -40,6 +40,7 @@ App.Models.State  = Backbone.Model.extend({
         windHeading: 0.0,
         requiredUsers: 2,
         readyUsers: 0,
+        completedSurveys: 0,
         chatLog: []
 	},
     url: function() {
@@ -193,6 +194,9 @@ App.Models.State  = Backbone.Model.extend({
     },
     getReadyUsers: function () {
         return this.get("readyUsers");
+    },
+    getCompletedSurveys: function () {
+        return this.get("completedSurveys");
     },
     getChatLog: function () {
         return this.get("chatLog");
