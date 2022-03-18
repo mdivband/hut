@@ -283,7 +283,7 @@ var MapAgentController = {
                 'transform': 'rotate(' + agent.getHeading() + 'deg)'
             });
             // Temp dioable battery readout
-            //MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
+            MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
         }
 
     },
