@@ -10,6 +10,7 @@ import server.model.agents.Agent;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
+import tool.SocketServer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +31,7 @@ public class Simulator {
 
     private State state;
     private Sensor sensor;
+    private SocketServer socketServer;
 
     private final QueueManager queueManager;
     private final AgentController agentController;
@@ -59,6 +61,9 @@ public class Simulator {
         random = new Random();
 
         queueManager.initDroneDataConsumer();
+
+        //Setup Socket Server
+        socketServer = new SocketServer(state);
     }
 
     public static void main(String[] args) {
@@ -136,6 +141,8 @@ public class Simulator {
             long startTime = System.currentTimeMillis();
 
             state.incrementTime(0.2);
+
+            socketServer.sendStatus();
 
             // Step agents
             checkAgentsForTimeout();
