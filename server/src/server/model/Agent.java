@@ -278,7 +278,7 @@ public abstract class Agent extends MObject implements Serializable {
 
     private void onTimeOut() {
         Simulator.instance.getAllocator().moveToDroppedAllocation(this.getId());
-        Simulator.instance.changeView(2);
+        // Simulator.instance.changeView(2);
     }
 
     public boolean isTimedOut() {

@@ -22,6 +22,9 @@ public class AgentVirtual extends Agent {
         if(!isTimedOut())
             heartbeat();
         this.battery = this.battery > 0 ? this.battery - windAdjustedBatteryConsumption : 0;
+        if (this.battery == 0) {
+            this.setTimedOut(true);
+        }
     }
 
     @Override
