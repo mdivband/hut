@@ -19,7 +19,7 @@ public class ImageController extends AbstractController {
 
     private final List<String> deepScannedTargets = new ArrayList<>(16);
     private final List<String> shallowScannedTargets = new ArrayList<>(16);
-    private final Map<String, Boolean> decisions = new HashMap<>(16);
+    private final Map<String, String> decisions = new HashMap<>(16);
     private HashMap<Double, ScheduledImage> scheduledImages = new HashMap<>(16);
 
 
@@ -135,9 +135,9 @@ public class ImageController extends AbstractController {
     /**
      * Called when an image is classified. Handles the addition of the record of this image and removes its target
      * @param ref File reference
-     * @param status Whether it was classified P or N
+     * @param targetClass Whether it was classified P or N
      */
-    public void classify(String ref, boolean status) {
+    public void classify(String ref, String targetClass) {
         try {
             Map<String, String> map = simulator.getState().getStoredImages();
             String id = map
@@ -149,7 +149,7 @@ public class ImageController extends AbstractController {
                     .get();
 
             // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
-            decisions.put(id, status);
+            decisions.put(id, targetClass);
 
             boolean isDeep = deepScannedTargets.contains(id);
             boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
@@ -164,13 +164,13 @@ public class ImageController extends AbstractController {
             }
             simulator.getTargetController().deleteTarget(id);
 
-            LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
+            LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, targetClass, isReal));
 
         } catch (Exception ignored) {}
 
     }
 
-    public Map<String, Boolean> getDecisions() {
+    public Map<String, String> getDecisions() {
         return decisions;
     }
 

@@ -45,14 +45,14 @@ public class ReviewHandler extends RestHandler {
      */
     private void handleClassify(Request req, Response resp) throws IOException {
         Map<String, String> params = req.getParams();
-        List<String> expectedKeys = Arrays.asList("ref", "status");
+        List<String> expectedKeys = Arrays.asList("ref", "targetClass");
         if (!checkParams(params, expectedKeys, resp))
             return;
 
         String ref = params.get("ref");
-        boolean status = Boolean.parseBoolean(params.get("status"));
+        String targetClass = params.get("targetClass");
 
-        this.simulator.getImageController().classify(ref, status);
+        this.simulator.getImageController().classify(ref, targetClass);
 
     }
 

@@ -20,11 +20,14 @@ var MapImageController = {
      * Bind listeners for agent state add, change and remove events
      */
     bindEvents: function () {
-        $("#rev_real").on('click', function () {
-            MapImageController.classify(true);
+        $("#rev_human").on('click', function () {
+            MapImageController.classify("human");
         });
         $("#rev_false").on('click', function () {
-            MapImageController.classify(false);
+            MapImageController.classify("false");
+        });
+        $("#rev_debris").on('click', function () {
+            MapImageController.classify("debris");
         });
         $("#rev_deep").on('click', function () {
             MapImageController.referDeep();
@@ -74,7 +77,7 @@ var MapImageController = {
     getCurrentImageId: function () {
         return this.views.review.currentImageName;
     },
-    classify: function (status) {
+    classify: function (targetClass) {
         var self = this;
         try {
             var img = MapController.getCurrentImage();
@@ -83,14 +86,14 @@ var MapImageController = {
                 MapTargetController.classifiedIds.push(tgtId);
                 $.post("/review/classify", {
                     ref: img,
-                    status: status,
+                    targetClass: targetClass,
                 });
             }
             var marker = self.$el.gmap("get", "markers")[tgtId];
             if (marker) {
                 var position = marker.getPosition();
                 MapTargetController.clearReviewedTarget(marker);
-                MapTargetController.placeEmptyTargetMarker(position, tgtId, status);
+                MapTargetController.placeEmptyTargetMarker(position, tgtId, targetClass);
 
             }
         } catch (e) {

@@ -217,16 +217,19 @@ var MapTargetController = {
             delete marker;
         }
     },
-    placeEmptyTargetMarker: function (position, targetId, real) {
+    placeEmptyTargetMarker: function (position, targetId, targetClass) {
         try {
             var icon;
             var label;
-            if (real) {
+            if (targetClass === "human") {
                 icon = this.icons.TargetHuman;
                 label = "CASUALTY"
+            } else if (targetClass === "debris") {
+                icon = this.icons.TargetDebris;
+                label = "DEBRIS"
             } else {
                 icon = this.icons.TargetDismissed;
-                label = "NO CASUALTY"
+                label = "FALSE ALARM"
             }
 
             var thisId = targetId + "_done";

@@ -216,7 +216,7 @@ public class Simulator {
     }
 
     private void printDiag() {
-        Map<String, Boolean> decisions = imageController.getDecisions();
+        Map<String, String> decisions = imageController.getDecisions();
         decisions.entrySet().forEach(System.out::println);
 
     }
