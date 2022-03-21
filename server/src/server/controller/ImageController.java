@@ -56,13 +56,13 @@ public class ImageController extends AbstractController {
         if (t instanceof AdjustableTarget at) {  // This also asserts that t is not null
             synchronized (simulator.getState().getStoredImages()) {
                 double timeToAdd;
-                String fileToAdd;
+                String fileToAdd = "images/" + at.getHighResFileName();
 
-                if (isDeep) {
-                    fileToAdd = "images/" + at.getHighResFileName();
-                } else {
-                    fileToAdd = "images/" + at.getLowResFileName();
-                }
+//                if (isDeep) {
+//                    fileToAdd = "images/" + at.getHighResFileName();
+//                } else {
+//                    fileToAdd = "images/" + at.getLowResFileName();
+//                }
                 if (at.isReal()) {
                     timeToAdd = simulator.getState().getTime() + DEEP_SCAN_TIME;
                 } else {
