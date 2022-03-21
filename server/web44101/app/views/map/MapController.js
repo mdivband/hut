@@ -417,6 +417,7 @@ var MapController = {
             $('#scanmode').prop("checked", false);
             $('#editmode').prop("checked", true);
             $('#monitor').prop("checked", false);
+            this.setMode(this.ModeEnum.PAN);
         } else if (modeFlag === 1) { // monitor
             $("#monitor_accordions").show();
             $("#edit_contexts").hide();
