@@ -120,7 +120,7 @@ App.Views.Map = Backbone.View.extend({
         try {
             self.clearUncertainties();
             self.clearPredictions();
-            MapTargetController.classifiedIds.clear();
+            MapTargetController.classifiedIds = [];
             MapImageController.reset();
             var markers = self.$el.gmap("get", "markers");
             for (var key in markers) {

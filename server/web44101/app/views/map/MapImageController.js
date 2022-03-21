@@ -89,13 +89,6 @@ var MapImageController = {
                     targetClass: targetClass,
                 });
             }
-            var marker = self.$el.gmap("get", "markers")[tgtId];
-            if (marker) {
-                var position = marker.getPosition();
-                MapTargetController.clearReviewedTarget(marker);
-                MapTargetController.placeEmptyTargetMarker(position, tgtId, targetClass);
-
-            }
         } catch (e) {
             alert("class : " + e)
         }

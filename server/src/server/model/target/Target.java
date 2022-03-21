@@ -20,6 +20,7 @@ public abstract class Target extends MObject implements Serializable {
     public static final int ADJ_SHALLOW_SCAN = 3;
     public static final int ADJ_DISMISSED = 4;
     public static final int ADJ_FOUND = 5;
+    public static final int ADJ_DEBRIS = 6;
 
 
     public Target(String id, Coordinate coordinate, int type) {
@@ -29,8 +30,8 @@ public abstract class Target extends MObject implements Serializable {
     }
 
     public void setType(int type) {
-        //this.type = type;
-        this.type = 0;
+        this.type = type;
+        // this.type = 0;
     }
 
     public int getType() {

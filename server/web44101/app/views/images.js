@@ -8,6 +8,7 @@ App.Views.Images = Backbone.View.extend({
         this.viewButtons = document.getElementById("button_panel");
         this.pendingPanel = document.getElementById("pending_scans");
         this.addedIds = [];
+        this.removedIds = [];
         this.addedRefs = [];
         this.pendingIds = [];
         this.addedPendingIds = [];
@@ -26,6 +27,12 @@ App.Views.Images = Backbone.View.extend({
         });
 
         this.state.on("change:editMode", function () {
+            self.checkForNonRemoved();
+            self.checkForRemoval();
+            self.update();
+        });
+
+        this.state.targets.on("change:type", function () {
             self.checkForNonRemoved();
             self.checkForRemoval();
             self.update();
@@ -55,7 +62,7 @@ App.Views.Images = Backbone.View.extend({
             this.state.targets.each(function (target) {
                 var id = target.getId()
                 var iRef = knownImages[id]
-                if (iRef !== undefined) {
+                if (!self.removedIds.includes(id) && iRef !== undefined) {
                     if (!self.addedIds.includes(id) && deepIds.includes(id)) {
                         console.log("Adding deep: " + id);
                         // A new scan and is deep
@@ -72,7 +79,7 @@ App.Views.Images = Backbone.View.extend({
                             button.focus();
                             $("#rev_deep").prop('disabled', true);
                         });
-                        self.addedIds.push(id)
+                        self.addedIds.push(id);
 
                     } else if (!self.addedIds.includes(id)) {
                         console.log("Adding shallow " + id);
@@ -90,7 +97,7 @@ App.Views.Images = Backbone.View.extend({
                             button.focus();
                             $("#rev_deep").prop('disabled', false);
                         });
-                        self.addedIds.push(id)
+                        self.addedIds.push(id);
 
                     } else if (deepIds.includes(id) && !self.addedDeepIds.includes(id)) {
                         // An update scan from shallow to deep
@@ -227,8 +234,9 @@ App.Views.Images = Backbone.View.extend({
                 newArray[newIndex] = self.addedIds[i]
                 newIndex++;
             } else {
+                self.removedIds.push(id);
                 var button = document.getElementById(self.addedIds[i]);
-                button.remove()
+                button.remove();
             }
         }
         this.addedIds = newArray;
@@ -279,10 +287,15 @@ App.Views.Images = Backbone.View.extend({
     checkForNonRemoved : function() {
         try {
             var buttons = document.getElementsByClassName('image_select_buttons');
+            console.log(buttons);
             for (var i = 0; i < buttons.length; i++) {
                 //console.log(buttons[i]);
                 var thisId = buttons[i].id;
-                MapTargetController.checkIcon(thisId);
+                console.log(thisId);
+                if (MapTargetController.classifiedIds.includes(thisId)) {
+                    this.safeRemoveId(thisId);
+                }
+                //MapTargetController.checkIcon(thisId);
             }
         } catch (e) {
             alert(e);

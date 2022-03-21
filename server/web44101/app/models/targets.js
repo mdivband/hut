@@ -33,7 +33,8 @@ App.Collections.Targets = Backbone.Collection.extend({
     ADJ_DEEP_SCAN: 2,
     ADJ_SHALLOW_SCAN: 3,
     ADJ_DISMISSED: 4,
-    ADJ_FOUND: 5
+    ADJ_FOUND: 5,
+    ADJ_DEBRIS: 6
 
 });
 

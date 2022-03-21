@@ -162,7 +162,23 @@ public class ImageController extends AbstractController {
             for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
                 t.complete();
             }
-            simulator.getTargetController().deleteTarget(id);
+
+            Coordinate targetCoords = simulator.getState().getTarget(id).getCoordinate();
+            int taskType;
+            switch (targetClass) {
+                case "human":
+                    taskType = Target.HUMAN;
+                    break;
+                case "debris":
+                    taskType = Target.ADJ_DEBRIS;
+                    break;
+                case "false":
+                    taskType = Target.ADJ_DISMISSED;
+                    break;
+                default:
+                    taskType = Target.ADJUSTABLE;
+            }
+            simulator.getTargetController().adjustForTask(taskType, targetCoords.getLatitude(), targetCoords.getLongitude());
 
             LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, targetClass, isReal));
 

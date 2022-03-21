@@ -28,6 +28,10 @@ var MapTargetController = {
         this.state.targets.on("change:visible", function (target) {
             MapTargetController.updateTargetMarkerVisibility(target);
         });
+
+        this.state.targets.on("change:type", function (target) {
+            MapTargetController.updateTargetMarkerIcon(target);
+        });
     },
     onTargetAdd: function (target) {
         console.log('Target added ' + target.getId());
@@ -134,25 +138,36 @@ var MapTargetController = {
     updateTargetMarkerIcon: function (target) {
         var marker = this.$el.gmap("get", "markers")[target.getId()];
         var icon;
+        var label;
         try {
             switch (target.getType()) {
                 case this.state.targets.HUMAN:
                     icon = this.icons.TargetHuman;
+                    label = "CASUALTY";
                     break;
                 case this.state.targets.ADJUSTABLE:
                     icon = this.icons.TargetUnknown;
+                    label = target.getId();
                     break;
                 case this.state.targets.ADJ_DEEP_SCAN:
                     icon = this.icons.TargetDeepScan;
+                    label = target.getId();
                     break;
                 case this.state.targets.ADJ_SHALLOW_SCAN:
                     icon = this.icons.TargetShallowScan;
+                    label = target.getId();
                     break;
                 case this.state.targets.ADJ_DISMISSED:
                     icon = this.icons.TargetDismissed;
+                    label = "FALSE ALARM";
                     break;
                 case this.state.targets.ADJ_FOUND:
                     icon = this.icons.TargetFound;
+                    label = target.getId();
+                    break;
+                case this.state.targets.ADJ_DEBRIS:
+                    icon = this.icons.TargetDebris;
+                    label = "DEBRIS";
                     break;
                 default:
                     console.log("No icon found for target type " + target.getType());
@@ -161,6 +176,7 @@ var MapTargetController = {
            alert("eee + " + e)
         }
         if (icon) {
+            marker.setOptions({labelContent: label});
             marker.setIcon(icon.Image);
             marker.setPosition(target.getPosition());
         }
@@ -223,13 +239,13 @@ var MapTargetController = {
             var label;
             if (targetClass === "human") {
                 icon = this.icons.TargetHuman;
-                label = "CASUALTY"
+                label = "CASUALTY";
             } else if (targetClass === "debris") {
                 icon = this.icons.TargetDebris;
-                label = "DEBRIS"
+                label = "DEBRIS";
             } else {
                 icon = this.icons.TargetDismissed;
-                label = "FALSE ALARM"
+                label = "FALSE ALARM";
             }
 
             var thisId = targetId + "_done";
