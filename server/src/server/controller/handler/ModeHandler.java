@@ -7,6 +7,7 @@ import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,9 @@ public class ModeHandler extends RestHandler {
             case "/scenario/closeSurvey":
                 handleCloseSurvey(resp);
                 break;
+            case "/scenario/attentionCheck":
+                handleAttentionCheck(req, resp);
+                break;
             case "/scenario/start":
                 handleScenarioStart(resp);
                 break;
@@ -55,6 +59,21 @@ public class ModeHandler extends RestHandler {
         //LOGGER.info(String.format("%s; RST; Resetting logs; ", simulator.getState().getTime()));
         simulator.resetLogging(this.simulator.getState().getUserNames());
         //LOGGER.info(String.format("%s; RGNAME; UserName is (name/id); %s ", simulator.getState().getTime(), simulator.getState().getUserName()));
+
+    }
+
+    private void handleAttentionCheck(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Arrays.asList("confirmed", "userRole");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+        String userRole = params.get("userRole");
+        if (Boolean.parseBoolean(params.get("confirmed"))) {
+            LOGGER.info(String.format("%s; ATTCHCK; %s has confirmed they are paying attention", simulator.getState().getTime(), userRole));
+        } else {
+            LOGGER.info(String.format("%s; ATTCHCK; Attention check popup closed for %s", simulator.getState().getTime(), userRole));
+        }
+        resp.sendOkay();
 
     }
 

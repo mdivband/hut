@@ -2,6 +2,7 @@ var MapController = {
     predictionLength: 0,
     showUncertainties: false,
     uncertaintyRadius: 10,
+    reminderSent: false,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -259,6 +260,31 @@ var MapController = {
         //$("#game_time").html("Time: " + time);
          */
         $("#game_time").html("Time: " + time + "/" + limit);
+        if (!MapController.reminderSent && tempLimit / 2 < tempTime) {
+            MapController.reminderSent = true;
+            var self = this;
+            var uid = "reminder_" + userRole;
+            var content = _.template($("#popup_left_right").html(), {
+                left_content: "You have had half your time on this scenario, please click within the next 30s to confirm you have read this message.",
+                right_content: "Confirm",
+                uid: uid
+            });
+
+            spop({
+                template: content,
+                style: 'default',
+                autoclose: 30000,
+                onClose: function () {
+                    $.post("/mode/scenario/attentionCheck", {confirmed: false, userRole: userRole});
+                }
+            });
+
+            $("#popup_left_right").css("height", "auto");
+
+            $("#" + uid).on('click', function () {
+                $.post("/mode/scenario/attentionCheck", {confirmed: true, userRole: userRole});
+            });
+        }
         this.updateAllocationRendering();
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);
