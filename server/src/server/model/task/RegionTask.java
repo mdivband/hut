@@ -13,18 +13,19 @@ public class RegionTask extends PatrolTask {
     private static final double baseStep = 40;
     private Coordinate nw, ne, se, sw;
 
-    public RegionTask(String id, List<Coordinate> route, Coordinate centrePoint, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {
-        super(id, Task.TASK_REGION, route, centrePoint);
+    public RegionTask(String id, List<Coordinate> route, Coordinate centrePoint, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw, Boolean ignored) {
+        super(id, Task.TASK_REGION, route, centrePoint, ignored);
         this.nw = nw;
         this.ne = ne;
         this.se = se;
         this.sw = sw;
         this.group = 10; // hard coding 10 agents to complete region task
+        this.setIgnored(ignored);
     }
 
-    public static RegionTask createTask(String id, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {
+    public static RegionTask createTask(String id, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw, Boolean ignored) {
         List<Coordinate> route = createRoute(nw, ne, se, sw);
-        return new RegionTask(id, route, getCentre(Arrays.asList(nw, ne, se, sw)), nw, ne, se, sw);
+        return new RegionTask(id, route, getCentre(Arrays.asList(nw, ne, se, sw)), nw, ne, se, sw, ignored);
     }
 
     private static Coordinate getCentre(List<Coordinate> corners) {

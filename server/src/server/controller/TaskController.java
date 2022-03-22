@@ -67,9 +67,9 @@ public class TaskController extends AbstractController {
         }
     }
 
-    public synchronized Task createPatrolTask(List<Coordinate> path) {
+    public synchronized Task createPatrolTask(List<Coordinate> path, Boolean ignored) {
         String id = generateUID();
-        Task task = PatrolTask.createTask(id, path);
+        Task task = PatrolTask.createTask(id, path, ignored);
         simulator.getState().add(task);
         StringBuilder sb = new StringBuilder();
         for (Coordinate c : path) {
@@ -89,9 +89,9 @@ public class TaskController extends AbstractController {
         return false;
     }
 
-    public synchronized Task createRegionTask(Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {
+    public synchronized Task createRegionTask(Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw, Boolean ignored) {
         String id = generateUID();
-        Task task = RegionTask.createTask(id, nw, ne, se, sw);
+        Task task = RegionTask.createTask(id, nw, ne, se, sw, ignored);
         simulator.getState().add(task);
         StringBuilder sb = new StringBuilder();
         sb.append(nw.getLatitude()).append(";").append(nw.getLongitude()).append(";");

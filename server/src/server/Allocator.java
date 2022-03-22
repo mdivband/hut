@@ -79,6 +79,9 @@ public class Allocator {
         // Remove and ignore deep scans that have been assigned
         tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) task).isBeingWorked());
 
+        //Remove ignored tasks
+        tasksToAllocate.removeIf(task -> task.isIgnored());
+
         String allocationMethod = simulator.getState().getAllocationMethod();
 
         if(allocationMethod.equals("maxsum")){

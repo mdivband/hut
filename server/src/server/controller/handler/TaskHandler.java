@@ -80,7 +80,9 @@ public class TaskHandler extends RestHandler {
             Double lng = Double.parseDouble(pathSplit[i + 1]);
             path.add(new Coordinate(lat, lng));
         }
-        Task task = simulator.getTaskController().createPatrolTask(path);
+        int rnd = new Random().nextInt(100);
+        Boolean ignored = (rnd <= 30);
+        Task task = simulator.getTaskController().createPatrolTask(path, ignored);
         resp.getHeaders().add("Content-type", "text");
         resp.send(201, task.getId());
     }
@@ -120,7 +122,9 @@ public class TaskHandler extends RestHandler {
             Double lng = Double.parseDouble(pathSplit[i + 1]);
             corners.add(new Coordinate(lat, lng));
         }
-        Task task = simulator.getTaskController().createRegionTask(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+        int rnd = new Random().nextInt(100);
+        Boolean ignored = (rnd <= 30);
+        Task task = simulator.getTaskController().createRegionTask(corners.get(0), corners.get(1), corners.get(2), corners.get(3), ignored);
         resp.getHeaders().add("Content-type", "text");
         resp.send(201, task.getId());
     }

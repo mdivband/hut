@@ -16,16 +16,17 @@ public class PatrolTask extends Task {
     private final List<Agent> workingAgents;
     private double totalPathDistance;
 
-    public PatrolTask(String id, int type, List<Coordinate> points, Coordinate centrePoint) {
+    public PatrolTask(String id, int type, List<Coordinate> points, Coordinate centrePoint, Boolean ignored) {
         super(id, type, centrePoint);
         this.points = points;
         this.workingAgents = new ArrayList<>();
         this.lastPointMap = new HashMap<>();
         this.totalPathDistance = calcualteRouteLength();
+        this.setIgnored(ignored);
     }
 
-    public static PatrolTask createTask(String id, List<Coordinate> points) {
-        return new PatrolTask(id, Task.TASK_PATROL, points, getCentre(points));
+    public static PatrolTask createTask(String id, List<Coordinate> points, Boolean ignored) {
+        return new PatrolTask(id, Task.TASK_PATROL, points, getCentre(points), ignored);
     }
 
     private static Coordinate getCentre(List<Coordinate> points) {

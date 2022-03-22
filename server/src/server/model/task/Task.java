@@ -33,6 +33,8 @@ public abstract class Task extends MObject implements Serializable {
     public static final int TASK_DEEP_SCAN = 4;
     public static final int TASK_SHALLOW_SCAN = 5;
 
+    private Boolean ignored = false;
+
     //Used in client
     private final List<Agent> agents; //Serialised to just agent ids.
     protected int group;
@@ -181,5 +183,13 @@ public abstract class Task extends MObject implements Serializable {
             return task.serialize(context);
         }
     };
+
+    public void setIgnored(Boolean ignored) {
+        this.ignored = ignored;
+    }
+
+    public Boolean isIgnored() {
+        return this.ignored;
+    }
 
 }
