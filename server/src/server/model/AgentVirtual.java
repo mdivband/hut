@@ -2,6 +2,7 @@ package server.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 public class AgentVirtual extends Agent {
@@ -21,8 +22,10 @@ public class AgentVirtual extends Agent {
         //Simulate things that would be done by a real drone
         if(!isTimedOut())
             heartbeat();
+        int rnd = new Random().nextInt(360000);
+        Boolean droppedOut = (rnd <= 5);
         this.battery = this.battery > 0 ? this.battery - windAdjustedBatteryConsumption : 0;
-        if (this.battery == 0) {
+        if (this.battery == 0 || droppedOut) {
             this.setTimedOut(true);
         }
     }
