@@ -176,7 +176,7 @@ var simulator = {
         });
 
         var self = this;
-        this.state.on("change", function () {
+        this.state.on("change:chatLog", function () {
             $("#chat_history").empty();
             var chatLog = self.state.getChatLog();
             if (chatLog.length > 0) {
@@ -185,6 +185,7 @@ var simulator = {
                     newLine.text(item);
                 })
             }
+            $("#chat_history").scrollTop($("#chat_history")[0].scrollHeight);
         });
 
         // This defines the zoom and pan function including restriction of view
