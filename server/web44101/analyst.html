@@ -122,8 +122,9 @@
 
                     <div id="accordion_chat" style="margin: 2px;">
                         <h3>Chat</h3>
-                        <div>
-                            <div id="chat_history"></div>
+                        <div style="min-height: 300px; overflow: hidden">
+                            <div id="chat_history" style="max-height: 200px; overflow: scroll"></div>
+                            </br>
                             <textarea placeholder="Type message.." id="message_box" required></textarea>
                             <button id="button_send_msg">Send</button>
                         </div>

@@ -112,13 +112,16 @@ var simulator = {
         $("#accordion_smallview").accordion({
             collapsible: true
         });
+        $("#accordion_smallview").hide();
         $("#accordion_agent_schedule_m").accordion({
             collapsible: true,
             //active: false
         });
+        $("#accordion_agent_schedule_m").hide();
         $("#accordion_sotp_m").accordion({
             collapsible: true
         });
+        $("#accordion_sotp_m").hide();
         $("#accordion_wind_m").accordion({
             collapsible: true
         });
@@ -132,12 +135,15 @@ var simulator = {
             collapsible: true,
             active: false
         });
+        $("#accordion_otherlayer_m").hide();
         $("#accordion_agent_schedule_e").accordion({
             collapsible: true,
         });
+        $("#accordion_agent_schedule_e").hide();
         $("#accordion_sotp_e").accordion({
             collapsible: true,
         });
+        $("#accordion_sotp_e").hide();
 
         $("#camera_canvas_s").append($("#camera"));
 
