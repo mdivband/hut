@@ -155,6 +155,7 @@ public class Allocator {
             Agent agent = simulator.getState().getAgent(agentId);
             Task task = simulator.getState().getTask(taskId);
             agent.setAllocatedTaskId(null);
+            agent.setWorking(false);
             task.removeAgent(agentId);
             simulator.getState().getDroppedAllocation().put(agentId, taskId);
             simulator.getState().getAllocation().remove(agentId);

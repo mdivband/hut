@@ -49,7 +49,7 @@ public class PatrolTask extends Task {
         }
         Agent agentToRemove = null;
         for (Agent w : workingAgents) {
-            if (!(w.getAllocatedTaskId().equals(getId()))) {
+            if (w.getAllocatedTaskId() != null && !(w.getAllocatedTaskId().equals(getId()))) {
                 agentToRemove = w;
                 break;
             }
