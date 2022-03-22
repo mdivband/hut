@@ -386,10 +386,12 @@ public class Allocator {
                     // TODO Doesn't error handle for having fewer agents than group size
                     // TODO Is not an optional change
                     for (int i = 0; i < group - assigned; i++) {
-                        int rnd = new Random().nextInt(agents.size());
-                        Agent agent = agents.get(rnd);
-                        result.put(agent.getId(), task.getId());
-                        agents.remove(agent);
+                        if (agents.size() > 0) {
+                            int rnd = new Random().nextInt(agents.size());
+                            Agent agent = agents.get(rnd);
+                            result.put(agent.getId(), task.getId());
+                            agents.remove(agent);
+                        }
                     }
                 }
             }
