@@ -89,6 +89,8 @@ public class State {
 
     private int completedSurveys;
 
+    private Double avgAgentDropout;
+
     public State() {
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
@@ -130,6 +132,8 @@ public class State {
 
         requiredUsers = 2; // Just for testing
         readyUsers = 0;
+
+        avgAgentDropout = 0.0;
 
         agents.clear();
         tasks.clear();
@@ -483,6 +487,14 @@ public class State {
 
     public Double getWindHeading() {
         return windHeading;
+    }
+
+    public void setAvgAgentDropout(Double avgAgentDropout) {
+        this.avgAgentDropout = avgAgentDropout;
+    }
+
+    public Double getAvgAgentDropout() {
+        return this.avgAgentDropout;
     }
 
     private class HazardHit {

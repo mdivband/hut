@@ -17,13 +17,13 @@ public class AgentVirtual extends Agent {
     }
 
     @Override
-    public void step(Boolean flockingEnabled) {
-        super.step(flockingEnabled);
+    public void step(Boolean flockingEnabled, Double avgAgentDropout) {
+        super.step(flockingEnabled, avgAgentDropout);
         //Simulate things that would be done by a real drone
         if(!isTimedOut())
             heartbeat();
         int rnd = new Random().nextInt(360000);
-        Boolean droppedOut = (rnd <= 5);
+        Boolean droppedOut = (rnd <= avgAgentDropout);
         this.battery = this.battery > 0 ? this.battery - windAdjustedBatteryConsumption : 0;
         if (this.battery == 0 || droppedOut) {
             this.setTimedOut(true);

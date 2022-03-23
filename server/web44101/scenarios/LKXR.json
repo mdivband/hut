@@ -3,10 +3,7 @@
   "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You DO have access to the chat feature to talk to your teammate.",
   "comment": "This is the Complex - Low scenario",
   "allocationMethod": "random",
-  "hub": {
-    "lat": 50.928955248687274,
-    "lng": -1.40882186832185
-  },
+  "avgAgentDropout": 5,
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 480,
   "deepAllowed": true,

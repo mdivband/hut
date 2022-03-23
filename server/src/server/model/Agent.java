@@ -121,6 +121,10 @@ public abstract class Agent extends MObject implements Serializable {
         Simulator.instance.getState().addHazardHit(Hazard.NONE, this.getCoordinate());
     }
 
+    public void step(Boolean flockingEnabled, Double avgAgentDropout) {
+        this.step(flockingEnabled);
+    }
+
     /**
      * Stop an agent - should maintain its current position.
      */

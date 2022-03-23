@@ -175,7 +175,7 @@ public class Simulator {
             //Step agents
             checkAgentsForTimeout();
             for (Agent agent : state.getAgents())
-                agent.step(state.isFlockingEnabled());
+                agent.step(state.isFlockingEnabled(), state.getAvgAgentDropout());
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
@@ -375,6 +375,17 @@ public class Simulator {
                 Double lng = GsonUtils.getValue(hub, "lng");
                 agentController.addHubAgent(lat, lng);
                 state.setHubLocation(new Coordinate(lat, lng));
+            }
+
+            Object avgAgentDropout = GsonUtils.getValue(obj, "avgAgentDropout");
+            if (avgAgentDropout != null) {
+                if (avgAgentDropout.getClass() == Double.class ) {
+                    this.state.setAvgAgentDropout((Double)avgAgentDropout);
+                } else {
+                    LOGGER.warning("Expected integer value for avgAgentDropout in scenario file. Received: '" +
+                            avgAgentDropout.toString() + "'. Set to 0.");
+                    // state.avgAgentDropout initialised with default value of 0
+                }
             }
 
             this.state.resetNext();
