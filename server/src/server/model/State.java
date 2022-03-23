@@ -90,6 +90,7 @@ public class State {
     private int completedSurveys;
 
     private Double avgAgentDropout;
+    private Double ignoredTaskProb;
 
     public State() {
         agents = new ArrayList<>();
@@ -134,6 +135,7 @@ public class State {
         readyUsers = 0;
 
         avgAgentDropout = 0.0;
+        ignoredTaskProb = 0.0;
 
         agents.clear();
         tasks.clear();
@@ -495,6 +497,14 @@ public class State {
 
     public Double getAvgAgentDropout() {
         return this.avgAgentDropout;
+    }
+
+    public void setIgnoredTaskProb(Double ignoredTaskProb) {
+        this.ignoredTaskProb = ignoredTaskProb;
+    }
+
+    public Double getIgnoredTaskProb() {
+        return this.ignoredTaskProb;
     }
 
     private class HazardHit {

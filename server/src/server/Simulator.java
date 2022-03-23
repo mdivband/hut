@@ -382,9 +382,20 @@ public class Simulator {
                 if (avgAgentDropout.getClass() == Double.class ) {
                     this.state.setAvgAgentDropout((Double)avgAgentDropout);
                 } else {
-                    LOGGER.warning("Expected integer value for avgAgentDropout in scenario file. Received: '" +
+                    LOGGER.warning("Expected double value for avgAgentDropout in scenario file. Received: '" +
                             avgAgentDropout.toString() + "'. Set to 0.");
                     // state.avgAgentDropout initialised with default value of 0
+                }
+            }
+
+            Object ignoredTaskProb = GsonUtils.getValue(obj, "ignoredTaskProb");
+            if (ignoredTaskProb != null) {
+                if (ignoredTaskProb.getClass() == Double.class ) {
+                    this.state.setIgnoredTaskProb((Double)ignoredTaskProb);
+                } else {
+                    LOGGER.warning("Expected double value for ignoredTaskProb in scenario file. Received: '" +
+                            ignoredTaskProb.toString() + "'. Set to 0.");
+                    // state.ignoredTaskProb initialised with default value of 0
                 }
             }
 

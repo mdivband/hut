@@ -4,6 +4,7 @@
   "comment": "This is the Complex - Low scenario",
   "allocationMethod": "random",
   "avgAgentDropout": 5,
+  "ignoredTaskProb": 30,
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 480,
   "deepAllowed": true,
