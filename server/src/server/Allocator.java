@@ -2,6 +2,8 @@ package server;
 
 //import com.sun.javafx.geom.Edge;
 
+import cbaa.Cbaa;
+import cbba.Cbba;
 import maxsum.Constraint;
 import maxsum.Domain;
 import maxsum.MaxSum;
@@ -126,15 +128,23 @@ public class Allocator {
             currentAllocation = basicBundleCompute(agentsToAllocate, tasksToAllocate);
         } else if (allocationMethod.equals("heuristicbundle")) {
             currentAllocation = heuristicBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("cbaa")) {
+            currentAllocation = cbaaBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("cbba")) {
+            currentAllocation = cbbaBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("pimaxass")) {
+            currentAllocation = piMaxAssBundleCompute(agentsToAllocate, tasksToAllocate);
         } else {
             return null;
         }
 
         currentAllocation.forEach((k, v) -> {
-            Iterator<String> taskIt = v.listIterator();
-            result.put(k, taskIt.next());
-            while (taskIt.hasNext()) {
-                ((AgentVirtual) simulator.getState().getAgent(k)).addTaskToQueue(simulator.getState().getTask(taskIt.next()));
+            if (!v.isEmpty()) {
+                Iterator<String> taskIt = v.listIterator();
+                result.put(k, taskIt.next());
+                while (taskIt.hasNext()) {
+                    ((AgentVirtual) simulator.getState().getAgent(k)).addTaskToQueue(simulator.getState().getTask(taskIt.next()));
+                }
             }
         });
 
@@ -208,6 +218,49 @@ public class Allocator {
             agentWeights.put(bestBin, agentWeights.get(bestBin) + weight);
             currentAllocation.get(bestBin).add(t.getId());
         }
+
+        return currentAllocation;
+    }
+
+    private HashMap<String, List<String>> cbaaBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        System.out.println("======= Runnning CBAA =======");
+        Cbaa cbaa = new Cbaa(agentsToAllocate, tasksToAllocate);
+        return cbaa.compute();
+    }
+
+    private HashMap<String, List<String>> cbbaBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        System.out.println("======= Runnning CBBA =======");
+        Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate);
+        return cbba.compute();
+    }
+
+    private HashMap<String, List<String>> piMaxAssBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        HashMap<String, List<String>> currentAllocation = new HashMap<>();
+
+        HashMap<String, Double> tasksByWeight = new HashMap<>();
+        tasksToAllocate.forEach(t -> tasksByWeight.put(t.getId(), t.getCoordinate().getDistance(simulator.getState().getHubLocation())));
+        List<Task> orderedTasks = new ArrayList<>();
+
+        boolean converged = false;
+        while (!converged) {
+            for (Agent a : agentsToAllocate) {
+                // Task Inclusion Phase
+
+
+
+                // Communication and Conflict Resolution Phase
+
+
+
+            }
+
+            // Check for Convergence
+
+        }
+
+
+
+
 
         return currentAllocation;
     }

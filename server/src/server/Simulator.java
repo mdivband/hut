@@ -389,7 +389,10 @@ public class Simulator {
                         "maxsumwithoverspill",
                         "bestfirst",
                         "basicbundle",
-                        "heuristicbundle"
+                        "heuristicbundle",
+                        "cbaa",
+                        "cbba",
+                        "pimaxass"
                 ));
 
                 if(possibleMethods.contains(allocationMethod)) {

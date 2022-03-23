@@ -8,7 +8,7 @@
   "extendedUIOptions": {
     "predictions": true
   },
-  "allocationMethod": "basicbundle",
+  "allocationMethod": "cbba",
   "allocationStyle": "bundle",
   "hub": {
     "lat": 50.928955248687274,
