@@ -57,7 +57,8 @@ public class RootHandler extends RestHandler {
     public void handleGet(Request req, Response resp) throws IOException, UnregisteredPathException {
         switch (req.getPath()) {
             case "/state.json":
-                handleGetState(resp);
+                State state = simulator.getState();
+                handleGetState(resp, state);
                 break;
             default:
                 throw new UnregisteredPathException("No method for handling GET request on " + req.getPath());
@@ -185,13 +186,10 @@ public class RootHandler extends RestHandler {
                 "<html><head><meta http-equiv='refresh' content='0; url=/' /><script type='text/javascript'>window.setTimeout(function(){window.location='/?'+(new Date()).getTime();},0);</script></head><body></body></html>");
     }
 
-    private void handleGetState(Response resp) throws IOException {
-        State state = simulator.getState();
-        synchronized (state) {
-            String stateString = simulator.getStateAsString();
-            resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
-            resp.send(200, stateString);
-        }
+    private void handleGetState(Response resp, State state) throws IOException {
+        String stateString = state.toString();
+        resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
+        resp.send(200, stateString);
 
     }
 
