@@ -35,10 +35,10 @@ public class AgentVirtual extends Agent {
             for (Agent a : sensor.senseNeighbours(this, 10.0)) {
                 if (a instanceof Hub) {
                     goingHome = false;
-                    System.out.println("Setting withpack now");
+                    //System.out.println("Setting withpack now");
                     setType("withpack");
                     if (getRoute().size() <= 0) {
-                        System.out.println("Stopping at home");
+                        //System.out.println("Stopping at home");
                         System.out.println(this);
                         stop();
                     }

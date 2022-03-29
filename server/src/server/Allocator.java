@@ -265,15 +265,22 @@ public class Allocator {
         return currentAllocation;
     }
 
+    public void putInTempAllocation(String agentId, String taskId) {
+        putInTempAllocation(agentId, taskId, true);
+    }
+
     /**
      * Put allocation into state's temp allocation.
      * Will remove existing allocation (in temp allocation) of agent if one exists.
      */
-    public void putInTempAllocation(String agentId, String taskId) {
+    public void putInTempAllocation(String agentId, String taskId, boolean overwrite) {
         //Remove allocation to task if monitor or waypoint task (1 to 1 allocation only!)
         Task task = simulator.getState().getTask(taskId);
-        if(task.getType() == Task.TASK_WAYPOINT || task.getType() == Task.TASK_MONITOR)
-            simulator.getState().getTempAllocation().entrySet().removeIf(entry -> entry.getValue().equals(taskId));
+        if (overwrite) {
+            if (task.getType() == Task.TASK_WAYPOINT || task.getType() == Task.TASK_MONITOR) {
+                simulator.getState().getTempAllocation().entrySet().removeIf(entry -> entry.getValue().equals(taskId));
+            }
+        }
         //Add new allocation
         simulator.getState().getTempAllocation().put(agentId, taskId);
         //Set agent route to task coordinate.

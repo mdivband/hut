@@ -66,16 +66,37 @@ public abstract class Task extends MObject implements Serializable {
 
         for (Agent a : agents) {
             if (a instanceof AgentVirtual av) {
+                /*
+                int loopCounter = 0;
                 Task t = av.getNextTaskFromQueue();
-                if (t != null) {
-                    //av.setAllocatedTaskId(t.getId());
-                    System.out.println("trying to add " + t);
-                    Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId());
-                    Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
+                //if (t != null && Simulator.instance.getState().getTasks().contains(t)) {  // Means we found one that exists
+                System.out.println("CHECKING");
+                System.out.println("tsks = " + Simulator.instance.getState().getTasks());
+                System.out.println("our task: " + t + ", status=" + t.getStatus() + " agents=" + t.getAgents());
 
-                    //av.setRoute(av.getTempRoute());
-                    System.out.println("comp -> " + av);
+                while (t == null || !Simulator.instance.getState().getTasks().contains(t) || t.getStatus() == STATUS_DONE) {
+                    System.out.println(t + " didn't work out, resecting... ");
+                    t = av.getNextTaskFromQueue();
+                    loopCounter++;
+                    if (loopCounter >= 10) {
+                        a.stop();
+                        return;
+                    }
                 }
+                 */
+
+                //av.setAllocatedTaskId(t.getId());
+                Task t = av.getNextTaskFromQueue();
+                //System.out.println("trying to add " + t);
+                if (t != null) {
+                    Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
+                    Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
+                } else {
+                    a.stop();
+                }
+                //av.setRoute(av.getTempRoute());
+                //System.out.println("comp -> " + av);
+
             }
         }
     }
