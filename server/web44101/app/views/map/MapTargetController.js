@@ -222,8 +222,12 @@ var MapTargetController = {
         });
 
         $("#" + uid).on('click', function () {
-            self.map.panTo(target.getPosition());
-            self.map.setZoom(19);
+            if (userRole == "planner") {
+                self.map.panTo(target.getPosition());
+                self.map.setZoom(19);
+            } else if (userRole == "analyst") {
+                MapController.swapMode(3, true);
+            }
         });
     },
     clearReviewedTarget: function (marker) {

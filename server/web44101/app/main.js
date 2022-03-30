@@ -261,7 +261,7 @@ var simulator = {
         //Configure pop up defaults
         spop.defaults = {
             position  : 'bottom-left',
-            autoclose: 5000
+            autoclose: 15000
         };
 
         this.run();
