@@ -34,7 +34,7 @@ public class ImageController extends AbstractController {
         scheduledImages.clear();
     }
 
-    public void takeImageById(String id) {
+    public synchronized void takeImageById(String id) {
         boolean match =  false;
         for (var entry : scheduledImages.entrySet()) {
             if (entry.getValue().id.equals(id)) {

@@ -325,7 +325,7 @@ var simulator = {
                         $.unblockUI();
                         var description_panel = document.createElement("div");
                         description_panel.innerHTML = _.template($("#description_panel").html(), {
-                            title: "Scenario " + self.state.getGameId(),
+                            title: "Scenario",
                             description: self.state.getGameDescription()
                         });
                         $.blockWithContent(description_panel);
@@ -423,10 +423,11 @@ var simulator = {
             .always(function () {
                 if (self.state.isInProgress()) {
                     var elapsedTime = ((new Date()).getTime() - startTime);
-                    if (elapsedTime < waitTime)
+                    if (elapsedTime < waitTime) {
                         window.setTimeout(_.bind(self.run, self), waitTime - elapsedTime);
-                    else
+                    } else {
                         _.bind(self.run, self)();
+                    }
                 }
             });
         $('#view_mode').buttonset().css({
