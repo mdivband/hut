@@ -1,17 +1,27 @@
 package cbba;
 
 import server.Simulator;
+import server.model.Coordinate;
 import server.model.agents.Agent;
 import server.model.task.Task;
 
 import java.util.*;
 
+/**
+ * Constraint Based Bundle Allocation
+ * https://ieeexplore.ieee.org/abstract/document/5072249?casa_token=wpoSEGtFX8oAAAAA:zwM0ViLXME4UevtMcXoEEwc4uff9QCkP7B31t0O1sZR4jacHXzETHen06s5K8bau4U61cZx3B5a0lMo
+ */
 public class Cbba {
-    private List<AgentRep> agents;
-    private List<Task> tasks;
+    private final List<AgentRep> agents;
+    private final List<Task> tasks;
+    private final boolean coverageRequired;
 
-
-    public Cbba(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+    /**
+     * Constructor
+     * @param agentsToAllocate The list of agents available
+     * @param tasksToAllocate The list of tasks to assign these to
+     */
+    public Cbba(List<Agent> agentsToAllocate, List<Task> tasksToAllocate, boolean coverage) {
         agents = new ArrayList<>();
         tasks = tasksToAllocate;
         int bundleSize = Math.floorDiv(tasksToAllocate.size(), agentsToAllocate.size()) + 1; //Same as ceildiv
@@ -20,25 +30,39 @@ public class Cbba {
         for (Agent a : agentsToAllocate) {
             agents.add(new AgentRep(numTasks, numAgents, a, bundleSize));
         }
+        coverageRequired = coverage;
     }
 
+    /**
+     * The main compute method
+     * @return Allocation as a HashMap, handled in Allocator
+     */
     public HashMap<String, List<String>> compute() {
         HashMap<String, List<String>> newAlloc = new HashMap<>();
         boolean converged = false;
         for (AgentRep a : agents) {
             a.bundle.add(a.findNearestTask());
             a.buildBundle(a.bundle);
-            System.out.println(a.agent.getId() + ", bundle: ");
-            System.out.println(a.bundle);
+            //System.out.println(a.agent.getId() + ", bundle: ");
+            //System.out.println(a.bundle);
         }
-        while (!converged) {
+        int depth = 0;
+        while (!converged && depth < 100) {
             converged = true;
             for (AgentRep a : agents) {
+                /*
+                if (coverageAttained()) {
+                    converged = true;
+                    break;
+                }
+                 */
                 // TODO comms here to update adjacency matrix
                 if (!a.findConsensus()) {
                     converged = false;
                 }
             }
+            depth++;
+            /*
             System.out.println();
             System.out.println();
             System.out.println("===============================Round complete=============================");
@@ -46,49 +70,71 @@ public class Cbba {
             agents.forEach(AgentRep::printBundles);
             agents.forEach(AgentRep::printBids);
             agents.forEach(AgentRep::printAllocation);
-
             System.out.println();
+            */
         }
 
-        List<String> usedTasks = new ArrayList<>();
-        tasks.forEach(t -> usedTasks.add(t.getId()));
+        System.out.println("At depth = " + depth);
+
+        List<String> unassignedTasks = new ArrayList<>();
+        tasks.forEach(t -> unassignedTasks.add(t.getId()));
         for (AgentRep a : agents) {
             newAlloc.put(a.agent.getId(), a.getChosenTaskIds());
-            usedTasks.removeAll(a.getChosenTaskIds());
+            unassignedTasks.removeAll(a.getChosenTaskIds());
         }
-
-        usedTasks.forEach(t -> {
-            double maxTotal = -999999999;
-            AgentRep bestAgent = null;
-            for (AgentRep a : agents) {
-                double thisTotal = tasks.get(a.bundle.get(a.bundle.size() - 1)).getCoordinate().getDistance(Simulator.instance.getState().getTask(t).getCoordinate()) - a.bidsList[a.bundle.get(0)];
-                if (thisTotal > maxTotal) {
-                    bestAgent = a;
-                    maxTotal = thisTotal;
+        if (coverageRequired) {
+            unassignedTasks.forEach(t -> {
+                double maxTotal = -999999999;
+                AgentRep bestAgent = null;
+                for (AgentRep a : agents) {
+                    double thisTotal = a.bidsList[a.bundle.get(0)] - tasks.get(a.bundle.get(a.bundle.size() - 1)).getCoordinate().getDistance(Simulator.instance.getState().getTask(t).getCoordinate());
+                    if (thisTotal > maxTotal) {
+                        bestAgent = a;
+                        maxTotal = thisTotal;
+                    }
                 }
-            }
 
-            //bestAgent.bundle.add(tasks.indexOf(Simulator.instance.getState().getTask(t)));
-            newAlloc.get(bestAgent.agent.getId()).add(t);
-            System.out.println("Added " + t + " to " + bestAgent.agent.getId());
-        });
+
+                //bestAgent.bundle.add(tasks.indexOf(Simulator.instance.getState().getTask(t)));
+                bestAgent.addToBundle(tasks.indexOf(Simulator.instance.getState().getTask(t)));
+                newAlloc.get(bestAgent.agent.getId()).add(t);
+
+
+                // Update bids, incase we have to do another insertion
+                for (AgentRep a : agents) {
+                    for (int i : bestAgent.bundle) {
+                        a.bidsList[i] = maxTotal;
+                    }
+                }
+
+                System.out.println("Added " + t + " to " + bestAgent.agent.getId());
+            });
+        }
 
 
         System.out.println("===SUMMARY===");
         agents.forEach(AgentRep::printBundles);
-        System.out.println();
-        System.out.println();
-        System.out.println();
-        agents.forEach(AgentRep::printBids);
-        System.out.println();
-        System.out.println();
-        System.out.println();
-        agents.forEach(AgentRep::printAllocation);
-
-
+        //agents.forEach(AgentRep::printBids);
+        //agents.forEach(AgentRep::printAllocation);
         return newAlloc;
     }
 
+    /**
+     * Unused, Returns true if every task has been assigned
+     * @return
+     */
+    private boolean coverageAttained() {
+        for (AgentRep a : agents) {
+            if (Arrays.stream(a.allocation).anyMatch(Objects::isNull)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Inner class used to represent agents.
+     */
     private class AgentRep {
         // x_i is agent i's task list, where x_ij = 1 if i has been assigned to task j, or 0 otherwise (maybe use an array?)
         // y_i us the winning bids list. Up to date list of highest bid for each task
@@ -101,7 +147,7 @@ public class Cbba {
         double[] timeStamps; // I'm not 100% certain this is their method, but I store a list of timestamps for the most recent update
         int rebuildCounter = (new Random()).nextInt(20);
         int rebuildLimit = 40;
-        int t = 0;
+        private double weight = 0;
 
         public AgentRep(int numTasks, int numAgents, Agent a, int bundleSize) {
             agent = a;
@@ -119,25 +165,29 @@ public class Cbba {
             bundle = new ArrayList<>();
         }
 
-
+        /**
+         * Construct the shortest-distaced bundle of tasks from the given stub
+         * @param currentBundle
+         */
         public void buildBundle(List<Integer> currentBundle) {
-            System.out.println(" FOR AGENT " + agent.getId());
+            //System.out.println(" FOR AGENT " + agent.getId());
             // c_ij >=0 is the bid for agent i, task j
             // x_i is agent i's task list, where x_ij = 1 if i has been assigned to task j, or 0 otherwise (maybe use an array?)
             // y_i us the winning bids list. Up to date list of highest bid for each task
             // h_i is the valid task list, h_ij = I(c_ij > y_ij) for all J
-            int[] newTaskList = taskList.clone();
             double[] newBidsList = bidsList.clone();
 
             while (currentBundle.size() < bundleSize) {
                 List<Integer> possibleTasks = new ArrayList<>();
 
                 for (int j=0; j<taskList.length; j++) {
-                    if (!currentBundle.contains(j)) {
+                    if (!currentBundle.contains(j)) { // && j!=veto) {
                         possibleTasks.add(j);
                     }
                 }
-                Collections.shuffle(possibleTasks);
+                //Collections.shuffle(possibleTasks);
+                //System.out.println("POSS: " + possibleTasks);
+                //System.out.println("bundle = " + currentBundle);
 
                 double minDistOverall = 999999999;
                 int bestI = -1;
@@ -158,14 +208,29 @@ public class Cbba {
                         for (int p = 0; p < currentBundle.size(); p++) {
                             //System.out.println("For p="+p);
                             // Each possible insertion position
-                            double thisDist = agent.getCoordinate().getDistance(tasks.get(currentBundle.get(0)).getCoordinate());
-                            for (int k = 0; k < currentBundle.size() - 1; k++) {
-                                if (k == p) {
-                                    // Insert, then add next one
-                                    thisDist += tasks.get(currentBundle.get(k)).getCoordinate().getDistance(tasks.get(i).getCoordinate());
-                                    thisDist += tasks.get(i).getCoordinate().getDistance(tasks.get(currentBundle.get(k + 1)).getCoordinate());
-                                } else {
-                                    thisDist += tasks.get(currentBundle.get(k)).getCoordinate().getDistance(tasks.get(currentBundle.get(k + 1)).getCoordinate());
+                            double thisDist;
+                            if (currentBundle.size() == 1) {
+                                thisDist = agent.getCoordinate().getDistance(tasks.get(currentBundle.get(0)).getCoordinate());
+                                thisDist += tasks.get(currentBundle.get(0)).getCoordinate().getDistance(tasks.get(i).getCoordinate());
+                            } else {
+                                thisDist = 0;//agent.getCoordinate().getDistance(tasks.get(currentBundle.get(0)).getCoordinate());
+                                Iterator<Integer> bundleIt = currentBundle.listIterator();
+                                int bundleIndex = 0;
+                                Coordinate lastCoord = agent.getCoordinate();
+                                while (bundleIt.hasNext()) {
+                                    if (bundleIndex == p) {
+                                        Task insertTask = tasks.get(i);
+                                        thisDist += lastCoord.getDistance(insertTask.getCoordinate());
+
+                                        Task thisTask = tasks.get(bundleIt.next());
+                                        thisDist += insertTask.getCoordinate().getDistance(thisTask.getCoordinate());
+                                        lastCoord = thisTask.getCoordinate();
+                                    } else {
+                                        Task thisTask = tasks.get(bundleIt.next());
+                                        thisDist += lastCoord.getDistance(thisTask.getCoordinate());
+                                        lastCoord = thisTask.getCoordinate();
+                                    }
+                                    bundleIndex++;
                                 }
                             }
                             if (thisDist < minDistForThisTask) {
@@ -176,6 +241,7 @@ public class Cbba {
                         }
 
                         if (minDistForThisTask < minDistOverall) {
+                            //System.out.println("for i="+i+", p="+thisBestP+", a score of "+minDistForThisTask+" is better than "+ minDistOverall);
                             minDistOverall = minDistForThisTask;
                             bestI = i;
                             bestP = thisBestP;
@@ -183,15 +249,13 @@ public class Cbba {
                         }
                     }
                 }
-
+                //System.out.println("Chose task " + tasks.get(bestI));
                 List<Integer> newBundle = new ArrayList<>();
                 if (currentBundle.isEmpty()) {
                     newBundle.add(bestI);
                 } else {
-                    //System.out.println("bestP = " + bestP);
                     for (int i = 0; i < currentBundle.size(); i++) {
                         if (i == bestP) {
-                            //System.out.println("HERE adding bestI: " + bestI);
                             newBundle.add(bestI);
                             newBidsList[bestI] = -minDistOverall;
                         }
@@ -200,45 +264,79 @@ public class Cbba {
                     }
                 }
                 currentBundle = newBundle;
-
-                //System.out.println("Updating bundle to "  + currentBundle);
-                //System.out.println();
-                //System.out.println();
-
+                weight = -minDistOverall;
             }
 
             bundle = currentBundle;
-
-
-            //taskList = newTaskList;
             bidsList = newBidsList;
-            /*
-            for (int i=0; i<allocation.length; i++) {
-                if (bundle.contains(i)) {
-                    allocation[i] = this;
-                } else {
-                    allocation[i] = null;
-                }
-            }
-             */
+
             for (int i : bundle) {
                 allocation[i] = this;
             }
-            //System.out.println(agent.getId());
-            //System.out.println("tl = " + Arrays.toString(taskList));
-            //System.out.println("bl = " + Arrays.toString(bidsList));
-            System.out.println("updated bundle to " + bundle);
+        }
+
+        /**
+         * Manually add the given task to bundle at best location
+         * @param taskToAdd
+         */
+        public void addToBundle(int taskToAdd) {
+            double minDistForThisTask = 999999999;
+            int bestP = -1;
+
+            for (int p = 0; p < bundle.size(); p++) {
+                //System.out.println("For p="+p);
+                // Each possible insertion position
+                double thisDist = 0;//agent.getCoordinate().getDistance(tasks.get(currentBundle.get(0)).getCoordinate());
+                Iterator<Integer> bundleIt = bundle.listIterator();
+                int bundleIndex = 0;
+                Coordinate lastCoord = agent.getCoordinate();
+                while (bundleIt.hasNext()) {
+                    if (bundleIndex == p) {
+                        Task insertTask = tasks.get(taskToAdd);
+                        thisDist += lastCoord.getDistance(insertTask.getCoordinate());
+
+                        Task thisTask = tasks.get(bundleIt.next());
+                        thisDist += insertTask.getCoordinate().getDistance(thisTask.getCoordinate());
+                        lastCoord = thisTask.getCoordinate();
+                    } else {
+                        Task thisTask = tasks.get(bundleIt.next());
+                        thisDist += lastCoord.getDistance(thisTask.getCoordinate());
+                        lastCoord = thisTask.getCoordinate();
+                    }
+                    bundleIndex++;
+                }
+                if (thisDist < minDistForThisTask) {
+                    minDistForThisTask = thisDist;
+                    bestP = p;
+                }
+            }
+
+            weight = minDistForThisTask;
+            List<Integer> newBundle = new ArrayList<>();
+            for (int i = 0; i < bundle.size(); i++) {
+                if (i == bestP) {
+                    newBundle.add(taskToAdd);
+                }
+                newBundle.add(bundle.get(i));
+                if (bidsList[i] > minDistForThisTask) {
+                    bidsList[i] = minDistForThisTask;
+                }
+            }
+            bundle = newBundle;
+            System.out.println("Updated: ");
+            printBundles();
+            printBids();
             System.out.println();
         }
 
+        /**
+         * Attempts to find a consensus through communication between agents
+         * @return
+         */
         public boolean findConsensus() {
             // For now replace the communication matrix with global comms.
             // Not certain this is right
             boolean converged = true;
-            System.out.println("Consensus for agent " + agent.getId());
-            System.out.println("Before:");
-            System.out.print("-- allocation: [");Arrays.stream(allocation).forEach(a -> {if (a == null) {System.out.print("0, ");}else{System.out.print(a.agent.getId() + "  ");}});System.out.println("]");
-            System.out.println("-- bidsList: " + Arrays.toString(bidsList));
 
             // "If a bid is changed by the decision rules in Table I, each agent
             //checks if any of the updated or reset tasks were in their bundle,
@@ -247,22 +345,14 @@ public class Cbba {
 
             for (AgentRep a : agents) {
                 if (a != this) {  // Don't send to ourself
-                    //System.out.println();
-                    System.out.println("===== SENDING TO AGENT " + a.agent.getId() + " =====");
                     for (int j = 0; j < allocation.length; j++) {
                         if (a.receive(j, this, allocation[j])) {
                             converged = false;
-                            System.out.println("breaking at j="+j);
                             break;
                         }
                     }
                 }
             }
-
-            System.out.println("After:");
-            System.out.print("-- allocation: [");Arrays.stream(allocation).forEach(a -> {if (a == null) {System.out.print("0, ");}else{System.out.print(a.agent.getId() + ", ");}});System.out.println("]");
-            System.out.println("-- bidsList: " + Arrays.toString(bidsList));
-            System.out.println();
 
             if (converged) {
                 if (Arrays.stream(allocation).anyMatch(Objects::isNull)) {
@@ -273,11 +363,6 @@ public class Cbba {
                     }
                     return false;
                 } else {
-                    System.out.println("None match null");
-                    System.out.println("our alloc: " + Arrays.toString(allocation));
-                    System.out.println("All bundles: ");
-                    agents.forEach(AgentRep::printBundles);
-                    System.out.println();
                     return true;
                 }
             } else {
@@ -308,26 +393,26 @@ public class Cbba {
                     //System.out.println("--Receiver thinks: i (receiver)");
                     if (senderBid > thisBid) {
                         // UPDATE
-                        System.out.println("k, i. UPDATE");
+                        //System.out.println("k, i. UPDATE");
                         return update(senderBid, sender, j);
                     }
                 } else if (thisBelief == sender) {
                     //System.out.println("--Receiver thinks: k (sender)");
                     // UPDATE
-                    System.out.println("k, k. UPDATE");
+                    //System.out.println("k, k. UPDATE");
                     //update(senderBid, sender, j);
                     return false;  // As these agree, we return false
                 } else if (thisBelief == null) {
                     //System.out.println("--Receiver thinks: none");
                     // UPDATE
-                    System.out.println("k, null. UPDATE");
+                    //System.out.println("k, null. UPDATE");
                     return update(senderBid, sender, j);
                 } else {
                     //System.out.println("--Receiver thinks: m (other agent)");
                     // We believe it's m, which is thisBelief
                     if (sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)] || senderBid > thisBid) {
                         // UPDATE
-                        System.out.println("k, m. UPDATE");
+                        //System.out.println("k, m. UPDATE");
                         return update(senderBid, sender, j);
                     }
                 }
@@ -340,7 +425,7 @@ public class Cbba {
                 } else if (thisBelief == sender) {
                     //System.out.println("--Receiver thinks: k (sender)");
                     // RESET
-                    System.out.println("i, k. RESET");
+                    //System.out.println("i, k. RESET");
                     return reset(j);
                 } else if (thisBelief == null) {
                     //System.out.println("--Receiver thinks: none");
@@ -350,7 +435,7 @@ public class Cbba {
                     //System.out.println("--Receiver thinks: m (other agent)");
                     if (sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)]) {
                         // RESET
-                        System.out.println("i, m. RESET");
+                        //System.out.println("i, m. RESET");
                         return reset(j);
                     }
                 }
@@ -363,7 +448,7 @@ public class Cbba {
                 } else if (thisBelief == sender) {
                     //System.out.println("--Receiver thinks: k (sender)");
                     // UPDATE
-                    System.out.println("null, k. UPDATE");
+                    //System.out.println("null, k. UPDATE");
                     return update(senderBid, sender, j);
                 } else if (thisBelief == null) {
                     //System.out.println("--Receiver thinks: none");
@@ -374,7 +459,7 @@ public class Cbba {
                     //System.out.println("--Receiver thinks: m (other agent)");
                     if (sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)]) {
                         // UPDATE
-                        System.out.println("null, m. UPDATE");
+                        //System.out.println("null, m. UPDATE");
                         return update(senderBid, sender, j);
                     }
                 }
@@ -385,18 +470,18 @@ public class Cbba {
                     //System.out.println("Sender thinks: i (receiver)");
                     if (sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)] && senderBid > thisBid) {
                         // UPDATE
-                        System.out.println("m, i. UPDATE");
+                        //System.out.println("m, i. UPDATE");
                         return update(senderBid, sender, j);
                     }
                 } else if (thisBelief == sender) {
                     //System.out.println("--Receiver thinks: k (sender)");
                     if (sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)]) {
                         // UPDATE
-                        System.out.println("m, k. UPDATE");
+                        //System.out.println("m, k. UPDATE");
                         return  update(senderBid, sender, j);
                     } else {
                         // RESET
-                        System.out.println("m, k. RESET");
+                        //System.out.println("m, k. RESET");
                         return reset(j);
                     }
                 } else if (thisBelief == senderBelief) {
@@ -405,14 +490,14 @@ public class Cbba {
                     if (sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)]) {
                         // UPDATE
                         //update(senderBid, sender, j);
-                        System.out.println("m, m. UPDATE");
+                        //System.out.println("m, m. UPDATE");
                         return false;  // As these agree, we return false
                     }
                 } else if (thisBelief == null) {
                     //System.out.println("--Receiver thinks: none");
                     if (sender.timeStamps[agents.indexOf(senderBelief)] > timeStamps[agents.indexOf(senderBelief)]) {
                         // UPDATE
-                        System.out.println("m, null. UPDATE");
+                       // System.out.println("m, null. UPDATE");
                         return update(senderBid, sender, j);
                     }
                 } else {
@@ -421,24 +506,31 @@ public class Cbba {
                     // m = senderBelief, n = thisBelief
                     if (sender.timeStamps[agents.indexOf(senderBelief)] > timeStamps[agents.indexOf(senderBelief)] && sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)]) {
                        // UPDATE
-                        System.out.println("m, n. UPDATE 1");
+                        //System.out.println("m, n. UPDATE 1");
                         return update(senderBid, sender, j);
                     } else if (sender.timeStamps[agents.indexOf(senderBelief)] > timeStamps[agents.indexOf(senderBelief)] && senderBid > thisBid) {
                         // UPDATE
-                        System.out.println("m, n. UPDATE 2");
+                        //System.out.println("m, n. UPDATE 2");
                         return update(senderBid, sender, j);
                     } else if (sender.timeStamps[agents.indexOf(thisBelief)] > timeStamps[agents.indexOf(thisBelief)] && timeStamps[agents.indexOf(senderBelief)] > sender.timeStamps[agents.indexOf(sender)]) {
                         // RESET
-                        System.out.println("m, n. RESET");
+                        //System.out.println("m, n. RESET");
                         return reset(j);
                     } else {
-                        System.out.println("FINAL COND");
+                        //System.out.println("FINAL COND");
                     }
                 }
             }
             return false;
         }
 
+        /**
+         * For update signals
+         * @param senderBid
+         * @param sender
+         * @param j
+         * @return
+         */
         private boolean update(double senderBid, AgentRep sender, int j) {
             bidsList[j] = senderBid;
             allocation[j] = sender;
@@ -447,6 +539,11 @@ public class Cbba {
             return recomputeBundle(j);
         }
 
+        /**
+         * For reset signals
+          * @param j
+         * @return
+         */
         private boolean reset(int j) {
             for (int k=j; k<allocation.length; k++) {
                 bidsList[k] = 0;
@@ -457,16 +554,29 @@ public class Cbba {
             return recomputeBundle(j);
         }
 
+        /**
+         * Rebuilds the bundle given the changes
+         * @param j
+         * @return
+         */
         private boolean recomputeBundle(int j) {
             if (bundle.contains(j)) {
-                System.out.println("==Recomputing Bundle from " + bundle);
                 int i = bundle.indexOf(j);
+                System.out.println("==Recomputing Bundle from i="+i+", bundle = " + bundle);
                 if (i == 0) {
                     bundle = new ArrayList<>();
+                    for (int k = 0; k < allocation.length; k++) {
+                        AgentRep a = allocation[k];
+                        if (a == null && bundle.size() < bundleSize - 1) {
+                            bundle.add(k);
+                            System.out.println("Manually adding " + k);
+                        }
+                    }
                 } else {
                     bundle = bundle.subList(0, i);
                 }
-                System.out.println("==Reduced to " + bundle);
+
+                //System.out.println("==Reduced to " + bundle);
                 considerReduction();
                 buildBundle(new ArrayList<>(bundle));
                 return true;
@@ -474,22 +584,31 @@ public class Cbba {
             return false;
         }
 
+        /**
+         * Checks, and if required, reduces the bundle size
+         */
         private void considerReduction() {
             rebuildCounter++;
             if (rebuildCounter > rebuildLimit) {
                 bundleSize--;
                 rebuildCounter = 0;
-                System.out.println("REDUCED BUNDLE SIZE TO " + bundleSize);
+                if (bundle.size() > bundleSize) {
+                    bundle = bundle.subList(0, bundleSize);
+                }
+                //System.out.println("REDUCED BUNDLE SIZE TO " + bundleSize);
                 sendReductionReset();
             }
         }
 
+        /**
+         * Alert other agents to reset their counters for reducing bundle size
+         */
         private void sendReductionReset() {
             for (AgentRep agentRep : agents) {
                 // TODO limited comms
                 if (agentRep != this) {
                     agentRep.rebuildCounter = (new Random()).nextInt(20);
-                    System.out.println("RESET REBUILD COUNTER FOR " + agentRep.agent.getId());
+                    //System.out.println("RESET REBUILD COUNTER FOR " + agentRep.agent.getId());
                 }
             }
         }
@@ -519,7 +638,7 @@ public class Cbba {
         }
 
         public void printBundles() {
-            System.out.println(agent.getId() + ": " + bundle);
+            System.out.println(agent.getId() + ": " + bundle + " -> dist" + weight);
         }
 
         public void printAllocation() {
@@ -540,6 +659,7 @@ public class Cbba {
             }
             return bestIndex;
         }
+
 
     }
 

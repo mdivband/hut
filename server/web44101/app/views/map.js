@@ -265,6 +265,15 @@ App.Views.Map = Backbone.View.extend({
                 var predId = agent.getId() + "_pred";
                 var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
                 var predPath = agent.getRoute();
+                var queue = agent.getCoordQueue();
+                console.log("before, predpath : " + predPath);
+                console.log("before, queue : " + queue);
+                queue.forEach(function (q) {
+                    predPath.push(q);
+                });
+                console.log("after, predpath : " + predPath);
+
+
 
                 // This statement later catches the invisble agent case
                 if (predPath.length !== 0 && agent.isVisible()){

@@ -92,6 +92,7 @@ public abstract class Task extends MObject implements Serializable {
                     Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
                     Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
                 } else {
+                    //System.out.println("got null task");
                     a.stop();
                 }
                 //av.setRoute(av.getTempRoute());

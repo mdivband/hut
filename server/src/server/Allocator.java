@@ -132,6 +132,8 @@ public class Allocator {
             currentAllocation = cbaaBundleCompute(agentsToAllocate, tasksToAllocate);
         } else if (allocationMethod.equals("cbba")) {
             currentAllocation = cbbaBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("cbbacoverage")) {
+            currentAllocation = cbbaBundleComputeWithCoverage(agentsToAllocate, tasksToAllocate);
         } else if (allocationMethod.equals("pimaxass")) {
             currentAllocation = piMaxAssBundleCompute(agentsToAllocate, tasksToAllocate);
         } else {
@@ -230,7 +232,13 @@ public class Allocator {
 
     private HashMap<String, List<String>> cbbaBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
         System.out.println("======= Runnning CBBA =======");
-        Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate);
+        Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate, false);
+        return cbba.compute();
+    }
+
+    private HashMap<String, List<String>> cbbaBundleComputeWithCoverage(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        System.out.println("======= Runnning CBBA with coverage =======");
+        Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate, true);
         return cbba.compute();
     }
 
@@ -276,20 +284,24 @@ public class Allocator {
     public void putInTempAllocation(String agentId, String taskId, boolean overwrite) {
         //Remove allocation to task if monitor or waypoint task (1 to 1 allocation only!)
         Task task = simulator.getState().getTask(taskId);
-        if (overwrite) {
-            if (task.getType() == Task.TASK_WAYPOINT || task.getType() == Task.TASK_MONITOR) {
-                simulator.getState().getTempAllocation().entrySet().removeIf(entry -> entry.getValue().equals(taskId));
+        if (task != null) {
+            if (overwrite) {
+                if (task.getType() == Task.TASK_WAYPOINT || task.getType() == Task.TASK_MONITOR) {
+                    simulator.getState().getTempAllocation().entrySet().removeIf(entry -> entry.getValue().equals(taskId));
+                }
             }
+            //Add new allocation
+            simulator.getState().getTempAllocation().put(agentId, taskId);
+            //Set agent route to task coordinate.
+            Agent agent = simulator.getState().getAgent(agentId);
+            if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
+                agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
+            else
+                agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+            updateAllocationHistory();
+        } else {
+            System.out.println("NULL!");
         }
-        //Add new allocation
-        simulator.getState().getTempAllocation().put(agentId, taskId);
-        //Set agent route to task coordinate.
-        Agent agent = simulator.getState().getAgent(agentId);
-        if(task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
-            agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
-        else
-            agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
-        updateAllocationHistory();
     }
 
     /**

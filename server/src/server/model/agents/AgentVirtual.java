@@ -18,8 +18,6 @@ public class AgentVirtual extends Agent {
     protected boolean goingHome = false;
     private double batteryVariance;
 
-    private List<Task> taskQueue = new ArrayList<>();
-
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
         batteryVariance = 0.0002 - (Simulator.instance.getRandom().nextDouble() / 2500);
@@ -249,6 +247,11 @@ public class AgentVirtual extends Agent {
         setRoute(Collections.singletonList(Simulator.instance.getState().getHubLocation()));
     }
 
+    @Override
+    public void setRoute(List<Coordinate> route) {
+        super.setRoute(route);
+    }
+
     public boolean isGoingHome() {
         return goingHome;
     }
@@ -310,15 +313,31 @@ public class AgentVirtual extends Agent {
         }
     }
 
+    /** Append a task to the queue
+     * @param task
+     */
     public void addTaskToQueue(Task task) {
         taskQueue.add(task);
+        coordQueue.add(task.getCoordinate());
     }
 
+    /**
+     * Fetch the next task from our internal queue
+     * @return
+     */
     public Task getNextTaskFromQueue() {
         if (!taskQueue.isEmpty()) {
             Task taskToReturn = taskQueue.get(0);
             taskQueue.remove(0);
-            return taskToReturn;
+            coordQueue.remove(0);
+            if (taskToReturn != null && Simulator.instance.getState().getTasks().contains(taskToReturn)) {
+                //System.out.println(getId() + " Moving to next task " + taskToReturn);
+                return taskToReturn;
+            } else {
+                // Recurse until find next working task
+                //System.out.println("NULL TASK, q=" + taskQueue);
+                return getNextTaskFromQueue();
+            }
         }
         return null;
     }

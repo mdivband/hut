@@ -43,6 +43,8 @@ public abstract class Agent extends MObject implements Serializable {
     private transient long lastHeartbeat;
     private transient boolean startSearching;
     private transient boolean stopped;
+    protected List<Task> taskQueue =  new ArrayList<>();
+    protected List<Coordinate> coordQueue = new ArrayList<>();
 
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);

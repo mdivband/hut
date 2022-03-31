@@ -101,6 +101,7 @@ public class TaskController extends AbstractController {
             agent.setRoute(new ArrayList<>());
             agent.setWorking(false);
             agent.setAllocatedTaskId("");
+            agent.stop();
         }
 
         simulator.getState().remove(task);

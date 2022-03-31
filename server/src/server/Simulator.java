@@ -392,6 +392,7 @@ public class Simulator {
                         "heuristicbundle",
                         "cbaa",
                         "cbba",
+                        "cbbacoverage",
                         "pimaxass"
                 ));
 
