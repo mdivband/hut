@@ -50,13 +50,9 @@ App.Views.Wind = Backbone.View.extend({
         new Chart(this.ctx).HorizontalBar(chartData, options, this.ctx);
 
         $(self.canvas).show();
-
-        $("#wind_dial_m").attr("src", "icons/used/wind_dial.png");
         $("#wind_dial_m").css({
             'transform': 'rotate(' + this.state.getWindHeading() + 'deg)'
         });
-
-        $("#wind_dial_e").attr("src", "icons/used/wind_dial.png");
         $("#wind_dial_e").css({
             'transform': 'rotate(' + this.state.getWindHeading() + 'deg)'
         });
