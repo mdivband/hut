@@ -86,7 +86,7 @@ App.Views.Images = Backbone.View.extend({
                         // A new scan and is shallow
                         var button = document.createElement("button");
                         button.id = id;
-                        button.innerHTML = id;
+                        button.innerHTML = MapTargetController.getMarkerLabel(id);
                         button.className = "image_select_buttons";
                         self.viewButtons.append(button);
 

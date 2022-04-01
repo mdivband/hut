@@ -278,5 +278,13 @@ var MapTargetController = {
         } catch (e) {
             alert(e);
         }
+    },
+    getMarkerLabel: function(id) {
+        try {
+            var marker = $("#map_canvas").gmap("get", "markers")[id];
+            return marker.get("labelContent");
+        } catch (e) {
+            alert(e);
+        }
     }
 };
