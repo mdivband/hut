@@ -356,7 +356,8 @@ var simulator = {
                     }
                 } else if (self.waitingForPlanner) {
                     if (userRole != "planner" && self.state.getReadyUsers() > 0) {
-                        location.reload();
+                        self.waitingForPlanner = false;
+                        self.initialisedState = false;
                     }
                     _.bind(self.run, self)();
                 } else if (self.waiting) {
