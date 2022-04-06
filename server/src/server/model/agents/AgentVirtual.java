@@ -245,6 +245,7 @@ public class AgentVirtual extends Agent {
         setWorking(false);
         goingHome = true;
         setRoute(Collections.singletonList(Simulator.instance.getState().getHubLocation()));
+        resume();
     }
 
     @Override

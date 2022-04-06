@@ -6,7 +6,7 @@
     "uncertainties": true
   },
   "flockingEnabled": false,
-  "allocationMethod" : "maxsum",
+  "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
   "hub": {
     "lat": 50.928955248687274,
