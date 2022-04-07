@@ -326,7 +326,6 @@ public class Simulator {
     }
 
     private void pushConfig(int port) {
-        webRef = webRef+port;
         connectionController.init(port, webRef);
     }
 
