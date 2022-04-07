@@ -1,8 +1,8 @@
 package server.model.agents;
 
 import server.Simulator;
+import server.model.AStar;
 import server.model.Coordinate;
-import server.model.hazard.Hazard;
 import server.model.target.PackageTarget;
 import server.model.target.Target;
 import server.model.task.PatrolTask;
@@ -43,6 +43,7 @@ public class ProgrammerHandler implements Serializable {
     private int stepCounter = 0;
     private int pingCounter = 0;
     private PackageTarget pack = null;
+    private static double tempHighestTimeTaken;
 
     /***
      * Constructor. Connects the agent to the programmer s.t. this class behaves akin to an MVC controller
@@ -332,41 +333,121 @@ public class ProgrammerHandler implements Serializable {
         return agent.getSearching();
     }
 
+    private ArrayList<Coordinate> calculateAStarPath(List<Coordinate> coords) {
+        double startTime = System.nanoTime();
+        AStar aStar = new AStar(hazards);
+        ArrayList<Coordinate> rt = aStar.compute(agent.getCoordinate(), coords.get(0));
+        if (rt == null) {
+            rt = (ArrayList<Coordinate>) coords;
+        }
+        double elapsed = System.nanoTime() - startTime;
+        if (elapsed > tempHighestTimeTaken) {
+            tempHighestTimeTaken = elapsed;
+        }
+        System.out.println(getId() + ": For route len="+rt.size() + " took " + elapsed / 1_000_000_000 + " highest = " + tempHighestTimeTaken / 1_000_000_000);
+        return rt;
+    }
+
     /***
      * Sets the route for this agent.
      * @param coords The list of waypoints in the planned route
      */
     protected void setRoute(List<Coordinate> coords){
+        agent.setRoute(coords);
+        /*
         if (coords.size() == 1) {
+            double startTime = System.nanoTime();
+            AStar aStar = new AStar(hazards);
+            ArrayList<Coordinate> rt = aStar.compute(agent.getCoordinate(), coords.get(0));
+            if (rt == null) {
+                rt = (ArrayList<Coordinate>) coords;
+            }
+            double elapsed = System.nanoTime() - startTime;
+            System.out.println(getId() + ": For route len="+rt.size() + " took " + elapsed / 1_000_000_000);
+            /*
+            ArrayList<Coordinate> rt = new ArrayList<>();
+            rt.add(getPosition().getCoordinate(25 , 0));
+            rt.add(rt.get(0).getCoordinate(25, 0.5));
+            rt.add(rt.get(1).getCoordinate(25, 0.5));
+            rt.add(rt.get(2).getCoordinate(25, -0.5));
+            rt.add(rt.get(3).getCoordinate(25, 0));
+            rt.add(rt.get(4).getCoordinate(25, 0.5));
+            rt.add(rt.get(5).getCoordinate(25, 0.5));
+            rt.add(coords.get(0));
+
+             */
+
+
+
+
+
+
+            //rt.add(getPosition());
+
+
+            //System.out.println("ROUTE DONE");
+            //System.out.println("rt = " + rt);
+            //System.out.println(agent);
+            /*
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
+            return;
+
             ArrayList<Coordinate> rt = new ArrayList<>();
             //rt.add(getPosition());
             Coordinate startLocation = getPosition();
-            for (int i = 0; i < 10; i++) {
-                List<Coordinate> pointSet = generatePointSet(startLocation, coords.get(0));
-
-                if (routeHasHazard(pointSet)) {
-                    double offset = i * 25.0;
+            List<Coordinate> pointSet;
+            List<Coordinate> startPointSet = new ArrayList<>();
+            for (int d=0; d<10; d++) {
+                if (d > 0) {
+                    double offset = d * 25.0;
                     double theta = 2 * getNextRandomDouble() * Math.PI;  // Angle up to 2pi
                     startLocation = getPosition().getCoordinate(offset, theta);
-                    System.out.println(getId() + " Route had a hazard, trying with offset="+offset+", theta="+theta);
-
-                } else {
-                    System.out.println(getId() + " Found a good route, at i="+i);
-                    if (i>0) {
-                        rt.add(startLocation);
+                    startPointSet = generatePointSet(getPosition(), startLocation);
+                    System.out.println(getId() + " two step route starting offset=" + offset + ", theta=" + theta);
+                }
+                for (int i = 0; i < 15; i++) {
+                    if (d == 0) {
+                        pointSet = generatePointSet(startLocation, coords.get(0));
+                    } else {
+                        pointSet = startPointSet;
+                        pointSet.addAll(generatePointSet(startLocation, coords.get(0)));
                     }
 
-                    rt.add(coords.get(0));
-                    agent.setRoute(rt);
-                    return;
+
+                    if (routeHasHazard(pointSet)) {
+                        double offset = i * 25.0;
+                        double theta = 2 * getNextRandomDouble() * Math.PI;  // Angle up to 2pi
+                        startLocation = getPosition().getCoordinate(offset, theta);
+                        System.out.println(getId() + " Route had a hazard, trying with offset=" + offset + ", theta=" + theta);
+
+                    } else {
+                        System.out.println(getId() + " Found a good route, at i=" + i);
+                        if (i > 0) {
+                            rt.add(startLocation);
+                        }
+
+                        rt.add(coords.get(0));
+                        agent.setRoute(rt);
+                        return;
+                    }
                 }
+
             }
             cancel();
             stopGoingHome();
 
+
+
         } else {
             agent.setRoute(coords);
         }
+        */
     }
 
     private List<Coordinate> generatePointSet(Coordinate start, Coordinate end) {
@@ -1095,7 +1176,7 @@ public class ProgrammerHandler implements Serializable {
             currentTask = taskCoords;
             tasks.get(taskCoords).add(getId());  // must add ourselves
             resume();
-            setRoute(taskCoords);
+            setRoute(calculateAStarPath(taskCoords));
 
         } catch (Exception e) {
             // Failed to do this, probably due to incorrect information. We have to allow this mistake to happen,
@@ -1104,7 +1185,7 @@ public class ProgrammerHandler implements Serializable {
             currentTask = taskCoords;
             tasks.get(taskCoords).add(getId());  // must add ourselves
             resume();
-            setRoute(taskCoords);
+            setRoute(calculateAStarPath(taskCoords));
 
         }
     }
@@ -1298,7 +1379,7 @@ public class ProgrammerHandler implements Serializable {
         //setRoute(Collections.singletonList(calculateNearestHomeLocation()));
         isGoingHome = true;
         resume();
-        setRoute(Collections.singletonList(getHubPosition()));
+        setRoute(calculateAStarPath(Collections.singletonList(getHubPosition())));
         //agent.setRoute(Collections.singletonList(getHubPosition()));
 
     }
@@ -1451,7 +1532,7 @@ public class ProgrammerHandler implements Serializable {
         double d = 5 * (double) communicationRange / 111111;
         Coordinate c = new Coordinate(getHubPosition().getLatitude() + (Simulator.instance.getRandom().nextDouble() * 2*d) - d, getHubPosition().getLongitude() + (Simulator.instance.getRandom().nextDouble() * 2*d) - d);
         resume();
-        setRoute(Collections.singletonList(c));
+        setRoute(Collections.singletonList(c));  // Don't use AStar (high altitude)
     }
 
     // TODO make this based on internal model

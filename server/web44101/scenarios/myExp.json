@@ -42,7 +42,13 @@
       "lat": 52.155114,
       "lng": 1.216683,
       "programmed": true
+    },
+    {
+      "lat": 52.155114,
+      "lng": 1.216683,
+      "programmed": true
     }
+
   ],
   "hazards": [
     {
