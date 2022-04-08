@@ -237,7 +237,6 @@ public class Simulator {
     }
 
     public void changeView(int modeFlag) {
-        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
         if (modeFlag == 2) {
             //agentController.stopAllAgents();
             //agentController.updateAgentsTempRoutes();
