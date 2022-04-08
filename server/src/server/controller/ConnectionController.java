@@ -170,4 +170,14 @@ public class ConnectionController extends AbstractController {
         return getHandlerForPath(path.substring(0, path.lastIndexOf("/")));
     }
 
+    @Override
+    public void resetLogger(FileHandler fileHandler) {
+        super.resetLogger(fileHandler);
+        RestHandlerFactory.getRestHandler("/").resetLogger(fileHandler);
+        RestHandlerFactory.getRestHandler("/tasks").resetLogger(fileHandler);
+        RestHandlerFactory.getRestHandler("/allocation").resetLogger(fileHandler);
+        RestHandlerFactory.getRestHandler("/mode").resetLogger(fileHandler);
+        RestHandlerFactory.getRestHandler("/chat").resetLogger(fileHandler);
+    }
+
 }
