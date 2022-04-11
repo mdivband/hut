@@ -39,6 +39,7 @@ public class Simulator {
     private final HazardController hazardController;
     private final Allocator allocator;
     private final Modeller modeller;
+    private final ModelCaller modelCaller;
 
     public static Simulator instance;
 
@@ -61,6 +62,7 @@ public class Simulator {
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
         modeller = new Modeller(this);
+        modelCaller = new ModelCaller();
         random = new Random();
 
         queueManager.initDroneDataConsumer();
@@ -205,9 +207,30 @@ public class Simulator {
                                         av.stopGoingHome();
                                         getAllocator().dynamicAssign(av);
 
+
                                         Simulator.instance.getScoreController().incrementCompletedTask();
-                                        double successChance = modeller.calculateAll(agent);
-                                        state.setSuccessChance(successChance);
+
+                                        boolean generated = ModelGenerator.run(state);
+                                        if (generated) {
+                                            System.out.println("Model generated successfully");
+                                            modelCaller.startThread();
+                                            //new Thread(modelCaller::run).start();
+
+                                            /*
+                                            boolean called = modelCaller.run();
+                                            if (called) {
+                                                System.out.println("Model called successfully");
+                                            } else {
+                                                System.out.println("Calling failure");
+                                            }
+                                             */
+                                        } else {
+                                            System.out.println("Generation failure");
+                                        }
+
+
+                                        //double successChance = modeller.calculateAll(agent);
+                                        //state.setSuccessChance(successChance);
                                     } else {
                                         av.heartbeat();
                                         System.out.println(agent.getId() + ", heartbeat");
@@ -215,6 +238,15 @@ public class Simulator {
                                 }
                             }
                         }
+
+                        // Update prediction if ready
+                        if (modelCaller.isReady()) {
+                            System.out.println("DONE");
+                            double successChance = modelCaller.getResult();
+                            state.setSuccessChance(successChance);
+                            modelCaller.setReady(false);
+                        }
+
                     }
 
                     agentsToRemove.forEach(a -> getState().getAgents().remove(a));

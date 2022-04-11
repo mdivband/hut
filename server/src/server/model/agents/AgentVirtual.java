@@ -17,6 +17,7 @@ public class AgentVirtual extends Agent {
     private transient boolean alive = true;
     protected boolean goingHome = false;
     private double batteryVariance;
+    private boolean charging = false;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -300,6 +301,7 @@ public class AgentVirtual extends Agent {
     }
 
     public void charge() {
+        charging = true;
         battery += unitTimeBatteryConsumption * 10;
         if (battery >= 1) {
             battery = 1;
@@ -308,6 +310,7 @@ public class AgentVirtual extends Agent {
             //setSearching(true);
             resume();
             setType("standard");
+            charging = false;
         }
         if (isTimedOut()) {
             heartbeat();
@@ -320,6 +323,10 @@ public class AgentVirtual extends Agent {
     public void addTaskToQueue(Task task) {
         taskQueue.add(task);
         coordQueue.add(task.getCoordinate());
+    }
+
+    public boolean isCharging() {
+        return charging;
     }
 
     /**
