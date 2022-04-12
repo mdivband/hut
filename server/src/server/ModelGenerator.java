@@ -21,13 +21,11 @@ public class ModelGenerator {
             myWriter.write(droneRep);
             myWriter.close();
             System.out.println("Wrote to drones.txt");
-            myWriter.close();
 
             myWriter = new FileWriter("tasks.txt");
             myWriter.write(taskRep);
             myWriter.close();
             System.out.println("Wrote to tasks.txt");
-            myWriter.close();
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();

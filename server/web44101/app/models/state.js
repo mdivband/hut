@@ -38,6 +38,9 @@ App.Models.State  = Backbone.Model.extend({
         markers: [],
         communicationRange: 0,
         successChance: 100.00,
+        missionSuccessChance: 100.00,
+        missionSuccessOverChance: 100.00,
+        missionSuccessUnderChance: 100.00,
         scoreInfo: {},
     },
     url: function() {
@@ -147,6 +150,15 @@ App.Models.State  = Backbone.Model.extend({
     getSuccessChance: function () {
         return this.get("successChance");
     },
+    getMissionSuccessChance: function () {
+        return this.get("missionSuccessChance")
+    },
+    getMissionSuccessOverChance: function () {
+        return this.get("missionSuccessOverChance")
+    },
+    getMissionSuccessUnderChance: function () {
+        return this.get("missionSuccessUnderChance")
+    },
     getScoreInfo: function () {
         return this.get("scoreInfo");
     },
@@ -162,5 +174,5 @@ App.Models.State  = Backbone.Model.extend({
     },
     getMarkers: function () {
         return this.get("markers");
-    }
+    },
 });

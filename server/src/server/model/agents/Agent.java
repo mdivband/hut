@@ -255,7 +255,6 @@ public abstract class Agent extends MObject implements Serializable {
             this.route.clear();
             this.route.addAll(route);
         }
-        System.out.println(getId() + " going home rt = " + route);
     }
 
     public void prependToRoute(Coordinate location) {

@@ -541,7 +541,7 @@ ul.list li:hover {
 	background-image: linear-gradient(to bottom, #333333, #333333);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#333333, endColorstr=#333333);
 }
 
-#prediction_circle {
+#prediction_circle, #mission_prediction_circle {
 	width: 150px;
 	height: 150px;
 	position: relative;

@@ -51,17 +51,21 @@ var simulator = {
             forEditMode: true
         });
 
-        try {
-            this.views.prediction = new App.Views.Prediction({
-                el: $("#prediction_canvas"),
-                state: this.state,
-                views: this.views,
-                //ctx: $("#prediction").get(0).getContext("2d"),
-                canvas: $("#prediction").get(0)
-            });
-        } catch (e) {
-            alert(e)
-        }
+        this.views.prediction = new App.Views.Prediction({
+            el: $("#prediction_canvas"),
+            state: this.state,
+            views: this.views,
+            type: "allocation",
+            canvas: $("#prediction").get(0)
+        });
+
+        this.views.missionPrediction = new App.Views.Prediction({
+            el: $("#mission_prediction_canvas"),
+            state: this.state,
+            views: this.views,
+            type: "mission",
+            canvas: $("#mission_prediction").get(0)
+        });
 
         // setup accordion for jquery ui
         $("#accordion_smallview").accordion({
@@ -70,13 +74,14 @@ var simulator = {
         });
         $("#accordion_agent_schedule_m").accordion({
             collapsible: true,
-            //active: false
+            active: false
         });
         $("#accordion_score").accordion({
             collapsible: true
         });
         $("#accordion_sotp_m").accordion({
-            collapsible: true
+            collapsible: true,
+            active: false
         });
         $("#accordion_otherlayer_m").accordion({
             collapsible: true,
@@ -86,6 +91,10 @@ var simulator = {
             collapsible: true,
         });
         $("#prediction_canvas").accordion({
+            collapsible: true,
+            heightStyle: "content"
+        });
+        $("#mission_prediction_canvas").accordion({
             collapsible: true,
             heightStyle: "content"
         });

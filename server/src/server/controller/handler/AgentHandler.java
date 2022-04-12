@@ -1,5 +1,6 @@
 package server.controller.handler;
 
+import server.ModelGenerator;
 import server.Simulator;
 import server.model.agents.*;
 import server.model.Coordinate;
@@ -45,6 +46,8 @@ public class AgentHandler extends RestHandler {
     private void handleHubSpawn(Request req, Response resp) throws IOException {
         Agent a = simulator.getAgentController().spawnAgent();
         if (a != null) {
+            // Update model and start thread
+            simulator.updateMissionModel();
             a.stop();
             resp.send(201, "Created new agent " + a.getId());
         } else {

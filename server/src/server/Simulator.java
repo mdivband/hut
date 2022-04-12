@@ -193,7 +193,7 @@ public class Simulator {
                                     //System.out.println("timed out, passing");
                                 } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
                                     av.charge();
-                                } else if (agent.getBattery() < 0 && av.isAlive()) {
+                                } else if (agent.getBattery() < 0.15 && av.isAlive()) {
                                     modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                     av.kill();
                                 } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
@@ -206,31 +206,10 @@ public class Simulator {
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
                                         getAllocator().dynamicAssign(av);
-
-
                                         Simulator.instance.getScoreController().incrementCompletedTask();
-
-                                        boolean generated = ModelGenerator.run(state);
-                                        if (generated) {
-                                            System.out.println("Model generated successfully");
-                                            modelCaller.startThread();
-                                            //new Thread(modelCaller::run).start();
-
-                                            /*
-                                            boolean called = modelCaller.run();
-                                            if (called) {
-                                                System.out.println("Model called successfully");
-                                            } else {
-                                                System.out.println("Calling failure");
-                                            }
-                                             */
-                                        } else {
-                                            System.out.println("Generation failure");
-                                        }
-
-
-                                        //double successChance = modeller.calculateAll(agent);
-                                        //state.setSuccessChance(successChance);
+                                        // In-runtime allocation model
+                                        double successChance = modeller.calculateAll(agent);
+                                        state.setSuccessChance(successChance);
                                     } else {
                                         av.heartbeat();
                                         System.out.println(agent.getId() + ", heartbeat");
@@ -240,16 +219,26 @@ public class Simulator {
                         }
 
                         // Update prediction if ready
-                        if (modelCaller.isReady()) {
-                            System.out.println("DONE");
-                            double successChance = modelCaller.getResult();
-                            state.setSuccessChance(successChance);
-                            modelCaller.setReady(false);
-                        }
 
                     }
 
-                    agentsToRemove.forEach(a -> getState().getAgents().remove(a));
+                    agentsToRemove.forEach(a -> {
+                        getState().getAgents().remove(a);
+
+                        // If an agent is removed or dies, update model and start thread
+                        updateMissionModel();
+                    });
+
+                    // If a thread is done, update it
+                    /*
+                    if (modelCaller.isReady()) {
+                        double successChance = modelCaller.getResult();
+                        state.setMissionSuccessChance(successChance);
+                        modelCaller.setReady(false);
+                    }
+
+                     */
+
                 } else {
                     // Step agents
                     checkAgentsForTimeout();
@@ -296,6 +285,7 @@ public class Simulator {
 
                 if (!modeller.isStarted()) {
                     modeller.start();
+                    updateMissionModel();
                 }
 
             }
@@ -311,6 +301,17 @@ public class Simulator {
                 sleepTime = 0;
             }
         } while (sleep(sleepTime));
+    }
+
+    public void updateMissionModel() {
+        // Update model and start thread
+        boolean generated = ModelGenerator.run(state);
+        if (generated) {
+            System.out.println("Model generated successfully");
+            modelCaller.startThread();
+        } else {
+            System.out.println("Generation failure");
+        }
     }
 
     private void updateNextValues() {

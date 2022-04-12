@@ -68,6 +68,9 @@ public class State {
     private double communicationRange = 0;
     private boolean communicationConstrained = false;
     private double successChance;
+    private double missionSuccessChance;
+    private double missionSuccessOverChance;
+    private double missionSuccessUnderChance;
     private Map<String, Double> scoreInfo;
 
     // We could combine these, but it might be little more efficient to let them stay separate
@@ -622,6 +625,18 @@ public class State {
 
     public Collection<Task> getCompletedTasks() {
         return completedTasks;
+    }
+
+    public void setMissionSuccessChance(double successChance) {
+        this.missionSuccessChance = successChance;
+    }
+
+    public void setMissionSuccessOverChance(double overChance) {
+        this.missionSuccessOverChance = overChance;
+    }
+
+    public void setMissionSuccessUnderChance(double underChance) {
+        this.missionSuccessUnderChance = underChance;
     }
 
     private class HazardHit {
