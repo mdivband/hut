@@ -6,111 +6,105 @@ import java.io.*;
 
 public class ModelCaller {
     private double result = 1;
-    private double overResult = 1;
-    private double underResult = 1;
-    //private boolean ready = true;
     private Thread currentThread = null;
     private Thread underThread;
     private Thread overThread;
 
+    /**
+     * Starts the first run, which in turn runs 1 over and 1 under.
+     * Also side effects the chances in State.
+     */
     public void startThread() {
-        //if (!ready && currentThread != null) {//(currentTask != null && currentTask.isAlive()) {
+        // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
         if (currentThread != null) {
             currentThread.interrupt();
             underThread.interrupt();
             overThread.interrupt();
         }
 
-        currentThread = new Thread(this::run);
+        result = -1;
+        Simulator.instance.getState().setMissionSuccessChance(-1);
+        Simulator.instance.getState().setMissionSuccessOverChance(-1);
+        Simulator.instance.getState().setMissionSuccessUnderChance(-1);
+
+        currentThread = new Thread(this::runOn);
         currentThread.start();
     }
 
-    public boolean run() {
+    /**
+     * Run the script for the model. Used for every run
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void runScript() throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", "integration.py");
+        processBuilder.redirectErrorStream(true);
+        Process process = processBuilder.start();
+        String s;
+        BufferedReader stdOut = new BufferedReader(new
+                InputStreamReader(process.getInputStream()));
+        while ((s = stdOut.readLine()) != null) {
+            System.out.println(s);
+        }
+        int exitCode = process.waitFor();
+        System.out.println("RUN - Finished with exit code " + exitCode);
+    }
+
+    /**
+     * Run a model for the actual number of drones
+     */
+    public void runOn() {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", "integration.py");
-            processBuilder.redirectErrorStream(true);
-            //ready = false;
-            Process process = processBuilder.start();
-            //String s;
-            //BufferedReader stdOut = new BufferedReader(new
-            //        InputStreamReader(process.getInputStream()));
-            //while ((s = stdOut.readLine()) != null) {
-            //    System.out.println(s);
-            //}
-            int exitCode = process.waitFor();
+            runScript();
             result = readResult();
             Simulator.instance.getState().setMissionSuccessChance(result * 100);
             System.out.println("on: " + result);
-            System.out.println("RUN - Finished with exit code " + exitCode);
-            //ready = true;
-
         } catch (IOException e) {
             System.out.println("RUN - An IO error occurred.");
-            return false;
         } catch (InterruptedException e) {
             System.out.println("RUN - Process interrupted.");
-            return false;
         }
         currentThread.interrupt();
         currentThread = null;
-        System.out.println("int");
 
         overThread = new Thread(this::runOver);
         overThread.start();
-        //runOver();
-
-        return true;
     }
 
+    /**
+     * Run a model for one drone over this number
+     */
     private void runOver() {
         addAgentToParameters();
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", "integration.py");
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-            //String s;
-            //BufferedReader stdOut = new BufferedReader(new
-            //        InputStreamReader(process.getInputStream()));
-            //while ((s = stdOut.readLine()) != null) {
-            //    System.out.println(s);
-            //}
-            int exitCode = process.waitFor();
-            overResult = readResult();
+            runScript();
+            double overResult = readResult();
             Simulator.instance.getState().setMissionSuccessOverChance(overResult * 100);
             System.out.println("over: " + overResult);
-            System.out.println("RUN OVER - Finished with exit code " + exitCode);
         } catch (IOException e) {
-            System.out.println("RUN OVER - An IO error occured.");
+            System.out.println("RUN OVER - An IO error occurred.");
         } catch (InterruptedException e) {
             System.out.println("RUN OVER - Process interrupted.");
         }
         overThread.interrupt();
         overThread = null;
-        System.out.println("int2");
 
         underThread = new Thread(this::runUnder);
         underThread.start();
     }
 
+    /**
+     * Run a model for 1 drone under this number
+     */
     private void runUnder() {
         removeAgentFromParameters();
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", "integration.py");
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-            //String s;
-            //BufferedReader stdOut = new BufferedReader(new
-            //        InputStreamReader(process.getInputStream()));
-            //while ((s = stdOut.readLine()) != null) {
-            //    System.out.println(s);
-            //}
-            underResult = readResult();
+            runScript();
+            double underResult = readResult();
             Simulator.instance.getState().setMissionSuccessUnderChance(underResult * 100);
             System.out.println("under: " + underResult);
-            int exitCode = process.waitFor();
-            System.out.println("RUN UNDER - Finished with exit code " + exitCode);
         } catch (IOException e) {
-            System.out.println("RUN UNDER - An IO error occured.");
+            System.out.println("RUN UNDER - An IO error occurred.");
         } catch (InterruptedException e) {
             System.out.println("RUN UNDER - Process interrupted.");
         }
@@ -118,6 +112,9 @@ public class ModelCaller {
         underThread = null;
     }
 
+    /**
+     * Add an extra agent to the drones file
+     */
     private void addAgentToParameters() {
         try {
             BufferedReader reader = new BufferedReader(
@@ -134,14 +131,17 @@ public class ModelCaller {
             String rep = "0.0 0.0 1.0 1 0 1 1 \n";
             sb.append(rep);
             myWriter.write(sb.toString());
-            System.out.println("produced: " + sb);
-            System.out.println("Wrote to drones.txt");
+            //System.out.println("produced: " + sb);
+            //System.out.println("Wrote to drones.txt");
             myWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Remove 2 agents (the just added one, and the last one in the list after)
+     */
     private void removeAgentFromParameters() {
         try {
             BufferedReader reader = new BufferedReader(
@@ -161,18 +161,22 @@ public class ModelCaller {
 
             }
 
-            System.out.println("produced: " + sb);
+            //System.out.println("produced: " + sb);
             reader.close();
 
             FileWriter myWriter = new FileWriter("drones.txt");
             myWriter.write(sb.toString());
-            System.out.println("Wrote to drones.txt");
+            //System.out.println("Wrote to drones.txt");
             myWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Read result from file. In future this may take an argument in future
+     * @return
+     */
     private double readResult() {
         try {
             BufferedReader reader = new BufferedReader(
@@ -190,16 +194,5 @@ public class ModelCaller {
     public double getResult() {
         return 100 * result;
     }
-/*
-    public boolean isReady() {
-        return ready;
-    }
-
-    public void setReady(boolean ready) {
-        this.ready = ready;
-    }
-
- */
-
 
 }

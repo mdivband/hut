@@ -409,7 +409,7 @@ public class AgentController extends AbstractController {
         //  Gives ~0.000041667, and I tweak by eye after that
 
         if (a instanceof AgentVirtual av) {
-            if (simulator.getRandom().nextDouble()  < 0.00004) {
+            if (simulator.getRandom().nextDouble() < 0.00004) {
                 av.setTimedOut(true);
                 if (av.getAllocatedTaskId() != null && !av.getAllocatedTaskId().equals("")) {
                     av.getTask().getAgents().remove(av);

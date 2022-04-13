@@ -62,15 +62,25 @@ public class AgentVirtual extends Agent {
     @Override
     void moveTowardsDestination() {
         //Align agent, if aligned then moved towards target
-        if(!isStopped() && this.adjustHeadingTowardsGoal())
-            this.moveAlongHeading(1);
+        if(!isStopped() && this.adjustHeadingTowardsGoal()) {
+            // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
+            // We also check if we are closer than 1 move step; in which case
+            double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+            this.moveAlongHeading(distToMove);
+            //this.moveAlongHeading(1);
+        }
     }
 
     @Override
     void performFlocking() {
         //Align agent, if aligned then moved towards target
-        if(!isStopped() && this.adjustFlockingHeading())
-            this.moveAlongHeading(1);
+        if(!isStopped() && this.adjustFlockingHeading()) {
+            // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
+            // We also check if we are closer than 1 move step; in which case
+            double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+            this.moveAlongHeading(distToMove);
+            //this.moveAlongHeading(1);
+        }
     }
 
     /**
@@ -217,6 +227,11 @@ public class AgentVirtual extends Agent {
             hdgRad += 2*Math.PI;
 
         this.heading = Math.toDegrees(hdgRad);
+
+        if (!isAligned) {
+            System.out.println("TURN");
+        }
+
         return isAligned;
     }
 

@@ -109,7 +109,9 @@ public abstract class Task extends MObject implements Serializable {
     protected ArrayList<Agent> getArrivedAgents(){
         ArrayList<Agent> arrivedAgents = new ArrayList<>();
         for (Agent a : Simulator.instance.getState().getAgents()) {
-            if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+            //if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+            // 10m doesn't work for an agent speed that's too high. Maybe a better option is for the agent to slow down
+            if (a.getCoordinate().getDistance(this.getCoordinate()) < a.getSpeed()) {
                 arrivedAgents.add(a);
             }
         }

@@ -37,17 +37,32 @@ App.Views.Prediction = Backbone.View.extend({
         } else if (this.type === "mission") {
             chance = this.state.getMissionSuccessChance();
             pred = document.getElementById("mission_prediction_text");
-            pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
             background = document.getElementById("mission_prediction_circle");
-            background.style.background = this.getColor(chance.toFixed(0));
+            if (chance === -1) {
+                pred.innerHTML = "?%";
+                background.style.background = "rgb(255,255,255)";
+            } else {
+                pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
+                background.style.background = this.getColor(chance.toFixed(0));
+            }
         }
     },
     updateUnderAndOverBounds : function () {
         var addButton = document.getElementById("add_agent");
-        addButton.innerText = "Add Agent (" + parseFloat(this.state.getMissionSuccessOverChance().toFixed(1)).toString() + "%)";
+        var chance = this.state.getMissionSuccessOverChance();
+        if (chance === -1) {
+            addButton.innerText = "Add Agent (?%)"
+        } else {
+            addButton.innerText = "Add Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+        }
 
         var removeButton = document.getElementById("remove_agent");
-        removeButton.innerText = "Remove Agent (" + parseFloat(this.state.getMissionSuccessUnderChance().toFixed(1)).toString() + "%)";
+        chance = this.state.getMissionSuccessUnderChance()
+        if (chance === -1) {
+            removeButton.innerText = "Remove Agent (?%)"
+        } else {
+            removeButton.innerText = "Remove Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+        }
     },
     getColor: function (p) {
         var red = p < 50 ? 255 : Math.round(256 - (p - 50) * 5.12);
