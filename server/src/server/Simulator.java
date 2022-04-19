@@ -455,4 +455,8 @@ public class Simulator {
         return queueManager;
     }
 
+    public double getGameSpeed() {
+        return gameSpeed;
+    }
+
 }
