@@ -1,5 +1,6 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
 import server.model.Sensor;
@@ -111,8 +112,13 @@ public class AgentProgrammed extends Agent {
             if (!getSearching()) {
 
                 //Align agent, if aligned then moved towards target
-                if(!isStopped() && this.adjustHeadingTowardsGoal())
-                    this.moveAlongHeading(1);
+                if(!isStopped() && this.adjustHeadingTowardsGoal()) {
+                    // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
+                    // We also check if we are closer than 1 move step; in which case
+                    double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+                    this.moveAlongHeading(distToMove);
+                    //this.moveAlongHeading(1);
+                }
 
                 incrementTimeInAir();
             }
@@ -140,8 +146,13 @@ public class AgentProgrammed extends Agent {
             setRoute(newRoute);
         } else {
             //Align agent, if aligned then moved towards target
-            if(!isStopped() && this.adjustHeadingTowardsGoal())
-                this.moveAlongHeading(1);
+            if(!isStopped() && this.adjustHeadingTowardsGoal()) {
+                // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
+                // We also check if we are closer than 1 move step; in which case
+                double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+                this.moveAlongHeading(distToMove);
+                //this.moveAlongHeading(1);
+            }
         }
     }
 

@@ -198,7 +198,11 @@ public class ProgrammerHandler implements Serializable {
      * Default move command; assumes distance to move is 1 unit
      */
     protected void moveAlongHeading() {
-        agent.moveAlongHeading(1);
+        // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
+        // We also check if we are closer than 1 move step; in which case
+        // double distToMove = Math.min(agent.getSpeed() / Simulator.instance.getGameSpeed(), agent.getCoordinate().getDistance(getCurrentDestination()));
+        double distToMove = agent.getSpeed() / Simulator.instance.getGameSpeed();
+        agent.moveAlongHeading(distToMove);
     }
 
     /***

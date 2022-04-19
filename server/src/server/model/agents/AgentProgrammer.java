@@ -133,14 +133,14 @@ public class AgentProgrammer {
                 // wait and check
                 if (a.checkForNeighbourMovement()) {
                     a.flockWithAttractionRepulsion(100, 20);
-                    a.moveAlongHeading(1);
+                    a.moveAlongHeading();
                     strandedCounter++;
                 }
             } else if (strandedCounter < 30) {
                 pingLeaders();  // This updates the nearby leaders by use of custom messages
                 if (a.checkForNeighbourMovement() && hasNearbyLeader) {
                     a.flockWithAttractionRepulsion(100, 20);
-                    a.moveAlongHeading(1);
+                    a.moveAlongHeading();
                     strandedCounter = 1;
                 } else {
                     strandedCounter++;
