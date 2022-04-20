@@ -3,12 +3,13 @@ package server;
 import server.model.agents.AgentVirtual;
 
 import java.io.*;
+import java.util.logging.Logger;
 
 public class ModelCaller {
-    private double result = 1;
     private Thread currentThread = null;
     private Thread underThread;
     private Thread overThread;
+    private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
 
     /**
      * Starts the first run, which in turn runs 1 over and 1 under.
@@ -18,17 +19,30 @@ public class ModelCaller {
         // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
         if (currentThread != null) {
             currentThread.interrupt();
+        }
+        if (underThread != null) {
             underThread.interrupt();
+        }
+        if (overThread != null) {
             overThread.interrupt();
         }
 
-        result = -1;
         Simulator.instance.getState().setMissionSuccessChance(-1);
         Simulator.instance.getState().setMissionSuccessOverChance(-1);
         Simulator.instance.getState().setMissionSuccessUnderChance(-1);
 
+
         currentThread = new Thread(this::runOn);
         currentThread.start();
+        /*
+        underThread = new Thread(this::runUnder);
+        underThread.start();
+        overThread = new Thread(this::runOver);
+        overThread.start();
+
+         */
+
+         
     }
 
     /**
@@ -36,16 +50,18 @@ public class ModelCaller {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void runScript() throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", "integration.py");
+    private void runScript(String fileName) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", fileName);
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
+        /*
         String s;
         BufferedReader stdOut = new BufferedReader(new
                 InputStreamReader(process.getInputStream()));
         while ((s = stdOut.readLine()) != null) {
             System.out.println(s);
         }
+         */
         int exitCode = process.waitFor();
         System.out.println("RUN - Finished with exit code " + exitCode);
     }
@@ -55,20 +71,20 @@ public class ModelCaller {
      */
     public void runOn() {
         try {
-            runScript();
-            result = readResult();
+            LOGGER.info(String.format("%s; MDSTO; Model starting on the current number of agents;", Simulator.instance.getState().getTime()));
+            double startTime = System.nanoTime();
+            runScript("current.py");
+            double result = readResult();
             Simulator.instance.getState().setMissionSuccessChance(result * 100);
-            System.out.println("on: " + result);
+            double elapsed = (System.nanoTime() - startTime) / 10E8;
+            LOGGER.info(String.format("%s; MDDNO; Model done on the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), result, elapsed));
         } catch (IOException e) {
             System.out.println("RUN - An IO error occurred.");
         } catch (InterruptedException e) {
             System.out.println("RUN - Process interrupted.");
         }
-        currentThread.interrupt();
+        //currentThread.interrupt();
         currentThread = null;
-
-        overThread = new Thread(this::runOver);
-        overThread.start();
     }
 
     /**
@@ -77,20 +93,18 @@ public class ModelCaller {
     private void runOver() {
         addAgentToParameters();
         try {
-            runScript();
+            LOGGER.info(String.format("%s; MDSTV; Model starting at 1 over the current number of agents;", Simulator.instance.getState().getTime()));
+            runScript("add1drone.py");
             double overResult = readResult();
             Simulator.instance.getState().setMissionSuccessOverChance(overResult * 100);
-            System.out.println("over: " + overResult);
+            LOGGER.info(String.format("%s; MDDNV; Model done at 1 over the current number of agents (result); %s", Simulator.instance.getState().getTime(), overResult));
         } catch (IOException e) {
             System.out.println("RUN OVER - An IO error occurred.");
         } catch (InterruptedException e) {
             System.out.println("RUN OVER - Process interrupted.");
         }
-        overThread.interrupt();
+        //overThread.interrupt();
         overThread = null;
-
-        underThread = new Thread(this::runUnder);
-        underThread.start();
     }
 
     /**
@@ -99,16 +113,17 @@ public class ModelCaller {
     private void runUnder() {
         removeAgentFromParameters();
         try {
-            runScript();
+            LOGGER.info(String.format("%s; MDSTU; Model starting at 1 under the current number of agents;", Simulator.instance.getState().getTime()));
+            runScript("remove1drone.py");
             double underResult = readResult();
             Simulator.instance.getState().setMissionSuccessUnderChance(underResult * 100);
-            System.out.println("under: " + underResult);
+            LOGGER.info(String.format("%s; MDDNU; Model done at 1 under the current number of agents (result); %s", Simulator.instance.getState().getTime(), underResult));
         } catch (IOException e) {
             System.out.println("RUN UNDER - An IO error occurred.");
         } catch (InterruptedException e) {
             System.out.println("RUN UNDER - Process interrupted.");
         }
-        underThread.interrupt();
+        //underThread.interrupt();
         underThread = null;
     }
 
@@ -180,7 +195,7 @@ public class ModelCaller {
     private double readResult() {
         try {
             BufferedReader reader = new BufferedReader(
-                    new FileReader("results.txt")
+                    new FileReader("ModelFiles/currentResults.txt")
             );
             double d = Double.parseDouble(reader.readLine());
             reader.close();
@@ -189,10 +204,6 @@ public class ModelCaller {
             System.out.println("ERROR READING RESULT. RETURNING 0");
             return 0;
         }
-    }
-
-    public double getResult() {
-        return 100 * result;
     }
 
 }

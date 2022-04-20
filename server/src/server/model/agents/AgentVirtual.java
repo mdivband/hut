@@ -17,11 +17,15 @@ public class AgentVirtual extends Agent {
     private transient boolean alive = true;
     protected boolean goingHome = false;
     private double batteryVariance;
+    private double speedVariance;
     private boolean charging = false;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
+        // [-0.0002, 0.0002]
         batteryVariance = 0.0002 - (Simulator.instance.getRandom().nextDouble() / 2500);
+        // [-0.1, 0.1]
+        speedVariance = 0.1 - (Simulator.instance.getRandom().nextDouble() / 5);
         //System.out.println("var = " + batteryVariance);
         this.sensor = sensor;
         setType("standard");
@@ -50,8 +54,6 @@ public class AgentVirtual extends Agent {
 
             // TEMP - Incorporate some randomness  (base 0.0005
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
-        } else {
-            System.out.println("last cond " + this);
         }
 
         //Simulate things that would be done by a real drone
@@ -65,7 +67,8 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustHeadingTowardsGoal()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+            double baseDistToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+            double distToMove = baseDistToMove + speedVariance + (Simulator.instance.getRandom().nextDouble() / 10);
             this.moveAlongHeading(distToMove);
             //this.moveAlongHeading(1);
         }
@@ -88,6 +91,10 @@ public class AgentVirtual extends Agent {
      * @return isAligned - Whether the agent is aligned or needs to continue rotating.
      */
     protected boolean adjustHeadingTowardsGoal() {
+        return adjustHeading(calculateAngleToGoal());
+    }
+
+    public double calculateAngleToGoal() {
         double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
         double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
         double lat2 = Math.toRadians(this.getCurrentDestination().getLatitude());
@@ -96,8 +103,7 @@ public class AgentVirtual extends Agent {
         double y = Math.sin(dLng) * Math.cos(lat2);
         double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
                 * Math.cos(lat2) * Math.cos(dLng);
-        double angleToGoal = Math.atan2(y, x);
-        return adjustHeading(angleToGoal);
+        return Math.atan2(y, x);
     }
 
     /**
@@ -227,11 +233,6 @@ public class AgentVirtual extends Agent {
             hdgRad += 2*Math.PI;
 
         this.heading = Math.toDegrees(hdgRad);
-
-        if (!isAligned) {
-            System.out.println("TURN");
-        }
-
         return isAligned;
     }
 
