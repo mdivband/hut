@@ -1,13 +1,13 @@
 {
   "gameId": "LKXR",
-  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You DO have access to the chat feature to talk to your teammate.",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You do NOT have access to the chat feature to talk to your teammate.",
   "comment": "This is the Complex - Low scenario",
   "allocationMethod": "random",
   "avgAgentDropout": 5,
   "ignoredTaskProb": 30,
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 480,
-  "deepAllowed": true,
+  "chatEnabled": false,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285

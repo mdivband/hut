@@ -293,6 +293,11 @@ var simulator = {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
+                    console.log(self.state.getChatEnabled())
+                    if (!self.state.getChatEnabled()) {
+                        $("#accordion_chat").hide();
+                    }
+
                     if (self.state.getUserNames().length == 0 && userRole == "planner") {
                         // TODO get their name, also log it in backend
                         var name = null;

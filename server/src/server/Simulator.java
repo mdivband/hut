@@ -397,6 +397,17 @@ public class Simulator {
                 }
             }
 
+            Object chatEnabled = GsonUtils.getValue(obj, "chatEnabled");
+            if (chatEnabled != null) {
+                if (chatEnabled.getClass() == Boolean.class ) {
+                    this.state.setChatEnabled((Boolean)chatEnabled);
+                } else {
+                    LOGGER.warning("Expected boolean value for chatEnabled in scenario file. Received: '" +
+                            chatEnabled.toString() + "'. Set to false.");
+                    // state.chatEnabled initialised with default value of false
+                }
+            }
+
             this.state.resetNext();
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");

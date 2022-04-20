@@ -83,6 +83,7 @@ public class State {
     private List<String> markers = new ArrayList<>();
 
     private List<String> chatLog = new ArrayList<>();
+    private Boolean chatEnabled;
 
     private int requiredUsers;
     private int readyUsers;
@@ -126,6 +127,7 @@ public class State {
 
         chatLog.clear();
         chatLog.add("Chat Connected.");
+        chatEnabled = false;
 
         if (completedSurveys == requiredUsers) {
             completedSurveys = 0;
@@ -505,6 +507,10 @@ public class State {
 
     public Double getIgnoredTaskProb() {
         return this.ignoredTaskProb;
+    }
+
+    public void setChatEnabled(Boolean chatEnabled) {
+        this.chatEnabled = chatEnabled;
     }
 
     private class HazardHit {
