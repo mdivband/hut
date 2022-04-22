@@ -51,14 +51,14 @@ public class ModelCaller {
         ProcessBuilder processBuilder = new ProcessBuilder("python3", "ModelFiles/"+fileName);
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
-        /*
+
         String s;
         BufferedReader stdOut = new BufferedReader(new
                 InputStreamReader(process.getInputStream()));
         while ((s = stdOut.readLine()) != null) {
             System.out.println(s);
         }
-         */
+        
         int exitCode = process.waitFor();
         System.out.println("RUN - Finished with exit code " + exitCode);
     }
