@@ -305,13 +305,13 @@ public class Simulator {
 
     public void updateMissionModel() {
         // Update model and start thread
-        boolean generatedCurrent = ModelGenerator.run(state);
-        boolean generatedOver = ModelGenerator.runOver(state);
-        boolean generatedUnder = ModelGenerator.runUnder(state);
+        boolean generatedCurrent = ModelGenerator.run(state, webRef);
+        boolean generatedOver = ModelGenerator.runOver(state, webRef);
+        boolean generatedUnder = ModelGenerator.runUnder(state, webRef);
         if (generatedCurrent && generatedOver && generatedUnder) {
         //if (generatedCurrent) {
             System.out.println("Model generated successfully");
-            modelCaller.startThread();
+            modelCaller.startThread(webRef);
         } else {
             System.out.println("Generation failure");
         }

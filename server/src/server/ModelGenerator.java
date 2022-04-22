@@ -14,40 +14,40 @@ import java.util.Arrays;
 
 public class ModelGenerator {
 
-    public static boolean run(State state) {
+    public static boolean run(State state, String webRef) {
         String droneRep = generateDroneRep(state);
         String taskRep = generateTaskRep(state);
-        return generate(droneRep, taskRep, "currentDrones.txt", "currentTasks.txt");
+        return generate(droneRep, taskRep, webRef+"/ModelFiles/currentDrones.txt", webRef+"/ModelFiles/currentTasks.txt");
     }
 
-    public static boolean runOver(State state) {
+    public static boolean runOver(State state, String webRef) {
         String droneRep = generateDroneRep(state) + "0.0 0.0 1.0 1 0 1 1 1 \n";
         String taskRep = generateTaskRep(state);
-        return generate(droneRep, taskRep, "add1drone.txt", "add1tasks.txt");
+        return generate(droneRep, taskRep, webRef+"/ModelFiles/add1drone.txt", webRef+"/ModelFiles/add1tasks.txt");
     }
 
-    public static boolean runUnder(State state) {
+    public static boolean runUnder(State state, String webRef) {
         String[] rep = generateDroneRep(state).split("\n");
         StringBuilder sb = new StringBuilder();
         for (int i=0; i<rep.length-1; i++) {
             sb.append(rep[i]).append("\n");
         }
         String taskRep = generateTaskRep(state);
-        return generate(sb.toString(), taskRep, "remove1drone.txt", "remove1tasks.txt");
+        return generate(sb.toString(), taskRep, webRef+"/ModelFiles/remove1drone.txt", webRef+"/ModelFiles/remove1tasks.txt");
 
     }
 
     public static boolean generate(String droneRep, String taskRep, String dronesFileName, String tasksFileName) {
         try {
-            FileWriter myWriter = new FileWriter("ModelFiles/"+dronesFileName);
+            FileWriter myWriter = new FileWriter(dronesFileName);
             myWriter.write(droneRep);
             myWriter.close();
-            System.out.println("Wrote to ModelFiles/"+dronesFileName);
+            System.out.println("Wrote to "+dronesFileName);
 
-            myWriter = new FileWriter("ModelFiles/"+tasksFileName);
+            myWriter = new FileWriter(tasksFileName);
             myWriter.write(taskRep);
             myWriter.close();
-            System.out.println("Wrote to ModelFiles/"+tasksFileName);
+            System.out.println("Wrote to "+tasksFileName);
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();

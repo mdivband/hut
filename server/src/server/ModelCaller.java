@@ -11,6 +11,7 @@ public class ModelCaller {
     private Thread overThread = null;
     private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
     private String style = "justOn";
+    private String webRef;
 
     public void reset() {
         style = "justOn";
@@ -26,7 +27,8 @@ public class ModelCaller {
      * Starts the first run, which in turn runs 1 over and 1 under.
      * Also side effects the chances in State.
      */
-    public void startThread() {
+    public void startThread(String webRef) {
+        this.webRef = webRef;
         // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
         if (currentThread != null) {
             currentThread.interrupt();
@@ -60,17 +62,18 @@ public class ModelCaller {
      * @throws InterruptedException
      */
     private void runScript(String fileName) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", "ModelFiles/"+fileName);
+        System.out.println("RUNNNING: " +  webRef+"/ModelFiles/"+fileName);
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", webRef+"/ModelFiles/"+fileName, webRef);
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
-        /*
+
         String s;
         BufferedReader stdOut = new BufferedReader(new
                 InputStreamReader(process.getInputStream()));
         while ((s = stdOut.readLine()) != null) {
             System.out.println(s);
         }
-         */
+
         int exitCode = process.waitFor();
         System.out.println("RUN - Finished with exit code " + exitCode);
     }
@@ -214,7 +217,7 @@ public class ModelCaller {
     private double readResult(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(
-                    new FileReader("ModelFiles/"+fileName)
+                    new FileReader(webRef+"/ModelFiles/"+fileName)
             );
             double d = Double.parseDouble(reader.readLine());
             reader.close();
