@@ -10,6 +10,7 @@ public class ModelCaller {
     private Thread underThread;
     private Thread overThread;
     private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
+    private String style = "justOn";
 
     /**
      * Starts the first run, which in turn runs 1 over and 1 under.
@@ -34,12 +35,13 @@ public class ModelCaller {
 
         currentThread = new Thread(this::runOn);
         currentThread.start();
-        underThread = new Thread(this::runUnder);
-        underThread.start();
-        overThread = new Thread(this::runOver);
-        overThread.start();
+        if (style.equals("parallel")) {
+            underThread = new Thread(this::runUnder);
+            underThread.start();
+            overThread = new Thread(this::runOver);
+            overThread.start();
+        }
 
-         
     }
 
     /**
@@ -58,7 +60,7 @@ public class ModelCaller {
         while ((s = stdOut.readLine()) != null) {
             System.out.println(s);
         }
-        
+
         int exitCode = process.waitFor();
         System.out.println("RUN - Finished with exit code " + exitCode);
     }
@@ -71,7 +73,7 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDSTO; Model starting on the current number of agents;", Simulator.instance.getState().getTime()));
             double startTime = System.nanoTime();
             runScript("current.py");
-            double result = readResult();
+            double result = readResult("currentResults.txt");
             Simulator.instance.getState().setMissionSuccessChance(result * 100);
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             LOGGER.info(String.format("%s; MDDNO; Model done on the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), result, elapsed));
@@ -82,6 +84,11 @@ public class ModelCaller {
         }
         //currentThread.interrupt();
         currentThread = null;
+
+        if (style.equals("series")) {
+            overThread = new Thread(this::runOver);
+            overThread.start();
+        }
     }
 
     /**
@@ -92,7 +99,7 @@ public class ModelCaller {
         try {
             LOGGER.info(String.format("%s; MDSTV; Model starting at 1 over the current number of agents;", Simulator.instance.getState().getTime()));
             runScript("add1drone.py");
-            double overResult = readResult();
+            double overResult = readResult("add1results.txt");
             Simulator.instance.getState().setMissionSuccessOverChance(overResult * 100);
             LOGGER.info(String.format("%s; MDDNV; Model done at 1 over the current number of agents (result); %s", Simulator.instance.getState().getTime(), overResult));
         } catch (IOException e) {
@@ -102,6 +109,11 @@ public class ModelCaller {
         }
         //overThread.interrupt();
         overThread = null;
+
+        if (style.equals("series")) {
+            underThread = new Thread(this::runUnder);
+            underThread.start();
+        }
     }
 
     /**
@@ -112,7 +124,7 @@ public class ModelCaller {
         try {
             LOGGER.info(String.format("%s; MDSTU; Model starting at 1 under the current number of agents;", Simulator.instance.getState().getTime()));
             runScript("remove1drone.py");
-            double underResult = readResult();
+            double underResult = readResult("remove1results.txt");
             Simulator.instance.getState().setMissionSuccessUnderChance(underResult * 100);
             LOGGER.info(String.format("%s; MDDNU; Model done at 1 under the current number of agents (result); %s", Simulator.instance.getState().getTime(), underResult));
         } catch (IOException e) {
@@ -189,10 +201,10 @@ public class ModelCaller {
      * Read result from file. In future this may take an argument in future
      * @return
      */
-    private double readResult() {
+    private double readResult(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(
-                    new FileReader("ModelFiles/currentResults.txt")
+                    new FileReader("ModelFiles/"+fileName)
             );
             double d = Double.parseDouble(reader.readLine());
             reader.close();
@@ -203,4 +215,7 @@ public class ModelCaller {
         }
     }
 
+    public void setStyle(String modelStyle) {
+        style = modelStyle;
+    }
 }

@@ -470,6 +470,13 @@ public class Simulator {
                     // state.flockingEnabled initialised with default value of false
                 }
             }
+
+            if(GsonUtils.hasKey(obj,"modelStyle")){
+                Object modelStyle = GsonUtils.getValue(obj, "modelStyle");
+                if(modelStyle.getClass() == String.class) {
+                    this.modelCaller.setStyle((String) modelStyle);
+                }
+            }
             
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");

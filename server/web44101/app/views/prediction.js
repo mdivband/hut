@@ -15,11 +15,16 @@ App.Views.Prediction = Backbone.View.extend({
         if (this.type === "allocation") {
             this.state.on("change:successChance", function () {
                 self.update();
-                self.updateUnderAndOverBounds();
             });
         } else if (this.type === "mission") {
             this.state.on("change:missionSuccessChance", function () {
                 self.update();
+            });
+            this.state.on("change:missionSuccessOverChance", function () {
+                self.updateOverBound();
+            });
+            this.state.on("change:missionSuccessUnderChance", function () {
+                self.updateUnderBound();
             });
         }
         self.update();
@@ -47,7 +52,7 @@ App.Views.Prediction = Backbone.View.extend({
             }
         }
     },
-    updateUnderAndOverBounds : function () {
+    updateOverBound : function () {
         var addButton = document.getElementById("add_agent");
         var chance = this.state.getMissionSuccessOverChance();
         if (chance === -1) {
@@ -55,9 +60,10 @@ App.Views.Prediction = Backbone.View.extend({
         } else {
             addButton.innerText = "Add Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
         }
-
+    },
+    updateUnderBound : function () {
         var removeButton = document.getElementById("remove_agent");
-        chance = this.state.getMissionSuccessUnderChance()
+        var chance = this.state.getMissionSuccessUnderChance()
         if (chance === -1) {
             removeButton.innerText = "Remove Agent (?%)"
         } else {
