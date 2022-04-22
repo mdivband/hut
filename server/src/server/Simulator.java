@@ -373,6 +373,8 @@ public class Simulator {
         targetController.resetTargetNumbers();
         taskController.resetTaskNumbers();
         scoreController.reset();
+        modelCaller.reset();
+        modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
         LogManager.getLogManager().reset();

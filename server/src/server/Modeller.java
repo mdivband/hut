@@ -328,6 +328,10 @@ public class Modeller {
 */
     }
 
+    public void stop() {
+        started = false;
+    }
+
     private class ModellerRecord {
         private double timeStamp;
         private double totalProbability;

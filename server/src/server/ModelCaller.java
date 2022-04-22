@@ -7,10 +7,20 @@ import java.util.logging.Logger;
 
 public class ModelCaller {
     private Thread currentThread = null;
-    private Thread underThread;
-    private Thread overThread;
+    private Thread underThread = null;
+    private Thread overThread = null;
     private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
     private String style = "justOn";
+
+    public void reset() {
+        style = "justOn";
+        currentThread = null;
+        underThread = null;
+        overThread = null;
+        Simulator.instance.getState().setMissionSuccessChance(-1);
+        Simulator.instance.getState().setMissionSuccessOverChance(-1);
+        Simulator.instance.getState().setMissionSuccessUnderChance(-1);
+    }
 
     /**
      * Starts the first run, which in turn runs 1 over and 1 under.
@@ -53,14 +63,14 @@ public class ModelCaller {
         ProcessBuilder processBuilder = new ProcessBuilder("python3", "ModelFiles/"+fileName);
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
-
+        /*
         String s;
         BufferedReader stdOut = new BufferedReader(new
                 InputStreamReader(process.getInputStream()));
         while ((s = stdOut.readLine()) != null) {
             System.out.println(s);
         }
-
+         */
         int exitCode = process.waitFor();
         System.out.println("RUN - Finished with exit code " + exitCode);
     }
@@ -218,4 +228,5 @@ public class ModelCaller {
     public void setStyle(String modelStyle) {
         style = modelStyle;
     }
+
 }
