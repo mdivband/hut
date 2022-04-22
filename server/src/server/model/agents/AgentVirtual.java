@@ -24,9 +24,9 @@ public class AgentVirtual extends Agent {
         super(id, position, true);
         // [-0.0002, 0.0002]
         batteryVariance = 0.0002 - (Simulator.instance.getRandom().nextDouble() / 2500);
-        // [-0.1, 0.1]
-        speedVariance = 0.1 - (Simulator.instance.getRandom().nextDouble() / 5);
-        //System.out.println("var = " + batteryVariance);
+        // Speed variance is given per second, not per timestep [-0.5, 0.5] (10%)
+        speedVariance = 0.5 - (Simulator.instance.getRandom().nextDouble());
+        // System.out.println("var = " + speedVariance);
         this.sensor = sensor;
         setType("standard");
     }
@@ -51,8 +51,6 @@ public class AgentVirtual extends Agent {
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
         } else if (alive) {
             super.step(flockingEnabled);
-
-            // TEMP - Incorporate some randomness  (base 0.0005
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
         }
 
@@ -67,8 +65,8 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustHeadingTowardsGoal()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            double baseDistToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
-            double distToMove = baseDistToMove + speedVariance + (Simulator.instance.getRandom().nextDouble() / 10);
+            double possDistToMove = (speed + speedVariance + (Simulator.instance.getRandom().nextDouble() / 2)) / Simulator.instance.getGameSpeed();
+            double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
             //this.moveAlongHeading(1);
         }
@@ -80,7 +78,8 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustFlockingHeading()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+            double possDistToMove = (speed + speedVariance + (Simulator.instance.getRandom().nextDouble() / 2)) / Simulator.instance.getGameSpeed();
+            double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
             //this.moveAlongHeading(1);
         }

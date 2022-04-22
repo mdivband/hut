@@ -34,13 +34,10 @@ public class ModelCaller {
 
         currentThread = new Thread(this::runOn);
         currentThread.start();
-        /*
         underThread = new Thread(this::runUnder);
         underThread.start();
         overThread = new Thread(this::runOver);
         overThread.start();
-
-         */
 
          
     }
@@ -51,7 +48,7 @@ public class ModelCaller {
      * @throws InterruptedException
      */
     private void runScript(String fileName) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", fileName);
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", "ModelFiles/"+fileName);
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
         /*

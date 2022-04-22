@@ -171,6 +171,7 @@ public class Simulator {
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
                 modeller.outputResults();
+                System.out.println("DONE: " + state.getTime());
 
                 if (state.isPassthrough()) {
                     updateNextValues();
@@ -185,9 +186,9 @@ public class Simulator {
                     synchronized (state.getAgents()) {
                         for (Agent agent : state.getAgents()) {
                             if (agent instanceof AgentVirtual av) {
-                                if (agentController.modelFailure(av)) {
-                                    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                                }
+                                //if (agentController.modelFailure(av)) {
+                                //    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                //}
 
                                 if (agent.isTimedOut()) {
                                     //System.out.println("timed out, passing");
@@ -212,7 +213,6 @@ public class Simulator {
                                         state.setSuccessChance(successChance);
                                     } else {
                                         av.heartbeat();
-                                        System.out.println(agent.getId() + ", heartbeat");
                                     }
                                 }
                             }
@@ -306,10 +306,10 @@ public class Simulator {
     public void updateMissionModel() {
         // Update model and start thread
         boolean generatedCurrent = ModelGenerator.run(state);
-        //boolean generatedOver = ModelGenerator.runOver(state);
-        //boolean generatedUnder = ModelGenerator.runUnder(state);
-        //if (generatedCurrent && generatedOver && generatedUnder) {
-        if (generatedCurrent) {
+        boolean generatedOver = ModelGenerator.runOver(state);
+        boolean generatedUnder = ModelGenerator.runUnder(state);
+        if (generatedCurrent && generatedOver && generatedUnder) {
+        //if (generatedCurrent) {
             System.out.println("Model generated successfully");
             modelCaller.startThread();
         } else {
