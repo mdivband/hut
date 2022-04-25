@@ -8,6 +8,7 @@ import server.model.task.Task;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class TargetController extends AbstractController {
 

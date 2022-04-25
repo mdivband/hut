@@ -21,6 +21,7 @@ import server.model.task.WaypointTask;
 import maxsum.EvaluationFunction;
 
 import java.util.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
@@ -1076,6 +1077,9 @@ public class Allocator {
                 System.out.println("Caught exception. This should be due to agent failure during reassignment?");
             }
         });
+    }
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
     //Inner class to provide generic pair of Agent-Task

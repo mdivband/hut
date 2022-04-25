@@ -1,5 +1,6 @@
 var MapTargetController = {
     revealDistance: 50,
+    classifiedIds: [],
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapAgentController.method() without

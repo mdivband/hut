@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -91,12 +92,15 @@ public class Simulator {
     }
 
     public void start(Integer port) {
+        /*
         try {
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
         } catch (final IOException e) {
             Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
             Logger.getAnonymousLogger().severe(e.getMessage());
         }
+
+         */
 
         //Setup GSON
         GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
@@ -118,10 +122,10 @@ public class Simulator {
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
         if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
-            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
+            //LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
-            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
+            //LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -377,6 +381,7 @@ public class Simulator {
         modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
+        /*
         LogManager.getLogManager().reset();
         try {
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
@@ -386,6 +391,33 @@ public class Simulator {
         }
         LOGGER = null;
         LOGGER = Logger.getLogger(Simulator.class.getName());
+
+         */
+    }
+
+    public void resetLogging(String userName) {
+        try {
+            String fileName = userName + "-" + state.getGameId() + ".log";
+            FileHandler fileHandler = new FileHandler(fileName);
+            LogManager.getLogManager().reset();
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+            LOGGER.addHandler(fileHandler);
+            state.resetLogger(fileHandler);
+            taskController.resetLogger(fileHandler);
+            queueManager.resetLogger(fileHandler);
+            agentController.resetLogger(fileHandler);
+            targetController.resetLogger(fileHandler);
+            connectionController.resetLogger(fileHandler);
+            hazardController.resetLogger(fileHandler);
+            allocator.resetLogger(fileHandler);
+            LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
+
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+
+        //System.out.println("Save now as " + userName + ", " + state.getGameId());
     }
 
     private void readConfig() {
@@ -640,9 +672,6 @@ public class Simulator {
                     this.state.getMarkers().add(shapeRep);
                 }
             }
-
-
-
             return true;
         } catch (IOException e) {
             e.printStackTrace();

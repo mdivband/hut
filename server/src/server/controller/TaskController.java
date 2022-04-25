@@ -173,4 +173,5 @@ public class TaskController extends AbstractController {
     public boolean checkForFreeTasks() {
         return simulator.getState().getTasks().stream().anyMatch(a -> a.getAgents().isEmpty());
     }
+
 }
