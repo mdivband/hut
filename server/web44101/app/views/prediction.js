@@ -26,6 +26,11 @@ App.Views.Prediction = Backbone.View.extend({
             this.state.on("change:missionSuccessUnderChance", function () {
                 self.updateUnderBound();
             });
+        } else if (this.type === "bounded") {
+            this.state.on("change:missionBoundedSuccessChance", function () {
+                self.update();
+            });
+            // TODO over and under here
         }
         self.update();
     },
@@ -50,11 +55,23 @@ App.Views.Prediction = Backbone.View.extend({
                 pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
                 background.style.background = this.getMissionColor(chance.toFixed(0));
             }
+        } else if (this.type === "bounded") {
+            chance = this.state.getMissionBoundedSuccessChance();
+            pred = document.getElementById("bounded_prediction_text");
+            background = document.getElementById("bounded_prediction_circle");
+            if (chance === -1) {
+                pred.innerHTML = "?%";
+                background.style.background = "rgb(255,255,255)";
+            } else {
+                pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
+                background.style.background = this.getMissionColor(chance.toFixed(0));
+            }
         }
     },
     updateOverBound : function () {
         var addButton = document.getElementById("add_agent");
-        var chance = this.state.getMissionSuccessOverChance();
+        //var chance = this.state.getMissionSuccessOverChance();
+        var chance = this.state.getMissionBoundedSuccessOverChance();
         if (chance === -1) {
             addButton.innerText = "Add Agent (?%)"
         } else {
@@ -63,7 +80,8 @@ App.Views.Prediction = Backbone.View.extend({
     },
     updateUnderBound : function () {
         var removeButton = document.getElementById("remove_agent");
-        var chance = this.state.getMissionSuccessUnderChance()
+        //var chance = this.state.getMissionSuccessUnderChance()
+        var chance = this.state.getMissionBoundedSuccessUnderChance()
         if (chance === -1) {
             removeButton.innerText = "Remove Agent (?%)"
         } else {

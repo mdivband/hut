@@ -67,6 +67,14 @@ var simulator = {
             canvas: $("#mission_prediction").get(0)
         });
 
+        this.views.boundedPrediction = new App.Views.Prediction({
+            el: $("#bounded_prediction_canvas"),
+            state: this.state,
+            views: this.views,
+            type: "bounded",
+            canvas: $("#bounded_prediction").get(0)
+        });
+
         // setup accordion for jquery ui
         $("#accordion_smallview").accordion({
             collapsible: true,
@@ -92,9 +100,14 @@ var simulator = {
         });
         $("#prediction_canvas").accordion({
             collapsible: true,
-            heightStyle: "content"
+            heightStyle: "content",
+            active: false
         });
         $("#mission_prediction_canvas").accordion({
+            collapsible: true,
+            heightStyle: "content"
+        });
+        $("#bounded_prediction_canvas").accordion({
             collapsible: true,
             heightStyle: "content"
         });

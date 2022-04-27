@@ -41,6 +41,9 @@ App.Models.State  = Backbone.Model.extend({
         missionSuccessChance: 100.00,
         missionSuccessOverChance: 100.00,
         missionSuccessUnderChance: 100.00,
+        missionBoundedSuccessChance: 100.00,
+        missionBoundedSuccessOverChance: 100.00,
+        missionBoundedSuccessUnderChance: 100.00,
         scoreInfo: {},
     },
     url: function() {
@@ -158,6 +161,15 @@ App.Models.State  = Backbone.Model.extend({
     },
     getMissionSuccessUnderChance: function () {
         return this.get("missionSuccessUnderChance")
+    },
+    getMissionBoundedSuccessChance: function () {
+        return this.get("missionBoundedSuccessChance")
+    },
+    getMissionBoundedSuccessOverChance: function () {
+        return this.get("missionBoundedSuccessOverChance")
+    },
+    getMissionBoundedSuccessUnderChance: function () {
+        return this.get("missionBoundedSuccessUnderChance")
     },
     getScoreInfo: function () {
         return this.get("scoreInfo");

@@ -73,6 +73,10 @@ public class State {
     private double missionSuccessChance;
     private double missionSuccessOverChance;
     private double missionSuccessUnderChance;
+    private double missionBoundedSuccessChance;
+    private double missionBoundedSuccessUnderChance;
+    private double missionBoundedSuccessOverChance;
+
     private Map<String, Double> scoreInfo;
 
     // We could combine these, but it might be little more efficient to let them stay separate
@@ -631,6 +635,18 @@ public class State {
 
     public void setMissionSuccessChance(double successChance) {
         this.missionSuccessChance = successChance;
+    }
+
+    public void setMissionBoundedSuccessChance(double successChance) {
+        this.missionBoundedSuccessChance = successChance;
+    }
+
+    public void setMissionBoundedSuccessUnderChance(double missionBoundedSuccessUnderChance) {
+        this.missionBoundedSuccessUnderChance = missionBoundedSuccessUnderChance;
+    }
+
+    public void setMissionBoundedSuccessOverChance(double missionBoundedSuccessOverChance) {
+        this.missionBoundedSuccessOverChance = missionBoundedSuccessOverChance;
     }
 
     public void setMissionSuccessOverChance(double overChance) {

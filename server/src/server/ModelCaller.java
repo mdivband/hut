@@ -87,7 +87,9 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             runScript("current.py");
             double result = readResult("currentResults.txt");
+            double boundedResult = readTimeBoundedResult("currentResults_boundedT.txt");
             Simulator.instance.getState().setMissionSuccessChance(result * 100);
+            Simulator.instance.getState().setMissionBoundedSuccessChance(boundedResult * 100);
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             LOGGER.info(String.format("%s; MDDNO; Model done on the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), result, elapsed));
         } catch (IOException e) {
@@ -108,12 +110,14 @@ public class ModelCaller {
      * Run a model for one drone over this number
      */
     private void runOver() {
-        addAgentToParameters();
+        //addAgentToParameters();
         try {
             LOGGER.info(String.format("%s; MDSTV; Model starting at 1 over the current number of agents;", Simulator.instance.getState().getTime()));
             runScript("add1drone.py");
             double overResult = readResult("add1results.txt");
+            double boundedResult = readTimeBoundedResult("add1results_boundedT.txt");
             Simulator.instance.getState().setMissionSuccessOverChance(overResult * 100);
+            Simulator.instance.getState().setMissionBoundedSuccessOverChance(boundedResult * 100);
             LOGGER.info(String.format("%s; MDDNV; Model done at 1 over the current number of agents (result); %s", Simulator.instance.getState().getTime(), overResult));
         } catch (IOException e) {
             System.out.println("RUN OVER - An IO error occurred.");
@@ -133,12 +137,13 @@ public class ModelCaller {
      * Run a model for 1 drone under this number
      */
     private void runUnder() {
-        removeAgentFromParameters();
         try {
             LOGGER.info(String.format("%s; MDSTU; Model starting at 1 under the current number of agents;", Simulator.instance.getState().getTime()));
             runScript("remove1drone.py");
             double underResult = readResult("remove1results.txt");
+            double boundedResult = readTimeBoundedResult("remove1results_boundedT.txt");
             Simulator.instance.getState().setMissionSuccessUnderChance(underResult * 100);
+            Simulator.instance.getState().setMissionBoundedSuccessUnderChance(boundedResult * 100);
             LOGGER.info(String.format("%s; MDDNU; Model done at 1 under the current number of agents (result); %s", Simulator.instance.getState().getTime(), underResult));
         } catch (IOException e) {
             System.out.println("RUN UNDER - An IO error occurred.");
@@ -223,6 +228,34 @@ public class ModelCaller {
             reader.close();
             return d;
         } catch (Exception e) {
+            System.out.println("ERROR READING RESULT. RETURNING 0");
+            return 0;
+        }
+    }
+
+    /**
+     * Read result from file. In future this may take an argument in future
+     * @return
+     */
+    private double readTimeBoundedResult(String fileName) {
+        try {
+            BufferedReader reader = new BufferedReader(
+                    new FileReader(webRef+"/ModelFiles/"+fileName)
+            );
+
+            //e.g 18000	0.998
+            String s;
+            double d = 0;
+            while ((s = reader.readLine()) != null) {
+                if (s.contains("18000")) {
+                    d = Double.parseDouble(s.split("\t")[1]);
+                    break;
+                }
+            }
+            reader.close();
+            return d;
+        } catch (Exception e) {
+            e.printStackTrace();
             System.out.println("ERROR READING RESULT. RETURNING 0");
             return 0;
         }
