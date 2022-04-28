@@ -88,7 +88,7 @@ public class State {
     private int requiredUsers;
     private int readyUsers;
 
-    private int completedSurveys;
+    private int completedSurveys = 0;
 
     private Double avgAgentDropout;
     private Double ignoredTaskProb;
@@ -129,9 +129,9 @@ public class State {
         chatLog.add("Chat Connected.");
         chatEnabled = false;
 
-        if (completedSurveys == requiredUsers) {
-            completedSurveys = 0;
-        }
+//        if (completedSurveys == requiredUsers) {
+//            completedSurveys = 0;
+//        }
 
         requiredUsers = 2; // Just for testing
         readyUsers = 0;

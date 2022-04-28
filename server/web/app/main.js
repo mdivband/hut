@@ -376,14 +376,34 @@ var simulator = {
                     _.bind(self.run, self)();
                 } else if (!self.state.isInProgress()) {
                     self.views.map.clearAll()
+                    $("#overlay_div").empty()
+                    var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
+                    $('<br>').appendTo($("#overlay_div"));
+                    var initialSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBURUI5REE4RVRGQjAzRTA3TjgxNzlUTTJLSC4u&embed=true";
+                    var postScenario1Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUOUNKMVY2TU1ZSTc2VEY1TUtNVE1YUVNSRi4u&embed=true";
+                    var postScenario2Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUM01CTU1aRDZMWDU1QzhHVVoxSkxOWDMyMy4u&embed=true";
+                    var surveySource = postScenario1Survey;
+                    var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
+                    $("#overlay_div").show();
                     var scenario_end_panel = document.createElement("div");
+                    closeSurvey.on('click', function () {
+                        var isSure = confirm("Have you completed and submitted the survey?");
+                        if (isSure) {
+                            self.surveyDone = true;
+                            $.post("/mode/scenario/closeSurvey", {}, function () {
+                                $("#overlay_div").empty();
+                                $("#overlay_div").hide();
+                                $.blockWithContent(scenario_end_panel);
+                            });
+                        }
+                    });
                     if (!self.state.isPassthrough()) {
                         // Return to menu
                         scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                             title: "Scenario Ended",
                             description: "This scenario has ended, please close your browser tab and continue with the MS form"
                         });
-                        $.blockWithContent(scenario_end_panel);
+
                         $('#end_scenario').on('click', function () {
                             $.post("/reset");
                             window.history.back();
@@ -394,7 +414,7 @@ var simulator = {
                             title: "Scenario Ended",
                             description: "This scenario has ended, please press close to continue to the next experiment"
                         });
-                        $.blockWithContent(scenario_end_panel);
+
                         var endScenarioDiv = $("#end_scenario");
 
                         endScenarioDiv.on('click', function () {

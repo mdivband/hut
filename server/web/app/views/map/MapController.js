@@ -104,15 +104,6 @@ var MapController = {
             if (exitConfirmed) {
                 self.views.map.clearAll()
                 $.post("/reset");
-                var scenario_end_panel = document.createElement("div");
-                scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
-                    title: "Scenario Ended",
-                    description: "This scenario has ended, please close your browser tab"
-                });
-                $.blockWithContent(scenario_end_panel);
-                //$('#end_scenario').on('click', function () {
-                    //window.history.back();
-                //});
             }
 
         });
