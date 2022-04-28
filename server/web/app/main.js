@@ -275,7 +275,10 @@ var simulator = {
                 if (!self.surveyDone && self.state.getCompletedSurveys() < self.state.getRequiredUsers()) {
                     var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
                     $('<br>').appendTo($("#overlay_div"));
-                    var surveySource = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUQjBWRjZQUTFaOUlTVlQ2QjJHRDRKVzgxRS4u&embed=true";
+                    var initialSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBURUI5REE4RVRGQjAzRTA3TjgxNzlUTTJLSC4u&embed=true";
+                    var postScenario1Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUOUNKMVY2TU1ZSTc2VEY1TUtNVE1YUVNSRi4u&embed=true";
+                    var postScenario2Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUM01CTU1aRDZMWDU1QzhHVVoxSkxOWDMyMy4u&embed=true";
+                    var surveySource = initialSurvey;
                     var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
                     closeSurvey.on('click', function () {
                         var isSure = confirm("Have you completed and submitted the survey?");
