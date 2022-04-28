@@ -42,7 +42,8 @@ App.Models.State  = Backbone.Model.extend({
         readyUsers: 0,
         completedSurveys: 0,
         chatLog: [],
-        chatEnabled: false
+        chatEnabled: false,
+        scenarioNumber: 0
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -204,5 +205,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getChatEnabled: function () {
         return this.get("chatEnabled");
+    },
+    getScenarioNumber: function () {
+        return this.get("scenarioNumber");
     }
 });

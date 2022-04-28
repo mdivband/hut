@@ -6,6 +6,7 @@
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 480,
   "chatEnabled": true,
+  "scenarioNumber": 1,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285

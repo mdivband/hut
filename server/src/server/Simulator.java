@@ -408,6 +408,17 @@ public class Simulator {
                 }
             }
 
+            Object scenarioNumber = GsonUtils.getValue(obj, "scenarioNumber");
+            if (scenarioNumber != null) {
+                if (scenarioNumber.getClass() == Double.class ) {
+                    this.state.setScenarioNumber((int) Math.round((Double)scenarioNumber));
+                } else {
+                    LOGGER.warning("Expected integer value for scenarioNumber in scenario file. Received: '" +
+                            scenarioNumber.toString() + "'. Set to 0.");
+                    // state.scenarioNumber initialised with default value of 0
+                }
+            }
+
             this.state.resetNext();
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");

@@ -89,6 +89,7 @@ public class State {
     private int readyUsers;
 
     private int completedSurveys = 0;
+    private int scenarioNumber;
 
     private Double avgAgentDropout;
     private Double ignoredTaskProb;
@@ -121,6 +122,8 @@ public class State {
         windSpeed = 1.0;
         windHeading = 0.0;
         markers.clear();
+
+        scenarioNumber = 0;
 
         gameCentre = null;
         userNames.clear();
@@ -511,6 +514,10 @@ public class State {
 
     public void setChatEnabled(Boolean chatEnabled) {
         this.chatEnabled = chatEnabled;
+    }
+
+    public void setScenarioNumber(int scenarioNumber) {
+        this.scenarioNumber = scenarioNumber;
     }
 
     private class HazardHit {
