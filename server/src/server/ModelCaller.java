@@ -13,6 +13,8 @@ public class ModelCaller {
     private String style = "justOn";
     private String webRef;
 
+    private Process[] procs = new Process[3];
+
     public void reset() {
         style = "justOn";
         currentThread = null;
@@ -31,21 +33,31 @@ public class ModelCaller {
         this.webRef = webRef;
         // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
         if (currentThread != null) {
+            System.out.println("INTERRUPTING");
+            procs[1].destroy();
+            System.out.println("dest");
             currentThread.interrupt();
+            //currentThread = null;
         }
         if (underThread != null) {
             underThread.interrupt();
+            underThread = null;
         }
         if (overThread != null) {
             overThread.interrupt();
+            overThread = null;
         }
 
         Simulator.instance.getState().setMissionSuccessChance(-1);
         Simulator.instance.getState().setMissionSuccessOverChance(-1);
         Simulator.instance.getState().setMissionSuccessUnderChance(-1);
 
+        Simulator.instance.getState().setMissionBoundedSuccessChance(-1);
+        Simulator.instance.getState().setMissionBoundedSuccessOverChance(-1);
+        Simulator.instance.getState().setMissionBoundedSuccessUnderChance(-1);
 
         currentThread = new Thread(this::runOn);
+        // TODO not properly interrupted
         currentThread.start();
         if (style.equals("parallel")) {
             underThread = new Thread(this::runUnder);
@@ -61,21 +73,29 @@ public class ModelCaller {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void runScript(String fileName) throws IOException, InterruptedException {
+    private void runScript(String fileName, int procIndex) throws IOException, InterruptedException {
         System.out.println("RUNNNING: " +  webRef+"/ModelFiles/"+fileName);
         ProcessBuilder processBuilder = new ProcessBuilder("python3", webRef+"/ModelFiles/"+fileName, webRef);
         processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
+        procs[procIndex] = processBuilder.start();
+        //try {
 
-        String s;
-        BufferedReader stdOut = new BufferedReader(new
-                InputStreamReader(process.getInputStream()));
-        while ((s = stdOut.readLine()) != null) {
-            System.out.println(s);
-        }
+            String s;
+            BufferedReader stdOut = new BufferedReader(new
+                    InputStreamReader(procs[procIndex].getInputStream()));
+            while ((s = stdOut.readLine()) != null) {
+                System.out.println(s);
+            }
 
-        int exitCode = process.waitFor();
-        System.out.println("RUN - Finished with exit code " + exitCode);
+
+            //int exitCode = procs[procIndex].waitFor();
+            //System.out.println("RUN - Finished with exit code " + exitCode);
+        //} catch (InterruptedException e) {
+            //process.destroy();
+            //System.out.println("destroyed");
+            //throw e;
+        //}
+
     }
 
     /**
@@ -85,9 +105,13 @@ public class ModelCaller {
         try {
             LOGGER.info(String.format("%s; MDSTO; Model starting on the current number of agents;", Simulator.instance.getState().getTime()));
             double startTime = System.nanoTime();
-            runScript("current.py");
+            runScript("current.py", 1);
+            System.out.println("EXITED runScript");
+            int exitCode = procs[1].waitFor();
+            System.out.println("runScript proc finished, ec="+exitCode);
             double result = readResult("currentResults.txt");
             double boundedResult = readTimeBoundedResult("currentResults_boundedT.txt");
+            System.out.println("cur " + boundedResult);
             Simulator.instance.getState().setMissionSuccessChance(result * 100);
             Simulator.instance.getState().setMissionBoundedSuccessChance(boundedResult * 100);
             double elapsed = (System.nanoTime() - startTime) / 10E8;
@@ -113,9 +137,10 @@ public class ModelCaller {
         //addAgentToParameters();
         try {
             LOGGER.info(String.format("%s; MDSTV; Model starting at 1 over the current number of agents;", Simulator.instance.getState().getTime()));
-            runScript("add1drone.py");
+            runScript("add1drone.py", 2);
             double overResult = readResult("add1results.txt");
             double boundedResult = readTimeBoundedResult("add1results_boundedT.txt");
+            System.out.println("ov " + boundedResult);
             Simulator.instance.getState().setMissionSuccessOverChance(overResult * 100);
             Simulator.instance.getState().setMissionBoundedSuccessOverChance(boundedResult * 100);
             LOGGER.info(String.format("%s; MDDNV; Model done at 1 over the current number of agents (result); %s", Simulator.instance.getState().getTime(), overResult));
@@ -139,9 +164,10 @@ public class ModelCaller {
     private void runUnder() {
         try {
             LOGGER.info(String.format("%s; MDSTU; Model starting at 1 under the current number of agents;", Simulator.instance.getState().getTime()));
-            runScript("remove1drone.py");
+            runScript("remove1drone.py", 0);
             double underResult = readResult("remove1results.txt");
             double boundedResult = readTimeBoundedResult("remove1results_boundedT.txt");
+            System.out.println("un " + boundedResult);
             Simulator.instance.getState().setMissionSuccessUnderChance(underResult * 100);
             Simulator.instance.getState().setMissionBoundedSuccessUnderChance(boundedResult * 100);
             LOGGER.info(String.format("%s; MDDNU; Model done at 1 under the current number of agents (result); %s", Simulator.instance.getState().getTime(), underResult));
@@ -220,6 +246,8 @@ public class ModelCaller {
      * @return
      */
     private double readResult(String fileName) {
+        return -1;
+        /*
         try {
             BufferedReader reader = new BufferedReader(
                     new FileReader(webRef+"/ModelFiles/"+fileName)
@@ -231,6 +259,8 @@ public class ModelCaller {
             System.out.println("ERROR READING RESULT. RETURNING 0");
             return 0;
         }
+
+         */
     }
 
     /**

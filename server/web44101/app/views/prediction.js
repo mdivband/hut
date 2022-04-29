@@ -20,15 +20,24 @@ App.Views.Prediction = Backbone.View.extend({
             this.state.on("change:missionSuccessChance", function () {
                 self.update();
             });
+            /*
             this.state.on("change:missionSuccessOverChance", function () {
                 self.updateOverBound();
             });
             this.state.on("change:missionSuccessUnderChance", function () {
                 self.updateUnderBound();
             });
+
+             */
         } else if (this.type === "bounded") {
             this.state.on("change:missionBoundedSuccessChance", function () {
                 self.update();
+            });
+            this.state.on("change:missionBoundedSuccessOverChance", function () {
+                self.updateOverBound();
+            });
+            this.state.on("change:missionBoundedSuccessUnderChance", function () {
+                self.updateUnderBound();
             });
             // TODO over and under here
         }

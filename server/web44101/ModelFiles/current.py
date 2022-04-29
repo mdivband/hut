@@ -178,6 +178,6 @@ for line in lines[1:]:
 new_file.close()
 
 # Remove the model file
-os.remove(PrismModelDir + '/current_model.pm')
+#os.remove(PrismModelDir + '/current_model.pm')
 
 # print('current model done \n')

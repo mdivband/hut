@@ -87,6 +87,7 @@ public class Simulator {
             port = Integer.parseInt(args[0]);
         } else {
             port = 44101;
+
         }
         new Simulator().start(port);
     }
@@ -190,9 +191,9 @@ public class Simulator {
                     synchronized (state.getAgents()) {
                         for (Agent agent : state.getAgents()) {
                             if (agent instanceof AgentVirtual av) {
-                                //if (agentController.modelFailure(av)) {
-                                //    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                                //}
+                                if (agentController.modelFailure(av)) {
+                                    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                }
 
                                 if (agent.isTimedOut()) {
                                     //System.out.println("timed out, passing");
@@ -230,7 +231,7 @@ public class Simulator {
                         getState().getAgents().remove(a);
 
                         // If an agent is removed or dies, update model and start thread
-                        updateMissionModel();
+                        //updateMissionModel();
                     });
 
                     // If a thread is done, update it
