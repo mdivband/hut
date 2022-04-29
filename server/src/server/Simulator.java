@@ -86,7 +86,7 @@ public class Simulator {
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         } else {
-            port = 44101;
+            port = 44105;
 
         }
         new Simulator().start(port);
@@ -169,15 +169,35 @@ public class Simulator {
         do {
             long startTime = System.currentTimeMillis();
 
-            if (state.getTasks().size() == 0 && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+            if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+                System.out.println("DONE BY COMPLETION: " + state.getTime());
+                System.out.println("agents = " + state.getAgents());
+                int numFailed = 0;
+                for (Agent a : state.getAgents()) {
+                    if (a instanceof AgentVirtual av) {
+                        if (!av.isAlive()) {
+                            numFailed++;
+                        }
+                    }
+                }
+                System.out.println("Num failed: " + numFailed);
                 this.reset();
             }
 
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+                System.out.println("DONE BY TIME: " + state.getTime());
+                System.out.println("agents = " + state.getAgents());
+                int numFailed = 0;
+                for (Agent a : state.getAgents()) {
+                    if (a instanceof AgentVirtual av) {
+                        if (!av.isAlive()) {
+                            numFailed++;
+                        }
+                    }
+                }
+                System.out.println("Num failed: " + numFailed);
                 modeller.outputResults();
-                System.out.println("DONE: " + state.getTime());
-
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }

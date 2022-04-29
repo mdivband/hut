@@ -4,9 +4,9 @@ ctmc
 const int nplaces = 7;
 
 // Battery drain rates
-const double battery_drain_high_mid = 0.0005;
-const double battery_drain_mid_low = 0.00125;
-const double battery_drain_low_critical = 0.0017;
+const double battery_drain_high_mid = 0.00125;
+const double battery_drain_mid_low = 0.000625;
+const double battery_drain_low_critical = 0.001;
 const double battery_charge = 0.0025;
 
 // Background failure rate
@@ -69,7 +69,7 @@ module agent0
   [] (battery0 = 2) & (alive0 = 1) & (place0 != 0) -> battery_drain_high_mid : (battery0' = 1);
   [] (battery0 = 1) & (alive0 = 1) & (place0 != 0) -> battery_drain_mid_low : (battery0' = 0);
   [] (battery0 = 0) & (alive0 = 1) & (place0 != 0) -> battery_drain_low_critical : (battery0' = 3) & (charge0' = 1) & (return0' = 1) & (turning0' = 1);
-  
+
   // Battery charge at base
   [] (battery0 = 3) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) -> battery_charge: (battery0' = 2) & (charge0' = 0);
 
@@ -100,7 +100,7 @@ module agent0
   [] (place0 = taskLoc0) & (taskLoc0 != 0) & (alive0 = 1) -> (delivered0' = 1) & (return0' = 1) & (taskLoc0' = 0) & (turning0' = 1);
 
   // Rotate
-  [] (turning0 = 1) -> rt_r: (turning0' = 0);
+  [] (turning0 = 1) & (alive0 = 1) -> rt_r: (turning0' = 0);
 
   // Movement
   // Go out

@@ -48,10 +48,10 @@ public class AgentVirtual extends Agent {
 
                 }
             }
-            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
+            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + (0.0001 - Simulator.instance.getRandom().nextDouble() / 5000)) : 0;
         } else if (alive) {
             super.step(flockingEnabled);
-            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getRandom().nextDouble() / 5000) : 0;
+            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + (0.0001 - Simulator.instance.getRandom().nextDouble() / 5000)) : 0;
         }
 
         //Simulate things that would be done by a real drone
@@ -65,7 +65,7 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustHeadingTowardsGoal()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            double possDistToMove = (speed + speedVariance + (Simulator.instance.getRandom().nextDouble() / 2)) / Simulator.instance.getGameSpeed();
+            double possDistToMove = (speed + speedVariance + ((0.25 - Simulator.instance.getRandom().nextDouble() / 2))) / Simulator.instance.getGameSpeed();
             double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
             //this.moveAlongHeading(1);
@@ -78,7 +78,7 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustFlockingHeading()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            double possDistToMove = (speed + speedVariance + (Simulator.instance.getRandom().nextDouble() / 2)) / Simulator.instance.getGameSpeed();
+            double possDistToMove = (speed + speedVariance + ((0.25 - Simulator.instance.getRandom().nextDouble() / 2))) / Simulator.instance.getGameSpeed();
             double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
             //this.moveAlongHeading(1);
@@ -285,7 +285,8 @@ public class AgentVirtual extends Agent {
     public String toString() {
         return "Agent{" +
                 "id=" + getId() +
-                "heading=" + heading +
+                ", isAlive=" + isAlive() +
+                ", heading=" + heading +
                 ", route=" + route +
                 ", allocatedTaskId='" + getAllocatedTaskId() + '\'' +
                 ", working=" + isWorking() +

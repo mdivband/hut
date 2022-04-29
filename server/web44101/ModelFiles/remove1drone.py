@@ -3,14 +3,16 @@ import numpy as np
 import sys
 
 webRef = str(sys.argv[1])
+salt = str(sys.argv[2])
+# For now I'm calling this a salt. It's a random identifier
 
 # Set dir
 DroneStatusDir = './'+webRef+'/ModelFiles/remove1drone.txt'
 TaskConfigurationDir = './'+webRef+'/ModelFiles/remove1tasks.txt'
 PrismDir = './libs/prism-4.7-linux64/bin/prism'
 PrismModelDir = './'+webRef+'/PrismModel'
-PrismOutputDir1 = './'+webRef+'/ModelFiles/remove1results.txt'
-PrismOutputDir2 = './'+webRef+'/ModelFiles/remove1results_boundedT.txt'
+PrismOutputDir1 = './'+webRef+'/ModelFiles/remove1results'+str(salt)+'.txt'
+PrismOutputDir2 = './'+webRef+'/ModelFiles/remove1results_boundedT'+str(salt)+'.txt'
 
 # Process parameters
 DroneStatus = np.loadtxt(DroneStatusDir)
@@ -31,8 +33,7 @@ for i in range(0, NumofDrones):
     if 799 <= DroneStatus[i][0] < 899: DroneStatus[i][0] = 6
     if DroneStatus[i][0] >= 899: DroneStatus[i][0] = 7
     # Abstract task location
-    if DroneStatus[i][1] < 299: DroneStatus[i][0] = 0
-    if 299 <= DroneStatus[i][1] < 399: DroneStatus[i][1] = 1
+    if DroneStatus[i][1] < 399: DroneStatus[i][1] = 1
     if 399 <= DroneStatus[i][1] < 499: DroneStatus[i][1] = 2
     if 499 <= DroneStatus[i][1] < 599: DroneStatus[i][1] = 3
     if 599 <= DroneStatus[i][1] < 699: DroneStatus[i][1] = 4
@@ -40,9 +41,10 @@ for i in range(0, NumofDrones):
     if 799 <= DroneStatus[i][1] < 899: DroneStatus[i][1] = 6
     if DroneStatus[i][1] >= 899: DroneStatus[i][1] = 7
     # Abstract battery level
-    if DroneStatus[i][2] < 0.14: DroneStatus[i][2] = 0
-    if 0.14 <= DroneStatus[i][2] < 0.39: DroneStatus[i][2] = 1
-    if DroneStatus[i][2] >= 0.39: DroneStatus[i][2] = 2
+    if DroneStatus[i][2] < 0.15: DroneStatus[i][2] = 3
+    if 0.15 <= DroneStatus[i][2] < 0.4: DroneStatus[i][2] = 0
+    if 0.4 <= DroneStatus[i][2] < 0.8: DroneStatus[i][2] = 1
+    if DroneStatus[i][2] >= 0.8: DroneStatus[i][2] = 2
     # Correct 'return' and 'delivered' guards
     if DroneStatus[i][0] == 0:
         DroneStatus[i][3] = 0
@@ -50,8 +52,7 @@ for i in range(0, NumofDrones):
 
 for j in range(0, NumofPendingTasks):
     # Abstract task configuration
-    if PendingTasks[j] < 299: PendingTasks[j] = 0
-    if 299 <= PendingTasks[j] < 399: PendingTasks[j] = 1
+    if PendingTasks[j] < 399: PendingTasks[j] = 1
     if 399 <= PendingTasks[j] < 499: PendingTasks[j] = 2
     if 499 <= PendingTasks[j] < 599: PendingTasks[j] = 3
     if 599 <= PendingTasks[j] < 699: PendingTasks[j] = 4

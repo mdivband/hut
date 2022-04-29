@@ -21,7 +21,7 @@ public class ModelGenerator {
     }
 
     public static boolean runOver(State state, String webRef) {
-        String droneRep = generateDroneRep(state) + "0.0 0.0 1.0 1 0 1 1 1 \n";
+        String droneRep = generateDroneRep(state) + "0.0 0.0 1.0 0 0 0 1 1 \n";
         String taskRep = generateTaskRep(state);
         return generate(droneRep, taskRep, webRef+"/ModelFiles/add1drone.txt", webRef+"/ModelFiles/add1tasks.txt");
     }
@@ -106,8 +106,9 @@ public class ModelGenerator {
         StringBuilder sb = new StringBuilder();
         Coordinate hubloc = Simulator.instance.getState().getHubLocation();
         for (Task t : state.getTasks()) {
-            double offset = 25 - (Simulator.instance.getRandom().nextDouble() * 50); // Random [-25, 25]
-            double tLoc = hubloc.getDistance(t.getCoordinate()) + offset;
+            // double offset = 25 - (Simulator.instance.getRandom().nextDouble() * 50); // Random [-25, 25]
+            // double tLoc = hubloc.getDistance(t.getCoordinate()) + offset;
+            double tLoc = hubloc.getDistance(t.getCoordinate());
             sb.append(tLoc).append("\n");
         }
         return sb.toString();

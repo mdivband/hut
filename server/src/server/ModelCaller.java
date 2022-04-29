@@ -14,6 +14,7 @@ public class ModelCaller {
     private String webRef;
 
     private Process[] procs = new Process[3];
+    private int currentSalt;
 
     public void reset() {
         style = "justOn";
@@ -30,20 +31,23 @@ public class ModelCaller {
      * Also side effects the chances in State.
      */
     public void startThread(String webRef) {
+        currentSalt = Simulator.instance.getRandom().nextInt(10000);
         this.webRef = webRef;
         // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
         if (currentThread != null) {
-            System.out.println("INTERRUPTING");
+            //System.out.println("INTERRUPTING");
             procs[1].destroy();
-            System.out.println("dest");
+            //System.out.println("dest");
             currentThread.interrupt();
-            //currentThread = null;
+            currentThread = null;
         }
         if (underThread != null) {
+            procs[0].destroy();
             underThread.interrupt();
             underThread = null;
         }
         if (overThread != null) {
+            procs[2].destroy();
             overThread.interrupt();
             overThread = null;
         }
@@ -75,7 +79,7 @@ public class ModelCaller {
      */
     private void runScript(String fileName, int procIndex) throws IOException, InterruptedException {
         System.out.println("RUNNNING: " +  webRef+"/ModelFiles/"+fileName);
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", webRef+"/ModelFiles/"+fileName, webRef);
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", webRef+"/ModelFiles/"+fileName, webRef, String.valueOf(currentSalt));
         processBuilder.redirectErrorStream(true);
         procs[procIndex] = processBuilder.start();
         //try {
@@ -103,14 +107,13 @@ public class ModelCaller {
      */
     public void runOn() {
         try {
-            LOGGER.info(String.format("%s; MDSTO; Model starting on the current number of agents;", Simulator.instance.getState().getTime()));
+            LOGGER.info(String.format("%s; MDSTO; Model starting on the current number of agents (#); %s", Simulator.instance.getState().getTime(), Simulator.instance.getState().getAgents().size()));
             double startTime = System.nanoTime();
             runScript("current.py", 1);
-            System.out.println("EXITED runScript");
+            System.out.println("EXIT runScript");
             int exitCode = procs[1].waitFor();
-            System.out.println("runScript proc finished, ec="+exitCode);
-            double result = readResult("currentResults.txt");
-            double boundedResult = readTimeBoundedResult("currentResults_boundedT.txt");
+            double result = readResult("currentResults"+currentSalt+".txt");
+            double boundedResult = readTimeBoundedResult("currentResults_boundedT"+currentSalt+".txt");
             System.out.println("cur " + boundedResult);
             Simulator.instance.getState().setMissionSuccessChance(result * 100);
             Simulator.instance.getState().setMissionBoundedSuccessChance(boundedResult * 100);
@@ -138,8 +141,9 @@ public class ModelCaller {
         try {
             LOGGER.info(String.format("%s; MDSTV; Model starting at 1 over the current number of agents;", Simulator.instance.getState().getTime()));
             runScript("add1drone.py", 2);
-            double overResult = readResult("add1results.txt");
-            double boundedResult = readTimeBoundedResult("add1results_boundedT.txt");
+            int exitCode = procs[2].waitFor();
+            double overResult = readResult("add1results"+currentSalt+".txt");
+            double boundedResult = readTimeBoundedResult("add1results_boundedT"+currentSalt+".txt");
             System.out.println("ov " + boundedResult);
             Simulator.instance.getState().setMissionSuccessOverChance(overResult * 100);
             Simulator.instance.getState().setMissionBoundedSuccessOverChance(boundedResult * 100);
@@ -165,8 +169,9 @@ public class ModelCaller {
         try {
             LOGGER.info(String.format("%s; MDSTU; Model starting at 1 under the current number of agents;", Simulator.instance.getState().getTime()));
             runScript("remove1drone.py", 0);
-            double underResult = readResult("remove1results.txt");
-            double boundedResult = readTimeBoundedResult("remove1results_boundedT.txt");
+            int exitCode = procs[0].waitFor();
+            double underResult = readResult("remove1results"+currentSalt+".txt");
+            double boundedResult = readTimeBoundedResult("remove1results_boundedT"+currentSalt+".txt");
             System.out.println("un " + boundedResult);
             Simulator.instance.getState().setMissionSuccessUnderChance(underResult * 100);
             Simulator.instance.getState().setMissionBoundedSuccessUnderChance(boundedResult * 100);
@@ -270,7 +275,7 @@ public class ModelCaller {
     private double readTimeBoundedResult(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(
-                    new FileReader(webRef+"/ModelFiles/"+fileName)
+                    new FileReader(webRef + "/ModelFiles/" + fileName)
             );
 
             //e.g 18000	0.998
@@ -284,6 +289,9 @@ public class ModelCaller {
             }
             reader.close();
             return d;
+        } catch (FileNotFoundException e) {
+            System.out.println("File " + fileName + " not found");
+            return 0;
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("ERROR READING RESULT. RETURNING 0");
