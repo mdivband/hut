@@ -8,6 +8,7 @@ var simulator = {
     waitingForPlanner: false,
     scenarioNumber: 0,
     passedThrough: false,
+    prolificID: "undefined",
     init: function () {
         this.state = new App.Models.State();
         this.views = _.extend({}, Backbone.Events);
@@ -309,7 +310,7 @@ var simulator = {
                         showError("Unable to start scenario.");
                     });
                 }
-                
+
                 self.surveyDone = true;
                 self.initialisedState = false;
                 self.waiting = false;
@@ -360,20 +361,28 @@ var simulator = {
                     if (self.state.getUserNames().length == 0 && userRole == "planner") {
                         // TODO get their name, also log it in backend
                         var name = null;
+                        if (self.prolificID != "undefined") {
+                            name = self.prolificID;
+                        }
                         while (name == null || name === "") {
                             name = prompt("Please enter your prolific ID", "");
                         }
                         $.post("/mode/scenario/registerUser", {
                             userName: name
                         });
+                        self.prolificID = name;
                     } else if (self.state.getUserNames().length > 0 && self.state.getUserNames().length < self.state.getRequiredUsers()) {
                         var name = null;
+                        if (self.prolificID != "undefined") {
+                            name = self.prolificID;
+                        }
                         while (name == null || name === "") {
                             name = prompt("Please enter your prolific ID", "");
                         }
                         $.post("/mode/scenario/registerUser", {
                             userName: name
                         });
+                        self.prolificID = name;
                     }
 
                     if (self.state.attributes.prov_doc == null) {
