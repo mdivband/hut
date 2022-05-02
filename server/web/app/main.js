@@ -267,6 +267,62 @@ var simulator = {
 
         this.run();
     },
+    passthrough: function (self) {
+        $("#overlay_div").empty();
+        $("#overlay_div").hide();
+
+        var scenario_end_panel = document.createElement("div");
+        if (!self.state.isPassthrough()) {
+            // Return to menu
+            scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                title: "Scenario Ended",
+                description: "This scenario has ended, thank you for taking part in this experiment. You may now close this window"
+            });
+
+            $.blockWithContent(scenario_end_panel);
+
+            $('#end_scenario').on('click', function () {
+                $.post("/reset");
+                window.history.back();
+            });
+        } else {
+            // Has a scenario to pass through too
+            scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                title: "Scenario Ended",
+                description: "This scenario has ended, please press close to continue to the next experiment"
+            });
+
+            $.blockWithContent(scenario_end_panel);
+            var endScenarioDiv = $("#end_scenario");
+
+            endScenarioDiv.on('click', function () {
+                var fileName = self.state.getNextFileName();
+                //$.post("/reset");
+                $.post('/mode/scenario', {'file-name': fileName}, function () {
+                    endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
+                    endScenarioDiv[0].addEventListener("animationend", function () {
+                        window.location = "/sandbox.html";
+                    })
+                }).fail(function () {
+                    showError("Unable to start scenario.");
+                });
+
+                var description_panel = document.createElement("div");
+                description_panel.innerHTML = _.template($("#description_panel").html(), {
+                    title: self.state.getGameId(),
+                    description: self.state.getGameDescription()
+                });
+                $.blockWithContent(description_panel);
+                $('#start_scenario').on('click', function () {
+                    $.post("/mode/scenario/start", {}, function () {
+                        self.waiting = true;
+                        $.unblockUI();
+                        self.run();
+                    });
+                });
+            });
+        }
+    },
     run: function () {
         var waitTime = 400;
         var self = this;
@@ -389,69 +445,18 @@ var simulator = {
                     }
                     var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
                     $("#overlay_div").show();
-                    var scenario_end_panel = document.createElement("div");
                     closeSurvey.on('click', function () {
                         var isSure = confirm("Have you completed and submitted the survey?");
                         if (isSure) {
                             self.surveyDone = true;
                             $.post("/mode/scenario/closeSurvey", {}, function () {
-                                $("#overlay_div").empty();
-                                $("#overlay_div").hide();
-                                $.blockWithContent(scenario_end_panel);
+                                self.passthrough(self);
                             });
                         }
                     });
-                    if (!self.state.isPassthrough()) {
-                        // Return to menu
-                        scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
-                            title: "Scenario Ended",
-                            description: "This scenario has ended, please close your browser tab and continue with the MS form"
-                        });
 
-                        $('#end_scenario').on('click', function () {
-                            $.post("/reset");
-                            window.history.back();
-                        });
-                    } else {
-                        // Has a scenario to pass through too
-                        scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
-                            title: "Scenario Ended",
-                            description: "This scenario has ended, please press close to continue to the next experiment"
-                        });
-
-                        var endScenarioDiv = $("#end_scenario");
-
-                        endScenarioDiv.on('click', function () {
-                            var fileName = self.state.getNextFileName();
-                            //$.post("/reset");
-                            $.post('/mode/scenario', {'file-name': fileName}, function () {
-                                endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
-                                endScenarioDiv[0].addEventListener("animationend", function () {
-                                    window.location = "/sandbox.html";
-                                })
-                            }).fail(function () {
-                                showError("Unable to start scenario.");
-                            });
-
-                            var description_panel = document.createElement("div");
-                            description_panel.innerHTML = _.template($("#description_panel").html(), {
-                                title: self.state.getGameId(),
-                                description: self.state.getGameDescription()
-                            });
-                            $.blockWithContent(description_panel);
-                            $('#start_scenario').on('click', function () {
-                                $.post("/mode/scenario/start", {}, function () {
-                                    self.waiting = true;
-                                    $.unblockUI();
-                                    self.run();
-                                });
-                            });
-                        });
-                    }
                     if (self.scenarioNumber == 0) {
-                        $("#overlay_div").empty();
-                        $("#overlay_div").hide();
-                        $.blockWithContent(scenario_end_panel);
+                        self.passthrough(self);
                     }
                 }
             })
