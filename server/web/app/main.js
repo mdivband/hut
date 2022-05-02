@@ -297,17 +297,19 @@ var simulator = {
             var endScenarioDiv = $("#end_scenario");
 
             endScenarioDiv.on('click', function () {
-                var fileName = self.state.getNextFileName();
-                //$.post("/reset");
-                $.post('/mode/scenario', {'file-name': fileName}, function () {
-                    endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
-                    endScenarioDiv[0].addEventListener("animationend", function () {
-                        window.location = "/sandbox.html";
-                    })
-                }).fail(function () {
-                    showError("Unable to start scenario.");
-                });
-
+                if (userRole == "planner") {
+                    var fileName = self.state.getNextFileName();
+                    //$.post("/reset");
+                    $.post('/mode/scenario', {'file-name': fileName}, function () {
+                        endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
+                        endScenarioDiv[0].addEventListener("animationend", function () {
+                            window.location = "/sandbox.html";
+                        })
+                    }).fail(function () {
+                        showError("Unable to start scenario.");
+                    });
+                }
+                
                 self.surveyDone = true;
                 self.initialisedState = false;
                 self.waiting = false;
