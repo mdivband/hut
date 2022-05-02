@@ -7,6 +7,7 @@
   "timeLimitSeconds": 480,
   "chatEnabled": true,
   "scenarioNumber": 1,
+  "nextScenarioFile": "LKXR.json",
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285

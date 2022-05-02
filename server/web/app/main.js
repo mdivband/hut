@@ -7,6 +7,7 @@ var simulator = {
     waiting: false,
     waitingForPlanner: false,
     scenarioNumber: 0,
+    passedThrough: false,
     init: function () {
         this.state = new App.Models.State();
         this.views = _.extend({}, Backbone.Events);
@@ -307,19 +308,12 @@ var simulator = {
                     showError("Unable to start scenario.");
                 });
 
-                var description_panel = document.createElement("div");
-                description_panel.innerHTML = _.template($("#description_panel").html(), {
-                    title: self.state.getGameId(),
-                    description: self.state.getGameDescription()
-                });
-                $.blockWithContent(description_panel);
-                $('#start_scenario').on('click', function () {
-                    $.post("/mode/scenario/start", {}, function () {
-                        self.waiting = true;
-                        $.unblockUI();
-                        self.run();
-                    });
-                });
+                self.surveyDone = true;
+                self.initialisedState = false;
+                self.waiting = false;
+                self.waitingForPlanner = false;
+                self.passedThrough = true;
+                _.bind(self.run, self)();
             });
         }
     },
@@ -329,7 +323,11 @@ var simulator = {
         var startTime = (new Date()).getTime();
         this.state.fetch()
             .done(function () {
-                if (!self.surveyDone && self.state.getCompletedSurveys() < self.state.getRequiredUsers()) {
+                if (self.passedThrough) {
+                    // need to fetch state once more so self.state contains new scenario game description etc.
+                    self.passedThrough = false;
+                    _.bind(self.run, self)();
+                } else if (!self.surveyDone && self.state.getCompletedSurveys() < self.state.getRequiredUsers()) {
                     var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
                     $('<br>').appendTo($("#overlay_div"));
                     var initialSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBURUI5REE4RVRGQjAzRTA3TjgxNzlUTTJLSC4u&embed=true";
@@ -351,7 +349,6 @@ var simulator = {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
 
-                    console.log(self.state.getChatEnabled())
                     if (!self.state.getChatEnabled()) {
                         $("#accordion_chat").hide();
                     }

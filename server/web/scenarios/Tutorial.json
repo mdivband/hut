@@ -9,6 +9,7 @@
   "timeLimitSeconds": 300,
   "deepAllowed": false,
   "scenarioNumber": 0,
+  "nextScenarioFile": "WSGA.json",
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
