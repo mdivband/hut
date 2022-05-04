@@ -91,7 +91,7 @@ var MapTaskController = {
                     strokeOpacity: 0.8,
                     strokeColor: 'black',
                     strokeWeight: 5,
-                    zIndex: 0
+                    zIndex: 1
                 });
                 var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
                 google.maps.event.addListener(polyline.getPath(), 'insert_at', function (vertex) {
@@ -135,7 +135,7 @@ var MapTaskController = {
                     strokeOpacity: 0.3,
                     strokeColor: 'black',
                     strokeWeight: 5,
-                    zIndex: 0
+                    zIndex: 1
                 });
 
                 var corners = task.getCorners();
@@ -148,7 +148,7 @@ var MapTaskController = {
                     strokeOpacity: 0.8,
                     strokeColor: 'black',
                     strokeWeight: 5,
-                    zIndex: 0
+                    zIndex: 1
                 });
                 var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
                 google.maps.event.addListener(rectangle, "bounds_changed", function() {

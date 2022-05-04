@@ -380,10 +380,10 @@ App.Views.Map = Backbone.View.extend({
                     labelContent: "search here",
                     labelClass: "labels",
                     labelStyle: {opacity: 1.0},
-                    label: "There are casualties in this area!",
+                    label: "There are points of interest in this area!",
                     id: "testMk1",
                     position: new google.maps.LatLng(50.93007510846366, -1.412749970031315),
-                    zIndex: 3,
+                    zIndex: 0,
                     visible: true
                 });
             }
@@ -393,11 +393,11 @@ App.Views.Map = Backbone.View.extend({
                     bounds: false,
                     draggable: false,
                     clickable: false,
-                    label: "There are casualties in this area!",
+                    label: "There are points of interest in this area!",
                     labelAnchor: new google.maps.Point(50, -18),
                     id: "testMk2",
                     position: new google.maps.LatLng(50.93394037299629, -1.409213465112904),
-                    zIndex: 3
+                    zIndex: 0
                 });
             }
         }
