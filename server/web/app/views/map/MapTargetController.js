@@ -188,7 +188,7 @@ var MapTargetController = {
         if (!marker.getVisible() && target.isVisible()) {
             MapTargetController.popupTargetFound(target);
             MapTargetController.revealedNumber++;
-            marker.set("labelContent", id.replace(/\d/g, MapTargetController.revealedNumber));
+            marker.set("labelContent", id.replace(/[0-9]+/g, MapTargetController.revealedNumber));
         }
         marker.setVisible(target.isVisible());
     },
