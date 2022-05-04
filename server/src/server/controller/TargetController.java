@@ -35,7 +35,7 @@ public class TargetController extends AbstractController {
                 target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
                 break;
             case Target.ADJUSTABLE:
-                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), true);
+                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), "human");
                 break;
             default:
                 throw new RuntimeException("Unrecognized target type - " + type);
@@ -44,14 +44,14 @@ public class TargetController extends AbstractController {
         return target;
     }
 
-    public synchronized Target addTarget(double lat, double lng, int type, boolean isReal) {
+    public synchronized Target addTarget(double lat, double lng, int type, String correctClassification) {
         Target target;
         switch(type) {
             case Target.HUMAN:
                 target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
                 break;
             case Target.ADJUSTABLE:
-                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), isReal);
+                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), correctClassification);
                 break;
             default:
                 throw new RuntimeException("Unrecognized target type - " + type);

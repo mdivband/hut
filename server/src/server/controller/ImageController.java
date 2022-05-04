@@ -58,19 +58,10 @@ public class ImageController extends AbstractController {
                 double timeToAdd;
                 String fileToAdd = "images/" + at.getHighResFileName();
 
-//                if (isDeep) {
-//                    fileToAdd = "images/" + at.getHighResFileName();
-//                } else {
-//                    fileToAdd = "images/" + at.getLowResFileName();
-//                }
-                if (at.isReal()) {
-                    timeToAdd = simulator.getState().getTime() + DEEP_SCAN_TIME;
-                } else {
-                    timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
-                }
+                timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
 
                 scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), fileToAdd, isDeep));
-                LOGGER.info(String.format("%s; TKIMG; Taking image for target of deep/shallow type with actual classification (id, filename, isDeep, isReal); %s; %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), fileToAdd, isDeep, at.isReal()));
+                LOGGER.info(String.format("%s; TKIMG; Taking image for target with actual classification (id, filename, correctClassification); %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), fileToAdd, at.getCorrectClassification()));
 
             }
         }
@@ -152,7 +143,7 @@ public class ImageController extends AbstractController {
             decisions.put(id, targetClass);
 
             boolean isDeep = deepScannedTargets.contains(id);
-            boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
+            String correctClassification = ((AdjustableTarget) simulator.getState().getTarget(id)).getCorrectClassification();
 
             deepScannedTargets.remove(id);
             shallowScannedTargets.remove(id);
@@ -180,7 +171,7 @@ public class ImageController extends AbstractController {
             }
             simulator.getTargetController().adjustForTask(taskType, targetCoords.getLatitude(), targetCoords.getLongitude());
 
-            LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, targetClass, isReal));
+            LOGGER.info(String.format("%s; CLIMG; Classifying target from scan as this, it is actually (id, classifiedStatus, ActualStatus); %s; %s; %s;", Simulator.instance.getState().getTime(), id, targetClass, correctClassification));
 
         } catch (Exception ignored) {}
 

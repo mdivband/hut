@@ -1,13 +1,9 @@
 {
   "gameId": "Tutorial",
   "gameDescription": "Tutorial Scenario - We have given you a hint, try to find the 3 targets in the circled areas and classify them. When you feel you understand the platform, you can close this window",
-  "hub": {
-    "lat": 50.928955248687274,
-    "lng": -1.40882186832185
-  },
+  "allocationMethod": "random",
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 300,
-  "deepAllowed": false,
   "scenarioNumber": 0,
   "nextScenarioFile": "WSGA.json",
   "gameCentre": {
@@ -62,25 +58,25 @@
       "lat": 50.929093899106334,
       "lng": -1.411966365771935,
       "type": 1,
-      "highRes": "Complex/Complex - High Res/ComplexHighT6.png",
-      "lowRes": "Complex/Complex - Low Res/ComplexLowT6.png",
-      "real": true
+      "highRes": "Set1/Human1.png",
+      "lowRes": "Set1/Human1.png",
+      "correctClassification": "human"
     },
     {
       "lat": 50.929702492100894,
       "lng": -1.4135756911808706,
       "type": 1,
-      "highRes": "Complex/Complex - High Res/ComplexHighT3.png ",
-      "lowRes": "Complex/Complex - Low Res/ComplexLowT3.png ",
-      "real": true
+      "highRes": "Set2/Debris1.png ",
+      "lowRes": "Set2/Debris1.png ",
+      "correctClassification": "debris"
     },
     {
       "lat": 50.9333140821332,
       "lng": -1.4087086804349669,
       "type": 1,
-      "highRes": "Complex/Complex - High Res/ComplexHighNT3.png ",
-      "lowRes": "Complex/Complex - Low Res/ComplexLowNT3.png ",
-      "real": false
+      "highRes": "Set1/False1.png ",
+      "lowRes": "Set1/False1.png ",
+      "correctClassification": "false"
     }
 
   ]

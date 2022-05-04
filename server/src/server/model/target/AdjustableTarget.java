@@ -5,17 +5,17 @@ import server.model.Coordinate;
 public class AdjustableTarget extends Target {
 
     //private int status = 0;
-    private final boolean real;
+    private final String correctClassification;
     private String lowResFileName = "";
     private String highResFileName = "";
 
-    public AdjustableTarget(String id, Coordinate coordinate, boolean isReal) {
+    public AdjustableTarget(String id, Coordinate coordinate, String correctClassification) {
         super(id, coordinate, Target.ADJUSTABLE);
-        this.real = isReal;
+        this.correctClassification = correctClassification;
     }
 
-    public boolean isReal() {
-        return real;
+    public String getCorrectClassification() {
+        return correctClassification;
     }
 
     public void setFilenames(String lowRes, String highRes) {

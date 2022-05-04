@@ -489,9 +489,9 @@ public class Simulator {
                     String highRes = GsonUtils.getValue(targetJson, "highRes");
                     String lowRes = GsonUtils.getValue(targetJson, "lowRes");
                     Target target;
-                    if (GsonUtils.hasKey(targetJson, "real")) {
-                        boolean isReal = GsonUtils.getValue(targetJson, "real");
-                        target = targetController.addTarget(lat, lng, type, isReal);
+                    if (GsonUtils.hasKey(targetJson, "correctClassification")) {
+                        String correctClassification = GsonUtils.getValue(targetJson, "correctClassification");
+                        target = targetController.addTarget(lat, lng, type, correctClassification);
                         ((AdjustableTarget) target).setFilenames(lowRes, highRes);
                     } else {
                         target = targetController.addTarget(lat, lng, type);

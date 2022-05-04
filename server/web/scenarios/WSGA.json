@@ -108,7 +108,7 @@
       "type": 1,
       "highRes": "Set1/Debris1.png",
       "lowRes": "Set1/Debris1.png",
-      "real": false
+      "correctClassification": "debris"
     },
     {
       "lat": 50.93356393802675,
@@ -116,7 +116,7 @@
       "type": 1,
       "highRes": "Set1/Human1.png",
       "lowRes": "Set1/Human1.png",
-      "real": true
+      "correctClassification": "human"
     },
     {
       "lat": 50.93134610043392,
@@ -124,7 +124,7 @@
       "type": 1,
       "highRes": "Set1/Human2.png",
       "lowRes": "Set1/Human2.png",
-      "real": true
+      "correctClassification": "human"
     },
     {
       "lat": 50.93543008528254,
@@ -132,7 +132,7 @@
       "type": 1,
       "highRes": "Set1/Debris2.png",
       "lowRes": "Set1/Debris2.png",
-      "real": false
+      "correctClassification": "debris"
     },
     {
       "lat": 50.92658807294463,
@@ -140,7 +140,7 @@
       "type": 1,
       "highRes": "Set1/Human3.png",
       "lowRes": "Set1/Human3.png",
-      "real": true
+      "correctClassification": "human"
     },
     {
       "lat": 50.92247369243777,
@@ -148,7 +148,7 @@
       "type": 1,
       "highRes": "Set1/Debris3.png",
       "lowRes": "Set1/Debris3.png",
-      "real": false
+      "correctClassification": "debris"
     },
     {
       "lat": 50.93088629159964,
@@ -156,7 +156,7 @@
       "type": 1,
       "highRes": "Set1/Human4.png",
       "lowRes": "Set1/Human4.png",
-      "real": true
+      "correctClassification": "human"
     },
     {
       "lat": 50.92462022635584,
@@ -164,7 +164,7 @@
       "type": 1,
       "highRes": "Set1/Human5.png",
       "lowRes": "Set1/Human5.png",
-      "real": true
+      "correctClassification": "human"
     }
   ]
 }
