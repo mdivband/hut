@@ -298,11 +298,10 @@ var simulator = {
             var endScenarioDiv = $("#end_scenario");
 
             endScenarioDiv.on('click', function () {
+                self.views.map.clearAll()
                 if (userRole == "planner") {
                     var fileName = self.state.getNextFileName();
-                    $.post('/reset', function () {
-                        state.reset();
-                    });
+                    $.post('/reset');
                     $.post('/mode/scenario', {'file-name': fileName}, function () {
                         endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
                         endScenarioDiv[0].addEventListener("animationend", function () {

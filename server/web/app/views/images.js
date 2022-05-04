@@ -47,9 +47,11 @@ App.Views.Images = Backbone.View.extend({
     },
     reset: function () {
         this.addedIds = [];
+        this.removedIds = [];
         this.addedRefs = [];
         this.pendingIds = [];
         this.addedPendingIds = [];
+        this.addedDeepIds = [];
         this.render();
     },
     update: function() {
