@@ -84,6 +84,11 @@ public class TaskController extends AbstractController {
         Task task = simulator.getState().getTask(id);
         if(task.getType() == Task.TASK_PATROL) {
             ((PatrolTask) task).updatePoints(path);
+            StringBuilder sb = new StringBuilder();
+            for (Coordinate c : path) {
+                sb.append(c.getLatitude()).append(";").append(c.getLongitude()).append(";");
+            }
+            LOGGER.info(String.format("%s; MVPT; Moved patrol task to points (id, lat1, lng1, lat2, lng2, ...); %s; %s", Simulator.instance.getState().getTime(), id, sb));
             return true;
         }
         return false;
@@ -109,6 +114,13 @@ public class TaskController extends AbstractController {
         Task task = simulator.getState().getTask(id);
         if(task.getType() == Task.TASK_REGION) {
             ((RegionTask) task).updateCorners(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+            StringBuilder sb = new StringBuilder();
+            sb.append(corners.get(0).getLatitude()).append(";").append(corners.get(0).getLongitude()).append(";");
+            sb.append(corners.get(1).getLatitude()).append(";").append(corners.get(1).getLongitude()).append(";");
+            sb.append(corners.get(2).getLatitude()).append(";").append(corners.get(2).getLongitude()).append(";");
+            sb.append(corners.get(3).getLatitude()).append(";").append(corners.get(3).getLongitude()).append(";");
+            LOGGER.info(String.format("%s; MVRG; Moved region task to corners (id, nwlat, nwlng, nelat, nelng, selat, selng, swlat, swlng,); %s; %s", Simulator.instance.getState().getTime(), id, sb));
+
             return true;
         }
         return false;
@@ -149,8 +161,10 @@ public class TaskController extends AbstractController {
         return true;
     }
 
-    public synchronized void updateTaskGroup(String taskId, int group) {
-        simulator.getState().getTask(taskId).setGroup(group);
+    public synchronized void updateTaskGroup(String id, int group) {
+        Task task = simulator.getState().getTask(id);
+        task.setGroup(group);
+        LOGGER.info(String.format("%s; UPDTSK; Updated task group size (id, lat, lng, agents); %s; %s; %s, %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude(), group));
     }
 
     public synchronized void updateTaskPriority(String taskId, double priority) {

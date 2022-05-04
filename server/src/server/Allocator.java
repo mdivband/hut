@@ -80,6 +80,11 @@ public class Allocator {
         tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) task).isBeingWorked());
 
         //Remove ignored tasks
+        for (Task task : tasksToAllocate) {
+            if (task.isIgnored()) {
+                LOGGER.info(String.format("%s; IGNTSK; Task was ignored (id); %s", Simulator.instance.getState().getTime(), task.getId()));
+            }
+        }
         tasksToAllocate.removeIf(task -> task.isIgnored());
 
         String allocationMethod = simulator.getState().getAllocationMethod();

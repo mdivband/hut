@@ -174,8 +174,14 @@ public class Simulator {
 
             //Step agents
             checkAgentsForTimeout();
-            for (Agent agent : state.getAgents())
-                agent.step(state.isFlockingEnabled(), state.getAvgAgentDropout());
+            for (Agent agent : state.getAgents()) {
+                if (!agent.isTimedOut()) {
+                    agent.step(state.isFlockingEnabled(), state.getAvgAgentDropout());
+                    if (agent.isTimedOut()) {
+                        LOGGER.info(String.format("%s; LSTCN; Lost connection with agent (id); %s ", getState().getTime(), agent.getId()));
+                    }
+                }
+            }
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
