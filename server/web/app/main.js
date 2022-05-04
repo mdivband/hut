@@ -326,6 +326,7 @@ var simulator = {
         var waitTime = 400;
         var self = this;
         var startTime = (new Date()).getTime();
+        var contingency = window.setTimeout(_.bind(self.run, self), 2000);
         this.state.fetch()
             .done(function () {
                 if (self.passedThrough) {
@@ -474,6 +475,7 @@ var simulator = {
                 _.bind(self.run, self)();
             })
             .always(function () {
+                window.clearTimeout(contingency);
                 if (self.state.isInProgress()) {
                     var elapsedTime = ((new Date()).getTime() - startTime);
                     if (elapsedTime < waitTime) {
