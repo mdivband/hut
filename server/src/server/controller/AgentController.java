@@ -256,7 +256,9 @@ public class AgentController extends AbstractController {
                 }
                 Agent agent;
                 if (hasProgrammed) {
-                    agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+                    synchronized (simulator.getState().getAgents()) {
+                        agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+                    }
                 } else {
                     int counter = 10;
                     double xOffset;
@@ -277,7 +279,9 @@ public class AgentController extends AbstractController {
                         // We still have a clash and can't fit it after 10 attempts
                         agent = null;
                     } else {
-                        agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                        synchronized (simulator.getState().getAgents()) {
+                            agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                        }
                         //agent.stop();
                 /*
                 simulator.getAllocator().runAutoAllocation();

@@ -5,6 +5,14 @@
     "predictions": true,
     "uncertainties": true
   },
+  "varianceParameters": {
+    "speedPerAgent": 0.5,
+    "batteryPerAgent": 0.0002
+  },
+  "noiseParameters": {
+    "speedPerSecond": 0.25,
+    "batteryPerStep": 0.0001
+  },
   "flockingEnabled": false,
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",

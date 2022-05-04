@@ -106,9 +106,9 @@ public class ModelGenerator {
         StringBuilder sb = new StringBuilder();
         Coordinate hubloc = Simulator.instance.getState().getHubLocation();
         for (Task t : state.getTasks()) {
-            // double offset = 25 - (Simulator.instance.getRandom().nextDouble() * 50); // Random [-25, 25]
-            // double tLoc = hubloc.getDistance(t.getCoordinate()) + offset;
-            double tLoc = hubloc.getDistance(t.getCoordinate());
+            double offset = Simulator.instance.getState().calculateRandomValueFor("locationNoise"); // Random [-25, 25]
+            double tLoc = hubloc.getDistance(t.getCoordinate()) + offset;
+            //double tLoc = hubloc.getDistance(t.getCoordinate());
             sb.append(tLoc).append("\n");
         }
         return sb.toString();

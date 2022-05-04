@@ -66,6 +66,8 @@ public class State {
     private HazardHitCollection hazardHits;
 
     private ArrayList<String> uiOptions = new ArrayList<>();
+    private Map<String, Double> varianceOptions = new HashMap<>();
+    private Map<String, Double> noiseOptions = new HashMap<>();
     private double uncertaintyRadius = 0;
     private double communicationRange = 0;
     private boolean communicationConstrained = false;
@@ -132,6 +134,9 @@ public class State {
         allocation.clear();
         tempAllocation.clear();
         hazardHits.clear();
+        uiOptions.clear();
+        varianceOptions.clear();
+        noiseOptions.clear();
 
         hazardHits.init();
     }
@@ -659,6 +664,40 @@ public class State {
 
     public void resetLogger(FileHandler fileHandler) {
         LOGGER.addHandler(fileHandler);
+    }
+
+    public void putVarianceOption(String key, Double val) {
+        varianceOptions.put(key, val);
+    }
+
+    public void putNoiseOption(String key, Double val) {
+        noiseOptions.put(key, val);
+    }
+
+    public double getVarianceValue(String key) {
+        return varianceOptions.get(key);
+    }
+
+    public double getNoiseValue(String key) {
+        return noiseOptions.get(key);
+    }
+
+    /**
+     * Calculates a zero-centred random value for the given key (noise or variance)
+     * @param key
+     * @return
+     */
+    public double calculateRandomValueFor(String key) {
+        double bound;
+        if (varianceOptions.containsKey(key)) {
+            bound = varianceOptions.get(key);
+        } else if (noiseOptions.containsKey(key)) {
+            bound = noiseOptions.get(key);
+        } else {
+            return 0;
+        }
+        // bound-[0,1]*bound*2 gives a value from [-bound/2, bound/2]
+        return bound - (Simulator.instance.getRandom().nextDouble() * bound * 2);
     }
 
     private class HazardHit {

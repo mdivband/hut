@@ -86,7 +86,7 @@ public class Simulator {
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         } else {
-            port = 44105;
+            port = 44101;
 
         }
         new Simulator().start(port);
@@ -236,15 +236,15 @@ public class Simulator {
                                         // In-runtime allocation model
                                         double successChance = modeller.calculateAll(agent);
                                         state.setSuccessChance(successChance);
+                                    } else if (agent.getBattery() < 0.9 && av.isAlive()) {
+                                        // If no tasks available, charge up in case we need to replace it
+                                        av.charge();
                                     } else {
                                         av.heartbeat();
                                     }
                                 }
                             }
                         }
-
-                        // Update prediction if ready
-
                     }
 
                     agentsToRemove.forEach(a -> {
@@ -253,16 +253,6 @@ public class Simulator {
                         // If an agent is removed or dies, update model and start thread
                         //updateMissionModel();
                     });
-
-                    // If a thread is done, update it
-                    /*
-                    if (modelCaller.isReady()) {
-                        double successChance = modelCaller.getResult();
-                        state.setMissionSuccessChance(successChance);
-                        modelCaller.setReady(false);
-                    }
-
-                     */
 
                 } else {
                     // Step agents
@@ -530,6 +520,29 @@ public class Simulator {
                 Object modelStyle = GsonUtils.getValue(obj, "modelStyle");
                 if(modelStyle.getClass() == String.class) {
                     this.modelCaller.setStyle((String) modelStyle);
+                }
+            }
+
+            Object varJson = GsonUtils.getValue(obj, "varianceParameters");
+            if (varJson != null) {
+                if (GsonUtils.getValue(varJson, "speedPerAgent") != null) {
+                    state.putVarianceOption("speedPerAgent", GsonUtils.getValue(varJson, "speedPerAgent"));
+                }
+                if (GsonUtils.getValue(varJson, "batteryPerAgent") != null) {
+                    state.putVarianceOption("batteryPerAgent", GsonUtils.getValue(varJson, "batteryPerAgent"));
+                }
+            }
+
+            Object noiseJson = GsonUtils.getValue(obj, "noiseParameters");
+            if (noiseJson != null) {
+                if (GsonUtils.getValue(noiseJson, "speedPerSecond") != null) {
+                    state.putNoiseOption("speedPerSecond", GsonUtils.getValue(noiseJson, "speedPerSecond"));
+                }
+                if (GsonUtils.getValue(noiseJson, "batteryPerStep") != null) {
+                    state.putNoiseOption("batteryPerStep", GsonUtils.getValue(noiseJson, "batteryPerStep"));
+                }
+                if (GsonUtils.getValue(noiseJson, "locationNoise") != null) {
+                    state.putNoiseOption("locationNoise", GsonUtils.getValue(noiseJson, "locationNoise"));
                 }
             }
             
