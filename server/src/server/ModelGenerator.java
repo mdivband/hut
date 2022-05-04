@@ -12,20 +12,41 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
+/**
+ * Generates the model files for PRISM to run on
+ */
 public class ModelGenerator {
 
+    /**
+     * Run generator to create files for the current number of agents
+     * @param state
+     * @param webRef
+     * @return
+     */
     public static boolean run(State state, String webRef) {
         String droneRep = generateDroneRep(state);
         String taskRep = generateTaskRep(state);
         return generate(droneRep, taskRep, webRef+"/ModelFiles/currentDrones.txt", webRef+"/ModelFiles/currentTasks.txt");
     }
 
+    /**
+     * Run generator to create files for the current number of agents plus 1
+     * @param state
+     * @param webRef
+     * @return
+     */
     public static boolean runOver(State state, String webRef) {
         String droneRep = generateDroneRep(state) + "0.0 0.0 1.0 0 0 0 1 1 \n";
         String taskRep = generateTaskRep(state);
         return generate(droneRep, taskRep, webRef+"/ModelFiles/add1drone.txt", webRef+"/ModelFiles/add1tasks.txt");
     }
 
+    /**
+     * Run generator to create files for the current number of agents minus 1
+     * @param state
+     * @param webRef
+     * @return
+     */
     public static boolean runUnder(State state, String webRef) {
         String[] rep = generateDroneRep(state).split("\n");
         StringBuilder sb = new StringBuilder();
@@ -37,6 +58,14 @@ public class ModelGenerator {
 
     }
 
+    /**
+     * The actual code used to generate the model parameter files
+     * @param droneRep
+     * @param taskRep
+     * @param dronesFileName
+     * @param tasksFileName
+     * @return
+     */
     public static boolean generate(String droneRep, String taskRep, String dronesFileName, String tasksFileName) {
         try {
             FileWriter myWriter = new FileWriter(dronesFileName);
@@ -56,6 +85,11 @@ public class ModelGenerator {
         return true;
     }
 
+    /**
+     * Generate a representation of the current drone state
+     * @param state
+     * @return
+     */
     public static String generateDroneRep(State state) {
         StringBuilder sb = new StringBuilder();
         Coordinate hubloc = Simulator.instance.getState().getHubLocation();
@@ -99,16 +133,19 @@ public class ModelGenerator {
             }
         }
         return sb.toString();
-
     }
 
+    /**
+     * Generate a representation of the current task state
+     * @param state
+     * @return
+     */
     public static String generateTaskRep(State state) {
         StringBuilder sb = new StringBuilder();
         Coordinate hubloc = Simulator.instance.getState().getHubLocation();
         for (Task t : state.getTasks()) {
-            double offset = Simulator.instance.getState().calculateRandomValueFor("locationNoise"); // Random [-25, 25]
+            double offset = Simulator.instance.getState().calculateRandomValueFor("locationNoise");
             double tLoc = hubloc.getDistance(t.getCoordinate()) + offset;
-            //double tLoc = hubloc.getDistance(t.getCoordinate());
             sb.append(tLoc).append("\n");
         }
         return sb.toString();

@@ -169,21 +169,6 @@ public class Simulator {
         do {
             long startTime = System.currentTimeMillis();
 
-            if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
-                System.out.println("DONE BY COMPLETION: " + state.getTime());
-                System.out.println("agents = " + state.getAgents());
-                int numFailed = 0;
-                for (Agent a : state.getAgents()) {
-                    if (a instanceof AgentVirtual av) {
-                        if (!av.isAlive()) {
-                            numFailed++;
-                        }
-                    }
-                }
-                System.out.println("Num failed: " + numFailed);
-                this.reset();
-            }
-
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
@@ -207,6 +192,21 @@ public class Simulator {
             if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
 
                 if (state.getAllocationStyle().equals("dynamic")) {
+                    if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+                        System.out.println("DONE BY COMPLETION: " + state.getTime());
+                        System.out.println("agents = " + state.getAgents());
+                        int numFailed = 0;
+                        for (Agent a : state.getAgents()) {
+                            if (a instanceof AgentVirtual av) {
+                                if (!av.isAlive()) {
+                                    numFailed++;
+                                }
+                            }
+                        }
+                        System.out.println("Num failed: " + numFailed);
+                        this.reset();
+                    }
+
                     List<Agent> agentsToRemove = new ArrayList<>();
                     synchronized (state.getAgents()) {
                         for (Agent agent : state.getAgents()) {
@@ -221,7 +221,7 @@ public class Simulator {
                                     av.charge();
                                 } else if (agent.getBattery() < 0.15 && av.isAlive()) {
                                     modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                                    av.kill();
+                                    av.killBattery();
                                 } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
                                     //System.out.println(agent);
                                     av.step(state.isFlockingEnabled());
@@ -473,8 +473,7 @@ public class Simulator {
                         "heuristicbundle",
                         "cbaa",
                         "cbba",
-                        "cbbacoverage",
-                        "pimaxass"
+                        "cbbacoverage"
                 ));
 
                 if(possibleMethods.contains(allocationMethod)) {

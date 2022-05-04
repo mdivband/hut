@@ -242,6 +242,10 @@ public class AgentController extends AbstractController {
         return ((AgentHubProgrammed) hub).checkForConnection(agent);
     }
 
+    /**
+     * Spawns a new agent next to the hub, if allowed by the limits
+     * @return
+     */
     public Agent spawnAgent() {
         if (scheduledRemovals > 0) {
             scheduledRemovals--;
@@ -283,12 +287,6 @@ public class AgentController extends AbstractController {
                             agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
                         }
                         //agent.stop();
-                /*
-                simulator.getAllocator().runAutoAllocation();
-                simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
-                double successChance = simulator.getRandom().nextDouble(100);
-                simulator.getState().setSuccessChance(successChance);
-                */
                     }
                 }
                 return agent;
@@ -297,6 +295,10 @@ public class AgentController extends AbstractController {
         return null;
     }
 
+    /**
+     * If within limits, schedule the hub to remove the next non-recharging agent to enter its area
+     * @return
+     */
     public int despawnAgent() {
         Hub hub = Simulator.instance.getState().getHub();
         if (hub instanceof AgentHubProgrammed ahp) {
@@ -356,6 +358,11 @@ public class AgentController extends AbstractController {
         }
     }
 
+    /**
+     * Remove the agent nearest to the hub that has no task
+     * @param agents
+     * @return
+     */
     public Agent removeLeastRequiredAgent(Collection<Agent> agents) {
         double maxDistance = -1;
         Agent leastRequiredAgent = null;
@@ -406,6 +413,11 @@ public class AgentController extends AbstractController {
         return true;
     }
 
+    /**
+     * Models the random failure, and kills if successful, the given agent
+     * @param a
+     * @return
+     */
     public boolean modelFailure(Agent a) {
         // Each agent is called every 5 seconds, and the scenario is 4 mins (at time of writing) at 6 times speed
         //  this means that to have just a few failures in a scenario typically, let's say 4*6*60*5 = 7200,

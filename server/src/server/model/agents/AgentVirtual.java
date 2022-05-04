@@ -16,19 +16,14 @@ public class AgentVirtual extends Agent {
 
     private transient boolean alive = true;
     protected boolean goingHome = false;
-    private double batteryVariance;
-    private double speedVariance;
+    private final double batteryVariance;
+    private final double speedVariance;
     private boolean charging = false;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
-        // [-0.0002, 0.0002]
-        //batteryVariance = 0.0002 - (Simulator.instance.getRandom().nextDouble() / 2500);
         batteryVariance = Simulator.instance.getState().calculateRandomValueFor("batteryPerAgent");
-        // Speed variance is given per second, not per timestep [-0.5, 0.5] (10%)
-        //speedVariance = 0.5 - (Simulator.instance.getRandom().nextDouble());
         speedVariance = Simulator.instance.getState().calculateRandomValueFor("speedPerAgent");
-        // System.out.println("var = " + speedVariance);
         this.sensor = sensor;
         setType("standard");
     }
@@ -40,21 +35,17 @@ public class AgentVirtual extends Agent {
             for (Agent a : sensor.senseNeighbours(this, 10.0)) {
                 if (a instanceof Hub) {
                     goingHome = false;
-                    //System.out.println("Setting withpack now");
                     setType("withpack");
                     if (getRoute().size() <= 0) {
-                        //System.out.println("Stopping at home");
                         System.out.println(this);
                         stop();
                     }
 
                 }
             }
-            //this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + (0.0001 - Simulator.instance.getRandom().nextDouble() / 5000)) : 0;
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getState().calculateRandomValueFor("batteryPerStep")) : 0;
         } else if (alive) {
             super.step(flockingEnabled);
-            //his.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + (0.0001 - Simulator.instance.getRandom().nextDouble() / 5000)) : 0;
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getState().calculateRandomValueFor("batteryPerStep")) : 0;
         }
 
@@ -69,11 +60,9 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustHeadingTowardsGoal()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            //double possDistToMove = (speed + speedVariance + ((0.25 - Simulator.instance.getRandom().nextDouble() / 2))) / Simulator.instance.getGameSpeed();
             double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) / Simulator.instance.getGameSpeed();
             double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
-            //this.moveAlongHeading(1);
         }
     }
 
@@ -83,11 +72,9 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustFlockingHeading()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            //double possDistToMove = (speed + speedVariance + ((0.25 - Simulator.instance.getRandom().nextDouble() / 2))) / Simulator.instance.getGameSpeed();
             double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) / Simulator.instance.getGameSpeed();
             double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
-            //this.moveAlongHeading(1);
         }
     }
 
@@ -306,7 +293,10 @@ public class AgentVirtual extends Agent {
 
     }
 
-    public void kill() {
+    /**
+     * The battery has got too low, set this to the "limp home" mode and return to hub for recharging
+     */
+    public void killBattery() {
         goHome();
         if (getAllocatedTaskId() != null && !getAllocatedTaskId().equals("")) {
             getTask().getAgents().remove(this);
@@ -322,6 +312,9 @@ public class AgentVirtual extends Agent {
         return alive;
     }
 
+    /**
+     * A per-step function to recharge the battery. Automatically resets it to alive state if battery is full
+     */
     public void charge() {
         charging = true;
         battery += unitTimeBatteryConsumption * 10;

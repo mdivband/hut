@@ -662,14 +662,28 @@ public class State {
         this.missionSuccessUnderChance = underChance;
     }
 
+    /**
+     * Resets log to a new filename
+     * @param fileHandler
+     */
     public void resetLogger(FileHandler fileHandler) {
         LOGGER.addHandler(fileHandler);
     }
 
+    /**
+     * Place a k,v pair for a variance (per agent persistent random offset)
+     * @param key
+     * @param val
+     */
     public void putVarianceOption(String key, Double val) {
         varianceOptions.put(key, val);
     }
 
+    /**
+     * Place a k,v pair for a variance (per agent persistent random offset)
+     * @param key
+     * @param val
+     */
     public void putNoiseOption(String key, Double val) {
         noiseOptions.put(key, val);
     }

@@ -99,6 +99,17 @@ public class Allocator {
         updateAllocationHistory();
     }
 
+    /**
+     * Overarching bundle method. Runs the given method specifically, and handles the surrounding assignment
+     * This means the algorithm-specific code only needs to produce a
+     *  (String to List<String>) HashMap of agent id -> list of task ids,
+     *  and the code handles the specifics of assignment in the backend
+     * @param allocationMethod
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @param editMode
+     * @return
+     */
     private Map<String, String> computeBundle(String allocationMethod, List<Agent> agentsToAllocate, List<Task> tasksToAllocate, boolean editMode) {
         HashMap<String, String> result = new HashMap<>();
 
@@ -135,8 +146,6 @@ public class Allocator {
             currentAllocation = cbbaBundleCompute(agentsToAllocate, tasksToAllocate);
         } else if (allocationMethod.equals("cbbacoverage")) {
             currentAllocation = cbbaBundleComputeWithCoverage(agentsToAllocate, tasksToAllocate);
-        } else if (allocationMethod.equals("pimaxass")) {
-            currentAllocation = piMaxAssBundleCompute(agentsToAllocate, tasksToAllocate);
         } else {
             return null;
         }
@@ -154,6 +163,12 @@ public class Allocator {
         return result;
     }
 
+    /**
+     * Evenly distributes tasks to agents irrespective of distance. Not hugely useful but possibly useful for comparison
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
     private HashMap<String, List<String>> basicBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
         HashMap<String, List<String>> currentAllocation = new HashMap<>();
 
@@ -178,6 +193,12 @@ public class Allocator {
 
     }
 
+    /**
+     * A basic heuristic approach to bundle based allocation. Uses a bin-packing-esque algorithm
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
     private HashMap<String, List<String>> heuristicBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
         HashMap<String, List<String>> currentAllocation = new HashMap<>();
 
@@ -225,53 +246,37 @@ public class Allocator {
         return currentAllocation;
     }
 
+    /**
+     * CBAA algorithm call
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
     private HashMap<String, List<String>> cbaaBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
-        System.out.println("======= Runnning CBAA =======");
         Cbaa cbaa = new Cbaa(agentsToAllocate, tasksToAllocate);
         return cbaa.compute();
     }
 
+    /**
+     * CBBA algorithm call
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
     private HashMap<String, List<String>> cbbaBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
-        System.out.println("======= Runnning CBBA =======");
         Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate, false);
         return cbba.compute();
     }
 
+    /**
+     * CBBA algorithm call, with additional step to ensure all agents are assigned to something
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
     private HashMap<String, List<String>> cbbaBundleComputeWithCoverage(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
-        System.out.println("======= Runnning CBBA with coverage =======");
         Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate, true);
         return cbba.compute();
-    }
-
-    private HashMap<String, List<String>> piMaxAssBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
-        HashMap<String, List<String>> currentAllocation = new HashMap<>();
-
-        HashMap<String, Double> tasksByWeight = new HashMap<>();
-        tasksToAllocate.forEach(t -> tasksByWeight.put(t.getId(), t.getCoordinate().getDistance(simulator.getState().getHubLocation())));
-        List<Task> orderedTasks = new ArrayList<>();
-
-        boolean converged = false;
-        while (!converged) {
-            for (Agent a : agentsToAllocate) {
-                // Task Inclusion Phase
-
-
-
-                // Communication and Conflict Resolution Phase
-
-
-
-            }
-
-            // Check for Convergence
-
-        }
-
-
-
-
-
-        return currentAllocation;
     }
 
     public void putInTempAllocation(String agentId, String taskId) {
@@ -537,6 +542,14 @@ public class Allocator {
         return null;
     }
 
+    /**
+     * For each agent, assign the nearest task. Quick and surprisingly effective. Assumes global information as agents
+     *  will reassign in the field
+     * @param agents
+     * @param tasks
+     * @param editMode
+     * @return
+     */
     protected Map<String, String> bestFirstCompute(List<Agent> agents, List<Task> tasks, boolean editMode) {
         if (!agents.isEmpty() && !tasks.isEmpty()) {
             HashMap<String, String> result = new HashMap<>();
@@ -560,7 +573,7 @@ public class Allocator {
                 if (closestTask != null) {
                     taskIdsToAllocate.add(closestTask.getId());
                 } else {
-                    System.out.println("passed agent for allocation");
+                    //System.out.println("passed agent for allocation");
                 }
             }
 
@@ -982,6 +995,10 @@ public class Allocator {
         return false;
     }
 
+    /**
+     * Clears agent values
+     * Unused currently
+     */
     public void clearAgents() {
         for (Agent a : simulator.getState().getAgents()) {
             if (!(a instanceof Hub)) {
@@ -996,6 +1013,11 @@ public class Allocator {
         }
     }
 
+    /**
+     * Assigns the nearest task that is not being done by any other agent
+     * @param agent
+     * @return
+     */
     public boolean dynamicAssignNearest(Agent agent) {
         double nearestDist = 99999999;
         Task nearestTask = null;
@@ -1016,6 +1038,11 @@ public class Allocator {
         return false;
     }
 
+    /**
+     * Assigns a random task that is not being done by any other agent
+     * @param agent
+     * @return
+     */
     public boolean dynamicAssignRandom(Agent agent) {
         List<Task> possibles = new ArrayList<>();
         // Add all empty tasks to the possibles array
@@ -1029,6 +1056,11 @@ public class Allocator {
         return false;
     }
 
+    /**
+     * Used for dynamic (ad hoc) assignment processes from the hub outwards. E.g in a package delivery configuration
+     * Depending on the options for the scenario, there are a few methods for this, called by this one
+     * @param agent
+     */
     public void dynamicAssign(Agent agent) {
         List<AgentVirtual> homingAgents = new ArrayList<>();
         simulator.getState().getAgents().forEach(a -> {
@@ -1078,6 +1110,11 @@ public class Allocator {
             }
         });
     }
+
+    /**
+     * Resets log to a new filename
+     * @param fileHandler
+     */
     public void resetLogger(FileHandler fileHandler) {
         LOGGER.addHandler(fileHandler);
     }

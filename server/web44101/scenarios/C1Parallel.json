@@ -9,6 +9,14 @@
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
   "modelStyle": "parallel",
+  "varianceParameters": {
+    "speedPerAgent": 0.5,
+    "batteryPerAgent": 0.0002
+  },
+  "noiseParameters": {
+    "speedPerSecond": 0.25,
+    "batteryPerStep": 0.0001
+  },
   "hub": {
     "lat": 50.928955248687274,
     "lng": -1.40882186832185
