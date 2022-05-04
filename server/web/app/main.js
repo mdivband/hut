@@ -300,7 +300,9 @@ var simulator = {
             endScenarioDiv.on('click', function () {
                 if (userRole == "planner") {
                     var fileName = self.state.getNextFileName();
-                    //$.post("/reset");
+                    $.post('/reset', function () {
+                        state.reset();
+                    });
                     $.post('/mode/scenario', {'file-name': fileName}, function () {
                         endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
                         endScenarioDiv[0].addEventListener("animationend", function () {
@@ -316,6 +318,7 @@ var simulator = {
                 self.waiting = false;
                 self.waitingForPlanner = false;
                 self.passedThrough = true;
+                MapTargetController.revealedNumber = 0;
                 _.bind(self.run, self)();
             });
         }
