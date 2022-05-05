@@ -78,6 +78,7 @@ App.Views.Review = Backbone.View.extend({
     },
     clearImage : function () {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.currentImageName = "";
         this.render();
     },
 });

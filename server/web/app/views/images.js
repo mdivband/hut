@@ -93,11 +93,15 @@ App.Views.Images = Backbone.View.extend({
                         self.viewButtons.append(button);
 
                         button.addEventListener("click", function (event) {
-                            console.log("Selecting an image that is shallow scanned - " + iRef);
-                            MapImageController.triggerImage(id, iRef, true);
-                            $("#rev_deep").removeClass("rev_buttons_greyed").addClass("rev_buttons");
-                            button.focus();
-                            $("#rev_deep").prop('disabled', false);
+                            if (MapImageController.getCurrentImageId() != "") {
+                                alert("Please finish classifying this scan before selecting another.");
+                            } else {
+                                console.log("Selecting an image that is shallow scanned - " + iRef);
+                                MapImageController.triggerImage(id, iRef, true);
+                                $("#rev_deep").removeClass("rev_buttons_greyed").addClass("rev_buttons");
+                                button.focus();
+                                $("#rev_deep").prop('disabled', false);
+                            }
                         });
                         self.addedIds.push(id);
 
