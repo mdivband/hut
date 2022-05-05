@@ -395,7 +395,14 @@ public class Simulator {
                 state.setHubLocation(new Coordinate(lat, lng));
             }
 
-            Object avgAgentDropout = GsonUtils.getValue(obj, "avgAgentDropout");
+            Boolean faultySwarm = GsonUtils.getValue(obj, "faultySwarm");
+            Object faultySwarmObj = obj;
+            if (faultySwarm != null && faultySwarm) {
+                String faultySwarmJson = GsonUtils.readFile(webRef + "/scenarios/snippets/faultySwarm.json");
+                faultySwarmObj = GsonUtils.fromJson(faultySwarmJson);
+            }
+
+            Object avgAgentDropout = GsonUtils.getValue(faultySwarmObj, "avgAgentDropout");
             if (avgAgentDropout != null) {
                 if (avgAgentDropout.getClass() == Double.class ) {
                     this.state.setAvgAgentDropout((Double)avgAgentDropout);
@@ -406,7 +413,7 @@ public class Simulator {
                 }
             }
 
-            Object ignoredTaskProb = GsonUtils.getValue(obj, "ignoredTaskProb");
+            Object ignoredTaskProb = GsonUtils.getValue(faultySwarmObj, "ignoredTaskProb");
             if (ignoredTaskProb != null) {
                 if (ignoredTaskProb.getClass() == Double.class ) {
                     this.state.setIgnoredTaskProb((Double)ignoredTaskProb);
@@ -439,7 +446,20 @@ public class Simulator {
                 }
             }
 
-            List<Object> windList = GsonUtils.getValue(obj, "wind");
+            Double windSet = GsonUtils.getValue(obj, "windSet");
+            List<Object> windList;
+            if (windSet != null) {
+                String windSetJson = "";
+                if (windSet == 1.0) {
+                    windSetJson = GsonUtils.readFile(webRef + "/scenarios/snippets/WindSet1.json");
+                } else if (windSet == 2.0) {
+                    windSetJson = GsonUtils.readFile(webRef + "/scenarios/snippets/WindSet2.json");
+                }
+                Object windSetObj = GsonUtils.fromJson(windSetJson);
+                windList = GsonUtils.getValue(windSetObj, "wind");
+            } else {
+                windList = GsonUtils.getValue(obj, "wind");
+            }
             if (windList != null) {
                 for (Object wind : windList) {
                     Double time = GsonUtils.getValue(wind, "time");
@@ -510,25 +530,63 @@ public class Simulator {
                 }
             }
 
-            List<Object> targetsJson = GsonUtils.getValue(obj, "targets");
+            Double targetSet = GsonUtils.getValue(obj, "targetSet");
+            Double imageSet = GsonUtils.getValue(obj, "imageSet");
+            List<Object> targetsJson;
+            List<Object> imagesJson = new ArrayList<>();
+            if (targetSet != null && imageSet != null) {
+                String targetSetJson = "";
+                if (targetSet == 1.0) {
+                    targetSetJson = GsonUtils.readFile(webRef + "/scenarios/snippets/TargetSet1.json");
+                } else if (targetSet == 2.0) {
+                    targetSetJson = GsonUtils.readFile(webRef + "/scenarios/snippets/TargetSet2.json");
+                }
+                Object targetSetObj = GsonUtils.fromJson(targetSetJson);
+                targetsJson = GsonUtils.getValue(targetSetObj, "targets");
+
+                String imageSetJson = "";
+                if (imageSet == 1.0) {
+                    imageSetJson = GsonUtils.readFile(webRef + "/scenarios/snippets/ImageSet1.json");
+                } else if (imageSet == 2.0) {
+                    imageSetJson = GsonUtils.readFile(webRef + "/scenarios/snippets/ImageSet2.json");
+                }
+                Object imageSetObj = GsonUtils.fromJson(imageSetJson);
+                imagesJson = GsonUtils.getValue(imageSetObj, "images");
+            } else {
+                targetsJson = GsonUtils.getValue(obj, "targets");
+            }
+            
             if (targetsJson != null) {
-                for (Object targetJson : targetsJson) {
+                for (int i = 0; i < targetsJson.size(); i++) {
+                    Object targetJson = targetsJson.get(i);
                     Double lat = GsonUtils.getValue(targetJson, "lat");
                     Double lng = GsonUtils.getValue(targetJson, "lng");
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
-                    String highRes = GsonUtils.getValue(targetJson, "highRes");
-                    String lowRes = GsonUtils.getValue(targetJson, "lowRes");
-                    Target target;
-                    if (GsonUtils.hasKey(targetJson, "correctClassification")) {
-                        String correctClassification = GsonUtils.getValue(targetJson, "correctClassification");
-                        target = targetController.addTarget(lat, lng, type, correctClassification);
-                        ((AdjustableTarget) target).setFilenames(lowRes, highRes);
+
+                    Object imageJson;
+                    if (imageSet != null) {
+                        imageJson = imagesJson.get(i);
+                    } else {
+                        imageJson = targetJson;
+                    }
+                    String highRes = GsonUtils.getValue(imageJson, "highRes");
+                    String lowRes = GsonUtils.getValue(imageJson, "lowRes");
+                    Target target = null;
+                    if (GsonUtils.hasKey(imageJson, "correctClassification")) {
+                        String correctClassification = GsonUtils.getValue(imageJson, "correctClassification");
+                        if (!correctClassification.equals("false") || (faultySwarm != null && faultySwarm)) {
+                            // if the swarm is not faulty, don't add false alarm targets
+                            target = targetController.addTarget(lat, lng, type, correctClassification);
+                            ((AdjustableTarget) target).setFilenames(lowRes, highRes);
+                        }
                     } else {
                         target = targetController.addTarget(lat, lng, type);
                     }
 
-                    //Hide all targets initially - they must be found!!
-                    targetController.setTargetVisibility(target.getId(), false);
+                    if (target != null) {
+                        //Hide all targets initially - they must be found!!
+                        targetController.setTargetVisibility(target.getId(), false);
+                    }
                 }
             }
 
@@ -559,6 +617,7 @@ public class Simulator {
                     this.state.getMarkers().add(shapeRep);
                 }
             }
+            LOGGER.info(String.format("%s; SCINIT; Scenario initialised with the following conditions (scenarioNumber, chatEnabled, faultySwarm, targetSet, imageSet, windSet); %s, %s, %s, %s, %s, %s ", getState().getTime(), scenarioNumber, chatEnabled, faultySwarm, targetSet, imageSet, windSet));
             return true;
         } catch (IOException e) {
             e.printStackTrace();

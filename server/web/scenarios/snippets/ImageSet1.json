@@ -1,0 +1,79 @@
+{
+  "images": [
+    {
+      "highRes": "Set1/Debris1.png",
+      "lowRes": "Set1/Debris1.png",
+      "correctClassification": "debris"
+    },
+    {
+      "highRes": "Set1/Debris2.png",
+      "lowRes": "Set1/Debris2.png",
+      "correctClassification": "debris"
+    },
+    {
+      "highRes": "Set1/Debris3.png",
+      "lowRes": "Set1/Debris3.png",
+      "correctClassification": "debris"
+    },
+    {
+      "highRes": "Set1/Human1.png",
+      "lowRes": "Set1/Human1.png",
+      "correctClassification": "human"
+    },
+    {
+      "highRes": "Set1/Human2.png",
+      "lowRes": "Set1/Human2.png",
+      "correctClassification": "human"
+    },
+    {
+      "highRes": "Set1/Human3.png",
+      "lowRes": "Set1/Human3.png",
+      "correctClassification": "human"
+    },
+    {
+      "highRes": "Set1/Human4.png",
+      "lowRes": "Set1/Human4.png",
+      "correctClassification": "human"
+    },
+    {
+      "highRes": "Set1/Human5.png",
+      "lowRes": "Set1/Human5.png",
+      "correctClassification": "human"
+    },
+    {
+      "highRes": "Set1/Human6.png",
+      "lowRes": "Set1/Human6.png",
+      "correctClassification": "human"
+    },
+    {
+      "highRes": "Set1/False1.png",
+      "lowRes": "Set1/False1.png",
+      "correctClassification": "false"
+    },
+    {
+      "highRes": "Set1/False2.png",
+      "lowRes": "Set1/False2.png",
+      "correctClassification": "false"
+    },
+    {
+      "highRes": "Set1/False3.png",
+      "lowRes": "Set1/False3.png",
+      "correctClassification": "false"
+    },
+    {
+      "highRes": "Set1/False4.png",
+      "lowRes": "Set1/False4.png",
+      "correctClassification": "false"
+    },
+    {
+      "highRes": "Set1/False5.png",
+      "lowRes": "Set1/False5.png",
+      "correctClassification": "false"
+    },
+    {
+      "highRes": "Set1/False6.png",
+      "lowRes": "Set1/False6.png",
+      "correctClassification": "false"
+    }
+  ]
+}

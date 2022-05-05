@@ -1,0 +1,107 @@
+{
+  "gameId": "Test_2",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You do NOT have access to the chat feature to talk to your teammate.",
+  "comment": "This is the Complex - Low scenario",
+  "allocationMethod": "random",
+  "faultySwarm": true,
+  "uncertaintyRadius": 20.0,
+  "timeLimitSeconds": 480,
+  "chatEnabled": false,
+  "scenarioNumber": 2,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "windSet": 2,
+  "targetSet": 2,
+  "imageSet": 2,
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.409
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.408
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.407
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.406
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.405
+    },
+    {
+      "lat": 50.92870002299894,
+      "lng": -1.409
+    },
+    {
+      "lat": 50.92870002299894,
+      "lng": -1.408
+    },
+    {
+      "lat": 50.92870002299894,
+      "lng": -1.407
+    },
+    {
+      "lat": 50.92870002299894,
+      "lng": -1.406
+    },
+    {
+      "lat": 50.92870002299894,
+      "lng": -1.405
+    },
+    {
+      "lat": 50.92860002299894,
+      "lng": -1.409
+    },
+    {
+      "lat": 50.92860002299894,
+      "lng": -1.408
+    },
+    {
+      "lat": 50.92860002299894,
+      "lng": -1.407
+    },
+    {
+      "lat": 50.92860002299894,
+      "lng": -1.406
+    },
+    {
+      "lat": 50.92860002299894,
+      "lng": -1.405
+    },
+    {
+      "lat": 50.92850002299894,
+      "lng": -1.409
+    },
+    {
+      "lat": 50.92850002299894,
+      "lng": -1.408
+    },
+    {
+      "lat": 50.92850002299894,
+      "lng": -1.407
+    },
+    {
+      "lat": 50.92850002299894,
+      "lng": -1.406
+    },
+    {
+      "lat": 50.92850002299894,
+      "lng": -1.405
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 1
+    }
+  ]
+}
