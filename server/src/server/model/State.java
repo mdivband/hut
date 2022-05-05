@@ -33,6 +33,7 @@ public class State {
     private double time;
     private double timeLimit;
     private long scenarioEndTime;
+    private long scenarioStartTime;
     private int editMode;
     // editMode 1 = monitor
     //          2 = edit
@@ -78,6 +79,7 @@ public class State {
 
     private Double windSpeed;
     private Double windHeading;
+    private List<HashMap> futureWind = new ArrayList<>();
 
     private List<String> userNames = new ArrayList<>();
     private List<String> markers = new ArrayList<>();
@@ -119,7 +121,7 @@ public class State {
         allocationMethod = "maxsum";
         flockingEnabled = false;
         uncertaintyRadius = 0;
-        windSpeed = 1.0;
+        windSpeed = 0.0;
         windHeading = 0.0;
         markers.clear();
 
@@ -268,6 +270,14 @@ public class State {
         } else {
             this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
         }
+    }
+
+    public synchronized void setScenarioStartTime() {
+        this.scenarioStartTime = System.currentTimeMillis();
+    }
+
+    public synchronized long getScenarioStartTime() {
+        return scenarioStartTime;
     }
 
     private synchronized void setScenarioEndTime(double timeLimit) {
@@ -488,8 +498,16 @@ public class State {
         LOGGER.addHandler(fileHandler);
     }
 
+    public void setWindSpeed(Double windSpeed) {
+        this.windSpeed = windSpeed;
+    }
+
     public Double getWindSpeed() {
         return windSpeed;
+    }
+
+    public void setWindHeading(Double windHeading) {
+        this.windHeading = windHeading;
     }
 
     public Double getWindHeading() {
@@ -518,6 +536,18 @@ public class State {
 
     public void setScenarioNumber(int scenarioNumber) {
         this.scenarioNumber = scenarioNumber;
+    }
+
+    public void addFutureWind(Double time, Double speed, Double heading) {
+        HashMap<String, Double> wind = new HashMap<>();
+        wind.put("time", time);
+        wind.put("speed", speed);
+        wind.put("heading", heading);
+        this.futureWind.add(wind);
+    }
+
+    public List<HashMap> getFutureWind() {
+        return this.futureWind;
     }
 
     private class HazardHit {

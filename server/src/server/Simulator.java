@@ -130,6 +130,7 @@ public class Simulator {
     }
 
     public void startSimulation() {
+        state.setScenarioStartTime();
         state.setScenarioEndTime();
         //Heart beat all virtual agents to prevent time out when user is reading the description.
         for(Agent agent : this.state.getAgents())
@@ -170,6 +171,19 @@ public class Simulator {
                     updateNextValues();
                 }
                 this.reset();
+            }
+
+            //Check for wind change
+            List<HashMap> futureWind = this.state.getFutureWind();
+            Iterator<HashMap> i = futureWind.iterator();
+            while (i.hasNext()) {
+                HashMap<String, Double> wind = i.next();
+                if (System.currentTimeMillis() >= state.getScenarioStartTime() + (long) (wind.get("time") * 1000)) {
+                    state.setWindSpeed(wind.get("speed"));
+                    state.setWindHeading(wind.get("heading"));
+                    i.remove();
+                    LOGGER.info(String.format("%s; WNDCHG; Wind speed and heading has changed (speed, heading); %s, %s ", getState().getTime(), wind.get("speed"), wind.get("heading")));
+                }
             }
 
             //Step agents
@@ -422,6 +436,16 @@ public class Simulator {
                     LOGGER.warning("Expected integer value for scenarioNumber in scenario file. Received: '" +
                             scenarioNumber.toString() + "'. Set to 0.");
                     // state.scenarioNumber initialised with default value of 0
+                }
+            }
+
+            List<Object> windList = GsonUtils.getValue(obj, "wind");
+            if (windList != null) {
+                for (Object wind : windList) {
+                    Double time = GsonUtils.getValue(wind, "time");
+                    Double speed = GsonUtils.getValue(wind, "speed");
+                    Double heading = GsonUtils.getValue(wind, "heading");
+                    this.state.addFutureWind(time, speed, heading);
                 }
             }
 
