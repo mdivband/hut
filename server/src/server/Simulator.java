@@ -187,7 +187,7 @@ public class Simulator {
             }
 
             //Step agents
-            checkAgentsForTimeout();
+            // checkAgentsForTimeout();
             for (Agent agent : state.getAgents()) {
                 if (!agent.isTimedOut()) {
                     agent.step(state.isFlockingEnabled(), state.getAvgAgentDropout());
