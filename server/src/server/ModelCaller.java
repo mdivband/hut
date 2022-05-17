@@ -10,14 +10,13 @@ public class ModelCaller {
     private Thread underThread = null;
     private Thread overThread = null;
     private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
-    private String style = "justOn";
     private String webRef;
 
     private Process[] procs = new Process[3];
     private int currentSalt;
 
     public void reset() {
-        style = "justOn";
+        Simulator.instance.getState().setModelStyle("off");
         currentThread = null;
         underThread = null;
         overThread = null;
@@ -31,45 +30,46 @@ public class ModelCaller {
      * Also side effects the chances in State.
      */
     public void startThread(String webRef) {
-        currentSalt = Simulator.instance.getRandom().nextInt(10000);
-        this.webRef = webRef;
-        // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
-        if (currentThread != null) {
-            //System.out.println("INTERRUPTING");
-            procs[1].destroy();
-            //System.out.println("dest");
-            currentThread.interrupt();
-            currentThread = null;
-        }
-        if (underThread != null) {
-            procs[0].destroy();
-            underThread.interrupt();
-            underThread = null;
-        }
-        if (overThread != null) {
-            procs[2].destroy();
-            overThread.interrupt();
-            overThread = null;
-        }
+        if (!Simulator.instance.getState().getModelStyle().equals("off")) {
+            currentSalt = Simulator.instance.getRandom().nextInt(10000);
+            this.webRef = webRef;
+            // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
+            if (currentThread != null) {
+                //System.out.println("INTERRUPTING");
+                procs[1].destroy();
+                //System.out.println("dest");
+                currentThread.interrupt();
+                currentThread = null;
+            }
+            if (underThread != null) {
+                procs[0].destroy();
+                underThread.interrupt();
+                underThread = null;
+            }
+            if (overThread != null) {
+                procs[2].destroy();
+                overThread.interrupt();
+                overThread = null;
+            }
 
-        Simulator.instance.getState().setMissionSuccessChance(-1);
-        Simulator.instance.getState().setMissionSuccessOverChance(-1);
-        Simulator.instance.getState().setMissionSuccessUnderChance(-1);
+            Simulator.instance.getState().setMissionSuccessChance(-1);
+            Simulator.instance.getState().setMissionSuccessOverChance(-1);
+            Simulator.instance.getState().setMissionSuccessUnderChance(-1);
 
-        Simulator.instance.getState().setMissionBoundedSuccessChance(-1);
-        Simulator.instance.getState().setMissionBoundedSuccessOverChance(-1);
-        Simulator.instance.getState().setMissionBoundedSuccessUnderChance(-1);
+            Simulator.instance.getState().setMissionBoundedSuccessChance(-1);
+            Simulator.instance.getState().setMissionBoundedSuccessOverChance(-1);
+            Simulator.instance.getState().setMissionBoundedSuccessUnderChance(-1);
 
-        currentThread = new Thread(this::runOn);
-        // TODO not properly interrupted
-        currentThread.start();
-        if (style.equals("parallel")) {
-            underThread = new Thread(this::runUnder);
-            underThread.start();
-            overThread = new Thread(this::runOver);
-            overThread.start();
+            currentThread = new Thread(this::runOn);
+            // TODO not properly interrupted
+            currentThread.start();
+            if (Simulator.instance.getState().getModelStyle().equals("parallel")) {
+                underThread = new Thread(this::runUnder);
+                underThread.start();
+                overThread = new Thread(this::runOver);
+                overThread.start();
+            }
         }
-
     }
 
     /**
@@ -127,7 +127,7 @@ public class ModelCaller {
         //currentThread.interrupt();
         currentThread = null;
 
-        if (style.equals("series")) {
+        if (Simulator.instance.getState().getModelStyle().equals("series")) {
             overThread = new Thread(this::runOver);
             overThread.start();
         }
@@ -156,7 +156,7 @@ public class ModelCaller {
         //overThread.interrupt();
         overThread = null;
 
-        if (style.equals("series")) {
+        if (Simulator.instance.getState().getModelStyle().equals("series")) {
             underThread = new Thread(this::runUnder);
             underThread.start();
         }
@@ -297,10 +297,6 @@ public class ModelCaller {
             System.out.println("ERROR READING RESULT. RETURNING 0");
             return 0;
         }
-    }
-
-    public void setStyle(String modelStyle) {
-        style = modelStyle;
     }
 
 }

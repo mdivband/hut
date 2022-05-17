@@ -331,6 +331,7 @@ var MapController = {
      */
     swapMode: function (toEditMode, sendUpdate) {
         self = this;
+        // UI settings
         this.state.getUiOptions().forEach(function (option) {
             if (option === "predictions") {
                 $("#prediction_wrapper_div").show();
@@ -340,6 +341,20 @@ var MapController = {
                 $("#ranges_wrapper_div").show();
             }
         });
+
+        // Boxes to be shown or not as per modes
+        if (this.state.getModelStyle() === "off") {
+            $("#prediction_canvas").hide();
+            $("#mission_prediction_canvas").hide();
+            $("#bounded_prediction_canvas").hide();
+            $("#addRemAgentButton").hide()
+        } else {
+            $("#prediction_canvas").show();
+            $("#mission_prediction_canvas").show();
+            $("#bounded_prediction_canvas").show();
+            $("#addRemAgentButton").show()
+        }
+
         try {
             MapController.communicationRange = this.state.getCommunicationRange();
         } catch (e) {

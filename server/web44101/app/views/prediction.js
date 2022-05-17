@@ -79,22 +79,28 @@ App.Views.Prediction = Backbone.View.extend({
     },
     updateOverBound : function () {
         var addButton = document.getElementById("add_agent");
-        //var chance = this.state.getMissionSuccessOverChance();
-        var chance = this.state.getMissionBoundedSuccessOverChance();
-        if (chance === -1) {
-            addButton.innerText = "Add Agent (?%)"
+        if ((this.state.getModelStyle() === "series" || this.state.getModelStyle() === "parallel")) {
+            var chance = this.state.getMissionBoundedSuccessOverChance();
+            if (chance === -1) {
+                addButton.innerText = "Add Agent (?%)";
+            } else {
+                addButton.innerText = "Add Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+            }
         } else {
-            addButton.innerText = "Add Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+            addButton.innerText = "Add Agent";
         }
     },
     updateUnderBound : function () {
         var removeButton = document.getElementById("remove_agent");
-        //var chance = this.state.getMissionSuccessUnderChance()
-        var chance = this.state.getMissionBoundedSuccessUnderChance()
-        if (chance === -1) {
-            removeButton.innerText = "Remove Agent (?%)"
+        if ((this.state.getModelStyle() === "series" || this.state.getModelStyle() === "parallel")) {
+            var chance = this.state.getMissionBoundedSuccessUnderChance()
+            if (chance === -1) {
+                removeButton.innerText = "Remove Agent (?%)";
+            } else {
+                removeButton.innerText = "Remove Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+            }
         } else {
-            removeButton.innerText = "Remove Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+            removeButton.innerText = "Remove Agent";
         }
     },
     getAllocColor: function (p) {

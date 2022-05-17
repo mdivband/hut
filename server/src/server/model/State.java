@@ -32,6 +32,7 @@ public class State {
     private int gameType;
     private String allocationMethod;
     private String allocationStyle;
+    private String modelStyle;
     private Boolean flockingEnabled;
     private double time;
     private double timeLimit;
@@ -121,6 +122,8 @@ public class State {
         successChance = 100.00;
         scoreInfo.clear();
         uncertaintyRadius = 0;
+        communicationConstrained = false;
+        communicationRange = 0;
 
         gameCentre = null;
         userName = "";
@@ -321,6 +324,14 @@ public class State {
 
     public void setAllocationStyle(String allocationStyle) {
         this.allocationStyle = allocationStyle;
+    }
+
+    public String getModelStyle() {
+        return modelStyle;
+    }
+
+    public void setModelStyle(String modelStyle) {
+        this.modelStyle = modelStyle;
     }
 
     public synchronized void setFlockingEnabled(Boolean flockingEnabled) {

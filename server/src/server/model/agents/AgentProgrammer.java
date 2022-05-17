@@ -30,11 +30,11 @@ public class AgentProgrammer {
         if (a.isHub()) {
             LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
             a.setLeader(true);
-        } else if (a.getNextRandomDouble() > 0) { //0.65) {
+        } else if (a.getNextRandomDouble() > 0.65) {
             LOGGER.severe("Sv: Agent with GLOBAL ID " + a.agent.getId() + " randomly assigned leadership");
             a.setLeader(true);
             a.setVisual("leader");
-            if (a.getNextRandomDouble() > 0) { //0.5) {
+            if (a.getNextRandomDouble() > 0.5) {
                 LOGGER.severe("---- and set as a returning agent");
                 returner = true;
             } else {

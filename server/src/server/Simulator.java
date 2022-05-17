@@ -319,16 +319,18 @@ public class Simulator {
     }
 
     public void updateMissionModel() {
-        // Update model and start thread
-        boolean generatedCurrent = ModelGenerator.run(state, webRef);
-        boolean generatedOver = ModelGenerator.runOver(state, webRef);
-        boolean generatedUnder = ModelGenerator.runUnder(state, webRef);
-        if (generatedCurrent && generatedOver && generatedUnder) {
-        //if (generatedCurrent) {
-            System.out.println("Model generated successfully");
-            modelCaller.startThread(webRef);
-        } else {
-            System.out.println("Generation failure");
+        if (!state.getModelStyle().equals("off")) {
+            // Update model and start thread
+            boolean generatedCurrent = ModelGenerator.run(state, webRef);
+            boolean generatedOver = ModelGenerator.runOver(state, webRef);
+            boolean generatedUnder = ModelGenerator.runUnder(state, webRef);
+            if (generatedCurrent && generatedOver && generatedUnder) {
+                //if (generatedCurrent) {
+                System.out.println("Model generated successfully");
+                modelCaller.startThread(webRef);
+            } else {
+                System.out.println("Generation failure");
+            }
         }
     }
 
@@ -518,8 +520,10 @@ public class Simulator {
             if(GsonUtils.hasKey(obj,"modelStyle")){
                 Object modelStyle = GsonUtils.getValue(obj, "modelStyle");
                 if(modelStyle.getClass() == String.class) {
-                    this.modelCaller.setStyle((String) modelStyle);
+                    state.setModelStyle((String) modelStyle);
                 }
+            } else {
+                state.setModelStyle("off");
             }
 
             Object varJson = GsonUtils.getValue(obj, "varianceParameters");

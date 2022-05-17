@@ -45,6 +45,7 @@ App.Models.State  = Backbone.Model.extend({
         missionBoundedSuccessOverChance: 100.00,
         missionBoundedSuccessUnderChance: 100.00,
         scoreInfo: {},
+        modelStyle: "off"
     },
     url: function() {
         return "state.json?" + _.time();
@@ -187,4 +188,7 @@ App.Models.State  = Backbone.Model.extend({
     getMarkers: function () {
         return this.get("markers");
     },
+    getModelStyle: function () {
+        return this.get("modelStyle");
+    }
 });
