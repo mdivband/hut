@@ -1,11 +1,11 @@
 {
   "gameId": "Tutorial",
-  "gameDescription": "Tutorial Scenario - We have given you a hint, try to find the 3 targets in the circled areas and classify them. When you feel you understand the platform, you can close this window",
+  "gameDescription": "Tutorial Scenario - We have given you a hint, try to find the 3 points of interest in the circled areas and classify them. When you feel you understand the platform, the planner can click the 'exit scenario' button.",
   "allocationMethod": "random",
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 300,
   "scenarioNumber": 0,
-  "nextScenarioFile": "WSGA.json",
+  "nextScenarioFile": "test.json",
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
@@ -58,8 +58,8 @@
       "lat": 50.929093899106334,
       "lng": -1.411966365771935,
       "type": 1,
-      "highRes": "Set1/Human1.png",
-      "lowRes": "Set1/Human1.png",
+      "highRes": "Set2/Human1.png",
+      "lowRes": "Set2/Human1.png",
       "correctClassification": "human"
     },
     {
@@ -74,9 +74,9 @@
       "lat": 50.9333140821332,
       "lng": -1.4087086804349669,
       "type": 1,
-      "highRes": "Set1/False1.png ",
-      "lowRes": "Set1/False1.png ",
-      "correctClassification": "false"
+      "highRes": "Set1/Human1.png ",
+      "lowRes": "Set1/Human1.png ",
+      "correctClassification": "human"
     }
 
   ]
