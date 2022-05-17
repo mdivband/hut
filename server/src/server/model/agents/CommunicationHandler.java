@@ -2,7 +2,6 @@ package server.model.agents;
 
 import server.Simulator;
 import server.model.Coordinate;
-import server.model.Hub;
 import server.model.target.Target;
 
 import java.util.*;
@@ -464,10 +463,9 @@ public class CommunicationHandler {
     }
 
     protected void completeTask(){
-        System.out.println("Comm agent completing");
         // A very important check here, otherwise return home tasks mess up the propagation of completed tasks and it
         //  stops tasks being checked properly
-        if (currentTask.size() > 0) {    // TODO this needs to get thje info properly
+        if (currentTask.size() > 0) {    // TODO this needs to get the info properly
             List<Coordinate> coords = currentTask;
             tasks.remove(currentTask);
 

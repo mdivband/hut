@@ -6,6 +6,7 @@ import server.model.*;
 import server.model.agents.Agent;
 import server.model.agents.AgentCommunicating;
 import server.model.agents.AgentProgrammed;
+import server.model.agents.AgentVirtual;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -31,6 +32,7 @@ public abstract class Task extends MObject implements Serializable {
     public static final int TASK_MONITOR = 1;
     public static final int TASK_PATROL = 2;
     public static final int TASK_REGION = 3;
+    public static final int TASK_VISIT = 4;
 
     //Used in client
     private final List<Agent> agents; //Serialised to just agent ids.
@@ -59,30 +61,57 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
-        if (!Simulator.instance.getState().isCommunicationConstrained()) {  // If we can instantly complete
-            Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-            LOGGER.info("Task " + this.getId() + " has been completed");
-        } else {
-            for (Agent agent : getAgents()) {
-                if (agent instanceof AgentProgrammed ap) {
-                    ap.registerCompleteTask(getCoordinate());
-                } else if (agent instanceof AgentCommunicating ac) {
-                    ac.registerCompleteTask(getCoordinate());
+        Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+        LOGGER.info(String.format("%s; TSKCMP; Task completed (id); %s", Simulator.instance.getState().getTime(), this.getId()));
+
+        for (Agent a : agents) {
+            if (a instanceof AgentVirtual av) {
+                /*
+                int loopCounter = 0;
+                Task t = av.getNextTaskFromQueue();
+                //if (t != null && Simulator.instance.getState().getTasks().contains(t)) {  // Means we found one that exists
+                System.out.println("CHECKING");
+                System.out.println("tsks = " + Simulator.instance.getState().getTasks());
+                System.out.println("our task: " + t + ", status=" + t.getStatus() + " agents=" + t.getAgents());
+
+                while (t == null || !Simulator.instance.getState().getTasks().contains(t) || t.getStatus() == STATUS_DONE) {
+                    System.out.println(t + " didn't work out, resecting... ");
+                    t = av.getNextTaskFromQueue();
+                    loopCounter++;
+                    if (loopCounter >= 10) {
+                        a.stop();
+                        return;
+                    }
                 }
+                 */
+
+                //av.setAllocatedTaskId(t.getId());
+                Task t = av.getNextTaskFromQueue();
+                //System.out.println("trying to add " + t);
+                if (t != null) {
+                    Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
+                    Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
+                } else {
+                    //System.out.println("got null task");
+                    a.stop();
+                }
+                //av.setRoute(av.getTempRoute());
+                //System.out.println("comp -> " + av);
+
             }
         }
-        Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-
     }
 
     /**
      * Gets all agents within [10m] of this agent
      * @return ArrayList of arrived agents
      */
-    private ArrayList<Agent> getArrivedAgents(){
+    protected ArrayList<Agent> getArrivedAgents(){
         ArrayList<Agent> arrivedAgents = new ArrayList<>();
         for (Agent a : Simulator.instance.getState().getAgents()) {
-            if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+            //if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+            // 10m doesn't work for an agent speed that's too high. Maybe a better option is for the agent to slow down
+            if (a.getCoordinate().getDistance(this.getCoordinate()) < a.getSpeed()) {
                 arrivedAgents.add(a);
             }
         }
@@ -98,18 +127,21 @@ public abstract class Task extends MObject implements Serializable {
             // Completed, but not yet reported to HUB
             return false;
         } else if (status == STATUS_DONE) {
+            //System.out.println(getId() + " is done");
             // Completed and should be reported
             return true;
         }
-
         ArrayList<Agent> arrivedAgents = getArrivedAgents();
         if (arrivedAgents.size() > 0) {
             // An agent has found this task
             if (Simulator.instance.getState().isCommunicationConstrained()) {
                 // It is NOT programmed or communicating
                 setStatus(Task.STATUS_DONE_PENDING);
+                if (this instanceof VisitTask vt) {
+                    vt.triggerReturnHome();
+                }
             } else {
-                setStatus(Task.STATUS_DONE);
+                //setStatus(Task.STATUS_DONE);
             }
         }
 

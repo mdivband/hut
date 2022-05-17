@@ -8,6 +8,7 @@ import server.model.hazard.Hazard;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class HazardController extends AbstractController {
 
@@ -56,5 +57,10 @@ public class HazardController extends AbstractController {
         }
         simulator.getState().add(hazard);
     }
+
+    public synchronized void resetHazardNumbers() {
+        this.uniqueHazardNumbers = new HashMap<>();
+    }
+
 
 }

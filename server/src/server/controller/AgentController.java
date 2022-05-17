@@ -5,17 +5,14 @@ import server.model.*;
 import server.model.agents.*;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
-import tool.GsonUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class AgentController extends AbstractController {
 
     public static int nextAgentAltitude = 5;
     private static int uniqueAgentNumber = 1;
+    private int scheduledRemovals = 0;
 
     private Sensor sensor;
 
@@ -25,7 +22,16 @@ public class AgentController extends AbstractController {
     }
 
     private String generateUID() {
-        return "UAV-" + uniqueAgentNumber++;
+        String nextId = "UAV-" + uniqueAgentNumber++;
+        while (isClash(nextId)) {
+            System.out.println("CLASH DETECTED. INCREMENTING ID");
+            nextId = "UAV-" + uniqueAgentNumber++;
+        }
+        return nextId;
+    }
+
+    private boolean isClash(String idToCheck) {
+        return simulator.getState().getAgents().stream().anyMatch(a -> a.getId().equals(idToCheck));
     }
 
     public synchronized Agent addRealAgent(double lat, double lng, double heading) {
@@ -44,6 +50,14 @@ public class AgentController extends AbstractController {
 
     public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController) {
         AgentProgrammed agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, random, taskController);
+        agent.setCommunicationRange(simulator.getState().getCommunicationRange());
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading) {
+        AgentProgrammed agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, simulator.getRandom(), simulator.getTaskController());
         agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         agent.setHeading(heading);
         simulator.getState().add(agent);
@@ -113,7 +127,7 @@ public class AgentController extends AbstractController {
             oldResult.remove(id);
 
         simulator.getState().remove(agent);
-        LOGGER.info("Deleted agent " + id);
+        LOGGER.info(String.format("%s; DELAG; Deleted Agent (id); %s ", Simulator.instance.getState().getTime(), id));
         return true;
     }
 
@@ -226,6 +240,207 @@ public class AgentController extends AbstractController {
      */
     public boolean checkHubConnection(Hub hub, Agent agent) {
         return ((AgentHubProgrammed) hub).checkForConnection(agent);
+    }
+
+    /**
+     * Spawns a new agent next to the hub, if allowed by the limits
+     * @return
+     */
+    public Agent spawnAgent() {
+        if (scheduledRemovals > 0) {
+            scheduledRemovals--;
+        } else {
+            if (Simulator.instance.getState().getAgents().size() < 11) {
+                boolean hasProgrammed = false;
+                for (Agent a : Simulator.instance.getState().getAgents()) {
+                    if (a instanceof AgentProgrammed) {
+                        hasProgrammed = true;
+                        break;
+                    }
+                }
+                Agent agent;
+                if (hasProgrammed) {
+                    synchronized (simulator.getState().getAgents()) {
+                        agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+                    }
+                } else {
+                    int counter = 10;
+                    double xOffset;
+                    double yOffset;
+                    boolean clash = true;
+                    Coordinate c = null;
+                    while (clash && counter > 0) {
+                        xOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
+                        yOffset = (simulator.getRandom().nextDouble() * 0.0015) - 0.00075;
+                        c = new Coordinate(simulator.getState().getHubLocation().getLatitude() + xOffset, simulator.getState().getHubLocation().getLongitude() + yOffset);
+                        // Check if any agent is too close
+                        Coordinate finalC = c;
+                        clash = simulator.getState().getAgents().stream().anyMatch(a -> a.getCoordinate().getDistance(finalC) < 0.0002);
+                        counter--;
+                    }
+
+                    if (clash) {
+                        // We still have a clash and can't fit it after 10 attempts
+                        agent = null;
+                    } else {
+                        synchronized (simulator.getState().getAgents()) {
+                            agent = simulator.getAgentController().addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                        }
+                        //agent.stop();
+                    }
+                }
+                return agent;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * If within limits, schedule the hub to remove the next non-recharging agent to enter its area
+     * @return
+     */
+    public int despawnAgent() {
+        Hub hub = Simulator.instance.getState().getHub();
+        if (hub instanceof AgentHubProgrammed ahp) {
+            return ahp.scheduleRemoval(1);
+        } else if (hub instanceof AgentHub ah) {
+            //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
+            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4) {
+                simulator.getAgentController().decrementAgentNumbers();
+                return simulator.getAgentController().incrementRemoval();
+                //return ah.scheduleRemoval(1);
+            }
+        }
+        return -1;
+    }
+
+    private int incrementRemoval() {
+        scheduledRemovals++;
+        return scheduledRemovals;
+    }
+
+    public void decrementRemoval() {
+        scheduledRemovals--;
+    }
+
+    public int getScheduledRemovals() {
+        return scheduledRemovals;
+    }
+
+    public Agent removeClosestAgentToHub() {
+        synchronized (Simulator.instance.getState().getAgents()) {
+            return removeClosestAgentToHub(Simulator.instance.getState().getAgents());
+        }
+    }
+
+    public Agent removeClosestAgentToHub(Collection<Agent> agents) {
+        Agent closestAgent = getClosestAgentToHub(agents);
+        Simulator.instance.getState().getAgents().remove(closestAgent);
+        return closestAgent;
+    }
+
+    public Agent getClosestAgentToHub(Collection<Agent> agents) {
+        double minDistance = 99999.0;
+        Agent closestAgent = null;
+        for (Agent a : agents) {
+            double thisDistance = simulator.getState().getHubLocation().getDistance(a.getCoordinate());
+            if (thisDistance < minDistance && !(a instanceof Hub)) {
+                closestAgent = a;
+                minDistance = thisDistance;
+            }
+        }
+        return closestAgent;
+    }
+
+    public Agent removeLeastRequiredAgent() {
+        synchronized (Simulator.instance.getState().getAgents()) {
+            return removeLeastRequiredAgent(Simulator.instance.getState().getAgents());
+        }
+    }
+
+    /**
+     * Remove the agent nearest to the hub that has no task
+     * @param agents
+     * @return
+     */
+    public Agent removeLeastRequiredAgent(Collection<Agent> agents) {
+        double maxDistance = -1;
+        Agent leastRequiredAgent = null;
+        // We handle two cases: whether there are some unassigned agents, or whether there are zero unassigned agents
+        boolean hasNull = agents.stream().anyMatch(a -> !(a instanceof Hub) && a.getTask() == null);
+        ArrayList<Agent> agentsToConsider = new ArrayList<>();
+        for (Agent a : agents) {
+            if (hasNull && a.getTask() == null && !(a instanceof Hub)) {
+                agentsToConsider.add(a);
+            } else if (!(a instanceof Hub)) {
+                double thisDistance = a.getCoordinate().getDistance(a.getTask().getCoordinate());
+                if (thisDistance > maxDistance) {
+                    leastRequiredAgent = a;
+                    maxDistance = thisDistance;
+                }
+            }
+        }
+        Agent agentToRemove;
+        if (hasNull) {
+            // We return the closest of these to the hub as normal
+            if (agentsToConsider.size() > 1) {
+                agentToRemove = getClosestAgentToHub(agentsToConsider);
+            } else {
+                agentToRemove = agentsToConsider.get(0);
+            }
+        } else {
+            agentToRemove = leastRequiredAgent;
+        }
+        Simulator.instance.getState().getAgents().remove(agentToRemove);
+        LOGGER.severe("Removing " + agentToRemove);
+        return agentToRemove;
+    }
+
+    public synchronized void resetAgentNumbers() {
+        this.uniqueAgentNumber = 1;
+    }
+
+    public synchronized void decrementAgentNumbers() {
+        this.uniqueAgentNumber-= 1;
+    }
+
+    public boolean areAllAgentsStopped() {
+        for (Agent a : simulator.getState().getAgents()) {
+            if (!a.isStopped()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Models the random failure, and kills if successful, the given agent
+     * @param a
+     * @return
+     */
+    public boolean modelFailure(Agent a) {
+        // Each agent is called every 5 seconds, and the scenario is 4 mins (at time of writing) at 6 times speed
+        //  this means that to have just a few failures in a scenario typically, let's say 4*6*60*5 = 7200,
+        //  and 7200*10agents max = 72000, so 3/72000 = 1/24000 per step to average three failures at 10 agents total
+        //  Gives ~0.000041667, and I tweak by eye after that
+
+        if (a instanceof AgentVirtual av) {
+            if (simulator.getRandom().nextDouble() < 0.00004) {
+                av.setTimedOut(true);
+                if (av.getAllocatedTaskId() != null && !av.getAllocatedTaskId().equals("")) {
+                    av.getTask().getAgents().remove(av);
+                }
+                Simulator.instance.getAllocator().removeFromTempAllocation(av.getId());
+                av.stop();
+                av.setType("ghost");
+                av.clearRoute();
+                av.clearTempRoute();
+                av.setAllocatedTaskId(null);
+                av.setSearching(false);
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 public class QueueManager {
@@ -32,7 +33,7 @@ public class QueueManager {
 	public QueueManager(Simulator simulator) {
 		this.simulator = simulator;
 		queues = new HashMap<>();
-		LOGGER.info("QueueManager Fully Started: " + this.initConnectionFactory());
+		LOGGER.info(String.format("%s; QMST; QueueManager Fully Started; %s", Simulator.instance.getState().getTime(), this.initConnectionFactory()));
 	}
 
 	public String getCloudURI() {
@@ -123,7 +124,11 @@ public class QueueManager {
 		}
 	}
 
-	public class MessagePublisher {
+    public void resetLogger(FileHandler fileHandler) {
+		LOGGER.addHandler(fileHandler);
+    }
+
+    public class MessagePublisher {
 		public boolean publishMessage(String queueName, String message){
 			QueueManager.this.publishMessage(queueName, message);
 			return true;

@@ -2,10 +2,10 @@ package server.model.agents;
 
 import server.Simulator;
 import server.model.Coordinate;
-import server.model.Hub;
 import server.model.target.Target;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
+import server.model.task.VisitTask;
 import server.model.task.WaypointTask;
 import tool.GsonUtils;
 
@@ -58,6 +58,7 @@ public class ProgrammerHandler implements Serializable {
      */
     public void step() {
         if (agent.getNetworkId().equals("")) {
+            agent.stop();
             // Must perform setup on the first step, otherwise they can't find each other
             //agent.setNetworkID(agent.generateRandomTag());
             agent.setNetworkID(agent.getId());
@@ -1089,10 +1090,13 @@ public class ProgrammerHandler implements Serializable {
         List<Coordinate> thisTask;
         if (item instanceof WaypointTask wt) {
             thisTask = Collections.singletonList(wt.getCoordinate());
+        } else if (item instanceof VisitTask vt) {
+            // TODO actually handle these right
+            thisTask = Collections.singletonList(vt.getCoordinate());
         } else if (item instanceof PatrolTask pt) {
             thisTask = pt.getPoints();
         } else {
-            // We don't know how to handl;e this task type
+            // We don't know how to handle this task type
             return;
         }
         tasks.put(thisTask, new ArrayList<>());

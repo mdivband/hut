@@ -3,8 +3,10 @@ package server.model.agents;
 import server.Simulator;
 import server.model.Coordinate;
 import server.model.Sensor;
+import server.model.task.Task;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -12,18 +14,44 @@ public class AgentVirtual extends Agent {
     protected transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
     protected transient Sensor sensor;
 
+    private transient boolean alive = true;
+    protected boolean goingHome = false;
+    private final double batteryVariance;
+    private final double speedVariance;
+    private boolean charging = false;
+
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
+        batteryVariance = Simulator.instance.getState().calculateRandomValueFor("batteryPerAgent");
+        speedVariance = Simulator.instance.getState().calculateRandomValueFor("speedPerAgent");
         this.sensor = sensor;
+        setType("standard");
     }
 
     @Override
     public void step(Boolean flockingEnabled) {
-        super.step(flockingEnabled);
+        if (goingHome) {
+            moveTowardsDestination();
+            for (Agent a : sensor.senseNeighbours(this, 10.0)) {
+                if (a instanceof Hub) {
+                    goingHome = false;
+                    setType("withpack");
+                    if (getRoute().size() <= 0) {
+                        System.out.println(this);
+                        stop();
+                    }
+
+                }
+            }
+            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getState().calculateRandomValueFor("batteryPerStep")) : 0;
+        } else if (alive) {
+            super.step(flockingEnabled);
+            this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getState().calculateRandomValueFor("batteryPerStep")) : 0;
+        }
+
         //Simulate things that would be done by a real drone
-        if(!isTimedOut())
+        if (!isTimedOut())
             heartbeat();
-        this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
     }
 
     @Override
@@ -32,9 +60,9 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustHeadingTowardsGoal()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+            double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) / Simulator.instance.getGameSpeed();
+            double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
-            //this.moveAlongHeading(1);
         }
     }
 
@@ -44,9 +72,9 @@ public class AgentVirtual extends Agent {
         if(!isStopped() && this.adjustFlockingHeading()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
-            double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+            double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) / Simulator.instance.getGameSpeed();
+            double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
-            //this.moveAlongHeading(1);
         }
     }
 
@@ -55,6 +83,10 @@ public class AgentVirtual extends Agent {
      * @return isAligned - Whether the agent is aligned or needs to continue rotating.
      */
     protected boolean adjustHeadingTowardsGoal() {
+        return adjustHeading(calculateAngleToGoal());
+    }
+
+    public double calculateAngleToGoal() {
         double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
         double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
         double lat2 = Math.toRadians(this.getCurrentDestination().getLatitude());
@@ -63,8 +95,7 @@ public class AgentVirtual extends Agent {
         double y = Math.sin(dLng) * Math.cos(lat2);
         double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
                 * Math.cos(lat2) * Math.cos(dLng);
-        double angleToGoal = Math.atan2(y, x);
-        return adjustHeading(angleToGoal);
+        return Math.atan2(y, x);
     }
 
     /**
@@ -219,4 +250,122 @@ public class AgentVirtual extends Agent {
         this.setCoordinate(new Coordinate(latDest, lngDest));
     }
 
+    public void goHome() {
+        setWorking(false);
+        goingHome = true;
+        setRoute(Collections.singletonList(Simulator.instance.getState().getHubLocation()));
+        resume();
+    }
+
+    @Override
+    public void setRoute(List<Coordinate> route) {
+        super.setRoute(route);
+    }
+
+    public boolean isGoingHome() {
+        return goingHome;
+    }
+
+    public void setGoingHome(boolean goingHome) {
+        this.goingHome = goingHome;
+    }
+
+    public void stopGoingHome() {
+        goingHome = false;
+    }
+
+    @Override
+    public String toString() {
+        return "Agent{" +
+                "id=" + getId() +
+                ", isAlive=" + isAlive() +
+                ", heading=" + heading +
+                ", route=" + route +
+                ", allocatedTaskId='" + getAllocatedTaskId() + '\'' +
+                ", working=" + isWorking() +
+                ", stopped=" + isStopped() +
+                ", isSearching=" + getSearching() +
+                '}';
+    }
+
+    public boolean isHome() {
+        return getCoordinate().getDistance(Simulator.instance.getState().getHubLocation()) < 15;
+
+    }
+
+    /**
+     * The battery has got too low, set this to the "limp home" mode and return to hub for recharging
+     */
+    public void killBattery() {
+        goHome();
+        if (getAllocatedTaskId() != null && !getAllocatedTaskId().equals("")) {
+            getTask().getAgents().remove(this);
+        }
+        Simulator.instance.getAllocator().removeFromTempAllocation(getId());
+        setAllocatedTaskId(null);
+        setSearching(false);
+        alive = false;
+        setType("leader");
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    /**
+     * A per-step function to recharge the battery. Automatically resets it to alive state if battery is full
+     */
+    public void charge() {
+        charging = true;
+        battery += unitTimeBatteryConsumption * 10;
+        if (battery >= 1) {
+            battery = 1;
+            alive = true;
+            setWorking(false);
+            //setSearching(true);
+            resume();
+            setType("standard");
+            charging = false;
+        }
+        if (isTimedOut()) {
+            heartbeat();
+        }
+    }
+
+    /** Append a task to the queue
+     * @param task
+     */
+    public void addTaskToQueue(Task task) {
+        taskQueue.add(task);
+        coordQueue.add(task.getCoordinate());
+    }
+
+    public boolean isCharging() {
+        return charging;
+    }
+
+    /**
+     * Fetch the next task from our internal queue
+     * @return
+     */
+    public Task getNextTaskFromQueue() {
+        if (!taskQueue.isEmpty()) {
+            Task taskToReturn = taskQueue.get(0);
+            taskQueue.remove(0);
+            coordQueue.remove(0);
+            if (taskToReturn != null && Simulator.instance.getState().getTasks().contains(taskToReturn)) {
+                //System.out.println(getId() + " Moving to next task " + taskToReturn);
+                return taskToReturn;
+            } else {
+                // Recurse until find next working task
+                //System.out.println("NULL TASK, q=" + taskQueue);
+                return getNextTaskFromQueue();
+            }
+        }
+        return null;
+    }
+
+    public List<Task> getTaskQueue() {
+        return taskQueue;
+    }
 }

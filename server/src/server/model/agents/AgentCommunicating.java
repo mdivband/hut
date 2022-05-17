@@ -2,6 +2,7 @@ package server.model.agents;
 
 import server.model.Coordinate;
 import server.model.Sensor;
+import server.model.task.VisitTask;
 
 import java.util.List;
 import java.util.Random;

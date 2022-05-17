@@ -8,6 +8,7 @@ import server.model.task.Task;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 public class TargetController extends AbstractController {
 
@@ -52,10 +53,13 @@ public class TargetController extends AbstractController {
             return false;
         }
         simulator.getState().remove(target);
-        LOGGER.info("Deleted agent " + id);
+        LOGGER.info(String.format("%s; DELTRG; Deleted target (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, target.getCoordinate().getLatitude(), target.getCoordinate().getLongitude()));
         return true;
     }
 
+    public synchronized void resetTargetNumbers() {
+        this.uniqueTargetNumbers = new HashMap<>();
+    }
     /**
      * Searches for any target with the given coordinate
      * @param coordinate The coordinate to check
@@ -64,5 +68,6 @@ public class TargetController extends AbstractController {
     public Target findTargetByCoord(Coordinate coordinate) {
         return simulator.getState().getTargetByCoordinate(coordinate);
     }
+
 
 }

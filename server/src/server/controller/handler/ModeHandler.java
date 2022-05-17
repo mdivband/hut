@@ -27,12 +27,32 @@ public class ModeHandler extends RestHandler {
             case "/scenario":
                 handleScenario(req, resp);
                 break;
+            case "/scenario/registerUser":
+                handleRegisterUser(req, resp);
+                break;
             case "/scenario/start":
                 handleScenarioStart(resp);
                 break;
             default:
                 throw new UnregisteredPathException("No method for handling POST request on " + req.getPath());
         }
+    }
+
+    private void handleRegisterUser(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Collections.singletonList("userName");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+        String userName = params.get("userName");
+        if(this.simulator.getState().setUserName(userName))
+            resp.sendOkay();
+        else
+            resp.sendError(400, "Unable to set username to " + userName);
+
+        //LOGGER.info(String.format("%s; RST; Resetting logs; ", simulator.getState().getTime()));
+        simulator.resetLogging(userName);
+        //LOGGER.info(String.format("%s; RGNAME; UserName is (name/id); %s ", simulator.getState().getTime(), simulator.getState().getUserName()));
+
     }
 
     @Override

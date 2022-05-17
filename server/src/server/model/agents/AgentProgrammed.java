@@ -375,10 +375,6 @@ public class AgentProgrammed extends Agent {
         return true;
     }
 
-    private String getType() {
-        return type;
-    }
-
     public String getBelievedModel() {
         return programmerHandler.getModel();
     }

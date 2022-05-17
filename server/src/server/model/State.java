@@ -13,11 +13,10 @@ import server.model.task.Task;
 import tool.GsonUtils;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -31,10 +30,14 @@ public class State {
     private String gameId;
     private String gameDescription;
     private int gameType;
-    private String allocationMethod = "maxsum";
-    private Boolean flockingEnabled = false;
+    private String allocationMethod;
+    private String allocationStyle;
+    private Boolean flockingEnabled;
     private double time;
+    private double timeLimit;
+    private long scenarioEndTime;
     private boolean editMode;
+    private boolean passthrough = false;
 
     private String prov_doc;
 
@@ -63,14 +66,28 @@ public class State {
     private HazardHitCollection hazardHits;
 
     private ArrayList<String> uiOptions = new ArrayList<>();
+    private Map<String, Double> varianceOptions = new HashMap<>();
+    private Map<String, Double> noiseOptions = new HashMap<>();
     private double uncertaintyRadius = 0;
     private double communicationRange = 0;
     private boolean communicationConstrained = false;
+    private double successChance;
+    private double missionSuccessChance;
+    private double missionSuccessOverChance;
+    private double missionSuccessUnderChance;
+    private double missionBoundedSuccessChance;
+    private double missionBoundedSuccessUnderChance;
+    private double missionBoundedSuccessOverChance;
+
+    private Map<String, Double> scoreInfo;
 
     // We could combine these, but it might be little more efficient to let them stay separate
     private Hub hub;
     private Coordinate hubLocation;
 
+
+    private String userName = "";
+    private List<String> markers= new ArrayList<>();
 
     public State() {
         agents = new ArrayList<>();
@@ -83,7 +100,8 @@ public class State {
         tempAllocation = new ConcurrentHashMap<>();
         droppedAllocation = new ConcurrentHashMap<>();
         hazardHits = new HazardHitCollection();
-
+        scoreInfo = new HashMap<>();
+        successChance = 100.00;
         allocationUndoAvailable = false;
         allocationRedoAvailable = false;
 
@@ -91,9 +109,21 @@ public class State {
     }
 
     public synchronized void reset() {
+        // Define defaults
         time = 0;
+        timeLimit = 0;    // 0 means no time limit
+        scenarioEndTime = 0; // 0 means no time limit
         editMode = false;
         inProgress = false;
+        allocationMethod = "maxsum";
+        allocationStyle = "manualwithstop";
+        flockingEnabled = false;
+        successChance = 100.00;
+        scoreInfo.clear();
+        uncertaintyRadius = 0;
+
+        gameCentre = null;
+        userName = "";
 
         agents.clear();
         ghosts.clear();
@@ -104,6 +134,9 @@ public class State {
         allocation.clear();
         tempAllocation.clear();
         hazardHits.clear();
+        uiOptions.clear();
+        varianceOptions.clear();
+        noiseOptions.clear();
 
         hazardHits.init();
     }
@@ -134,6 +167,7 @@ public class State {
             add(targets, (Target) item);
         else if(item instanceof  Task) {
             add(tasks, (Task) item);
+            Simulator.instance.getScoreController().setTotalTasks(getTasks().size());
             // For programmed agents:
             for (Agent a : agents) {
                 if (a instanceof AgentHubProgrammed abs) {
@@ -161,7 +195,9 @@ public class State {
             }
         }
         else if(item instanceof  Agent)
-            remove(agents, (Agent) item);
+            synchronized (agents) {
+                remove(agents, (Agent) item);
+            }
         else
             throw new RuntimeException("Cannot remove item from state, unrecognised class - " + item.getClass().getSimpleName());
     }
@@ -199,6 +235,40 @@ public class State {
 
     public synchronized void incrementTime(double increment) {
         setTime(this.time + increment);
+    }
+
+    public synchronized double getTimeLimit() {
+        return timeLimit;
+    }
+
+    public synchronized void setTimeLimit(double timeLimit) {
+        this.timeLimit = timeLimit;
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized void incrementTimeLimit(double increment) {
+        setTimeLimit(this.timeLimit + increment);
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized long getScenarioEndTime() {
+        return scenarioEndTime;
+    }
+
+    public synchronized void setScenarioEndTime() {
+        if (this.timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
+        }
+    }
+
+    private synchronized void setScenarioEndTime(double timeLimit) {
+        if (timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
+        }
     }
 
     public synchronized boolean isEditMode() {
@@ -245,6 +315,14 @@ public class State {
         return this.allocationMethod;
     }
 
+    public String getAllocationStyle() {
+        return allocationStyle;
+    }
+
+    public void setAllocationStyle(String allocationStyle) {
+        this.allocationStyle = allocationStyle;
+    }
+
     public synchronized void setFlockingEnabled(Boolean flockingEnabled) {
         this.flockingEnabled = flockingEnabled;
     }
@@ -258,7 +336,9 @@ public class State {
     }
 
     public Collection<Task> getTasks() {
-        return tasks;
+        synchronized (tasks) {
+            return tasks;
+        }
     }
 
     public Collection<Agent> getAgents() {
@@ -354,6 +434,14 @@ public class State {
 
     public void decayHazardHits() {
         hazardHits.decayAll();
+    }
+
+    public void setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
+    }
+
+    public boolean isPassthrough() {
+        return passthrough;
     }
 
     /**
@@ -501,6 +589,14 @@ public class State {
         this.hub = (Hub) hub;
     }
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public List<String> getMarkers() {
+        return markers;
+    }
+
     /**
      * Getter for whether the simulation is communication constrained
      * @return boolean value for whether simulation is communication constrained
@@ -515,6 +611,107 @@ public class State {
      */
     public void setCommunicationConstrained(Boolean communicationConstrained) {
         this.communicationConstrained = communicationConstrained;
+    }
+
+    public void setSuccessChance(double successChance) {
+        this.successChance = successChance;
+    }
+
+    public Hub getHub() {
+        return hub;
+    }
+
+    public void addScoreInfo(String key, double value) {
+        scoreInfo.put(key, value);
+    }
+
+    public Map<String, Double> getScoreInfo() {
+        return scoreInfo;
+    }
+
+    public boolean setUserName(String userName) {
+        this.userName = userName;
+        return true;
+    }
+
+    public Collection<Task> getCompletedTasks() {
+        return completedTasks;
+    }
+
+    public void setMissionSuccessChance(double successChance) {
+        this.missionSuccessChance = successChance;
+    }
+
+    public void setMissionBoundedSuccessChance(double successChance) {
+        this.missionBoundedSuccessChance = successChance;
+    }
+
+    public void setMissionBoundedSuccessUnderChance(double missionBoundedSuccessUnderChance) {
+        this.missionBoundedSuccessUnderChance = missionBoundedSuccessUnderChance;
+    }
+
+    public void setMissionBoundedSuccessOverChance(double missionBoundedSuccessOverChance) {
+        this.missionBoundedSuccessOverChance = missionBoundedSuccessOverChance;
+    }
+
+    public void setMissionSuccessOverChance(double overChance) {
+        this.missionSuccessOverChance = overChance;
+    }
+
+    public void setMissionSuccessUnderChance(double underChance) {
+        this.missionSuccessUnderChance = underChance;
+    }
+
+    /**
+     * Resets log to a new filename
+     * @param fileHandler
+     */
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
+    }
+
+    /**
+     * Place a k,v pair for a variance (per agent persistent random offset)
+     * @param key
+     * @param val
+     */
+    public void putVarianceOption(String key, Double val) {
+        varianceOptions.put(key, val);
+    }
+
+    /**
+     * Place a k,v pair for a variance (per agent persistent random offset)
+     * @param key
+     * @param val
+     */
+    public void putNoiseOption(String key, Double val) {
+        noiseOptions.put(key, val);
+    }
+
+    public double getVarianceValue(String key) {
+        return varianceOptions.get(key);
+    }
+
+    public double getNoiseValue(String key) {
+        return noiseOptions.get(key);
+    }
+
+    /**
+     * Calculates a zero-centred random value for the given key (noise or variance)
+     * @param key
+     * @return
+     */
+    public double calculateRandomValueFor(String key) {
+        double bound;
+        if (varianceOptions.containsKey(key)) {
+            bound = varianceOptions.get(key);
+        } else if (noiseOptions.containsKey(key)) {
+            bound = noiseOptions.get(key);
+        } else {
+            return 0;
+        }
+        // bound-[0,1]*bound*2 gives a value from [-bound/2, bound/2]
+        return bound - (Simulator.instance.getRandom().nextDouble() * bound * 2);
     }
 
     private class HazardHit {
