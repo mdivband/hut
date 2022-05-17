@@ -402,7 +402,7 @@ var simulator = {
                         var description_panel = document.createElement("div");
                         description_panel.innerHTML = _.template($("#description_panel").html(), {
                             title: "Scenario",
-                            description: self.state.getGameDescription()
+                            description: self.state.getGameDescription() + "\n Your role is: " + userRole
                         });
                         $.blockWithContent(description_panel);
                         $('#start_scenario').on('click', function () {
