@@ -433,8 +433,13 @@ var MapTaskController = {
             iw.setContent(property);
             iw.setPosition(position);
 
+            if(task.getType() == self.state.tasks.TASK_REGION) {
+                $("#task_edit_rotate").show();
+            }
+
             if (self.state.getEditMode() === 1) {
                 $("#task_edit_update").hide();
+                $("#task_edit_rotate").hide();
                 $("#task_edit_delete").hide();
                 $("#task_priority").attr("readonly","readonly");
                 $("#group_size").attr("readonly","readonly");
@@ -454,6 +459,12 @@ var MapTaskController = {
                     }
                     else
                         alert("Group size is out of bounds: " + group_size);
+                });
+                $(property).on("click", "#task_edit_rotate", function () {
+                    $.post("/tasks/" + task.getId(), {
+                        rotate: true
+                    });
+                    iw.close();
                 });
                 //Delete task if delete pressed
                 $(property).on("click", "#task_edit_delete", function () {

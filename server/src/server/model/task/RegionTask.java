@@ -12,6 +12,7 @@ public class RegionTask extends PatrolTask {
 
     private static final double baseStep = 40;
     private Coordinate nw, ne, se, sw;
+    private int currentRotation;
 
     public RegionTask(String id, List<Coordinate> route, Coordinate centrePoint, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw, Boolean ignored) {
         super(id, Task.TASK_REGION, route, centrePoint, ignored);
@@ -21,6 +22,7 @@ public class RegionTask extends PatrolTask {
         this.sw = sw;
         this.group = 10; // hard coding 10 agents to complete region task
         this.setIgnored(ignored);
+        this.currentRotation = 0;
     }
 
     public static RegionTask createTask(String id, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw, Boolean ignored) {
@@ -39,6 +41,10 @@ public class RegionTask extends PatrolTask {
     }
 
     private static List<Coordinate> createRoute(Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {
+        return createRoute(nw, ne, se, sw, 0);
+    }
+
+    private static List<Coordinate> createRoute(Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw, int currentRotation) {
         double width = nw.getDistance(ne);
         double height = nw.getDistance(sw);
 
@@ -58,6 +64,21 @@ public class RegionTask extends PatrolTask {
             double NORTH = Math.PI/180.0D * 90.0F;
             double EAST = 0;
             double SOUTH = Math.PI/180.0D * 270.0F;
+            double WEST = Math.PI;
+            double OLD_NORTH;
+            double OLD_EAST;
+            double OLD_SOUTH;
+            double OLD_WEST;
+            for (int i = 0; i < currentRotation; i++) {
+                OLD_NORTH = NORTH;
+                OLD_EAST = EAST;
+                OLD_SOUTH = SOUTH;
+                OLD_WEST = WEST;
+                EAST = OLD_NORTH;
+                SOUTH = OLD_EAST;
+                WEST = OLD_SOUTH;
+                NORTH = OLD_WEST;
+            }
 
             points.add(nw);
             Coordinate currentPoint = nw;
@@ -78,6 +99,33 @@ public class RegionTask extends PatrolTask {
             points.add(nw);
         }
         return points;
+    }
+
+    public void rotateRoute() {
+        this.currentRotation++;
+        if (this.currentRotation == 4) {
+            currentRotation = 0;
+        }
+        Coordinate old_nw;
+        Coordinate old_ne;
+        Coordinate old_se;
+        Coordinate old_sw;
+        Coordinate new_nw = this.nw;
+        Coordinate new_ne = this.ne;
+        Coordinate new_se = this.se;
+        Coordinate new_sw = this.sw;
+        for (int i = 0; i < this.currentRotation; i++) {
+            old_nw = new_nw;
+            old_ne = new_ne;
+            old_se = new_se;
+            old_sw = new_sw;
+            new_nw = old_sw;
+            new_ne = old_nw;
+            new_se = old_ne;
+            new_sw = old_se;
+        }
+        List<Coordinate> points = this.createRoute(new_nw, new_ne, new_se, new_sw, currentRotation);
+        this.updatePoints(points);
     }
 
     public synchronized void updateCorners(Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {

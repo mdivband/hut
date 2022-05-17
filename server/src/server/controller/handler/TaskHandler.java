@@ -164,6 +164,8 @@ public class TaskHandler extends RestHandler {
             simulator.getTaskController().updateTaskGroup(id, Integer.parseInt(params.get("group")));
         if (params.containsKey("priority"))
             simulator.getTaskController().updateTaskPriority(id, Double.parseDouble(params.get("priority")));
+        if (params.containsKey("rotate") && Boolean.parseBoolean(params.get("rotate")))
+            simulator.getTaskController().updateRegionRotation(id);
         resp.sendOkay();
     }
 

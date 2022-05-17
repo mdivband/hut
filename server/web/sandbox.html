@@ -346,8 +346,8 @@
                     <input id="explored_overlay_toggle" type="checkbox">Explored Overlay</input><br>
                     <!--<input id="hazard_overlay_toggle" type="checkbox">Hazard Overlay</input><br>-->
 
-                    <!-- I think the region paths are now redundant? -WH
-                    <input id="region_path_toggle" type="checkbox">Show Region Paths</input><br>-->
+                    <!-- I think the region paths are now redundant? -WH -->
+                    <input id="region_path_toggle" type="checkbox">Show Region Paths</input><br>
 
                     <!-- By wrapping each button/slider in a named div, they provide an opt-in specification of UI
                          options. In future more UI can be specified this way if desired -WH-->
@@ -449,6 +449,9 @@
                 <div style="margin: 0px 1px 0px 5px;">
                     <div style="float: left;">
                         <button id="task_edit_update">Update</button>
+                    </div>
+                    <div style="float: left; visible: false;">
+                        <button id="task_edit_rotate">Rotate</button>
                     </div>
                     <div style="float: right;">
                         <button id="task_edit_delete">Delete</button>
