@@ -189,6 +189,24 @@ var simulator = {
                 })
             }
             $("#chat_history").scrollTop($("#chat_history")[0].scrollHeight);
+            if (chatLog.length > 1 && !chatLog[chatLog.length - 1].toLowerCase().startsWith(userRole)) {
+                var uid = "message_" + chatLog.length;
+                var content = _.template($("#popup_left_right").html(), {
+                    left_content: "New chat message: " + chatLog[chatLog.length - 1],
+                    right_content: "View",
+                    uid: uid
+                });
+
+                spop({
+                    template: content,
+                    style: 'default',
+                    autoclose: 10000
+                });
+
+                $("#" + uid).on('click', function() {
+                    MapController.swapMode(1, true);
+                });
+            }
         });
 
         // This defines the zoom and pan function including restriction of view
