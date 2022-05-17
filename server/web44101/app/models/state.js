@@ -190,5 +190,30 @@ App.Models.State  = Backbone.Model.extend({
     },
     getModelStyle: function () {
         return this.get("modelStyle");
+    },
+    getPendingIds: function () {
+        return this.get("pendingIds");
     }
-});
+    getMarkers: function () {
+        return this.get("markers");
+    },
+    getDeepAllowed: function () {
+        return this.get("deepAllowed");
+    },
+    getDeepScannedIds: function () {
+        return this.get("deepScannedIds");
+    },
+    getStoredImages: function () {
+        return this.get("storedImages")
+    },
+    pushMode: function(modeFlag) {
+        // modeflag 1 = monitor
+        //          2 = edit
+        //          3 = images
+        if (modeFlag === 2) {
+            this.set("editMode", 2);
+            $("#map_title").html("Edit Mode");
+        } else if (modeFlag === 1) {
+            this.set("editMode", 1);
+            $("#map_title").html("Monitor Mode");
+        }

@@ -82,7 +82,7 @@ public class QueueManager {
 
 	private boolean publishMessage(String queueName, String message) {
 		try {
-			LOGGER.info(queueName +": " + message);
+			//LOGGER.info(queueName +": " + message);
 			Connection connection = connectionFactory.newConnection();
 			Channel channel = connection.createChannel();
 			channel.basicPublish("", queueName, null, message.getBytes());

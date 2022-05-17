@@ -88,6 +88,13 @@ public class AgentController extends AbstractController {
         return agent;
     }
 
+    public synchronized Agent addHubAgent(double lat, double lng) {
+        // We assume just one HUB, so this is a unique ID
+        Agent agent = new AgentHub("HUB", new Coordinate(lat, lng), sensor);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
     public synchronized boolean deleteAgent(String id) {
         Agent agent = simulator.getState().getAgent(id);
         if(agent == null) {
@@ -201,6 +208,10 @@ public class AgentController extends AbstractController {
             return false;
         agent.setTimedOut(timedOut);
         return true;
+    }
+
+    public synchronized void resetAgentNumbers() {
+        this.uniqueAgentNumber = 1;
     }
 
     /**

@@ -74,6 +74,13 @@ public abstract class RestHandler {
         return remainingPath;
     }
 
+    String parseRemainingPath(String path, String handlerName) {
+        String remainingPath = path.replace(handlerName, "");
+        if(remainingPath.equals(""))
+            return null;
+        return remainingPath;
+    }
+
     /**
      * Check that the request parameters contain the expected keys.
      * @param params - Parameter map to check.

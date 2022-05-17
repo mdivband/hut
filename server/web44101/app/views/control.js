@@ -19,11 +19,12 @@ App.Views.Control = Backbone.View.extend({
 		if (model) {
 			this.agent = model;
 			var id = model.getId();
-
+			
 			if (!model.isSimulated()) {
 				this.setup_ardrone(model);
 			}
 			this.set_mode(model.getMode());
+			// TODO getmode() is not a function error
 			
 			$("#canvas_small_info_agentid").text(id);
 			
@@ -74,6 +75,8 @@ App.Views.Control = Backbone.View.extend({
 				allocation_text = "<p>No Allocation </p>";
 			}
 			$("#canvas_small_info_tasks").append(allocation_text);
+			
+
 
 			if (!$("#speed_slider").data("ishover")) {
 				$("#speed_value").text(model.getSpeed().toFixed(1));
@@ -223,6 +226,7 @@ App.Views.Control = Backbone.View.extend({
 		}).mouseout(function() {
 			$("#speed_slider_manual").data("ishover", false);
 		});
+
 
 		$("#altitude_slider").slider({
 			min: 0,

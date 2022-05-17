@@ -37,8 +37,13 @@ public class State {
     private double time;
     private double timeLimit;
     private long scenarioEndTime;
-    private boolean editMode;
+    private int editMode;
+    // editMode 1 = monitor
+    //          2 = edit
+    //          3 = images
     private boolean passthrough = false;
+    private String nextFileName = "";
+    private boolean deepAllowed = false;
 
     private String prov_doc;
 
@@ -90,6 +95,19 @@ public class State {
     private String userName = "";
     private List<String> markers= new ArrayList<>();
 
+    private ArrayList<String> uiOptions = new ArrayList<>();
+    private double uncertaintyRadius = 0;
+
+    private Coordinate hubLocation;
+
+    //                   ID->ImageName
+    private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
+    private final List<String> deepScannedIds = new ArrayList<>(16);
+    private final List<String> pendingIds = new ArrayList<>(16);
+
+    private String userName = "";
+    private List<String> markers = new ArrayList<>();
+
     public State() {
         agents = new ArrayList<>();
         ghosts = new ArrayList<>();
@@ -115,6 +133,7 @@ public class State {
         timeLimit = 0;    // 0 means no time limit
         scenarioEndTime = 0; // 0 means no time limit
         editMode = false;
+        editMode = 1;
         inProgress = false;
         allocationMethod = "maxsum";
         allocationStyle = "manualwithstop";
@@ -124,6 +143,10 @@ public class State {
         uncertaintyRadius = 0;
         communicationConstrained = false;
         communicationRange = 0;
+        allocationMethod = "maxsum";
+        flockingEnabled = false;
+        uncertaintyRadius = 0;
+        markers.clear();
 
         gameCentre = null;
         userName = "";
@@ -141,7 +164,17 @@ public class State {
         varianceOptions.clear();
         noiseOptions.clear();
 
+        storedImages.clear();
+        uiOptions.clear();
+
         hazardHits.init();
+    }
+
+    public void resetNext() {
+        passthrough = false;
+        nextFileName = "";
+        scenarioEndTime = 0; // 0 means no time limit
+        timeLimit = 0;    // 0 means no time limit
     }
 
     @Override
@@ -274,11 +307,46 @@ public class State {
         }
     }
 
+    public synchronized int getEditMode() {
+    public synchronized double getTimeLimit() {
+        return timeLimit;
+    }
+
+    public synchronized void setTimeLimit(double timeLimit) {
+        this.timeLimit = timeLimit;
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized void incrementTimeLimit(double increment) {
+        setTimeLimit(this.timeLimit + increment);
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized long getScenarioEndTime() {
+        return scenarioEndTime;
+    }
+
+    public synchronized void setScenarioEndTime() {
+        if (this.timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
+        }
+    }
+
+    private synchronized void setScenarioEndTime(double timeLimit) {
+        if (timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
+        }
+    }
+
     public synchronized boolean isEditMode() {
         return editMode;
     }
 
-    public synchronized void setEditMode(boolean editMode) {
+    public synchronized void setEditMode(int editMode) {
         this.editMode = editMode;
     }
 
@@ -723,6 +791,74 @@ public class State {
         }
         // bound-[0,1]*bound*2 gives a value from [-bound/2, bound/2]
         return bound - (Simulator.instance.getRandom().nextDouble() * bound * 2);
+    }
+
+    public void setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
+    }
+
+    public boolean isPassthrough() {
+        return passthrough;
+    }
+
+    public String getNextFileName() {
+        return nextFileName;
+    }
+
+    public void setNextFileName(String nextFileName) {
+        this.nextFileName = nextFileName;
+    }
+
+    public void addUIOption(String option) {
+        uiOptions.add(option);
+    }
+
+    public void setUncertaintyRadius(double uncertaintyRadius) {
+        this.uncertaintyRadius = uncertaintyRadius;
+    }
+
+    public void setHubLocation(Coordinate coordinate) {
+        hubLocation = coordinate;
+    }
+
+    public Coordinate getHubLocation() {
+        return hubLocation;
+    }
+
+    public Map<String, String> getStoredImages() {
+        return storedImages;
+    }
+
+    public void addToStoredImages(String id, String filename, boolean isDeep) {
+        storedImages.put(id, filename);
+        if (isDeep) {
+            deepScannedIds.add(id);
+        }
+    }
+
+    public void setDeepAllowed(Boolean deepAllowed) {
+        this.deepAllowed = deepAllowed;
+    }
+
+    public boolean setUserName(String userName) {
+        this.userName = userName;
+        return true;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public List<String> getMarkers() {
+        return markers;
+    }
+
+    public List<String> getPendingIds() {
+        return pendingIds;
+    }
+
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
     private class HazardHit {

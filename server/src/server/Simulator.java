@@ -42,6 +42,8 @@ public class Simulator {
     private final Modeller modeller;
     private final ModelCaller modelCaller;
 
+    private final ImageController imageController;
+
     public static Simulator instance;
 
     private static final double gameSpeed = 5;
@@ -66,14 +68,16 @@ public class Simulator {
         modelCaller = new ModelCaller();
         random = new Random();
 
+        imageController = new ImageController(this);
+
         queueManager.initDroneDataConsumer();
     }
 
     public static void main(String[] args) {
         try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("./logging.properties"));
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
         } catch (final IOException e) {
-            Logger.getAnonymousLogger().severe("Could not load default logging.properties file");
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
             Logger.getAnonymousLogger().severe(e.getMessage());
         }
 
@@ -87,7 +91,6 @@ public class Simulator {
             port = Integer.parseInt(args[0]);
         } else {
             port = 44101;
-
         }
         new Simulator().start(port);
     }
@@ -168,7 +171,6 @@ public class Simulator {
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
@@ -310,6 +312,9 @@ public class Simulator {
             // Step hazard hits
             this.state.decayHazardHits();
 
+            // Check and trigger images that are scheduled
+            imageController.checkForImages();
+
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));
             if (sleepTime < 0) {
@@ -361,18 +366,23 @@ public class Simulator {
         }
     }
 
-    public void changeView(boolean toEdit) {
-        if (toEdit) {
-            if (state.getAllocationStyle().equals("manualwithstop")) {
-                agentController.stopAllNonProgrammedAgents();
-                agentController.updateNonProgrammedAgentsTempRoutes();
-                allocator.copyRealAllocToTempAlloc();
+    public void changeView(int modeFlag) {
+        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
+        if (modeFlag == 2) {
+            //agentController.stopAllAgents();
+            //agentController.updateAgentsTempRoutes();
+            //allocator.copyRealAllocToTempAlloc();
+            //allocator.clearAllocationHistory();
+            state.setEditMode(2);
+        } else if (modeFlag == 1){
+            //allocator.confirmAllocation(state.getAllocation());
+            state.setEditMode(1);
+        } else if (modeFlag == 3) {
+            state.setEditMode(3);
+            //Clear agents and tasks
+            for(Agent agent : state.getAgents()) {
+                agent.resume();
             }
-            allocator.clearAllocationHistory();
-            state.setEditMode(true);
-        } else {
-            allocator.confirmAllocation(state.getAllocation());
-            state.setEditMode(false);
         }
     }
 
@@ -406,6 +416,7 @@ public class Simulator {
         LOGGER = Logger.getLogger(Simulator.class.getName());
 
          */
+        imageController.reset();
     }
 
     public void resetLogging(String userName) {
@@ -423,6 +434,7 @@ public class Simulator {
             connectionController.resetLogger(fileHandler);
             hazardController.resetLogger(fileHandler);
             allocator.resetLogger(fileHandler);
+            imageController.resetLogger(fileHandler);
             LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
 
         } catch (final IOException e) {
@@ -435,8 +447,8 @@ public class Simulator {
 
     private void readConfig() {
         try {
-            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), SERVER_CONFIG_FILE));
-            String json = GsonUtils.readFile(SERVER_CONFIG_FILE);
+            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), webRef+SERVER_CONFIG_FILE));
+            String json = GsonUtils.readFile(webRef+SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
 
@@ -514,6 +526,48 @@ public class Simulator {
                     LOGGER.warning("Expected boolean value for flockingEnabled in scenario file. Received: '" +
                             flockingEnabled + "'. Set to false.");
                     // state.flockingEnabled initialised with default value of false
+                }
+            }
+
+            Object hub = GsonUtils.getValue(obj, "hub");
+            if(hub != null) {
+                Double lat = GsonUtils.getValue(hub, "lat");
+                Double lng = GsonUtils.getValue(hub, "lng");
+                agentController.addHubAgent(lat, lng);
+                state.setHubLocation(new Coordinate(lat, lng));
+            }
+
+            this.state.resetNext();
+            if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
+                Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
+                if(timeLimitSeconds.getClass() == Double.class) {
+                    state.incrementTimeLimit((Double)timeLimitSeconds);
+                } else {
+                    LOGGER.warning("Expected double value for timeLimitSeconds in scenario file. Received: '" +
+                            timeLimitSeconds.toString() + "'. Time limit not changed.");
+                }
+            }
+            if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
+                Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
+                if(timeLimitMinutes.getClass() == Double.class) {
+                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
+                } else {
+                    LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
+                            timeLimitMinutes.toString() + "'. Time limit not changed.");
+                }
+            }
+            if(GsonUtils.hasKey(obj,"nextScenarioFile")){
+                Object nextScenarioFile = GsonUtils.getValue(obj, "nextScenarioFile");
+                if(nextScenarioFile.getClass() == String.class) {
+                    this.state.setPassthrough(true);
+                    state.setNextFileName(nextScenarioFile.toString());
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"deepAllowed")) {
+                Object deepAllowed = GsonUtils.getValue(obj, "deepAllowed");
+                if (deepAllowed.getClass() == Boolean.class) {
+                    state.setDeepAllowed((Boolean) deepAllowed);
                 }
             }
 
@@ -676,12 +730,49 @@ public class Simulator {
                     Double lat = GsonUtils.getValue(targetJson, "lat");
                     Double lng = GsonUtils.getValue(targetJson, "lng");
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
-                    Target target = targetController.addTarget(lat, lng, type);
-                    // Hide all targets initially - they must be found!!
+                    String highRes = GsonUtils.getValue(targetJson, "highRes");
+                    String lowRes = GsonUtils.getValue(targetJson, "lowRes");
+                    Target target;
+                    if (GsonUtils.hasKey(targetJson, "real")) {
+                        boolean isReal = GsonUtils.getValue(targetJson, "real");
+                        target = targetController.addTarget(lat, lng, type, isReal);
+                        ((AdjustableTarget) target).setFilenames(lowRes, highRes);
+                    } else {
+                        target = targetController.addTarget(lat, lng, type);
+                    }
+
+                    //Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), false);
                 }
             }
 
+            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
+            if (uiJson != null) {
+                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
+                    state.addUIOption("predictions");
+                }
+                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
+                    state.addUIOption("uncertainties");
+                }
+            }
+
+            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
+                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
+            }
+
+            List<Object> markers = GsonUtils.getValue(obj, "markers");
+            if (markers != null) {
+                for (Object markerJson : markers) {
+                    String shape = GsonUtils.getValue(markerJson, "shape");
+                    Double cLat = GsonUtils.getValue(markerJson, "centreLat");
+                    Double cLng = GsonUtils.getValue(markerJson, "centreLng");
+                    Double radius = GsonUtils.getValue(markerJson, "radius");
+
+                    String shapeRep = shape+","+cLat+","+cLng+","+radius;
+
+                    this.state.getMarkers().add(shapeRep);
+                }
+            }
             List<Object> tasksJson = GsonUtils.getValue(obj, "tasks");
             if (tasksJson != null) {
                 for (Object taskJson : tasksJson) {
@@ -798,6 +889,10 @@ public class Simulator {
 
     public QueueManager getQueueManager() {
         return queueManager;
+    }
+
+    public ImageController getImageController() {
+        return imageController;
     }
 
     public Random getRandom() {

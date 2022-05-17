@@ -7,6 +7,8 @@ import tool.HttpServer.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
@@ -62,8 +64,8 @@ public class ConnectionController extends AbstractController {
             RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
             RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
             RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
+            RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator));
             RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -109,6 +111,7 @@ public class ConnectionController extends AbstractController {
             RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
             RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
             RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
+            RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator));
             RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
         } catch (IOException e) {
             e.printStackTrace();

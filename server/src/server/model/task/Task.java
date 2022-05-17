@@ -34,6 +34,9 @@ public abstract class Task extends MObject implements Serializable {
     public static final int TASK_REGION = 3;
     public static final int TASK_VISIT = 4;
 
+    public static final int TASK_DEEP_SCAN = 4;
+    public static final int TASK_SHALLOW_SCAN = 5;
+
     //Used in client
     private final List<Agent> agents; //Serialised to just agent ids.
     protected int group;
@@ -100,6 +103,8 @@ public abstract class Task extends MObject implements Serializable {
 
             }
         }
+        Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+        LOGGER.info(String.format("%s; TSKCMP; Task completed (id); %s", Simulator.instance.getState().getTime(), this.getId()));
     }
 
     /**

@@ -47,6 +47,16 @@ public class PatrolTask extends Task {
             else
                 workingAgents.remove(agent);
         }
+        Agent agentToRemove = null;
+        for (Agent w : workingAgents) {
+            if (!(w.getAllocatedTaskId().equals(getId()))) {
+                agentToRemove = w;
+                break;
+            }
+        }
+        if (agentToRemove != null) {
+            workingAgents.remove(agentToRemove);
+        }
         sortSpacing();
         return false;
     }
@@ -78,7 +88,7 @@ public class PatrolTask extends Task {
                 //Keep first agent moving
                 if(i == sortedAgents.size() - 1) {
                     Agent agent = sortedAgents.get(i);
-                    if(agent.isStopped() && !Simulator.instance.getState().isEditMode())
+                    if(agent.isStopped() && Simulator.instance.getState().getEditMode() == 1)
                         agent.resume();
                 }
                 else {
@@ -89,10 +99,12 @@ public class PatrolTask extends Task {
                     double dBetween = agentPositions.get(next.getId()) - agentPositions.get(agent.getId());
 
                     if(dBetween < spacing - tolerance) {
-                        if(!agent.isStopped())
+                        if(!agent.isStopped()) {
+                            System.out.println(123);
                             agent.stop();
+                        }
                     }
-                    else if(agent.isStopped() && !Simulator.instance.getState().isEditMode())
+                    else if(agent.isStopped() && Simulator.instance.getState().getEditMode() == 1)
                         agent.resume();
                 }
             }
@@ -161,9 +173,9 @@ public class PatrolTask extends Task {
         double nearestDist = 0;
         double lat0 = this.getCoordinate().getLatitude();
         Coordinate agentPos = agent.getCoordinate();
-        if(Simulator.instance.getState().isEditMode() && agent.getTempRoute().size() > 1)
+        if(Simulator.instance.getState().getEditMode() == 2 && agent.getTempRoute().size() > 1)
             agentPos = agent.getTempRoute().get(agent.getTempRoute().size() - 2);
-        else if(!Simulator.instance.getState().isEditMode() && agent.getRoute().size() > 1)
+        else if(Simulator.instance.getState().getEditMode() == 1 && agent.getRoute().size() > 1)
             agentPos = agent.getRoute().get(agent.getRoute().size() - 2);
         for(int i = 0; i < points.size() - 1; i++) {
             Coordinate p1 = this.points.get(i);

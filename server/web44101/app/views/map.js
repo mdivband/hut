@@ -35,11 +35,12 @@ App.Views.Map = Backbone.View.extend({
         MapTaskController.bind(this);
         MapHazardController.bind(this);
         MapTargetController.bind(this);
+        MapImageController.bind(this);
 
         this.mapOptions = {
             zoom: 18,
             center: new google.maps.LatLng(50.939025, -1.461583),
-            mapTypeId: google.maps.MapTypeId.HYBRID,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
             overviewMapControl: false,
             streetViewControl: false,
             mapTypeControl: false,
@@ -52,14 +53,21 @@ App.Views.Map = Backbone.View.extend({
 
         this.icons = {
             UAV: $.loadIcon("icons/used/uav.png", "icons/plane.shadow.png", 30, 30),
-            UAVWithPack: $.loadIcon("icons/used/uav_with_pack.png", "icons/plane.shadow.png", 30, 30),
             UAVManual: $.loadIcon("icons/used/uav_manual.png", "icons/plane.shadow.png", 30, 30),
             UAVSelected: $.loadIcon("icons/used/uav_selected.png", "icons/plane.shadow.png", 30, 30),
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
             MarkerMonitor: $.loadIcon("icons/used/marker_monitor.png", "icons/msmarker.shadow.png", 10, 34),
             TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
-            FLAG: $.loadIcon("icons/flag_over.png", "icons/man.shadow.png", 15, 15)
+
+            TargetUnknown: $.loadIcon("icons/question.png", "icons/man.shadow.png", 30, 30),
+            TargetDeepScan: $.loadIcon("icons/rectangle_red.png", "icons/man.shadow.png", 30, 30),
+            TargetShallowScan: $.loadIcon("icons/rectangle_green.png", "icons/man.shadow.png", 30, 30),
+            TargetDismissed: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
+            TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
+
+
+            FLAG: $.loadIcon("icons/flag_up.png", "icons/man.shadow.png", 15, 15)
         };
 
         this.first = true;
@@ -70,6 +78,7 @@ App.Views.Map = Backbone.View.extend({
         MapTaskController.bindEvents();
         MapHazardController.bindEvents();
         MapTargetController.bindEvents();
+        MapImageController.bindEvents();
 
         setTimeout(function () {
             self.setupROS();
@@ -110,6 +119,8 @@ App.Views.Map = Backbone.View.extend({
         try {
             self.clearUncertainties();
             self.clearPredictions();
+            MapTargetController.classifiedIds.clear();
+            MapImageController.reset();
             var markers = self.$el.gmap("get", "markers");
             for (var key in markers) {
                 var marker = markers[key];
@@ -117,6 +128,15 @@ App.Views.Map = Backbone.View.extend({
                     console.log("deleting: " + marker);
                     marker.setMap(null);
                     delete marker;
+                }
+            }
+            var circles = self.$el.gmap("get", "overlays > Circle");
+            for (var key in circles) {
+                var circle = circles[key];
+                if (circle) {
+                    console.log("deleting: " + circle);
+                    circle.setMap(null);
+                    delete circle;
                 }
             }
             var lines = self.$el.gmap("get", "overlays > Polyline", []);
@@ -254,29 +274,16 @@ App.Views.Map = Backbone.View.extend({
         //     });
         // }
     },
-    /**
-     * Draws the predicted route of this agent as an arrow on the map
-     * @param predDepth The maximum number of points of the route to draw
-     */
     drawPredictedPath: function (predDepth){
         try {
             self = this;
             this.state.agents.forEach(function (agent) {
                 var predId = agent.getId() + "_pred";
                 var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
+
                 var predPath = agent.getRoute();
-                var queue = agent.getCoordQueue();
-                console.log("before, predpath : " + predPath);
-                console.log("before, queue : " + queue);
-                queue.forEach(function (q) {
-                    predPath.push(q);
-                });
-                console.log("after, predpath : " + predPath);
 
-
-
-                // This statement later catches the invisble agent case
-                if (predPath.length !== 0 && agent.isVisible()){
+                if (predPath.length !== 0) {
                     var newPath = [];
                     newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
                     predPath.forEach(function (item, index) {
@@ -303,11 +310,9 @@ App.Views.Map = Backbone.View.extend({
                         });
 
                     }
-                } else {
-                    if (polyline) {
-                        // Hide the old line, as no route planned. It will be revealed again if it is updated
-                        polyline.setOptions({visible: false});
-                    }
+                } else if (polyline) {
+                    // Clear it (probably due to task deletion)
+                    polyline.setOptions({visible: false});
                 }
             });
         } catch (e) {
@@ -328,61 +333,9 @@ App.Views.Map = Backbone.View.extend({
         });
     },
     /**
-     * Draws the predicted route of this ghost as an arrow on the map. Uses a black transparent line
-     * @param predDepth The maximum number of points of the route to draw
-     */
-    drawPredictedGhostPath: function (predDepth){
-        try {
-            self = this;
-            this.state.ghosts.forEach(function (agent) {
-                var predId = agent.getId() + "_pred";
-                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
-                var predPath = agent.getRoute();
-
-                // This statement later catches the invisible agent case
-                if (predPath.length !== 0 && agent.isVisible()){
-                    var newPath = [];
-                    newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
-                    predPath.forEach(function (item, index) {
-                        if (index < predDepth) {
-                            newPath[index + 1] = {lat: item.latitude, lng: item.longitude}
-                        }
-                    });
-
-                    if (polyline) {
-                        // We found a path line we've already drawn, let's update it
-                        polyline.setOptions({path: newPath})
-                        polyline.setOptions({visible: true}) // In case it was hidden by the clearUncertainties() method
-                    } else {
-                        // Otherwise make a new one
-                        self.$el.gmap("addShape", "Polyline", {
-                            path: newPath,
-                            id: predId,
-                            icons: [self.polylineIcon],
-                            strokeOpacity: 0.8,
-                            strokeColor: 'rgba(19,18,18,0.78)',
-                            strokeWeight: 0.7,
-                            zIndex: 2,
-                            visible: true,
-                        });
-
-                    }
-                } else {
-                    if (polyline) {
-                        // Hide the old line, as no route planned. It will be revealed again if it is updated
-                        polyline.setOptions({visible: false});
-                    }
-                }
-            });
-        } catch (e) {
-            alert("Prediction drawing error: " + e)
-        }
-    },
-    /**
      * Draws persistent markers on the map for reference
      */
     drawMarkers: function () {
-
         try {
             var markers = this.state.getMarkers();
             var self = this;
@@ -402,6 +355,7 @@ App.Views.Map = Backbone.View.extend({
                             strokeColor: "#FF0000",
                             strokeOpacity: 0.8,
                             strokeWeight: 2,
+                            label: "Search here!",
                             center: new google.maps.LatLng(latX, latY),
                             radius: parseFloat(rad),
                             visible: true
@@ -413,6 +367,39 @@ App.Views.Map = Backbone.View.extend({
         } catch (e) {
             alert(e);
         }
+
+        // Clumsy, just add manually if using shapes for now. infutue should be done in the same way as above
+        if (this.state.getMarkers().length > 0) {
+            var marker = self.$el.gmap("get", "markers", [])["testMk1"];
+            if (!marker) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    clickable: false,
+                    labelContent: "search here",
+                    labelClass: "labels",
+                    labelStyle: {opacity: 1.0},
+                    label: "There are casualties in this area!",
+                    id: "testMk1",
+                    position: new google.maps.LatLng(50.93007510846366, -1.412749970031315),
+                    zIndex: 3,
+                    visible: true
+                });
+            }
+            var marker = self.$el.gmap("get", "markers", [])["testMk2"];
+            if (!marker) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    clickable: false,
+                    label: "There are casualties in this area!",
+                    labelAnchor: new google.maps.Point(50, -18),
+                    id: "testMk2",
+                    position: new google.maps.LatLng(50.93394037299629, -1.409213465112904),
+                    zIndex: 3
+                });
+            }
+        }
     },
     /***
      * A function to draw the circles for uncertainty.
@@ -420,32 +407,27 @@ App.Views.Map = Backbone.View.extend({
      *      The "radius" value can be imported based on real values live if required, as this is called with each time step
      *      Colour or opacity could also be modulated
      */
-    drawUncertainties: function (sigma) {
+    drawUncertainties: function (radius) {
         var self = this;
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
+            var sigma = radius; // Uncertainty radius in metres
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
 
-            if (agent.isVisible()) {
-                if (currentCircle) {
-                    currentCircle.setOptions({center: agent.getPosition()});
-                    currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
-                } else {
-                    self.$el.gmap("addShape", "Circle", {
-                        id: agentId + "_unc",
-                        strokeColor: "#FF0000",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 0,
-                        fillColor: "#00ff2a",
-                        fillOpacity: 0.4,
-                        center: agent.getPosition(),
-                        radius: sigma,
-                    });
-                }
+            if(currentCircle) {
+                currentCircle.setOptions({center: agent.getPosition()});
+                currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
             } else {
-                if (currentCircle) {
-                    currentCircle.setVisible(false);
-                }
+                self.$el.gmap("addShape", "Circle", {
+                    id: agentId + "_unc",
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 0,
+                    fillColor: "#0033ff",
+                    fillOpacity: 0.4,
+                    center: agent.getPosition(),
+                    radius: sigma,
+                });
             }
         })
     },
@@ -457,54 +439,6 @@ App.Views.Map = Backbone.View.extend({
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_unc"];
-            if (currentCircle) {
-                currentCircle.setOptions({visible: false});
-            }
-        });
-    },
-    /***
-     * A function to draw the circles for communication range
-     * Currently these are of a constant size (proof of concept)
-     *      The "radius" value can be imported based on real values live if required, as this is called with each time step
-     *      Colour or opacity could also be modulated
-     */
-    drawRanges: function (range) {
-        var self = this;
-        this.state.agents.each(function (agent) {
-            var agentId = agent.getId();
-            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_rng"];
-
-            if (agent.isVisible()) {
-                if (currentCircle) {
-                    currentCircle.setOptions({center: agent.getPosition()});
-                    currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
-                } else {
-                    self.$el.gmap("addShape", "Circle", {
-                        id: agentId + "_rng",
-                        strokeColor: "#FF0000",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 0,
-                        fillColor: "#0033ff",
-                        fillOpacity: 0.2,
-                        center: agent.getPosition(),
-                        radius: range,
-                    });
-                }
-            } else {
-                if (currentCircle) {
-                    currentCircle.setVisible(false);
-                }
-            }
-        })
-    },
-    /**
-     * To clear the existing circles from the UI
-     */
-    clearRanges: function () {
-        self = this
-        this.state.agents.each(function (agent) {
-            var agentId = agent.getId();
-            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_rng"];
             if (currentCircle) {
                 currentCircle.setOptions({visible: false});
             }
@@ -529,7 +463,7 @@ App.Views.Map = Backbone.View.extend({
 
             //Draw or hide 'real' allocation.
             if (agentId in mainAllocation) {
-                if (!self.state.isEdit())
+                if (self.state.getEditMode() === 1)
                     MapTaskController.updateTaskRendering(mainAllocation[agentId], self.MarkerColourEnum.GREEN);
                 if (!agent.isWorking())
                     self.drawAllocation(mainLineId, "green", agentId, mainAllocation[agentId]);
@@ -540,7 +474,7 @@ App.Views.Map = Backbone.View.extend({
                 self.hidePolyline(mainLineId);
 
             //Draw or hide 'temp' allocation.
-            if (self.state.isEdit() && agentId in tempAllocation) {
+            if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
                 MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
                 if((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
                     self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
@@ -549,7 +483,7 @@ App.Views.Map = Backbone.View.extend({
                 self.hidePolyline(tempLineId);
 
             //Draw or hide 'dropped' allocation.
-            if (self.state.isEdit() && agentId in droppedAllocation)
+            if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
                 self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
             else
                 self.hidePolyline(droppedLineId);
@@ -711,7 +645,7 @@ App.Views.Map = Backbone.View.extend({
         var tempAllocation = this.state.getTempAllocation();
         var self = this;
 
-        if (this.state.isEdit()) {
+        if (this.state.getEditMode() === 2) {
             var originalDist = 0;
             var originalTime = 0;
             var newDist = 0;
@@ -770,16 +704,6 @@ App.Views.Map = Backbone.View.extend({
             $("#remaining_dist").html(parseFloat(remainingDist / 1000).toFixed(2) + "km");
             $("#remaining_time").html(_.convertToTime(estimatedRemainingTime, false));
         }
-    },
-    updateScorePanel: function () {
-        var scoreInfo = this.state.getScoreInfo();
-        var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime())));
-        $("#score_timeLeft").html(timeRem);
-        $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
-        $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
-        $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
-        $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
-
     },
     updateClickedAgent: function (agent) {
         this.views.clickedAgent = agent != null ? agent.getId() : "";

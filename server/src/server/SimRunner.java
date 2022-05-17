@@ -27,4 +27,9 @@ public class SimRunner implements Runnable {
         simulator = new Simulator();
         simulator.start(port);
     }
+
+    public static void main(String[] args) {
+        SimRunner simRunner = new SimRunner(44101);
+        simRunner.run();
+    }
 }

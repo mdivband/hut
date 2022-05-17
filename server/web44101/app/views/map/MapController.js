@@ -1,9 +1,7 @@
 var MapController = {
     predictionLength: 0,
     showUncertainties: false,
-    showRanges: false,
     uncertaintyRadius: 10,
-    communicationRange: 100,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -19,6 +17,7 @@ var MapController = {
         this.onConfirmAllocationClick = _.bind(this.onConfirmAllocationClick, context);
         this.onViewModePressed = _.bind(this.onViewModePressed, context);
         this.onMonitorModePressed = _.bind(this.onMonitorModePressed, context);
+        this.onScanModePressed = _.bind(this.onScanModePressed, context)
         this.onEditModePressed = _.bind(this.onEditModePressed, context);
         this.swapMode = _.bind(this.swapMode, context);
         this.onTick = _.bind(this.onTick, context);
@@ -34,6 +33,10 @@ var MapController = {
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
+        this.pushImage = _.bind(this.pushImage, context);
+        this.getCurrentImage = _.bind(this.getCurrentImage, context);
+        this.clearReviewImage = _.bind(this.clearReviewImage, context);
+
     },
     /**
      * Bind listeners for map view.
@@ -77,13 +80,6 @@ var MapController = {
         $("#cancel_allocation").on('click', function () {
             MapController.onCancelAllocationClick()
         });
-        $("#add_agent").on('click', function () {
-            MapController.onAddAgentClick()
-        });
-        $("#remove_agent").on('click', function () {
-            MapController.onRemoveAgentClick()
-        });
-
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
@@ -101,8 +97,23 @@ var MapController = {
             MapController.toggleUncertainties( $(this).is(":checked"));
         });
 
-        $('#ranges_toggle').change(function () {
-            MapController.toggleRanges( $(this).is(":checked"));
+        $('#exit_button').on('click', function () {
+            var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
+                "of the targets \n Are you sure you want to exit?");
+            if (exitConfirmed) {
+                self.views.map.clearAll()
+                $.post("/reset");
+                var scenario_end_panel = document.createElement("div");
+                scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                    title: "Scenario Ended",
+                    description: "This scenario has ended, please close your browser tab"
+                });
+                $.blockWithContent(scenario_end_panel);
+                //$('#end_scenario').on('click', function () {
+                    //window.history.back();
+                //});
+            }
+
         });
 
         //State listeners
@@ -110,7 +121,8 @@ var MapController = {
             MapController.onTick();
         });
         this.state.on("change:gameId", function () {
-            $("#game_id").html("" + self.state.getGameId());
+            // We don't display this, for fairness
+            //$("#game_id").html("" + self.state.getGameId());
         });
         this.state.on("change:gameType", function () {
             var lat = self.state.getGameCentre().latitude;
@@ -125,10 +137,7 @@ var MapController = {
             MapController.onUndoRedoAvailableChange();
         });
         this.state.on("change:editMode", function () {
-            MapController.swapMode(self.state.isEdit(), false);
-        });
-        this.state.on("change:scoreInfo", function () {
-            self.updateScorePanel();
+            MapController.swapMode(self.state.getEditMode(), false);
         });
 
         //Map listeners
@@ -151,12 +160,9 @@ var MapController = {
     },
     showPredictedPaths: function (setting) {
         MapController.predictionLength = setting;
-    },
+   },
     toggleUncertainties: function (setting) {
         MapController.showUncertainties = setting;
-    },
-    toggleRanges: function (setting) {
-        MapController.showRanges = setting;
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");
@@ -184,7 +190,7 @@ var MapController = {
         $.post("/allocation/confirm", function () {
             self.state.fetch({
                 success: function () {
-                    MapController.swapMode(false, true);
+                    MapController.swapMode(1, true);
                 }
             });
         });
@@ -192,44 +198,62 @@ var MapController = {
     onCancelAllocationClick: function () {
         MapController.abortAllocation();
     },
-    onAddAgentClick: function () {
-        $.post("/agents/hubspawn");
-    },
-    onRemoveAgentClick: function () {
-        $.post("/agents/hubdespawn");
-    },
     onViewModePressed: function (viewModeValue) {
         if (viewModeValue === "monitor")
             MapController.onMonitorModePressed();
-        else
+        else if (viewModeValue === "editmode")
             MapController.onEditModePressed();
+        else {
+            MapController.onScanModePressed();
+        }
     },
     onMonitorModePressed: function () {
-        if(this.state.isEdit()) {
-            var mainAllocation = this.state.getAllocation();
-            var tempAllocation = this.state.getTempAllocation();
-            if(_.compareAllocations(mainAllocation, tempAllocation))
-                MapController.swapMode(false, true);
-            else
-                MapController.abortAllocation();
+        if(this.state.getEditMode() === 2) {
+            try {
+                var mainAllocation = this.state.getAllocation();
+                var tempAllocation = this.state.getTempAllocation();
+                if (_.compareAllocations(mainAllocation, tempAllocation))
+                    MapController.swapMode(1, true);
+                else
+                    MapController.abortAllocation();
+            } catch (e) {
+                console.log("MMP : " + e);
+            }
+        } else if (this.state.getEditMode() !== 1) {
+            MapController.swapMode(1, true);
         }
     },
     onEditModePressed: function () {
-        if(!this.state.isEdit())
-            MapController.swapMode(true, true);
+        if(this.state.getEditMode() !== 2)
+            try {
+                MapController.swapMode(2, true);
+            } catch (e) {
+                console.log("EMP : " + e);
+            }
+    },
+    onScanModePressed: function () {
+        if(this.state.getEditMode() !== 3)
+            try {
+                MapController.swapMode(3, true);
+            } catch (e) {
+                console.log("SMP : " + e);
+            }
     },
     onTick: function () {
         // TODO this is a temp feature and should be hardcoded
         var tempTime = this.state.getTime();
         var tempLimit = this.state.getTimeLimit();
-        //var time = $.fromTime(tempTime / 6);
-        var time = $.fromTime(tempTime);
-        var limit = $.fromTime(tempLimit * 5);
+        var time = $.fromTime(tempTime / 6);
+        var limit = $.fromTime(tempLimit / 6);
+        /*
+        var time = $.fromTime(this.state.getTime());
+        var limit = $.fromTime(this.state.getTimeLimit());
+        //$("#game_time").html("Time: " + time);
+         */
         $("#game_time").html("Time: " + time + "/" + limit);
         this.updateAllocationRendering();
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);
-            this.drawPredictedGhostPath(MapController.predictionLength);
         } else {
             this.clearPredictions();
         }
@@ -237,11 +261,6 @@ var MapController = {
             this.drawUncertainties(MapController.uncertaintyRadius);
         } else {
             this.clearUncertainties();
-        }
-        if (MapController.showRanges) {
-            this.drawRanges(MapController.communicationRange);
-        } else {
-            this.clearRanges();
         }
 
         this.drawMarkers();
@@ -326,60 +345,95 @@ var MapController = {
     /**
      * Swaps the UI mode (typically monitor/task view)
      * I have added a check for UI options specified in the scenario file -WH
-     * @param toEditMode
+     * @param modeFlag
      * @param sendUpdate
      */
-    swapMode: function (toEditMode, sendUpdate) {
+    swapMode: function (modeFlag, sendUpdate) {
+        // modeflag 1 = monitor
+        //          2 = edit
+        //          3 = images
         self = this;
-        // UI settings
         this.state.getUiOptions().forEach(function (option) {
             if (option === "predictions") {
                 $("#prediction_wrapper_div").show();
             } else if (option === "uncertainties") {
                 $("#uncertainties_wrapper_div").show();
-            } else if (option === "ranges") {
-                $("#ranges_wrapper_div").show();
             }
         });
-
-        // Boxes to be shown or not as per modes
-        if (this.state.getModelStyle() === "off") {
-            $("#prediction_canvas").hide();
-            $("#mission_prediction_canvas").hide();
-            $("#bounded_prediction_canvas").hide();
-            $("#addRemAgentButton").hide()
-        } else {
-            $("#prediction_canvas").show();
-            $("#mission_prediction_canvas").show();
-            $("#bounded_prediction_canvas").show();
-            $("#addRemAgentButton").show()
-        }
-
         try {
-            MapController.communicationRange = this.state.getCommunicationRange();
+            MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
         } catch (e) {
-            alert(e);
+           alert(e);
         }
 
 
-        if(toEditMode) {
+        if(modeFlag === 2) {  // edit
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();
             $("#edit_buttons_sub").show();
             $("#sandbox_buttons_sub").show();
             MapController.onUndoRedoAvailableChange();
-        } else {
+            $("#scan_view").hide();
+
+            $("#map_canvas").show();
+            $("#image_review").hide();
+            $("#review_panel").hide();
+
+
+            $('#scanmode').prop("checked", false);
+            $('#editmode').prop("checked", true);
+            $('#monitor').prop("checked", false);
+        } else if (modeFlag === 1) { // monitor
             $("#monitor_accordions").show();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();
             $("#sandbox_buttons_sub").hide();
+            $("#scan_view").hide();
+
+            $("#map_canvas").show();
+            $("#image_review").hide();
+            $("#review_panel").hide();
+
+            $('#scanmode').prop("checked", false);
+            $('#editmode').prop("checked", false);
+            $('#monitor').prop("checked", true);
+        } else {  // scans
+            $("#monitor_accordions").hide();
+            $("#edit_contexts").hide();
+            $("#edit_buttons_sub").hide();
+            $("#sandbox_buttons_sub").hide();
+            $("#scan_view").show();
+
+            $("#map_canvas").hide();
+            $("#image_review").show();
+            $("#review_panel").show();
+
+            self.views.images.checkAndUpdateDeepButton();
+            MapImageController.resetCurrentImageData();
+            self.views.review.update();
+
+            $('#scanmode').prop("checked", true);
+            $('#editmode').prop("checked", false);
+            $('#monitor').prop("checked", false);
         }
-        $('#monitor').prop("checked", !toEditMode);
-        $('#editmode').prop("checked", toEditMode);
+
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
         if(sendUpdate)
-            this.state.toggleEdit(toEditMode);
+            this.state.pushMode(modeFlag);
+    },
+    pushImage: function (id, iRef, update) {
+        try {
+            this.views.review.displayImage(id, iRef, update);
+        } catch (e) {
+            alert("PI: " + e)
+        }
+    },
+    getCurrentImage: function () {
+        return this.views.review.currentImageRef;
+    },
+    clearReviewImage : function () {
+        this.views.review.clearImage();
     },
     abortAllocation: function() {
         var mainAllocation = this.state.getAllocation();
@@ -389,7 +443,7 @@ var MapController = {
         else
             cancelConfirmed = confirm("This will result with an empty allocation. Continue?");
         if(cancelConfirmed)
-            MapController.swapMode(false, true);
+            MapController.swapMode(1, true);
     },
     processWaypointChange: function(agentId, polyline, vertex, insert) {
         var path = polyline.getPath();
@@ -417,8 +471,8 @@ var MapController = {
                 lng: path.getAt(pathSize - 1).lng()
             });
         }
-            //If any other point is dragged, add or edit vertex as required.
-            // Index passed to server is one less than index on client as server route doesn't include the start point
+        //If any other point is dragged, add or edit vertex as required.
+        // Index passed to server is one less than index on client as server route doesn't include the start point
         // (current agent position)
         else {
             if (insert) {

@@ -25,6 +25,8 @@ public class TargetHandler extends RestHandler {
         // /targets/reveal/<id>
         else if(rPath.startsWith("/reveal"))
             handleReveal(resp, rPath.replace("/reveal/", ""));
+        else if(rPath.startsWith("/requestImage"))
+            handleRequestImage(resp, rPath.replace("/requestImage/", ""));
     }
 
     @Override
@@ -54,6 +56,14 @@ public class TargetHandler extends RestHandler {
         if (!targetExists(id, resp))
             return;
         simulator.getTargetController().setTargetVisibility(id, true);
+        simulator.getImageController().takeImageById(id);
+        resp.sendOkay();
+    }
+
+    private void handleRequestImage(Response resp, String id) throws IOException {
+        if (!targetExists(id, resp))
+            return;
+        simulator.getTargetController().requestImage(id);
         resp.sendOkay();
     }
 
