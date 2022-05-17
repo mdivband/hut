@@ -401,7 +401,7 @@ var simulator = {
                         $.unblockUI();
                         var description_panel = document.createElement("div");
                         description_panel.innerHTML = _.template($("#description_panel").html(), {
-                            title: "Scenario",
+                            title: self.state.getGameId(),
                             description: self.state.getGameDescription() + "\n Your role is: " + userRole
                         });
                         $.blockWithContent(description_panel);
