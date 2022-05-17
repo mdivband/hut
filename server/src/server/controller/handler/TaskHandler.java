@@ -81,7 +81,7 @@ public class TaskHandler extends RestHandler {
             path.add(new Coordinate(lat, lng));
         }
         int rnd = new Random().nextInt(100);
-        Boolean ignored = (rnd <= simulator.getState().getIgnoredTaskProb());
+        Boolean ignored = (rnd < simulator.getState().getIgnoredTaskProb());
         Task task = simulator.getTaskController().createPatrolTask(path, ignored);
         resp.getHeaders().add("Content-type", "text");
         resp.send(201, task.getId());
@@ -123,7 +123,7 @@ public class TaskHandler extends RestHandler {
             corners.add(new Coordinate(lat, lng));
         }
         int rnd = new Random().nextInt(100);
-        Boolean ignored = (rnd <= simulator.getState().getIgnoredTaskProb());
+        Boolean ignored = (rnd < simulator.getState().getIgnoredTaskProb());
         Task task = simulator.getTaskController().createRegionTask(corners.get(0), corners.get(1), corners.get(2), corners.get(3), ignored);
         resp.getHeaders().add("Content-type", "text");
         resp.send(201, task.getId());
