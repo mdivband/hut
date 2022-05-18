@@ -35,18 +35,20 @@ public class PatrolTask extends Task {
 
     @Override
     boolean perform() {
-        for (Agent agent : getAgents()) {
-            if(agent.isWorking() && !workingAgents.contains(agent)) {
-                lastPointMap.put(agent.getId(), points.indexOf(getPreviousPoint(agent)));
-                workingAgents.add(agent);
+        synchronized (this.getAgents()) {
+            for (Agent agent : getAgents()) {
+                if(agent.isWorking() && !workingAgents.contains(agent)) {
+                    lastPointMap.put(agent.getId(), points.indexOf(getPreviousPoint(agent)));
+                    workingAgents.add(agent);
+                }
+                if(agent.isWorking()) {
+                    updateAgentRoute(agent);
+                    if(agent.isCurrentDestinationReached())
+                        lastPointMap.put(agent.getId(), lastPointMap.get(agent.getId()) < points.size() - 1 ? lastPointMap.get(agent.getId()) + 1 : 0);
+                }
+                else
+                    workingAgents.remove(agent);
             }
-            if(agent.isWorking()) {
-                updateAgentRoute(agent);
-                if(agent.isCurrentDestinationReached())
-                    lastPointMap.put(agent.getId(), lastPointMap.get(agent.getId()) < points.size() - 1 ? lastPointMap.get(agent.getId()) + 1 : 0);
-            }
-            else
-                workingAgents.remove(agent);
         }
         Agent agentToRemove = null;
         for (Agent w : workingAgents) {
@@ -130,7 +132,7 @@ public class PatrolTask extends Task {
         return absDistance/totalPathDistance;
     }
 
-    private void updateAgentRoute(Agent agent) {
+    private synchronized void updateAgentRoute(Agent agent) {
         List<Coordinate> route = new ArrayList<>();
         if(lastPointMap.get(agent.getId()) < points.size() - 1)
             route.addAll(points.subList(lastPointMap.get(agent.getId()) + 1, points.size()));
@@ -278,7 +280,15 @@ public class PatrolTask extends Task {
             this.points.addAll(points);
             this.setCoordinate(getCentre(points));
             this.totalPathDistance = calcualteRouteLength();
+            this.resetAllocatedAgentRoutes();
             perform();
+        }
+    }
+
+    private synchronized void resetAllocatedAgentRoutes() {
+        for (Agent agent : this.getAgents()) {
+            agent.stop();
+            agent.setTempRoute(Collections.singletonList(this.getRandomPoint()));
         }
     }
 

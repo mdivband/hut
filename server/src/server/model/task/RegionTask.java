@@ -101,7 +101,7 @@ public class RegionTask extends PatrolTask {
         return points;
     }
 
-    public void rotateRoute() {
+    public synchronized void rotateRoute() {
         this.currentRotation++;
         if (this.currentRotation == 4) {
             currentRotation = 0;

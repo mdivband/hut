@@ -75,29 +75,31 @@ public abstract class Task extends MObject implements Serializable {
      * @return True if the task has been completed, false otherwise.
      */
     public boolean step() {
-        if (status == STATUS_TODO) {
-            boolean hasAnyAgentArrived = false;
-            for (Agent agent : getAgents()) {
-                if (agent.isFinalDestinationReached()) {
-                    agent.setWorking(true);
-                    hasAnyAgentArrived = true;
+        synchronized (getAgents()) {
+            if (status == STATUS_TODO) {
+                boolean hasAnyAgentArrived = false;
+                for (Agent agent : getAgents()) {
+                    if (agent.isFinalDestinationReached()) {
+                        agent.setWorking(true);
+                        hasAnyAgentArrived = true;
+                    }
+                }
+
+                if (hasAnyAgentArrived) {
+                    setStatus(Task.STATUS_DOING);
+                    setStartTime(Simulator.instance.getState().getTime());
                 }
             }
 
-            if (hasAnyAgentArrived) {
-                setStatus(Task.STATUS_DOING);
-                setStartTime(Simulator.instance.getState().getTime());
+            if (status == Task.STATUS_DOING) {
+                for (Agent agent : getAgents())
+                    if (agent.isFinalDestinationReached())
+                        agent.setWorking(true);
+                if (perform())
+                    setStatus(Task.STATUS_DONE);
+                if (agents.isEmpty())
+                    setStatus(Task.STATUS_TODO);
             }
-        }
-
-        if (status == Task.STATUS_DOING) {
-            for (Agent agent : getAgents())
-                if (agent.isFinalDestinationReached())
-                    agent.setWorking(true);
-            if(perform())
-                setStatus(Task.STATUS_DONE);
-            if(agents.isEmpty())
-                setStatus(Task.STATUS_TODO);
         }
 
         return status == Task.STATUS_DONE;

@@ -90,7 +90,6 @@ public class TaskController extends AbstractController {
                 sb.append(c.getLatitude()).append(";").append(c.getLongitude()).append(";");
             }
             LOGGER.info(String.format("%s; MVPT; Moved patrol task to points (id, lat1, lng1, lat2, lng2, ...); %s; %s", Simulator.instance.getState().getTime(), id, sb));
-            this.resetAllocatedAgentRoutes(id);
             return true;
         }
         return false;
@@ -122,7 +121,6 @@ public class TaskController extends AbstractController {
             sb.append(corners.get(2).getLatitude()).append(";").append(corners.get(2).getLongitude()).append(";");
             sb.append(corners.get(3).getLatitude()).append(";").append(corners.get(3).getLongitude()).append(";");
             LOGGER.info(String.format("%s; MVRG; Moved region task to corners (id, nwlat, nwlng, nelat, nelng, selat, selng, swlat, swlng,); %s; %s", Simulator.instance.getState().getTime(), id, sb));
-            this.resetAllocatedAgentRoutes(id);
             return true;
         }
         return false;
@@ -135,7 +133,6 @@ public class TaskController extends AbstractController {
             LOGGER.info("Moved task " + id + " to " + lat + ", " + lng);
             LOGGER.info(String.format("%s; MVTSK; Moved task to (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         }
-        this.resetAllocatedAgentRoutes(id);
         return task;
     }
 
@@ -178,17 +175,6 @@ public class TaskController extends AbstractController {
         Task task = simulator.getState().getTask(taskId);
         if (task.getType() == Task.TASK_REGION) {
             ((RegionTask) task).rotateRoute();
-        }
-        this.resetAllocatedAgentRoutes(taskId);
-    }
-
-    private synchronized void resetAllocatedAgentRoutes(String taskId) {
-        Task task = simulator.getState().getTask(taskId);
-        if (task.getType() == Task.TASK_REGION || task.getType() == Task.TASK_PATROL) {
-            for (Agent agent : task.getAgents()) {
-                agent.stop();
-                agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getRandomPoint()));
-            }
         }
     }
 
