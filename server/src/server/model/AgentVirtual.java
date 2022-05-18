@@ -24,7 +24,9 @@ public class AgentVirtual extends Agent {
             heartbeat();
         int rnd = new Random().nextInt(360000);
         Boolean droppedOut = (rnd < avgAgentDropout);
-        this.battery = this.battery > 0 ? this.battery - windAdjustedBatteryConsumption : 0;
+        if (this.getTask() != null) {
+            this.battery = this.battery > 0 ? this.battery - windAdjustedBatteryConsumption : 0;
+        }
         if (this.battery == 0 || droppedOut) {
             this.setTimedOut(true);
         }
