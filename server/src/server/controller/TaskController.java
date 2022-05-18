@@ -176,6 +176,7 @@ public class TaskController extends AbstractController {
         if (task.getType() == Task.TASK_REGION) {
             ((RegionTask) task).rotateRoute();
         }
+        LOGGER.info(String.format("%s; RTRG; Region task path rotated (id); %s; ", Simulator.instance.getState().getTime(), taskId));
     }
 
     private void removeTaskAllocations(String taskId, Map<String, String> allocation) {
