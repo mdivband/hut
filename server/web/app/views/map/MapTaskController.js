@@ -316,10 +316,19 @@ var MapTaskController = {
                     var point = task.getPoints()[i];
                     path.push(_.position(point.latitude, point.longitude));
                 }
+                polylineIcon = {
+                    icon: {
+                        scale: 4,
+                        path: google.maps.SymbolPath.FORWARD_OPEN_ARROW
+                    },
+                    offset: '20%',
+                    repeat: '750px'
+                }
                 polyline.setOptions({
                     strokeColor: colourOptions['name'],
                     visible: $('#region_path_toggle').is(":checked"),
-                    path: path
+                    path: path,
+                    icons: [polylineIcon],
                 });
                 var rect = this.$el.gmap("get", "overlays > Rectangle", [])[taskId];
                 rect.setOptions({
