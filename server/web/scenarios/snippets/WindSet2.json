@@ -2,12 +2,12 @@
   "wind": [
     {
       "time": 0,
-      "speed": 0.25,
-      "heading": 180
+      "speed": 0.5,
+      "heading": 270
     },
     {
       "time": 100,
-      "speed": 0.8,
+      "speed": 0.25,
       "heading": 90
     }
   ]
