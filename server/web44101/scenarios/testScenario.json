@@ -5,7 +5,7 @@
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
   },
-  "allocationMethod": "maxsumwithstop",
+  "allocationMethod": "maxsum",
   "allocationStyle": "manual",
   "agents": [
     {

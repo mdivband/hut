@@ -92,11 +92,9 @@ var MapController = {
                 MapController.showPredictedPaths($(this).val());
             }
         });
-
         $('#uncertainties_toggle').change(function () {
             MapController.toggleUncertainties( $(this).is(":checked"));
         });
-
         $('#exit_button').on('click', function () {
             var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
                 "of the targets \n Are you sure you want to exit?");
@@ -113,6 +111,15 @@ var MapController = {
                     //window.history.back();
                 //});
             }
+            $("#add_agent").on('click', function () {
+                MapController.onAddAgentClick()
+            });
+            $("#remove_agent").on('click', function () {
+                MapController.onRemoveAgentClick()
+            });
+            this.state.on("change:scoreInfo", function () {
+                self.updateScorePanel();
+            });
 
         });
 
@@ -198,6 +205,12 @@ var MapController = {
     onCancelAllocationClick: function () {
         MapController.abortAllocation();
     },
+    onAddAgentClick: function () {
+        $.post("/agents/hubspawn");
+    },
+    onRemoveAgentClick: function () {
+        $.post("/agents/hubdespawn");
+    },
     onViewModePressed: function (viewModeValue) {
         if (viewModeValue === "monitor")
             MapController.onMonitorModePressed();
@@ -209,27 +222,24 @@ var MapController = {
     },
     onMonitorModePressed: function () {
         if(this.state.getEditMode() === 2) {
-            try {
-                var mainAllocation = this.state.getAllocation();
-                var tempAllocation = this.state.getTempAllocation();
-                if (_.compareAllocations(mainAllocation, tempAllocation))
-                    MapController.swapMode(1, true);
-                else
-                    MapController.abortAllocation();
-            } catch (e) {
-                console.log("MMP : " + e);
-            }
+            var mainAllocation = this.state.getAllocation();
+            var tempAllocation = this.state.getTempAllocation();
+            if (_.compareAllocations(mainAllocation, tempAllocation))
+                MapController.swapMode(1, true);
+            else
+                MapController.abortAllocation();
         } else if (this.state.getEditMode() !== 1) {
             MapController.swapMode(1, true);
         }
     },
     onEditModePressed: function () {
-        if(this.state.getEditMode() !== 2)
+        if(this.state.getEditMode() !== 2) {
             try {
                 MapController.swapMode(2, true);
             } catch (e) {
                 console.log("EMP : " + e);
             }
+        }
     },
     onScanModePressed: function () {
         if(this.state.getEditMode() !== 3)
@@ -358,6 +368,8 @@ var MapController = {
                 $("#prediction_wrapper_div").show();
             } else if (option === "uncertainties") {
                 $("#uncertainties_wrapper_div").show();
+            } else if (option === "ranges") {
+                $("#ranges_wrapper_div").show();
             }
         });
         try {
@@ -366,6 +378,28 @@ var MapController = {
            alert(e);
         }
 
+        if (this.state.getShowReviewPanel()) {
+            $("#review_panel").show();
+            $("#image_review").show();
+            $("#scan_button_group").show()
+        } else {
+            $("#review_panel").hide();
+            $("#image_review").hide();
+            $("#scan_button_group").hide()
+        }
+
+        // Boxes to be shown or not as per modes
+        if (this.state.getModelStyle() === "off") {
+            $("#prediction_canvas").hide();
+            $("#mission_prediction_canvas").hide();
+            $("#bounded_prediction_canvas").hide();
+            $("#addRemAgentButton").hide()
+        } else {
+            $("#prediction_canvas").show();
+            $("#mission_prediction_canvas").show();
+            $("#bounded_prediction_canvas").show();
+            $("#addRemAgentButton").show()
+        }
 
         if(modeFlag === 2) {  // edit
             $("#monitor_accordions").hide();

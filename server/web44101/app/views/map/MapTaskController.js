@@ -46,7 +46,7 @@ var MapTaskController = {
     },
     onTaskAdd: function (task) {
         console.log("Task added " + task.getId());
-        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR) {
+        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
             this.$el.gmap("addMarker", {
                 bounds: false,
                 draggable: true,

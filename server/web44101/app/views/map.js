@@ -54,6 +54,7 @@ App.Views.Map = Backbone.View.extend({
         this.icons = {
             UAV: $.loadIcon("icons/used/uav.png", "icons/plane.shadow.png", 30, 30),
             UAVManual: $.loadIcon("icons/used/uav_manual.png", "icons/plane.shadow.png", 30, 30),
+            UAVWithPack: $.loadIcon("icons/used/uav_with_pack.png", "icons/plane.shadow.png", 30, 30),
             UAVSelected: $.loadIcon("icons/used/uav_selected.png", "icons/plane.shadow.png", 30, 30),
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
@@ -752,6 +753,16 @@ App.Views.SubMap = Backbone.View.extend({
 
         this.render();
         this.bindEvents();
+    },
+    updateScorePanel: function () {
+        var scoreInfo = this.state.getScoreInfo();
+        var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime())));
+        $("#score_timeLeft").html(timeRem);
+        $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
+        $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
+        $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
+        $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
+
     },
     render: function () {
         this.$el.gmap(this.mapOptions);

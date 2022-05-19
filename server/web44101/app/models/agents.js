@@ -15,6 +15,7 @@ App.Models.Agent = App.Models.MObject.extend({
         timedOut: false,
         timeInAir: 0,
         working: false,
+        hub: false,
         isLeader: false,
         type: "standard",
         visible: false,
@@ -60,6 +61,9 @@ App.Models.Agent = App.Models.MObject.extend({
     },
     isWorking: function () {
         return this.get("working");
+    },
+    isHub: function () {
+        return this.get("hub")
     },
     getType: function () {
         return this.get("type");

@@ -3,7 +3,7 @@ package server.controller.handler;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import server.Simulator;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.Coordinate;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;

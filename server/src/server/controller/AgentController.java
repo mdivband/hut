@@ -64,14 +64,6 @@ public class AgentController extends AbstractController {
         return agent;
     }
 
-    public synchronized Agent addHubAgent(double lat, double lng) {
-        // We assume just one HUB, so this is a unique ID
-        Agent agent = new AgentHub("HUB", new Coordinate(lat, lng), sensor);
-        simulator.getState().add(agent);
-        simulator.getState().attachHub(agent);
-        return agent;
-    }
-
     public synchronized Agent addHubProgrammedAgent(double lat, double lng, Random random, TaskController taskController) {
         // We assume just one HUB, so this is a unique ID
         AgentProgrammed agent = new AgentHubProgrammed("HUB", new Coordinate(lat, lng), sensor, random, taskController);
@@ -208,10 +200,6 @@ public class AgentController extends AbstractController {
             return false;
         agent.setTimedOut(timedOut);
         return true;
-    }
-
-    public synchronized void resetAgentNumbers() {
-        this.uniqueAgentNumber = 1;
     }
 
     /**

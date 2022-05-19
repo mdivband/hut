@@ -3,6 +3,7 @@ package server;
 import server.controller.*;
 import server.model.*;
 import server.model.agents.*;
+import server.model.target.AdjustableTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
@@ -313,7 +314,9 @@ public class Simulator {
             this.state.decayHazardHits();
 
             // Check and trigger images that are scheduled
-            imageController.checkForImages();
+            if (state.isShowReviewPanel()) {
+                imageController.checkForImages();
+            }
 
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));
@@ -529,14 +532,6 @@ public class Simulator {
                 }
             }
 
-            Object hub = GsonUtils.getValue(obj, "hub");
-            if(hub != null) {
-                Double lat = GsonUtils.getValue(hub, "lat");
-                Double lng = GsonUtils.getValue(hub, "lng");
-                agentController.addHubAgent(lat, lng);
-                state.setHubLocation(new Coordinate(lat, lng));
-            }
-
             this.state.resetNext();
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
@@ -544,7 +539,7 @@ public class Simulator {
                     state.incrementTimeLimit((Double)timeLimitSeconds);
                 } else {
                     LOGGER.warning("Expected double value for timeLimitSeconds in scenario file. Received: '" +
-                            timeLimitSeconds.toString() + "'. Time limit not changed.");
+                            timeLimitSeconds + "'. Time limit not changed.");
                 }
             }
             if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
@@ -553,7 +548,7 @@ public class Simulator {
                     state.incrementTimeLimit((Double)timeLimitMinutes * 60);
                 } else {
                     LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
-                            timeLimitMinutes.toString() + "'. Time limit not changed.");
+                            timeLimitMinutes + "'. Time limit not changed.");
                 }
             }
             if(GsonUtils.hasKey(obj,"nextScenarioFile")){
@@ -576,8 +571,13 @@ public class Simulator {
                 if(modelStyle.getClass() == String.class) {
                     state.setModelStyle((String) modelStyle);
                 }
-            } else {
-                state.setModelStyle("off");
+            }
+
+            if(GsonUtils.hasKey(obj,"reviewPanel")){
+                Object reviewPanel = GsonUtils.getValue(obj, "reviewPanel");
+                if(reviewPanel.getClass() == Boolean.class) {
+                    state.setShowReviewPanel((Boolean) reviewPanel);
+                }
             }
 
             Object varJson = GsonUtils.getValue(obj, "varianceParameters");
@@ -600,33 +600,6 @@ public class Simulator {
                 }
                 if (GsonUtils.getValue(noiseJson, "locationNoise") != null) {
                     state.putNoiseOption("locationNoise", GsonUtils.getValue(noiseJson, "locationNoise"));
-                }
-            }
-            
-            if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
-                Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
-                if(timeLimitSeconds.getClass() == Double.class) {
-                    state.incrementTimeLimit((Double)timeLimitSeconds);
-                } else {
-                    LOGGER.warning("Expected double value for timeLimitSeconds in scenario file. Received: '" +
-                            timeLimitSeconds.toString() + "'. Time limit not changed.");
-                }
-            }
-            if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
-                Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
-                if(timeLimitMinutes.getClass() == Double.class) {
-                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
-                } else {
-                    LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
-                            timeLimitMinutes.toString() + "'. Time limit not changed.");
-                }
-            }
-
-            if(GsonUtils.hasKey(obj,"nextScenarioFile")){
-                Object nextScenarioFile = GsonUtils.getValue(obj, "nextScenarioFile");
-                if(nextScenarioFile.getClass() == String.class) {
-                    this.state.setPassthrough(true);
-                    nextFileName = nextScenarioFile.toString();
                 }
             }
 
@@ -746,20 +719,6 @@ public class Simulator {
                 }
             }
 
-            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
-            if (uiJson != null) {
-                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
-                    state.addUIOption("predictions");
-                }
-                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
-                    state.addUIOption("uncertainties");
-                }
-            }
-
-            if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
-                this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
-            }
-
             List<Object> markers = GsonUtils.getValue(obj, "markers");
             if (markers != null) {
                 for (Object markerJson : markers) {
@@ -787,19 +746,6 @@ public class Simulator {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
             }
 
-            List<Object> markers = GsonUtils.getValue(obj, "markers");
-            if (markers != null) {
-                for (Object markerJson : markers) {
-                    String shape = GsonUtils.getValue(markerJson, "shape");
-                    Double cLat = GsonUtils.getValue(markerJson, "centreLat");
-                    Double cLng = GsonUtils.getValue(markerJson, "centreLng");
-                    Double radius = GsonUtils.getValue(markerJson, "radius");
-
-                    String shapeRep = shape+","+cLat+","+cLng+","+radius;
-
-                    this.state.getMarkers().add(shapeRep);
-                }
-            }
             return true;
         } catch (IOException e) {
             e.printStackTrace();

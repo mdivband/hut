@@ -256,20 +256,24 @@ var MapAgentController = {
     updateAgentMarkerIcon: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         var icon;
-
         if (agent.getId() === this.views.clickedAgent)
             icon = this.icons.UAVSelected;
         else {
-            if(agent.getManuallyControlled())
-                icon = this.icons.UAVManual;
-            else if(agent.isTimedOut())
-                icon = this.icons.UAVTimedOut;
-            else if(agent.isHub()) {
+            if(agent.getType() === "hub") {
                 icon = this.icons.FLAG;
                 marker.setOptions({clickable: false, draggable: false})
-            }
-            else
+            } else if (agent.getType() === "ghost") {
+                icon = this.icons.UAVTimedOut;
+                marker.setOptions({clickable: false, draggable: false})
+            } else if(agent.getManuallyControlled() || agent.getType() === "leader") {
+                icon = this.icons.UAVManual;
+            } else if (agent.getType() === "withpack") {
+                icon = this.icons.UAVWithPack;
+            } else if(agent.isTimedOut()) {
+                icon = this.icons.UAVTimedOut;
+            } else
                 icon = this.icons.UAV;
+
         }
         marker.setIcon(icon.Image);
         marker.setPosition(agent.getPosition());
@@ -282,8 +286,7 @@ var MapAgentController = {
             markerImgEl.css({
                 'transform': 'rotate(' + agent.getHeading() + 'deg)'
             });
-            // Temp dioable battery readout
-            //MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
+            MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
         }
 
     },

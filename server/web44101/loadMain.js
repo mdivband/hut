@@ -73,6 +73,7 @@ $LAB.setOptions({
     .script("app/views/camera.js")
     .script("app/views/subcam.js")
     .script("app/views/map.js")
+    .script("app/views/prediction.js")
     .script("app/views/images.js")
     .script("app/views/review.js")
     .script("app/views/map/MapController.js")
@@ -86,6 +87,7 @@ $LAB.setOptions({
     // ----- Models -----
     .script("app/models/base.js")
     .script("app/models/agents.js")
+    .script("app/models/ghosts.js")
     .script("app/models/tasks.js")
     .script("app/models/hazards.js")
     .script("app/models/targets.js")

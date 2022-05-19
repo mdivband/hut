@@ -8,18 +8,16 @@ import maxsum.Constraint;
 import maxsum.Domain;
 import maxsum.MaxSum;
 import maxsum.Variable;
-import server.model.Agent;
-import server.model.AgentHub;
+import server.model.agents.Agent;
+import server.model.agents.AgentHub;
 import server.model.Coordinate;
 import server.model.agents.Hub;
 import server.model.MObject;
 import server.model.agents.AgentCommunicating;
-import server.model.agents.AgentProgrammed;
 import server.model.agents.AgentVirtual;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 import server.model.task.WaypointTask;
-import server.model.target.HumanTarget;
 import server.model.task.*;
 import maxsum.EvaluationFunction;
 
@@ -92,13 +90,13 @@ public class Allocator {
         String allocationMethod = simulator.getState().getAllocationMethod();
 
         if (allocationStyle.equals("bundle")) {
-            allocation = computeBundle(allocationMethod, agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+            allocation = computeBundle(allocationMethod, agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
         } else {
             switch (allocationMethod) {
-                case "maxsum" -> allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-                case "maxsumwithoverspill" -> allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-                case "random" -> allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-                case "bestfirst" -> allocation = bestFirstCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+                case "maxsum" -> allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+                case "maxsumwithoverspill" -> allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+                case "random" -> allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+                case "bestfirst" -> allocation = bestFirstCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
             }
         }
 
@@ -1091,9 +1089,6 @@ public class Allocator {
         LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         runAutoAllocation();
         confirmAllocation(simulator.getState().getTempAllocation());
-    }
-    public void resetLogger(FileHandler fileHandler) {
-        LOGGER.addHandler(fileHandler);
     }
 
     /**

@@ -44,6 +44,7 @@ public class State {
     private boolean passthrough = false;
     private String nextFileName = "";
     private boolean deepAllowed = false;
+    private boolean showReviewPanel = false;
 
     private String prov_doc;
 
@@ -95,18 +96,10 @@ public class State {
     private String userName = "";
     private List<String> markers= new ArrayList<>();
 
-    private ArrayList<String> uiOptions = new ArrayList<>();
-    private double uncertaintyRadius = 0;
-
-    private Coordinate hubLocation;
-
     //                   ID->ImageName
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
     private final List<String> pendingIds = new ArrayList<>(16);
-
-    private String userName = "";
-    private List<String> markers = new ArrayList<>();
 
     public State() {
         agents = new ArrayList<>();
@@ -132,7 +125,6 @@ public class State {
         time = 0;
         timeLimit = 0;    // 0 means no time limit
         scenarioEndTime = 0; // 0 means no time limit
-        editMode = false;
         editMode = 1;
         inProgress = false;
         allocationMethod = "maxsum";
@@ -150,6 +142,8 @@ public class State {
 
         gameCentre = null;
         userName = "";
+        modelStyle = "off";
+        showReviewPanel = false;
 
         agents.clear();
         ghosts.clear();
@@ -308,41 +302,6 @@ public class State {
     }
 
     public synchronized int getEditMode() {
-    public synchronized double getTimeLimit() {
-        return timeLimit;
-    }
-
-    public synchronized void setTimeLimit(double timeLimit) {
-        this.timeLimit = timeLimit;
-        this.setScenarioEndTime(timeLimit);
-    }
-
-    public synchronized void incrementTimeLimit(double increment) {
-        setTimeLimit(this.timeLimit + increment);
-        this.setScenarioEndTime(timeLimit);
-    }
-
-    public synchronized long getScenarioEndTime() {
-        return scenarioEndTime;
-    }
-
-    public synchronized void setScenarioEndTime() {
-        if (this.timeLimit == 0) {
-            this.scenarioEndTime = 0;
-        } else {
-            this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
-        }
-    }
-
-    private synchronized void setScenarioEndTime(double timeLimit) {
-        if (timeLimit == 0) {
-            this.scenarioEndTime = 0;
-        } else {
-            this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
-        }
-    }
-
-    public synchronized boolean isEditMode() {
         return editMode;
     }
 
@@ -399,6 +358,7 @@ public class State {
     }
 
     public void setModelStyle(String modelStyle) {
+        System.out.println("setting style to " + modelStyle);
         this.modelStyle = modelStyle;
     }
 
@@ -668,14 +628,6 @@ public class State {
         this.hub = (Hub) hub;
     }
 
-    public String getUserName() {
-        return userName;
-    }
-
-    public List<String> getMarkers() {
-        return markers;
-    }
-
     /**
      * Getter for whether the simulation is communication constrained
      * @return boolean value for whether simulation is communication constrained
@@ -708,11 +660,6 @@ public class State {
         return scoreInfo;
     }
 
-    public boolean setUserName(String userName) {
-        this.userName = userName;
-        return true;
-    }
-
     public Collection<Task> getCompletedTasks() {
         return completedTasks;
     }
@@ -739,14 +686,6 @@ public class State {
 
     public void setMissionSuccessUnderChance(double underChance) {
         this.missionSuccessUnderChance = underChance;
-    }
-
-    /**
-     * Resets log to a new filename
-     * @param fileHandler
-     */
-    public void resetLogger(FileHandler fileHandler) {
-        LOGGER.addHandler(fileHandler);
     }
 
     /**
@@ -793,36 +732,12 @@ public class State {
         return bound - (Simulator.instance.getRandom().nextDouble() * bound * 2);
     }
 
-    public void setPassthrough(boolean passthrough) {
-        this.passthrough = passthrough;
-    }
-
-    public boolean isPassthrough() {
-        return passthrough;
-    }
-
     public String getNextFileName() {
         return nextFileName;
     }
 
     public void setNextFileName(String nextFileName) {
         this.nextFileName = nextFileName;
-    }
-
-    public void addUIOption(String option) {
-        uiOptions.add(option);
-    }
-
-    public void setUncertaintyRadius(double uncertaintyRadius) {
-        this.uncertaintyRadius = uncertaintyRadius;
-    }
-
-    public void setHubLocation(Coordinate coordinate) {
-        hubLocation = coordinate;
-    }
-
-    public Coordinate getHubLocation() {
-        return hubLocation;
     }
 
     public Map<String, String> getStoredImages() {
@@ -859,6 +774,14 @@ public class State {
 
     public void resetLogger(FileHandler fileHandler) {
         LOGGER.addHandler(fileHandler);
+    }
+
+    public void setShowReviewPanel(Boolean reviewPanel) {
+        showReviewPanel = reviewPanel;
+    }
+
+    public boolean isShowReviewPanel() {
+        return showReviewPanel;
     }
 
     private class HazardHit {

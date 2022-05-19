@@ -1,7 +1,7 @@
 package server.model.task;
 
 import server.Simulator;
-import server.model.Agent;
+import server.model.agents.Agent;
 import server.model.Coordinate;
 
 import java.util.ArrayList;

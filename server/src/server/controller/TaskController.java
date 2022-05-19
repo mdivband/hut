@@ -1,17 +1,15 @@
 package server.controller;
 
 import server.Simulator;
-import server.model.Agent;
-import server.model.AgentHub;
+import server.model.agents.Agent;
+import server.model.agents.AgentHub;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
-import server.model.target.Target;
 import server.model.task.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.FileHandler;
 
 public class TaskController extends AbstractController {
 
@@ -46,6 +44,9 @@ public class TaskController extends AbstractController {
                     task = new ShallowScanTask(id, new Coordinate(lat, lng));
                     simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
                     break;
+                case Task.TASK_VISIT:
+                    task = new VisitTask(id, new Coordinate(lat, lng));
+                    break;
                 default:
                     throw new IllegalArgumentException("Unable to create task of type " + taskType);
             }
@@ -63,11 +64,9 @@ public class TaskController extends AbstractController {
                     a.resume();
                 }
             }
+            LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
             return task;
         }
-        simulator.getState().add(task);
-        LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
-        return task;
     }
 
     public synchronized Task createPatrolTask(List<Coordinate> path) {
@@ -222,11 +221,6 @@ public class TaskController extends AbstractController {
 
        return foundTasks;
     }
-
-    public synchronized void resetTaskNumbers() {
-        this.uniqueTaskNumber = 1;
-    }
-
 
     public synchronized void resetTaskNumbers() {
         this.uniqueTaskNumber = 1;
