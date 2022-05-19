@@ -274,12 +274,13 @@ public class PatrolTask extends Task {
         return distance;
     }
 
-    public void updatePoints(List<Coordinate> points) {
+    public synchronized void updatePoints(List<Coordinate> points) {
         synchronized (this) {
             this.points.clear();
             this.points.addAll(points);
             this.setCoordinate(getCentre(points));
             this.totalPathDistance = calcualteRouteLength();
+            this.lastPointMap.clear();
             this.resetAllocatedAgentRoutes();
             perform();
         }
@@ -289,6 +290,7 @@ public class PatrolTask extends Task {
         for (Agent agent : this.getAgents()) {
             agent.stop();
             agent.setTempRoute(Collections.singletonList(this.getRandomPoint()));
+            lastPointMap.put(agent.getId(), points.indexOf(getPreviousPoint(agent)));
         }
     }
 
