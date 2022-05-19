@@ -49,7 +49,7 @@ public abstract class Agent extends MObject implements Serializable {
 
         this.simulated = simulated;
 
-        speed = 1.0;
+        speed = 0.5;
         windAdjustedSpeed = speed;
         windAdjustedHeading = heading;
         windAdjustedBatteryConsumption = unitTimeBatteryConsumption;

@@ -46,7 +46,7 @@ var MapHazardController = {
         else {
             MapHazardController.heatmap[hazardType] = new HeatmapOverlay(this.map,
                 {
-                    "radius": 0.0005,
+                    "radius": 0.0003,
                     // "maxOpacity": 0.4,
                     "maxOpacity": 0.6,
                     "scaleRadius": true,

@@ -1,5 +1,5 @@
 var MapTargetController = {
-    revealDistance: 50,
+    revealDistance: 15,
     revealedNumber: 0,
     classifiedIds: [],
     /**
