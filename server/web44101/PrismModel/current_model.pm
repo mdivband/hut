@@ -113,6 +113,15 @@ const int initReturn7;
 const int initAlive7;
 const int initTurning7;
 
+const int initPlace8;
+const int initTaskLoc8;
+const int initBattery8;
+const int initDelivered8;
+const int initCharge8;
+const int initReturn8;
+const int initAlive8;
+const int initTurning8;
+
 
 // Agents
 module agent0
@@ -328,6 +337,27 @@ initCharge0=initCharge7,
 initReturn0=initReturn7,
 initAlive0=initAlive7,
 initTurning0=initTurning7
+]
+endmodule
+
+module agent8=agent0[
+place0=place8,
+taskLoc0=taskLoc8,
+battery0=battery8,
+ready0=ready8,
+return0=return8,
+delivered0=delivered8,
+charge0=charge8,
+alive0=alive8,
+turning0=turning8,
+initPlace0=initPlace8,
+initTaskLoc0=initTaskLoc8,
+initBattery0=initBattery8,
+initDelivered0=initDelivered8,
+initCharge0=initCharge8,
+initReturn0=initReturn8,
+initAlive0=initAlive8,
+initTurning0=initTurning8
 ]
 endmodule
 

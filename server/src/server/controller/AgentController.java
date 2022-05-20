@@ -84,6 +84,7 @@ public class AgentController extends AbstractController {
         // We assume just one HUB, so this is a unique ID
         Agent agent = new AgentHub("HUB", new Coordinate(lat, lng), sensor);
         simulator.getState().add(agent);
+        simulator.getState().attachHub(agent);
         return agent;
     }
 
@@ -300,11 +301,14 @@ public class AgentController extends AbstractController {
      */
     public int despawnAgent() {
         Hub hub = Simulator.instance.getState().getHub();
+        System.out.println("hub = " + hub);
         if (hub instanceof AgentHubProgrammed ahp) {
+            System.out.println("a");
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
-            //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
+            System.out.println("b");
             if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4) {
+                System.out.println("c");
                 simulator.getAgentController().decrementAgentNumbers();
                 return simulator.getAgentController().incrementRemoval();
                 //return ah.scheduleRemoval(1);

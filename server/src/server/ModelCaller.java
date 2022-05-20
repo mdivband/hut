@@ -14,6 +14,7 @@ public class ModelCaller {
 
     private Process[] procs = new Process[3];
     private int currentSalt;
+    private boolean debugMode = false;
 
     public void reset() {
         Simulator.instance.getState().setModelStyle("off");
@@ -82,24 +83,15 @@ public class ModelCaller {
         ProcessBuilder processBuilder = new ProcessBuilder("python3", webRef+"/ModelFiles/"+fileName, webRef, String.valueOf(currentSalt));
         processBuilder.redirectErrorStream(true);
         procs[procIndex] = processBuilder.start();
-        //try {
 
+        if (debugMode) {
             String s;
             BufferedReader stdOut = new BufferedReader(new
                     InputStreamReader(procs[procIndex].getInputStream()));
             while ((s = stdOut.readLine()) != null) {
                 System.out.println(s);
             }
-
-
-            //int exitCode = procs[procIndex].waitFor();
-            //System.out.println("RUN - Finished with exit code " + exitCode);
-        //} catch (InterruptedException e) {
-            //process.destroy();
-            //System.out.println("destroyed");
-            //throw e;
-        //}
-
+        }
     }
 
     /**

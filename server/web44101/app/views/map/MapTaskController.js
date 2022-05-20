@@ -180,7 +180,7 @@ var MapTaskController = {
     },
     onTaskRemove: function (task) {
         console.log('Task removed ' + task.getId());
-        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR) {
+        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
             var marker = this.$el.gmap("get", "markers")[task.getId()];
             if (marker) {
                 marker.setMap(null);
@@ -294,7 +294,7 @@ var MapTaskController = {
         var self = this;
         if (!task)
             return;
-        if(task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_WAYPOINT)
+        if(task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_VISIT)
             MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
         else if(task.getType() === this.state.tasks.TASK_PATROL) {
             var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];

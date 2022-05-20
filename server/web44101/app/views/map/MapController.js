@@ -1,7 +1,9 @@
 var MapController = {
     predictionLength: 0,
     showUncertainties: false,
+    showRanges: false,
     uncertaintyRadius: 10,
+    communicationRange: 100,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -33,6 +35,8 @@ var MapController = {
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
+        this.toggleUncertainties = _.bind(this.toggleUncertainties, context);
+        this.toggleRanges = _.bind(this.toggleRanges, context);
         this.pushImage = _.bind(this.pushImage, context);
         this.getCurrentImage = _.bind(this.getCurrentImage, context);
         this.clearReviewImage = _.bind(this.clearReviewImage, context);
@@ -83,6 +87,15 @@ var MapController = {
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
+        $("#add_agent").on('click', function () {
+            MapController.onAddAgentClick()
+        });
+        $("#remove_agent").on('click', function () {
+            MapController.onRemoveAgentClick()
+        });
+        this.state.on("change:scoreInfo", function () {
+            self.updateScorePanel();
+        });
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
                 MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
@@ -94,6 +107,9 @@ var MapController = {
         });
         $('#uncertainties_toggle').change(function () {
             MapController.toggleUncertainties( $(this).is(":checked"));
+        });
+        $('#ranges_toggle').change(function () {
+            MapController.toggleRanges( $(this).is(":checked"));
         });
         $('#exit_button').on('click', function () {
             var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
@@ -111,16 +127,6 @@ var MapController = {
                     //window.history.back();
                 //});
             }
-            $("#add_agent").on('click', function () {
-                MapController.onAddAgentClick()
-            });
-            $("#remove_agent").on('click', function () {
-                MapController.onRemoveAgentClick()
-            });
-            this.state.on("change:scoreInfo", function () {
-                self.updateScorePanel();
-            });
-
         });
 
         //State listeners
@@ -167,9 +173,12 @@ var MapController = {
     },
     showPredictedPaths: function (setting) {
         MapController.predictionLength = setting;
-   },
+    },
     toggleUncertainties: function (setting) {
         MapController.showUncertainties = setting;
+    },
+    toggleRanges: function (setting) {
+        MapController.showRanges = setting;
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");
@@ -264,6 +273,7 @@ var MapController = {
         this.updateAllocationRendering();
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);
+            this.drawPredictedGhostPath(MapController.predictionLength);
         } else {
             this.clearPredictions();
         }
@@ -271,6 +281,11 @@ var MapController = {
             this.drawUncertainties(MapController.uncertaintyRadius);
         } else {
             this.clearUncertainties();
+        }
+        if (MapController.showRanges) {
+            this.drawRanges(MapController.communicationRange);
+        } else {
+            this.clearRanges();
         }
 
         this.drawMarkers();
@@ -372,11 +387,8 @@ var MapController = {
                 $("#ranges_wrapper_div").show();
             }
         });
-        try {
-            MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
-        } catch (e) {
-           alert(e);
-        }
+        MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
+        MapController.communicationRange = this.state.getCommunicationRange();
 
         if (this.state.getShowReviewPanel()) {
             $("#review_panel").show();

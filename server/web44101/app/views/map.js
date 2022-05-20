@@ -275,16 +275,20 @@ App.Views.Map = Backbone.View.extend({
         //     });
         // }
     },
+    /**
+     * Draws the predicted route of this agent as an arrow on the map
+     * @param predDepth The maximum number of points of the route to draw
+     */
     drawPredictedPath: function (predDepth){
         try {
             self = this;
             this.state.agents.forEach(function (agent) {
                 var predId = agent.getId() + "_pred";
                 var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
-
                 var predPath = agent.getRoute();
 
-                if (predPath.length !== 0) {
+                // This statement later catches the invisble agent case
+                if (predPath.length !== 0 && agent.isVisible()){
                     var newPath = [];
                     newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
                     predPath.forEach(function (item, index) {
@@ -311,9 +315,11 @@ App.Views.Map = Backbone.View.extend({
                         });
 
                     }
-                } else if (polyline) {
-                    // Clear it (probably due to task deletion)
-                    polyline.setOptions({visible: false});
+                } else {
+                    if (polyline) {
+                        // Hide the old line, as no route planned. It will be revealed again if it is updated
+                        polyline.setOptions({visible: false});
+                    }
                 }
             });
         } catch (e) {
@@ -402,6 +408,57 @@ App.Views.Map = Backbone.View.extend({
             }
         }
     },
+    /**
+     * Draws the predicted route of this ghost as an arrow on the map. Uses a black transparent line
+     * @param predDepth The maximum number of points of the route to draw
+     */
+    drawPredictedGhostPath: function (predDepth){
+        try {
+            self = this;
+            this.state.ghosts.forEach(function (agent) {
+                var predId = agent.getId() + "_pred";
+                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
+                var predPath = agent.getRoute();
+
+                // This statement later catches the invisible agent case
+                if (predPath.length !== 0 && agent.isVisible()){
+                    var newPath = [];
+                    newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
+                    predPath.forEach(function (item, index) {
+                        if (index < predDepth) {
+                            newPath[index + 1] = {lat: item.latitude, lng: item.longitude}
+                        }
+                    });
+
+                    if (polyline) {
+                        // We found a path line we've already drawn, let's update it
+                        polyline.setOptions({path: newPath})
+                        polyline.setOptions({visible: true}) // In case it was hidden by the clearUncertainties() method
+                    } else {
+                        // Otherwise make a new one
+                        self.$el.gmap("addShape", "Polyline", {
+                            path: newPath,
+                            id: predId,
+                            icons: [self.polylineIcon],
+                            strokeOpacity: 0.8,
+                            strokeColor: 'rgba(19,18,18,0.78)',
+                            strokeWeight: 0.7,
+                            zIndex: 2,
+                            visible: true,
+                        });
+
+                    }
+                } else {
+                    if (polyline) {
+                        // Hide the old line, as no route planned. It will be revealed again if it is updated
+                        polyline.setOptions({visible: false});
+                    }
+                }
+            });
+        } catch (e) {
+            alert("Prediction drawing error: " + e)
+        }
+    },
     /***
      * A function to draw the circles for uncertainty.
      * Currently these are of a constant size (proof of concept)
@@ -440,6 +497,54 @@ App.Views.Map = Backbone.View.extend({
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_unc"];
+            if (currentCircle) {
+                currentCircle.setOptions({visible: false});
+            }
+        });
+    },
+    /***
+     * A function to draw the circles for communication range
+     * Currently these are of a constant size (proof of concept)
+     *      The "radius" value can be imported based on real values live if required, as this is called with each time step
+     *      Colour or opacity could also be modulated
+     */
+    drawRanges: function (range) {
+        var self = this;
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_rng"];
+
+            if (agent.isVisible()) {
+                if (currentCircle) {
+                    currentCircle.setOptions({center: agent.getPosition()});
+                    currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
+                } else {
+                    self.$el.gmap("addShape", "Circle", {
+                        id: agentId + "_rng",
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 0,
+                        fillColor: "#0033ff",
+                        fillOpacity: 0.2,
+                        center: agent.getPosition(),
+                        radius: range,
+                    });
+                }
+            } else {
+                if (currentCircle) {
+                    currentCircle.setVisible(false);
+                }
+            }
+        })
+    },
+    /**
+     * To clear the existing circles from the UI
+     */
+    clearRanges: function () {
+        self = this
+        this.state.agents.each(function (agent) {
+            var agentId = agent.getId();
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_rng"];
             if (currentCircle) {
                 currentCircle.setOptions({visible: false});
             }
@@ -713,6 +818,16 @@ App.Views.Map = Backbone.View.extend({
             this.views.control.trigger("update:agent", agent);
         }
     },
+    updateScorePanel: function () {
+        var scoreInfo = this.state.getScoreInfo();
+        var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime())));
+        $("#score_timeLeft").html(timeRem);
+        $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
+        $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
+        $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
+        $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
+
+    },
     getIcon: function (num) {
         switch (num) {
             case -1:
@@ -753,16 +868,6 @@ App.Views.SubMap = Backbone.View.extend({
 
         this.render();
         this.bindEvents();
-    },
-    updateScorePanel: function () {
-        var scoreInfo = this.state.getScoreInfo();
-        var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime())));
-        $("#score_timeLeft").html(timeRem);
-        $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
-        $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
-        $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
-        $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
-
     },
     render: function () {
         this.$el.gmap(this.mapOptions);
