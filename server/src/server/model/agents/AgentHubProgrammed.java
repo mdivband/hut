@@ -13,8 +13,8 @@ import java.util.Random;
  * Programmed version of the hub
  */
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {
-
     private int scheduledRemovals = 0;
+    private transient MissionProgrammer missionProgrammer;
 
     public AgentHubProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
         super(id, position, sensor, random, taskController);
@@ -24,6 +24,7 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         for (Task t : Simulator.instance.getState().getTasks()) {
             addTaskFromUser(t);
         }
+        missionProgrammer = new MissionProgrammer(this, programmerHandler);
     }
 
     /**
@@ -46,6 +47,7 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
     @Override
     public void step(Boolean flockingEnabled) {
         programmerHandler.baseStep();
+        missionProgrammer.step();
         //Simulate things that would be done by a real drone
         if(!isTimedOut())
             heartbeat();
@@ -72,4 +74,7 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
         return scheduledRemovals;
     }
+
+    //TODO here we add handlers for the mission programmer
+
 }

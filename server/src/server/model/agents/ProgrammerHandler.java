@@ -30,6 +30,7 @@ public class ProgrammerHandler implements Serializable {
     private HashMap<String, Position> neighbours;  // Stores the known other agents (including non-neighbours)
     private List<Coordinate> currentTask = new ArrayList<>();
     private final HashMap<List<Coordinate>, List<String>> tasks;
+    private final HashMap<List<Coordinate>, String> orders;
     private final List<Coordinate> completedTasks;
     private final List<Coordinate> foundTargets;
     
@@ -48,6 +49,7 @@ public class ProgrammerHandler implements Serializable {
         this.agent = connectedAgent;
         neighbours = new HashMap<>();
         tasks = new HashMap<>();
+        orders = new HashMap<>();
         completedTasks = new ArrayList<>();
         foundTargets = new ArrayList<>();
         agentProgrammer = new AgentProgrammer(this);
@@ -118,12 +120,27 @@ public class ProgrammerHandler implements Serializable {
         } else if (pingCounter >= pingTimeout) {
             declareSelf(communicationRange); // This must be separate, as order matters for the first case
             broadcastTasks();
+            broadcastOrders(communicationRange);
             declareTargets(communicationRange);
             pingCounter = 0;
         }
         pingCounter++;
         stepCounter++;
 
+    }
+
+    private void broadcastOrders(int radius) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ORDERS");
+        for (var entry : orders.entrySet()) {
+            sb.append(";");
+            sb.append(entry.getKey().get(0).getLatitude());
+            sb.append(",");
+            sb.append(entry.getKey().get(0).getLongitude());
+            sb.append(",");
+            sb.append(entry.getValue());
+        }
+        broadcast(sb.toString(), radius);
     }
 
     /**
@@ -141,6 +158,7 @@ public class ProgrammerHandler implements Serializable {
      */
     private void broadcastTasks(){
         // TODO fix this concurrent modification exception that triggers when task is placed during a completion step
+
         try {
             for (var entry : tasks.entrySet()) {
                 // Assuming that completion has been correctly pruned out
@@ -862,7 +880,21 @@ public class ProgrammerHandler implements Serializable {
                     }
                 }
 
-            } else if(message.contains("DIAG")) {
+            } else if (message.contains("ORDERS")) {
+                String[] msgArray = message.split(";");
+                Iterator<String> msgIt = Arrays.stream(msgArray).iterator();
+                msgIt.next();  // Discard the operand ("ORDERS")
+                while (msgIt.hasNext()) {
+                    String thisLine = msgIt.next();
+                    String x = thisLine.split(",")[0];
+                    String y = thisLine.split(",")[1];
+                    Coordinate coord = new Coordinate(Double.parseDouble(x), Double.parseDouble(y));
+                    String agent = thisLine.split(",")[2];
+                    orders.put(Collections.singletonList(coord), agent);
+                }
+            }
+
+            else if(message.contains("DIAG")) {
                 LOGGER.severe("Diagnostic message received: \"" + message.split(";")[1] + "\"");
 
             } else {
@@ -880,9 +912,12 @@ public class ProgrammerHandler implements Serializable {
      * @param thisTask
      */
     private void pruneTaskForReset(String id, List<Coordinate> thisTask) {
-        for (var entry : tasks.entrySet()) {
-            if (!entry.getKey().equals(thisTask) && entry.getValue().contains(id)) {
-                entry.getValue().remove(id);
+        // TODO Note that we are now ignoring null allocations to allow assignment propagation. In future this may need a flag
+        if (!thisTask.isEmpty()) {
+            for (var entry : tasks.entrySet()) {
+                if (!entry.getKey().equals(thisTask) && entry.getValue().contains(id)) {
+                    entry.getValue().remove(id);
+                }
             }
         }
     }
@@ -1372,6 +1407,28 @@ public class ProgrammerHandler implements Serializable {
             // Task not found
             return false;
         }
+    }
+
+    /**
+     * Returns true if any task has this agent ID in its assignment list
+     * @param a
+     * @return
+     */
+    public boolean agentHasTask(String a) {
+        return tasks.entrySet().stream().anyMatch(pair -> pair.getValue().contains(a));
+    }
+
+    public void issueOrder(String a, Coordinate c) {
+        orders.put(Collections.singletonList(c), a);
+    }
+
+    public List<Coordinate> findOwnOrder() {
+        for (var entry : orders.entrySet()) {
+            if (entry.getValue().contains(getId())) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     /***

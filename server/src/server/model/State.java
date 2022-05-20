@@ -135,7 +135,6 @@ public class State {
         uncertaintyRadius = 0;
         communicationConstrained = false;
         communicationRange = 0;
-        allocationMethod = "maxsum";
         flockingEnabled = false;
         uncertaintyRadius = 0;
         markers.clear();
