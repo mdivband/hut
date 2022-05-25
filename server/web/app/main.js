@@ -363,6 +363,7 @@ var simulator = {
                             self.surveyDone = true;
                             $.post("/mode/scenario/closeSurvey", {}, function () {
                                 $("#overlay_div").empty();
+                                $("#overlay_div").css('opacity', '1.0');
                                 var closeVideo = $('<button id="close_video" style="cursor: pointer;">Close Video</button>').appendTo($("#overlay_div"));
                                 $('<br>').appendTo($("#overlay_div"));
                                 var videoFrame = $('<iframe width="90%" height="90%" src="https://www.youtube.com/embed/se0vuA1uVmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>').appendTo($("#overlay_div"));
@@ -370,6 +371,7 @@ var simulator = {
                                     var isSure = confirm("Have you watched the tutorial video?");
                                     if (isSure) {
                                         $("#overlay_div").empty();
+                                        $("#overlay_div").css('opacity', '0.8');
                                         var closeVideoSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
                                         $('<br>').appendTo($("#overlay_div"));
                                         var videoSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUREpUOTMxMFJHV1dNQ1RPTDhFVkJNOVJTSy4u&embed=true";
