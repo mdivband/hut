@@ -366,7 +366,7 @@ var simulator = {
                                 $("#overlay_div").css('opacity', '1.0');
                                 var closeVideo = $('<button id="close_video" style="cursor: pointer;">Close Video</button>').appendTo($("#overlay_div"));
                                 $('<br>').appendTo($("#overlay_div"));
-                                var videoFrame = $('<iframe width="90%" height="90%" src="https://www.youtube.com/embed/se0vuA1uVmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>').appendTo($("#overlay_div"));
+                                var videoFrame = $('<iframe width="90%" height="90%" src="https://www.youtube.com/embed/se0vuA1uVmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" allowfullscreen></iframe>').appendTo($("#overlay_div"));
                                 closeVideo.on('click', function () {
                                     var isSure = confirm("Have you watched the tutorial video?");
                                     if (isSure) {
