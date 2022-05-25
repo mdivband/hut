@@ -401,6 +401,23 @@ var simulator = {
 
                     self.scenarioNumber = self.state.getScenarioNumber();
 
+                    var browser;
+                    if((navigator.userAgent.indexOf("Opera") || navigator.userAgent.indexOf('OPR')) != -1 ) {
+                        browser = "Opera";
+                    } else if(navigator.userAgent.indexOf("Edg") != -1 ) {
+                        browser = "Edge";
+                    } else if(navigator.userAgent.indexOf("Chrome") != -1 ) {
+                        browser = "Chrome";
+                    } else if(navigator.userAgent.indexOf("Safari") != -1) {
+                        browser = "Safari";
+                    } else if(navigator.userAgent.indexOf("Firefox") != -1 ) {
+                         browser = "Firefox";
+                    } else if((navigator.userAgent.indexOf("MSIE") != -1 ) || (!!document.documentMode == true )) { //IF IE > 10
+                      browser = "IE";
+                    } else {
+                       browser = "unknown";
+                    }
+
                     if (self.state.getUserNames().length == 0 && userRole == "planner") {
                         // TODO get their name, also log it in backend
                         var name = null;
@@ -411,7 +428,9 @@ var simulator = {
                             name = prompt("Please enter your prolific ID", "");
                         }
                         $.post("/mode/scenario/registerUser", {
-                            userName: name
+                            userName: name,
+                            browser: browser,
+                            userAgent: navigator.userAgent
                         });
                         self.prolificID = name;
                     } else if (self.state.getUserNames().length > 0 && self.state.getUserNames().length < self.state.getRequiredUsers()) {
@@ -423,7 +442,9 @@ var simulator = {
                             name = prompt("Please enter your prolific ID", "");
                         }
                         $.post("/mode/scenario/registerUser", {
-                            userName: name
+                            userName: name,
+                            browser: browser,
+                            userAgent: navigator.userAgent
                         });
                         self.prolificID = name;
                     }

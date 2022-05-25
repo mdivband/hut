@@ -47,10 +47,14 @@ public class ModeHandler extends RestHandler {
 
     private void handleRegisterUser(Request req, Response resp) throws IOException {
         Map<String, String> params = req.getParams();
-        List<String> expectedKeys = Collections.singletonList("userName");
+        List<String> expectedKeys = Arrays.asList("userName", "browser", "userAgent");
         if (!checkParams(params, expectedKeys, resp))
             return;
+
         String userName = params.get("userName");
+        String browser = params.get("browser");
+        String userAgent = params.get("userAgent");
+        LOGGER.info(String.format("%s; BRWSR; Browser info (prolific ID, browser, userAgent string); %s, %s, %s", simulator.getState().getTime(), userName, browser, userAgent));
         if(this.simulator.getState().addUserName(userName))
             resp.sendOkay();
         else
