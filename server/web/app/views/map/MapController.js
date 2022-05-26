@@ -435,6 +435,7 @@ var MapController = {
             $("#image_review").show();
             $("#review_panel").show();
 
+            MapController.clearReviewImage();
             self.views.images.checkAndUpdateDeepButton();
             MapImageController.resetCurrentImageData();
             self.views.review.update();
