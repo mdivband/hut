@@ -1,5 +1,5 @@
 var userRole = $("body").attr('id');
-console.log(userRole)
+// console.log(userRole)
 
 var simulator = {
     surveyDone: false,
@@ -288,6 +288,7 @@ var simulator = {
         this.run();
     },
     passthrough: function (self) {
+        // console.log("here passthrough")
         $("#overlay_div").empty();
         $("#overlay_div").hide();
 
@@ -316,41 +317,68 @@ var simulator = {
             var endScenarioDiv = $("#end_scenario");
 
             endScenarioDiv.on('click', function () {
+                endScenarioDiv.prop("disabled", true);
                 self.views.map.clearAll()
                 if (userRole == "planner") {
                     var fileName = self.state.getNextFileName();
                     $.post('/reset');
                     $.post('/mode/scenario', {'file-name': fileName}, function () {
+                        // console.log("here post end scenario");
                         endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
                         endScenarioDiv[0].addEventListener("animationend", function () {
                             window.location = "/sandbox.html";
                         })
+                        self.surveyDone = true;
+                        self.initialisedState = false;
+                        self.waiting = false;
+                        self.waitingForPlanner = false;
+                        self.passedThrough = true;
+                        MapTargetController.revealedNumber = 0;
+                        // console.log("here end scenario clicked planner")
+                        _.bind(self.run, self)();
                     }).fail(function () {
                         showError("Unable to start scenario.");
                     });
+                } else {
+                    self.surveyDone = true;
+                    self.initialisedState = false;
+                    self.waiting = false;
+                    self.waitingForPlanner = false;
+                    self.passedThrough = true;
+                    MapTargetController.revealedNumber = 0;
+                    // console.log("here end scenario clicked analyst")
+                    _.bind(self.run, self)();
                 }
 
-                self.surveyDone = true;
-                self.initialisedState = false;
-                self.waiting = false;
-                self.waitingForPlanner = false;
-                self.passedThrough = true;
-                MapTargetController.revealedNumber = 0;
-                _.bind(self.run, self)();
+
             });
         }
+    },
+    waitRun: function (waitTime, startTime, self) {
+        var elapsedTime = ((new Date()).getTime() - startTime);
+            if (elapsedTime < waitTime) {
+                window.setTimeout(_.bind(self.run, self), waitTime - elapsedTime);
+            } else {
+                _.bind(self.run, self)();
+            }
     },
     run: function () {
         var waitTime = 400;
         var self = this;
         var startTime = (new Date()).getTime();
-        var contingency = window.setTimeout(_.bind(self.run, self), 2000);
+        var contingency = window.setTimeout(function () {
+            // console.log("here contingency");
+            _.bind(self.run, self);
+            }, 2000);
         this.state.fetch()
             .done(function () {
+                window.clearTimeout(contingency);
+                // console.log("here done")
                 if (self.passedThrough) {
+                    // console.log("here passed through")
                     // need to fetch state once more so self.state contains new scenario game description etc.
                     self.passedThrough = false;
-                    _.bind(self.run, self)();
+                    self.waitRun(waitTime, startTime, self);
                 } else if (!self.surveyDone && self.state.getCompletedSurveys() < self.state.getRequiredUsers()) {
                     var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
                     $('<br>').appendTo($("#overlay_div"));
@@ -361,36 +389,36 @@ var simulator = {
                         var isSure = confirm("Have you completed and submitted the survey?");
                         if (isSure) {
                             self.surveyDone = true;
-                            $.post("/mode/scenario/closeSurvey", {}, function () {
-                                $("#overlay_div").empty();
-                                $("#overlay_div").css('opacity', '1.0');
-                                var closeVideo = $('<button id="close_video" style="cursor: pointer;">Close Video</button>').appendTo($("#overlay_div"));
-                                $('<br>').appendTo($("#overlay_div"));
-                                var videoFrame = $('<iframe width="90%" height="90%" src="https://www.youtube.com/embed/se0vuA1uVmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" allowfullscreen></iframe>').appendTo($("#overlay_div"));
-                                closeVideo.on('click', function () {
-                                    var isSure = confirm("Have you watched the tutorial video?");
-                                    if (isSure) {
-                                        $("#overlay_div").empty();
-                                        $("#overlay_div").css('opacity', '0.8');
-                                        var closeVideoSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
-                                        $('<br>').appendTo($("#overlay_div"));
-                                        var videoSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUREk2WkxIWDVOU1lERUNKRUVJSUZCTVRQVS4u&embed=true";
-                                        var surveySource = videoSurvey;
-                                        var videoSurveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
-                                        closeVideoSurvey.on('click', function () {
-                                            var isSure = confirm("Have you completed and submitted the survey?");
-                                            if (isSure) {
-                                                $("#overlay_div").empty();
-                                                $("#overlay_div").hide();
-                                                _.bind(self.run, self)();
-                                            }
-                                        });
-                                    }
-                                });
+                            $.post("/mode/scenario/closeSurvey");
+                            $("#overlay_div").empty();
+                            $("#overlay_div").css('opacity', '1.0');
+                            var closeVideo = $('<button id="close_video" style="cursor: pointer;">Close Video</button>').appendTo($("#overlay_div"));
+                            $('<br>').appendTo($("#overlay_div"));
+                            var videoFrame = $('<iframe width="90%" height="90%" src="https://www.youtube.com/embed/se0vuA1uVmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" allowfullscreen></iframe>').appendTo($("#overlay_div"));
+                            closeVideo.on('click', function () {
+                                var isSure = confirm("Have you watched the tutorial video?");
+                                if (isSure) {
+                                    $("#overlay_div").empty();
+                                    $("#overlay_div").css('opacity', '0.8');
+                                    var closeVideoSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
+                                    $('<br>').appendTo($("#overlay_div"));
+                                    var videoSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUREk2WkxIWDVOU1lERUNKRUVJSUZCTVRQVS4u&embed=true";
+                                    var surveySource = videoSurvey;
+                                    var videoSurveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
+                                    closeVideoSurvey.on('click', function () {
+                                        var isSure = confirm("Have you completed and submitted the survey?");
+                                        if (isSure) {
+                                            $("#overlay_div").empty();
+                                            $("#overlay_div").hide();
+                                            self.waitRun(waitTime, startTime, self);
+                                        }
+                                    });
+                                }
                             });
                         }
                     });
                 } else if (!self.initialisedState) {
+                    // console.log("here not initialised")
                     $("#overlay_div").hide();
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
@@ -467,7 +495,9 @@ var simulator = {
                         });
                         $.blockWithContent(description_panel);
                         $('#start_scenario').on('click', function () {
+                            $('#start_scenario').prop("disabled", true);
                             $.post("/mode/scenario/start", {}, function () {
+                                // console.log("here post start scenario");
                                 $.unblockUI();
                                 self.waiting = true;
                                 var wait_panel = document.createElement("div");
@@ -476,7 +506,7 @@ var simulator = {
                                     description: "Get ready, the scenario will begin as soon as the other user is ready."
                                 });
                                 $.blockWithContent(wait_panel);
-                                self.run();
+                                self.waitRun(waitTime, startTime, self);
                             });
                         });
                     }
@@ -489,21 +519,23 @@ var simulator = {
                             description: "The other user is setting up the scenario."
                         });
                         $.blockWithContent(wait_panel);
-                        _.bind(self.run, self)();
                     }
                 } else if (self.waitingForPlanner) {
+                    // console.log("here waiting for planner")
                     if (userRole != "planner" && self.state.getReadyUsers() > 0) {
                         self.waitingForPlanner = false;
                         self.initialisedState = false;
+                        self.waitRun(waitTime, startTime, self);
                     }
-                    _.bind(self.run, self)();
                 } else if (self.waiting) {
+                    // console.log("here waiting")
                     if (self.state.getReadyUsers() == self.state.getRequiredUsers()) {
                         $.unblockUI();
                         self.waiting = false;
+                        self.waitRun(waitTime, startTime, self);
                     }
-                    _.bind(self.run, self)();
                 } else if (!self.state.isInProgress()) {
+                    // console.log("here not in progress")
                     self.views.map.clearAll()
                     $("#overlay_div").empty()
                     var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
@@ -516,34 +548,36 @@ var simulator = {
                         var surveySource = postScenario2Survey;
                     }
                     var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
-                    $("#overlay_div").show();
-                    closeSurvey.on('click', function () {
-                        var isSure = confirm("Have you completed and submitted the survey?");
-                        if (isSure) {
-                            self.surveyDone = true;
-                            $.post("/mode/scenario/closeSurvey", {}, function () {
-                                self.passthrough(self);
-                            });
-                        }
-                    });
-
-                    if (self.scenarioNumber == 0) {
+                    if (self.scenarioNumber != 0) {
+                        $("#overlay_div").show();
+                        closeSurvey.on('click', function () {
+                            var isSure = confirm("Have you completed and submitted the survey?");
+                            if (isSure) {
+                                self.surveyDone = true;
+                                $.post("/mode/scenario/closeSurvey", {}, function () {
+                                    self.passthrough(self);
+                                });
+                            }
+                        });
+                    } else {
                         self.passthrough(self);
                     }
                 }
             })
-            .fail(function () {
-                _.bind(self.run, self)();
+            .fail(function (xhr, status, error) {
+                // console.log("here fail")
+                // console.log(error);
+                // console.log(status);
+                // console.log(xhr);
+                /*window.clearTimeout(contingency);
+                _.bind(self.run, self)();*/
             })
             .always(function () {
+                // console.log("here always")
                 window.clearTimeout(contingency);
-                if (self.state.isInProgress()) {
-                    var elapsedTime = ((new Date()).getTime() - startTime);
-                    if (elapsedTime < waitTime) {
-                        window.setTimeout(_.bind(self.run, self), waitTime - elapsedTime);
-                    } else {
-                        _.bind(self.run, self)();
-                    }
+                if (self.state.isInProgress() || self.waiting || self.waitingForPlanner) {
+                    // console.log("here if")
+                    self.waitRun(waitTime, startTime, self);
                 }
             });
         $('#view_mode').buttonset().css({
