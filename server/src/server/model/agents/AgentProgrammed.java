@@ -39,6 +39,11 @@ public class AgentProgrammed extends Agent {
         type = "programmed";
     }
 
+    public void softReset() {
+        super.softReset();
+        programmerHandler = new ProgrammerHandler(this);
+    }
+
     /***
      * Generates a random tag for a network ID. We use a global random object, but in real life these may be based on
      * unique information such as serial numbers PUFs.
@@ -398,4 +403,5 @@ public class AgentProgrammed extends Agent {
     public void setCommunicationRange(double communicationRange) {
         programmerHandler.setCommunicationRange(communicationRange);
     }
+
 }

@@ -25,6 +25,13 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
             addTaskFromUser(t);
         }
         missionProgrammer = new MissionProgrammer(this, programmerHandler);
+        Simulator.instance.getRlWrapper().setMissionProgrammer(missionProgrammer);
+    }
+
+    public void softReset() {
+        super.softReset();
+        programmerHandler = new ProgrammerHandler(this);
+        missionProgrammer = new MissionProgrammer(this, programmerHandler);
     }
 
     /**

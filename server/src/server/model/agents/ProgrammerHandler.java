@@ -726,7 +726,7 @@ public class ProgrammerHandler implements Serializable {
                     if (tasks.get(thisTask) != null && !tasks.get(thisTask).contains(id)) {
                         tasks.get(thisTask).add(id);
                         if (agent instanceof Hub) {
-                            System.out.println("HUB:        " + id + " is doing task at " + thisTask.get(0));
+                            //System.out.println("HUB:        " + id + " is doing task at " + thisTask.get(0));
                         }
                     } else if (tasks.get(thisTask) == null) {
                         tasks.put(thisTask, new ArrayList<>());
@@ -783,7 +783,7 @@ public class ProgrammerHandler implements Serializable {
                     // We don't need to worry about adding it twice as checkPossibleTask() ensures it's not there yet
                     completedTasks.add(calculateRepresentativeCoordinate(thisTask));
                     if (agent instanceof Hub) {
-                        System.out.println("HUB:        Receiving completed task at " + thisCoord);
+                        //System.out.println("HUB:        Receiving completed task at " + thisCoord);
                     }
                 }
             } else if (message.contains("TASK_WAYPOINT")) {
@@ -856,7 +856,7 @@ public class ProgrammerHandler implements Serializable {
                 // Debug to display hub knowledge of task completion
                 if (!completedTasks.contains(calculateRepresentativeCoordinate(thisTask))) {
                     if (agent instanceof Hub) {
-                        System.out.println("HUB:        Receiving completed task at " + thisTask);
+                        //System.out.println("HUB:        Receiving completed task at " + thisTask);
                     }
                 }
 
@@ -874,7 +874,7 @@ public class ProgrammerHandler implements Serializable {
                     if (!foundTargets.contains(coord)) {
                         foundTargets.add(coord);
                         if (agent instanceof Hub) {
-                            System.out.println("HUB:        Receiving target location at: " + coord);
+                            //System.out.println("HUB:        Receiving target location at: " + coord);
                             receiveTarget(coord);
                         }
                     }
@@ -1423,6 +1423,7 @@ public class ProgrammerHandler implements Serializable {
     }
 
     public List<Coordinate> findOwnOrder() {
+        //System.out.println(getId() + " -> " + orders.entrySet());
         for (var entry : orders.entrySet()) {
             if (entry.getValue().contains(getId())) {
                 return entry.getKey();

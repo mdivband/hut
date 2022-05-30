@@ -25,7 +25,7 @@ public class AgentProgrammer {
      */
     public void setup() {
         if (a.isHub()) {
-            LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
+            //LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
             a.setLeader(true);
         } else {
             a.setLeader(true);
@@ -39,12 +39,15 @@ public class AgentProgrammer {
     public void step(){
         if (a.isStopped()) {
             if (myTask != null) {
+
+                //System.out.println("a " + a.getId());
                 a.setTask(Collections.singletonList(myTask));
                 a.resume();
             } else {
+
+                //System.out.println("b " + a.getId());
                 List<Coordinate> taskToDo = a.findOwnOrder();
                 if (taskToDo != null) {
-                    System.out.println("--Found my task! " + taskToDo);
                     myTask = taskToDo.get(0);
                 }
             }

@@ -42,8 +42,8 @@ public class Simulator {
     private final Allocator allocator;
     private final Modeller modeller;
     private final ModelCaller modelCaller;
-
     private final ImageController imageController;
+    private final RLWrapper rlWrapper;
 
     public static Simulator instance;
 
@@ -70,6 +70,7 @@ public class Simulator {
         random = new Random();
 
         imageController = new ImageController(this);
+        rlWrapper = new RLWrapper();
 
         queueManager.initDroneDataConsumer();
     }
@@ -145,9 +146,8 @@ public class Simulator {
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
         this.state.setInProgress(true);
-        //allocator.runAutoAllocation();
-        //allocator.confirmAllocation(state.getTempAllocation());
-        LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
+        // TODO Important log line. We just disable it for the ML
+        //LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
     }
 
     public Map<String, String> getScenarioFileListWithGameIds() {
@@ -192,8 +192,8 @@ public class Simulator {
                 this.reset();
             }
 
-            if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
-
+            //if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
+            if (true) {
                 if (state.getAllocationStyle().equals("dynamic")) {
                     if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
                         System.out.println("DONE BY COMPLETION: " + state.getTime());
@@ -420,6 +420,18 @@ public class Simulator {
 
          */
         imageController.reset();
+    }
+
+    /**
+     * Just for ML work. This may need tweaking per scenario
+     * The idea is to reset drone positions etc so you can run a loop of the scenario for RL
+     */
+    public synchronized void softReset() {
+        if (this.mainLoopThread != null) {
+            this.mainLoopThread.interrupt();
+        }
+        state.softReset(rlWrapper);
+
     }
 
     public void resetLogging(String userName) {
@@ -652,6 +664,7 @@ public class Simulator {
                     if (programmed) {
                         // This means the agent is a programmed one, and the Hub is set up for this
                         agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
+                        rlWrapper.addAgent(agent);
                         containsProgrammed = true;
                     } else if (this.state.isCommunicationConstrained()) {
                         // This means the agent is a non-programmed one, but there is communication required for the network
@@ -674,7 +687,7 @@ public class Simulator {
 
                 if (this.state.isCommunicationConstrained() || containsProgrammed) {
                     // Even if it's not constrained, if there are programmed agents then we need to provide hub communication
-                    agentController.addHubProgrammedAgent(lat, lng, random, taskController);
+                    Agent agent = agentController.addHubProgrammedAgent(lat, lng, random, taskController);
                 } else {
                     agentController.addHubAgent(lat, lng);
                 }
@@ -772,7 +785,7 @@ public class Simulator {
             return true;
         } catch (InterruptedException e) {
             // TODO make this more graceful when state is reset
-            e.printStackTrace();
+            //e.printStackTrace();
             return false;
         }
     }
@@ -851,5 +864,9 @@ public class Simulator {
 
     public ScoreController getScoreController() {
         return scoreController;
+    }
+
+    public RLWrapper getRlWrapper() {
+        return rlWrapper;
     }
 }

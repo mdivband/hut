@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import server.Allocator;
+import server.RLWrapper;
 import server.Simulator;
 import server.model.agents.*;
 import server.model.hazard.Hazard;
@@ -161,6 +162,37 @@ public class State {
         uiOptions.clear();
 
         hazardHits.init();
+    }
+
+    public void softReset(RLWrapper rlWrapper) {
+        time = 0;
+        editMode = 1;
+
+        //agents.clear();
+        ghosts.clear();
+        tasks.clear();
+        completedTasks.clear();
+        targets.clear();
+        hazards.clear();
+        allocation.clear();
+        tempAllocation.clear();
+        hazardHits.clear();
+        hazardHits.init();
+
+        // Restore positions to original
+        HashMap<Agent, Coordinate> agentPositions = rlWrapper.getAgentPositions();
+        agents.forEach(a -> {
+            if (a instanceof AgentProgrammed ap) {
+                ap.softReset();
+            } else if (a instanceof AgentHubProgrammed ahp) {
+                ahp.softReset();
+            }
+            a.setCoordinate(agentPositions.get(a));
+
+        });
+        AgentHubProgrammed ahp = (AgentHubProgrammed) hub;
+        ahp.setCoordinate(hubLocation);
+
     }
 
     public void resetNext() {
