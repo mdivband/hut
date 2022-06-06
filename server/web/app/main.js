@@ -297,14 +297,14 @@ var simulator = {
             // Return to menu
             scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                 title: "Scenario Ended",
-                description: "This scenario has ended, thank you for taking part in this experiment. You may now close this window"
+                description: "This scenario has ended, thank you for taking part in this experiment. Please press Close to return to Prolific."
             });
 
             $.blockWithContent(scenario_end_panel);
 
             $('#end_scenario').on('click', function () {
                 $.post("/reset");
-                window.history.back();
+                window.location.replace("https://app.prolific.co/submissions/complete?cc=67A764B4");
             });
         } else {
             // Has a scenario to pass through too

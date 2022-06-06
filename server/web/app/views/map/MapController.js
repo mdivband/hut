@@ -256,7 +256,7 @@ var MapController = {
             var self = this;
             var uid = "reminder_" + userRole;
             var content = _.template($("#popup_left_right").html(), {
-                left_content: "You have had half your time on this scenario, please click within the next 30s to confirm you have read this message.",
+                left_content: "You have had half your time on this scenario, please click Confirm within the next 30s to confirm you have read this message.",
                 right_content: "Confirm",
                 uid: uid
             });
