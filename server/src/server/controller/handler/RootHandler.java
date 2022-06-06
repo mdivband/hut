@@ -14,11 +14,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class RootHandler extends RestHandler {
 
-    public RootHandler(String handlerName, Simulator simulator) {
-        super(handlerName, simulator);
+    public RootHandler(String handlerName, Simulator simulator, Logger LOGGER) {
+        super(handlerName, simulator, LOGGER);
     }
 
     @Override

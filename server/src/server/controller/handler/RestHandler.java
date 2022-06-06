@@ -17,10 +17,10 @@ public abstract class RestHandler {
     final Simulator simulator;
     final Logger LOGGER;
 
-    RestHandler(String handlerName, Simulator simulator) {
+    RestHandler(String handlerName, Simulator simulator, Logger LOGGER) {
         this.handlerName = handlerName;
         this.simulator = simulator;
-        this.LOGGER = Logger.getLogger(handlerName + "Handler");
+        this.LOGGER = LOGGER;
     }
 
     public void handle(Request req, Response resp) throws IOException, UnregisteredPathException {

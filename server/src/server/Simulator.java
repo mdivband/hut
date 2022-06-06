@@ -14,10 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 /**
  * @author Feng Wu
@@ -29,7 +26,7 @@ public class Simulator {
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
-    private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
+    private Logger LOGGER;
 
 
     private State state;
@@ -51,19 +48,29 @@ public class Simulator {
 
     private Thread mainLoopThread;
 
-    public Simulator() {
-        instance = this;
-        state = new State();
-        sensor = new Sensor(this);
-        connectionController = new ConnectionController(this);
-        allocator = new Allocator(this);
-        queueManager = new QueueManager(this);
-        agentController = new AgentController(this, sensor);
-        taskController = new TaskController(this);
-        hazardController = new HazardController(this);
-        targetController = new TargetController(this);
+    private final int port;
 
-        imageController = new ImageController(this);
+    public Simulator(int port) {
+        instance = this;
+        this.port = port;
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+        } catch (final IOException e) {
+            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(e.getMessage());
+        }
+        this.LOGGER = Logger.getLogger(Simulator.class.getName() + port);
+        state = new State(LOGGER);
+        sensor = new Sensor(this, LOGGER);
+        connectionController = new ConnectionController(this, LOGGER);
+        allocator = new Allocator(this, LOGGER);
+        queueManager = new QueueManager(this, LOGGER);
+        agentController = new AgentController(this, sensor, LOGGER);
+        taskController = new TaskController(this, LOGGER);
+        hazardController = new HazardController(this, LOGGER);
+        targetController = new TargetController(this, LOGGER);
+
+        imageController = new ImageController(this, LOGGER);
 
         queueManager.initDroneDataConsumer();
     }
@@ -87,10 +94,10 @@ public class Simulator {
         } else {
             port = 44101;
         }
-        new Simulator().start(port);
+        new Simulator(port).start();
     }
 
-    public void start(Integer port) {
+    public void start() {
         /*
         try {
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
@@ -106,7 +113,7 @@ public class Simulator {
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
-        pushConfig(port);
+        pushConfig(this.port);
         new Thread(connectionController::start).start();
         // LOGGER.info("Server ready.");
     }
@@ -309,18 +316,12 @@ public class Simulator {
         try {
             String fileName = String.join("-", userNames) + "-" + state.getGameId() + ".log";
             FileHandler fileHandler = new FileHandler(fileName);
-            LogManager.getLogManager().reset();
-            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+            Handler[] currentHandlers = LOGGER.getHandlers();
+            if (currentHandlers.length != 0) {
+                FileHandler oldHandler = (FileHandler) currentHandlers[currentHandlers.length - 1];
+                LOGGER.removeHandler(oldHandler);
+            }
             LOGGER.addHandler(fileHandler);
-            state.resetLogger(fileHandler);
-            taskController.resetLogger(fileHandler);
-            queueManager.resetLogger(fileHandler);
-            agentController.resetLogger(fileHandler);
-            targetController.resetLogger(fileHandler);
-            connectionController.resetLogger(fileHandler);
-            hazardController.resetLogger(fileHandler);
-            allocator.resetLogger(fileHandler);
-            imageController.resetLogger(fileHandler);
             LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, usernames); %s; %s ", getState().getTime(), state.getGameId(), String.join(", ", userNames)));
 
         } catch (final IOException e) {

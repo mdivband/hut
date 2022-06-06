@@ -10,9 +10,9 @@ abstract class AbstractController {
     final Simulator simulator;
     final Logger LOGGER;
 
-    AbstractController(Simulator simulator, String controllerName) {
+    AbstractController(Simulator simulator, String controllerName, Logger LOGGER) {
         this.simulator = simulator;
-        this.LOGGER = Logger.getLogger(controllerName);
+        this.LOGGER = LOGGER;
     }
 
     public void resetLogger(FileHandler fileHandler) {

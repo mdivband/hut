@@ -13,13 +13,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 public class TaskController extends AbstractController {
 
     private static int uniqueTaskNumber = 1;
 
-    public TaskController(Simulator simulator) {
-        super(simulator, TaskController.class.getName());
+    public TaskController(Simulator simulator, Logger LOGGER) {
+        super(simulator, TaskController.class.getName(), LOGGER);
     }
 
     private String generateUID() {

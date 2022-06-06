@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class Sensor {
-    private static final Logger LOGGER = Logger.getLogger(Sensor.class.getName());
+    private final Logger LOGGER;
     private Simulator simulator;
 
-    public Sensor(Simulator simulator){
+    public Sensor(Simulator simulator, Logger LOGGER){
         this.simulator = simulator;
+        this.LOGGER = LOGGER;
     }
 
     /**

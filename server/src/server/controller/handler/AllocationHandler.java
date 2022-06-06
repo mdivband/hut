@@ -9,11 +9,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 public class AllocationHandler extends RestHandler {
 
-    public AllocationHandler(String handlerName, Simulator simulator) {
-        super(handlerName, simulator);
+    public AllocationHandler(String handlerName, Simulator simulator, Logger LOGGER) {
+        super(handlerName, simulator, LOGGER);
     }
 
     @Override

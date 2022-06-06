@@ -5,11 +5,12 @@ import tool.GsonUtils;
 import tool.HttpServer;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class VisualizerHandler extends RestHandler {
 
-    public VisualizerHandler(String handlerName, Simulator simulator) {
-        super(handlerName, simulator);
+    public VisualizerHandler(String handlerName, Simulator simulator, Logger LOGGER) {
+        super(handlerName, simulator, LOGGER);
     }
 
     @Override

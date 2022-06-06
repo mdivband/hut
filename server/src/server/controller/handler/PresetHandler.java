@@ -10,11 +10,12 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class PresetHandler extends RestHandler {
 
-    public PresetHandler(String handlerName, Simulator simulator) {
-        super(handlerName, simulator);
+    public PresetHandler(String handlerName, Simulator simulator, Logger LOGGER) {
+        super(handlerName, simulator, LOGGER);
     }
 
     @Override

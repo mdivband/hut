@@ -28,11 +28,12 @@ public class QueueManager {
 
 	private Map<String, DeclareOk> queues;
 
-	private Logger LOGGER = Logger.getLogger(QueueManager.class.getName());
+	private Logger LOGGER;
 
-	public QueueManager(Simulator simulator) {
+	public QueueManager(Simulator simulator, Logger LOGGER) {
 		this.simulator = simulator;
 		queues = new HashMap<>();
+		this.LOGGER = LOGGER;
 		LOGGER.info(String.format("%s; QMST; QueueManager Fully Started; %s", Simulator.instance.getState().getTime(), this.initConnectionFactory()));
 	}
 

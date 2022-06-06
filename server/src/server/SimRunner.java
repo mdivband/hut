@@ -24,8 +24,8 @@ public class SimRunner implements Runnable {
 
     @Override
     public void run() {
-        simulator = new Simulator();
-        simulator.start(port);
+        simulator = new Simulator(this.port);
+        simulator.start();
     }
 
     public static void main(String[] args) {

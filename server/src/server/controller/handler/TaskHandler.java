@@ -8,11 +8,12 @@ import tool.HttpServer.Response;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class TaskHandler extends RestHandler {
 
-    public TaskHandler(String handlerName, Simulator simulator) {
-        super(handlerName, simulator);
+    public TaskHandler(String handlerName, Simulator simulator, Logger LOGGER) {
+        super(handlerName, simulator, LOGGER);
     }
 
     @Override

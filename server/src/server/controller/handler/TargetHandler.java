@@ -9,11 +9,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class TargetHandler extends RestHandler {
 
-    public TargetHandler(String handlerName, Simulator simulator) {
-        super(handlerName, simulator);
+    public TargetHandler(String handlerName, Simulator simulator, Logger LOGGER) {
+        super(handlerName, simulator, LOGGER);
     }
 
     @Override

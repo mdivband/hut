@@ -13,11 +13,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ReviewHandler extends RestHandler {
 
-    public ReviewHandler(String handlerName, Simulator simulator) {
-        super(handlerName, simulator);
+    public ReviewHandler(String handlerName, Simulator simulator, Logger LOGGER) {
+        super(handlerName, simulator, LOGGER);
     }
 
     @Override

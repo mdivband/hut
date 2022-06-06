@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 public class ImageController extends AbstractController {
 
@@ -23,8 +24,8 @@ public class ImageController extends AbstractController {
     private HashMap<Double, ScheduledImage> scheduledImages = new HashMap<>(16);
 
 
-    public ImageController(Simulator simulator) {
-        super(simulator, ImageController.class.getName());
+    public ImageController(Simulator simulator, Logger LOGGER) {
+        super(simulator, ImageController.class.getName(), LOGGER);
     }
 
     public void reset() {

@@ -18,10 +18,8 @@ public class ConnectionController extends AbstractController {
 
     private HttpServer httpserver;
 
-    private Logger LOGGER = Logger.getLogger(ConnectionController.class.getName());
-
-    public ConnectionController(Simulator simulator) {
-        super(simulator, ConnectionController.class.getName());
+    public ConnectionController(Simulator simulator, Logger LOGGER) {
+        super(simulator, ConnectionController.class.getName(), LOGGER);
     }
 
     public void init(int port, String webRef) {
@@ -57,16 +55,16 @@ public class ConnectionController extends AbstractController {
             });
 
             RestHandlerFactory.unregisterAllHandlers();
-            RestHandlerFactory.registerRestHandler(new RootHandler("/", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AgentHandler("/agents", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TaskHandler("/tasks", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TargetHandler("/targets", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
-            RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
-            RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
-            RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator));
-            RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
-            RestHandlerFactory.registerRestHandler(new ChatHandler("/chat", this.simulator));
+            RestHandlerFactory.registerRestHandler(new RootHandler("/", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new AgentHandler("/agents", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new TaskHandler("/tasks", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new TargetHandler("/targets", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new ChatHandler("/chat", this.simulator, this.LOGGER));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -105,15 +103,15 @@ public class ConnectionController extends AbstractController {
             });
 
             RestHandlerFactory.unregisterAllHandlers();
-            RestHandlerFactory.registerRestHandler(new RootHandler("/", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AgentHandler("/agents", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TaskHandler("/tasks", this.simulator));
-            RestHandlerFactory.registerRestHandler(new TargetHandler("/targets", this.simulator));
-            RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator));
-            RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator));
-            RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
-            RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator));
-            RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
+            RestHandlerFactory.registerRestHandler(new RootHandler("/", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new AgentHandler("/agents", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new TaskHandler("/tasks", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new TargetHandler("/targets", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new AllocationHandler("/allocation", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new ModeHandler("/mode", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator, this.LOGGER));
+            RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator, this.LOGGER));
         } catch (IOException e) {
             e.printStackTrace();
         }

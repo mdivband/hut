@@ -9,13 +9,14 @@ import server.model.hazard.Hazard;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 public class HazardController extends AbstractController {
 
     private static Map<String, Integer> uniqueHazardNumbers = new HashMap<>();
 
-    public HazardController(Simulator simulator) {
-        super(simulator, HazardController.class.getName());
+    public HazardController(Simulator simulator, Logger LOGGER) {
+        super(simulator, HazardController.class.getName(), LOGGER);
     }
 
     private String generateUID(String typeName) {

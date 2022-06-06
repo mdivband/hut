@@ -26,16 +26,17 @@ import java.util.logging.Logger;
 public class Allocator {
 
     private final static Task TASK_NONE = new WaypointTask("none", null);
-    private final static Logger LOGGER = Logger.getLogger(Allocator.class.getName());
+    private final Logger LOGGER;
     private Map<String, String> oldresult = null; // used in runNoMaxsum() for getting previous result created by maxsum
     private Simulator simulator;
     private List<Map<String, String>> tempAllocationHistory; //History of tempAllocation - used for undo/redo.
     private int tempAllocationHistoryIndex; //Current position in history.
 
-    public Allocator(Simulator simulator) {
+    public Allocator(Simulator simulator, Logger LOGGER) {
         this.simulator = simulator;
         tempAllocationHistory = new ArrayList<>();
         tempAllocationHistory.add(simulator.getState().getAllocation());
+        this.LOGGER = LOGGER;
     }
 
     public Map<String, String> getOldResult() {

@@ -9,13 +9,14 @@ import server.model.target.Target;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 public class TargetController extends AbstractController {
 
     private static Map<String, Integer> uniqueTargetNumbers = new HashMap<>();
 
-    public TargetController(Simulator simulator) {
-        super(simulator, TargetController.class.getName());
+    public TargetController(Simulator simulator, Logger LOGGER) {
+        super(simulator, TargetController.class.getName(), LOGGER);
     }
 
     private String generateUID(String typeName) {

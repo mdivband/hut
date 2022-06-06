@@ -8,6 +8,7 @@ import server.model.task.Task;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 public class AgentController extends AbstractController {
 
@@ -16,8 +17,8 @@ public class AgentController extends AbstractController {
 
     private Sensor sensor;
 
-    public AgentController(Simulator simulator, Sensor sensor) {
-        super(simulator, AgentController.class.getName());
+    public AgentController(Simulator simulator, Sensor sensor, Logger LOGGER) {
+        super(simulator, AgentController.class.getName(), LOGGER);
         this.sensor = sensor;
     }
 

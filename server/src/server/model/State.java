@@ -22,7 +22,7 @@ public class State {
 
     public static final int GAME_TYPE_SANDBOX = 0;
     public static final int GAME_TYPE_SCENARIO = 1;
-    private final static transient Logger LOGGER = Logger.getLogger(Allocator.class.getName());
+    private final transient Logger LOGGER;
     private boolean inProgress;
 
     private String gameId;
@@ -96,7 +96,8 @@ public class State {
     private Double avgAgentDropout;
     private Double ignoredTaskProb;
 
-    public State() {
+    public State(Logger LOGGER) {
+        this.LOGGER = LOGGER;
         agents = new ArrayList<>();
         tasks = new ArrayList<>();
         completedTasks = new ArrayList<>();
