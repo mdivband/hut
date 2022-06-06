@@ -382,7 +382,7 @@ var simulator = {
                 } else if (!self.surveyDone && self.state.getCompletedSurveys() < self.state.getRequiredUsers()) {
                     var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
                     $('<br>').appendTo($("#overlay_div"));
-                    var initialSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUN0JLOVk4SEhUOEtaTTA5MThXUUc3MldYQi4u&embed=true";
+                    var initialSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBURFNUT0tISzhON1U0TlM5U1gwU0ZHWFcwVS4u&embed=true";
                     var surveySource = initialSurvey;
                     var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
                     closeSurvey.on('click', function () {
@@ -402,7 +402,7 @@ var simulator = {
                                     $("#overlay_div").css('opacity', '0.8');
                                     var closeVideoSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
                                     $('<br>').appendTo($("#overlay_div"));
-                                    var videoSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUREk2WkxIWDVOU1lERUNKRUVJSUZCTVRQVS4u&embed=true";
+                                    var videoSurvey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUOTdKRllYODJDNFRPWU9NSVFUMjlaQVNaOC4u&embed=true";
                                     var surveySource = videoSurvey;
                                     var videoSurveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
                                     closeVideoSurvey.on('click', function () {
@@ -540,8 +540,8 @@ var simulator = {
                     $("#overlay_div").empty()
                     var closeSurvey = $('<button id="close_survey" style="cursor: pointer;">Close Survey</button>').appendTo($("#overlay_div"));
                     $('<br>').appendTo($("#overlay_div"));
-                    var postScenario1Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUQjNUNE5SOUxPNE1LM1VSQ0VOTUpBMFQxNy4u&embed=true";
-                    var postScenario2Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUMjBSRkU2UlRNSTdYVUlGUlM1MzNTSExFNi4u&embed=true";
+                    var postScenario1Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBUOElYTjk1UjU5T1ZVR0c1RURST0NNQ0E4My4u&embed=true";
+                    var postScenario2Survey = "https://forms.office.com/Pages/ResponsePage.aspx?id=-XhTSvQpPk2-iWadA62p2CmPPgx944RCrlRRT-uovIBURVJNMFdITVFQWTNXNk84UDU3NFRCV01RMS4u&embed=true";
                     if (self.scenarioNumber == 1) {
                         var surveySource = postScenario1Survey;
                     } else {
