@@ -234,4 +234,10 @@ public class TaskController extends AbstractController {
         return simulator.getState().getTasks().stream().anyMatch(a -> a.getAgents().isEmpty());
     }
 
+    public void createGroundTask(Coordinate coordinate, int prio) {
+        GroundTask groundTask = new GroundTask(generateUID(), coordinate);
+        groundTask.setPriority(prio);
+        simulator.getState().add(groundTask);
+
+    }
 }

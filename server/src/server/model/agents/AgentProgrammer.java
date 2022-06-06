@@ -1,4 +1,6 @@
 package server.model.agents;
+import com.mysql.jdbc.log.Log;
+import server.Simulator;
 import server.model.Coordinate;
 
 import java.util.List;
@@ -30,7 +32,15 @@ public class AgentProgrammer {
         if (a.isHub()) {
             LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
             a.setLeader(true);
-        } else if (a.getNextRandomDouble() > 0.65) {
+        } else {
+            a.setLeader(true);
+            returner = true;
+            a.setVisual("leader");
+        }
+
+
+            /*
+            if (a.getNextRandomDouble() > 0.65) {
             LOGGER.severe("Sv: Agent with GLOBAL ID " + a.agent.getId() + " randomly assigned leadership");
             a.setLeader(true);
             a.setVisual("leader");
@@ -44,6 +54,8 @@ public class AgentProgrammer {
             a.setLeader(false);
         }
 
+             */
+
         // Sets a random wait interval from 5-15
         dupeLimit = (int) Math.floor((a.getNextRandomDouble() * 10) + 5);
         LOGGER.severe("---- and set timeout to " + dupeLimit);
@@ -54,110 +66,43 @@ public class AgentProgrammer {
      * Called at every time step (currently 200ms)
      */
     public void step(){
-        if (a.getTasks().size() == 0 && a.getCompletedTasks().size() == 0) {
+        if (a.isGoingHome()) {
+            a.followRoute();
+        } else if (a.getTasks().size() == 0 && a.getCompletedTasks().size() == 0) {
             // WAIT; Only begin executing if we have tasks added now (so they don't fly off at the start)
         } else {
-            if (a.isLeader()) {
-                if (a.isStopped()) {
-                    if (a.getCompletedTasks().size() == 0) {
-                        // Get first task
-                        List<Coordinate> task = a.getNearestEmptyTask();
-                        if (task != null) {
-                            a.setTask(task);
-                            a.resume();
-                        }
-                    }
-                    if (a.getNextRandomDouble() < 0.9) {
-                        if (a.getCompletedTasks().size() > 0) {
-                            // WAIT - To make task clashes less likely
-                        }
-                    } else {
-                        try {
-                            if (returner || a.getNextRandomDouble() > 0.8) {
-                                // If this agent has selected the returner strategy then it always heads home after a
-                                // task completion
-                                // Otherwise, there is still a 20% chance to return anyway
-                                if (a.getCompletedTasks().size() > 0 && a.getPosition().getDistance(a.getHome()) < a.getSenseRange()) {
-                                    // At home
-                                    List<Coordinate> task = a.getNearestEmptyTask();
-                                    if (task != null) {
-                                        a.setTask(task);
-                                        a.resume();
-                                    } else {
-                                        a.goHome();
-                                    }
-                                } else {
-                                    a.goHome();
-                                }
-                            } else {
-                                List<Coordinate> task = a.getNearestEmptyTask();
-                                if (task != null) {
-                                    a.setTask(task);
-                                    a.resume();
-                                } else {
-                                    a.goHome();
-                                }
-                            }
+            if (a.isStopped()) {
+                if (a.getTasks().size() > 0) {
+                    List<Coordinate> task = a.getHighestPriorityNearestTask();//a.getNearestEmptyTask();
 
-                        } catch (Exception e) {
-                            System.out.println("Excep: Should be due to start conditions");
-                        }
+                    if (task != null) {
+                        a.setTask(task);
+                        a.resume();
                     }
-                } else {
-
-                    if (dupeCounter < dupeLimit) {
-                        a.followRoute();
-                        dupeCounter += 1;
-                    } else {
-                        dupeCounter = 0;
-                        if (a.checkForDuplicateAssignment()) {
-                            a.cancel();
-                            a.stop();
-                        }
-                    }
-
+                    // ELSE wait
                 }
+                // ELSE wait
+
             } else {
-                flock();
+                if (dupeCounter < dupeLimit) {
+                    a.followRoute();
+                    dupeCounter += 1;
+                } else {
+                    dupeCounter = 0;
+                    if (a.checkForDuplicateAssignment()) {
+                        a.cancel();
+                        a.stop();
+                    }
+                }
             }
         }
     }
 
-    /***
-     * You don't need to use this, but I would suggest having a method to call that makes agents flock when they can't
-     * find/select a task
-     */
-    public void flock() {
-        if (!a.isGoingHome()) {
-            if (strandedCounter == 0) {
-                // wait and check
-                if (a.checkForNeighbourMovement()) {
-                    a.flockWithAttractionRepulsion(100, 20);
-                    a.moveAlongHeading();
-                    strandedCounter++;
-                }
-            } else if (strandedCounter < 30) {
-                pingLeaders();  // This updates the nearby leaders by use of custom messages
-                if (a.checkForNeighbourMovement() && hasNearbyLeader) {
-                    a.flockWithAttractionRepulsion(100, 20);
-                    a.moveAlongHeading();
-                    strandedCounter = 1;
-                } else {
-                    strandedCounter++;
-                }
-            } else {
-                strandedCounter = 1;
-                a.goHome();
-            }
-        } else {
-            if (a.getPosition().getDistance(a.getHome()) > a.getSenseRange()) {
-                a.followRoute();
-            } else {
-                strandedCounter = 1;
-                a.stopGoingHome();
-            }
-
-        }
+    public void onComplete(Coordinate c) {
+        double prio = Simulator.instance.getTaskController().getAllTasksAt(c).get(0).getPriority();
+        LOGGER.info(String.format("%s; APCMP; Ground agent completed pickup at (x, y, priority); %s; %s; %s",
+                Simulator.instance.getState().getTime(), c.getLatitude(), c.getLongitude(), prio));
+        a.goHome();
     }
 
     private void pingLeaders() {
@@ -182,5 +127,4 @@ public class AgentProgrammer {
         }
 
     }
-
 }

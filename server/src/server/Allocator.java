@@ -8,13 +8,9 @@ import maxsum.Constraint;
 import maxsum.Domain;
 import maxsum.MaxSum;
 import maxsum.Variable;
-import server.model.agents.Agent;
-import server.model.agents.AgentHub;
+import server.model.agents.*;
 import server.model.Coordinate;
-import server.model.agents.Hub;
 import server.model.MObject;
-import server.model.agents.AgentCommunicating;
-import server.model.agents.AgentVirtual;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 import server.model.task.WaypointTask;
@@ -65,7 +61,7 @@ public class Allocator {
 
         List<Agent> newAgentsToAllocate = new ArrayList<>();
         for (Agent agent : agentsToAllocate) {
-            if (agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)) {
+            if (agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub) || (agent instanceof AgentProgrammed)) {
                 // Remove
             } else if (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)) {
                 // Remove, but reassign own task
@@ -85,7 +81,7 @@ public class Allocator {
 
         String allocationStyle = simulator.getState().getAllocationStyle();
         // Remove and ignore deep scans that have been assigned
-        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) task).isBeingWorked());
+        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN || task.getType() == Task.TASK_GROUND && ((DeepScanTask) task).isBeingWorked());
 
         String allocationMethod = simulator.getState().getAllocationMethod();
 

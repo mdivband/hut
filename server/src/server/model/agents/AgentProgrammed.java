@@ -4,6 +4,7 @@ import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
 import server.model.Sensor;
+import server.model.task.GroundTask;
 import server.model.task.Task;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,7 +128,11 @@ public class AgentProgrammed extends Agent {
             }
         }
 
-        if (isFinalDestinationReached() && !isStopped()) {
+        if (programmerHandler.isGoingHome()) {
+            if (getCoordinate().getDistance(getHubLocation()) < 10) {
+                programmerHandler.stopGoingHome();
+            }
+        } else if (isFinalDestinationReached() && !isStopped()) {
             stop();
             programmerHandler.completeTask();
         }
@@ -397,5 +402,9 @@ public class AgentProgrammed extends Agent {
 
     public void setCommunicationRange(double communicationRange) {
         programmerHandler.setCommunicationRange(communicationRange);
+    }
+
+    public void addTaskFromBacked(GroundTask groundTask) {
+        programmerHandler.addTask(groundTask);
     }
 }

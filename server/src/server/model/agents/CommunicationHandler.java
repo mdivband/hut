@@ -150,7 +150,7 @@ public class CommunicationHandler {
             } else if (n instanceof AgentCommunicating ac) {
                 ac.receiveMessage(message);
             } else {
-                LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
+                //LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
             }
         }
     }

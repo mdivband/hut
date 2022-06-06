@@ -283,11 +283,13 @@ public class Simulator {
                 }
                 // Step tasks - requires completed tasks array to avoid concurrent modification.
                 List<Task> completedTasks = new ArrayList<>();
-                for (Task task : state.getTasks()) {
-                    if (task.step()) {
-                        // If it's already tagged by a programmed agent, or if it gets completed by the step command
-                        completedTasks.add(task);
-                        //System.out.println("Adding " + task.getId());
+                synchronized (state.getTasks()) {
+                    for (Task task : state.getTasks()) {
+                        if (task.step()) {
+                            // If it's already tagged by a programmed agent, or if it gets completed by the step command
+                            completedTasks.add(task);
+                            //System.out.println("Adding " + task.getId());
+                        }
                     }
                 }
 
@@ -383,9 +385,12 @@ public class Simulator {
         } else if (modeFlag == 3) {
             state.setEditMode(3);
             //Clear agents and tasks
+            /*
             for(Agent agent : state.getAgents()) {
                 agent.resume();
             }
+
+             */
         }
     }
 
@@ -626,6 +631,7 @@ public class Simulator {
             } else {
                 this.state.setCommunicationRange(250);
             }
+            //this.state.setCommunicationRange(10000000);
 
             if(GsonUtils.hasKey(obj,"communicationConstrained")){
                 Object communicationConstrained = GsonUtils.getValue(obj, "communicationConstrained");
@@ -655,7 +661,8 @@ public class Simulator {
                         containsProgrammed = true;
                     } else if (this.state.isCommunicationConstrained()) {
                         // This means the agent is a non-programmed one, but there is communication required for the network
-                        agent = agentController.addVirtualCommunicatingAgent(lat, lng, random);
+                        //agent = agentController.addVirtualCommunicatingAgent(lat, lng, random);
+                        agent = agentController.addVirtualAgent(lat, lng, 0);
                     } else {
                         // Neither programmed or communication-required
                         agent = agentController.addVirtualAgent(lat, lng, 0);

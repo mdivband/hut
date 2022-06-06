@@ -309,7 +309,7 @@ var MapAgentController = {
                 icon = this.icons.UAVTimedOut;
                 marker.setOptions({clickable: false, draggable: false})
             } else if(agent.getManuallyControlled() || agent.getType() === "leader") {
-                icon = this.icons.UAVManual;
+                icon = this.icons.TargetDismissed;
             } else if (agent.getType() === "withpack") {
                 icon = this.icons.UAVWithPack;
             } else if(agent.isTimedOut()) {

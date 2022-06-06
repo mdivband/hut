@@ -3,10 +3,7 @@ package server.model.agents;
 import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.Target;
-import server.model.task.PatrolTask;
-import server.model.task.Task;
-import server.model.task.VisitTask;
-import server.model.task.WaypointTask;
+import server.model.task.*;
 import tool.GsonUtils;
 
 import java.io.Serializable;
@@ -409,6 +406,8 @@ public class ProgrammerHandler implements Serializable {
 
             completedTasks.add(coords);
         }
+
+        agentProgrammer.onComplete(coords);
     }
 
     /**
@@ -435,7 +434,7 @@ public class ProgrammerHandler implements Serializable {
      * Handles a completion message. Adds this task to the completed list
      * @param coord Coordinate of the task
      */
-    private void receiveCompleteTask(Coordinate coord){
+    private void receiveCompleteTask(Coordinate coord) {
         if (!completedTasks.contains(coord)) {
             completedTasks.add(coord);
         }
@@ -446,7 +445,6 @@ public class ProgrammerHandler implements Serializable {
 
         // This will work if it's a waypoint task
         tasks.remove(Collections.singletonList(coord));
-
 
         // Complicated statement to cover singleton currentTask exact match or non-singleton centre reference match with
         //  or without patrol allowance. Order of statements prevents errors
@@ -600,12 +598,16 @@ public class ProgrammerHandler implements Serializable {
     protected void broadcast(String message, int radius) {
         List<Agent> neighbours = agent.senseNeighbours(radius);
         for (Agent n : neighbours) {
-            if (n instanceof AgentProgrammed ap) {
+            if (n instanceof AgentHubProgrammed ahp) {
+                if (ahp.getCoordinate().getDistance(getPosition()) < 5) {
+                    ahp.receiveMessage(message);
+                }
+            } else if (n instanceof AgentProgrammed ap) {
                 ap.receiveMessage(message);
             } else if (n instanceof AgentCommunicating ac) {
                 ac.receiveMessage(message);
             } else {
-                LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
+                //LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
             }
         }
     }
@@ -903,7 +905,7 @@ public class ProgrammerHandler implements Serializable {
                     ap.receiveMessage(message);
                 }
             } catch (Exception e) {
-                LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
+                //LOGGER.severe("Unreceived message. Probably due to this not being a programmed agent.");
             }
         }
     }
@@ -956,6 +958,37 @@ public class ProgrammerHandler implements Serializable {
             }
         }
         return bestTask;
+    }
+
+    public List<Coordinate> getHighestPriorityNearestTask() {
+        List<Coordinate> bestTask = null;
+        double shortestDist = 1000000000;
+        for (int p=3; p>0; p--) {
+            for (var entry : tasks.entrySet()) {
+                if (entry.getKey().size() == 1 && entry.getValue().isEmpty()) {
+                    // It's a waypoint task with no agents assigned
+                    // TODO this violates backend access but it's fine for this purpose:
+                    Task taskToCheck = Simulator.instance.getTaskController().getAllTasksAt(entry.getKey().get(0)).get(0);
+                    double prio = taskToCheck.getPriority();
+
+                    if (prio == p) {
+                        // If at this prio, consider
+                        double dist = agent.getCoordinate().getDistance(entry.getKey().get(0));
+                        if (dist < shortestDist) {
+                            shortestDist = dist;
+                            bestTask = entry.getKey();
+                        }
+                    }
+                }
+            }
+            if (bestTask != null) {
+                // If we found one at this prio:
+                return bestTask;
+            }
+            // Otherwise, check one level of prio down
+        }
+
+        return null;
     }
 
     /***
@@ -1088,6 +1121,13 @@ public class ProgrammerHandler implements Serializable {
      */
     protected void addTask(Task item) {
         List<Coordinate> thisTask;
+        // Only identifying groundtasks for the programmed crew
+        if (item instanceof GroundTask gt) {
+            thisTask = Collections.singletonList(gt.getCoordinate());
+        } else {
+            return;
+        }
+        /*
         if (item instanceof WaypointTask wt) {
             thisTask = Collections.singletonList(wt.getCoordinate());
         } else if (item instanceof VisitTask vt) {
@@ -1099,6 +1139,8 @@ public class ProgrammerHandler implements Serializable {
             // We don't know how to handle this task type
             return;
         }
+
+         */
         tasks.put(thisTask, new ArrayList<>());
     }
 
@@ -1224,8 +1266,10 @@ public class ProgrammerHandler implements Serializable {
      */
     public void goHome(){
         agent.clearRoute();
+        currentTask = new ArrayList<>();
         // TODO this doesn't seem to update properly
-        setRoute(Collections.singletonList(calculateNearestHomeLocation()));
+        //setRoute(Collections.singletonList(calculateNearestHomeLocation()));
+        setRoute(Collections.singletonList(getHubPosition()));
         isGoingHome = true;
         resume();
     }
