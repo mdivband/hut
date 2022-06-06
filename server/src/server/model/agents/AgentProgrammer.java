@@ -2,6 +2,8 @@ package server.model.agents;
 import server.model.Coordinate;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -56,6 +58,29 @@ public class AgentProgrammer {
         }
     }
 
+    //private float[][] qTable; // No need for double precision; this may have a big performance improvement
+    //private int[][] freqTable;
+
+
+
+    public void setupRl(int numStates, int numAgents) {
+        /*
+        for (int i=0; i<numStates; i++) {
+            for (int j=0; j<numAgents; j++) {
+                qTable[i][j] = 0f;
+            }
+        }
+
+        for (int i=0; i<numStates; i++) {
+            for (int j=0; j<numAgents; j++) {
+                freqTable[i][j] = 0;
+            }
+        }
+*/
+
+
+    }
+
     /**
      * Needed to handle custom messages that we have added
      * @param opCode A code you can use to specify what type of message
@@ -64,5 +89,6 @@ public class AgentProgrammer {
     public void onMessageReceived(String opCode, String payload) {
 
     }
+
 
 }

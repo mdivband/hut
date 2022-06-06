@@ -31,7 +31,7 @@ public class RLWrapper {
             // I think this busy waiting is fine. This is only the wrapper thread so we aren't slowing anything down,
             //  probably better to change this in future, but for now it will do -WH
             while (true) {
-                Thread.sleep(1000);
+                Thread.sleep(100000);
                 restart();
             }
         } catch (InterruptedException e) {

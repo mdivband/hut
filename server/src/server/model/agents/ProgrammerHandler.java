@@ -1432,6 +1432,10 @@ public class ProgrammerHandler implements Serializable {
         return null;
     }
 
+    public void setupRl(int numStates, int numAgents) {
+        agentProgrammer.setupRl(numStates, numAgents);
+    }
+
     /***
      * We use an internal class to make handling positional information easier. Holds location, heading, and whether it
      * is stopped

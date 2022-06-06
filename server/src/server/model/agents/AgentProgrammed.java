@@ -404,4 +404,7 @@ public class AgentProgrammed extends Agent {
         programmerHandler.setCommunicationRange(communicationRange);
     }
 
+    public ProgrammerHandler getProgrammerHandler() {
+        return programmerHandler;
+    }
 }
