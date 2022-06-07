@@ -96,6 +96,8 @@ public class State {
     private Double avgAgentDropout;
     private Double ignoredTaskProb;
 
+    private Boolean abandoned = false;
+
     public State(Logger LOGGER) {
         this.LOGGER = LOGGER;
         agents = new ArrayList<>();
@@ -549,6 +551,10 @@ public class State {
 
     public List<HashMap> getFutureWind() {
         return this.futureWind;
+    }
+
+    public void abandonScenario() {
+        this.abandoned = true;
     }
 
     private class HazardHit {

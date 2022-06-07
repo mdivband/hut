@@ -9,6 +9,7 @@ var simulator = {
     scenarioNumber: 0,
     passedThrough: false,
     prolificID: "undefined",
+    completed: false,
     init: function () {
         this.state = new App.Models.State();
         this.views = _.extend({}, Backbone.Events);
@@ -301,6 +302,7 @@ var simulator = {
             });
 
             $.blockWithContent(scenario_end_panel);
+            self.completed = true;
 
             $('#end_scenario').on('click', function () {
                 $.post("/reset");
@@ -374,6 +376,23 @@ var simulator = {
             .done(function () {
                 window.clearTimeout(contingency);
                 // console.log("here done")
+                if (self.state.isAbandoned()) {
+                    self.views.map.clearAll()
+                    $.unblockUI();
+                    var scenario_end_panel = document.createElement("div");
+                    scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                        title: "Scenario Ended",
+                        description: "Unfortunately, your teammate has left the study so you are unable to continue. Please return your submission to Prolific, you will receive a part payment. Press Close to close this window."
+                    });
+
+                    $.blockWithContent(scenario_end_panel);
+                    self.completed = true;
+
+                    $('#end_scenario').on('click', function () {
+                        $.post("/reset");
+                        window.history.back();
+                    });
+                }
                 if (self.passedThrough) {
                     // console.log("here passed through")
                     // need to fetch state once more so self.state contains new scenario game description etc.
@@ -477,6 +496,20 @@ var simulator = {
                         self.prolificID = name;
                     }
 
+                    window.addEventListener('beforeunload', function(e) {
+                        if (!self.completed) {
+                            e.preventDefault();
+                            e.returnValue = '';
+                        }
+                    });
+
+                    window.addEventListener('unload', function () {
+                      if (!self.completed) {
+                        var blob= new Blob([JSON.stringify({userName: self.prolificID})], {type: 'application/json; charset=UTF-8'});
+                        navigator.sendBeacon('/abandon', blob);
+                      }
+                    });
+
                     if (self.state.attributes.prov_doc == null) {
                         var api = new $.provStoreApi({
                             username: 'atomicorchid',
@@ -575,7 +608,7 @@ var simulator = {
             .always(function () {
                 // console.log("here always")
                 window.clearTimeout(contingency);
-                if (self.state.isInProgress() || self.waiting || self.waitingForPlanner) {
+                if ((self.state.isInProgress() || self.waiting || self.waitingForPlanner) && !self.state.isAbandoned()) {
                     // console.log("here if")
                     self.waitRun(waitTime, startTime, self);
                 }

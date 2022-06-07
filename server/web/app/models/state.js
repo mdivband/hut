@@ -43,7 +43,8 @@ App.Models.State  = Backbone.Model.extend({
         completedSurveys: 0,
         chatLog: [],
         chatEnabled: false,
-        scenarioNumber: 0
+        scenarioNumber: 0,
+        abandoned: false
 	},
     url: function() {
        return "state.json?" + _.time();
@@ -208,5 +209,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getScenarioNumber: function () {
         return this.get("scenarioNumber");
+    },
+    isAbandoned: function () {
+        return this.get("abandoned");
     }
 });

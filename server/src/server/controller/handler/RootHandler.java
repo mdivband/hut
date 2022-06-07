@@ -49,6 +49,9 @@ public class RootHandler extends RestHandler {
             case "/register":
                 handleRegister(req, resp);
                 break;
+            case "/abandon":
+                handleAbandon(req, resp);
+                break;
             default:
                 throw new UnregisteredPathException("No method for handling POST request on " + req.getPath());
         }
@@ -221,6 +224,18 @@ public class RootHandler extends RestHandler {
 
         resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
         resp.send(200, jsonResp.toString());
+    }
+
+    private void handleAbandon(Request req, Response resp) throws IOException {
+        JsonObject jsonReq = new JsonParser().parse(req.getBodyContent()).getAsJsonObject();
+        String userName = jsonReq.get("userName").getAsString();
+
+        if (userName != null) {
+            simulator.getState().abandonScenario();
+        }
+
+        resp.sendOkay();
+        LOGGER.info(String.format("%s; ABDN; UserName has abandoned scenario (name/id); %s ", simulator.getState().getTime(), userName));
     }
 
 }
