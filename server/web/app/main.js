@@ -377,12 +377,17 @@ var simulator = {
                 window.clearTimeout(contingency);
                 // console.log("here done")
                 if (self.state.isAbandoned()) {
+                    var loadedBefore = sessionStorage.getItem('pageHasBeenLoaded');
+                    if (!loadedBefore) {
+                        var port = 44100;
+                        window.location.replace("http://" + window.location.hostname + ":" + port + "/redirect");
+                    }
                     self.views.map.clearAll()
                     $.unblockUI();
                     var scenario_end_panel = document.createElement("div");
                     scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                         title: "Scenario Ended",
-                        description: "Unfortunately, your teammate has left the study so you are unable to continue. Please return your submission to Prolific, you will receive a part payment. Press Close to close this window."
+                        description: "Unfortunately, your teammate has left the study so you are unable to continue. Please return your submission to Prolific, you will receive a part payment."
                     });
 
                     $.blockWithContent(scenario_end_panel);
@@ -399,6 +404,7 @@ var simulator = {
                     self.passedThrough = false;
                     self.waitRun(waitTime, startTime, self);
                 } else if (!self.initialisedState) {
+                    sessionStorage.setItem('pageHasBeenLoaded', 'true');
                     // console.log("here not initialised")
                     $("#overlay_div").hide();
                     self.initialisedState = true;
@@ -465,7 +471,7 @@ var simulator = {
                         }
                     });
 
-                    window.addEventListener('unload', function () {
+                    window.addEventListener('pagehide', function () {
                       if (!self.completed) {
                         var blob= new Blob([JSON.stringify({userName: self.prolificID})], {type: 'application/json; charset=UTF-8'});
                         navigator.sendBeacon('/abandon', blob);
