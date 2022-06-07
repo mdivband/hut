@@ -49,7 +49,7 @@ public class AgentController extends AbstractController {
     }
 
     public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController) {
-        AgentProgrammed agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, random, taskController);
+        AgentProgrammed agent = new AgentProgrammed("UGV-"+uniqueAgentNumber++, new Coordinate(lat, lng), sensor, random, taskController);
         agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         agent.setHeading(heading);
         simulator.getState().add(agent);
@@ -57,7 +57,7 @@ public class AgentController extends AbstractController {
     }
 
     public synchronized Agent addProgrammedAgent(double lat, double lng, double heading) {
-        AgentProgrammed agent = new AgentProgrammed(generateUID(), new Coordinate(lat, lng), sensor, simulator.getRandom(), simulator.getTaskController());
+        AgentProgrammed agent = new AgentProgrammed("UGV-"+uniqueAgentNumber++, new Coordinate(lat, lng), sensor, simulator.getRandom(), simulator.getTaskController());
         agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         agent.setHeading(heading);
         simulator.getState().add(agent);

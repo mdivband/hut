@@ -19,7 +19,8 @@ public abstract class Agent extends MObject implements Serializable {
 
     private static final long serialVersionUID = 5561040348988016571L;
     static final float unitTurningAngle = 0.1F; //Radians
-    static final float unitTimeBatteryConsumption = 0.00025F;
+    //static final float unitTimeBatteryConsumption = 0.00025F;
+    static final float unitTimeBatteryConsumption = 0.000025F;
     private static final double EPS = 1e-5;
 
     //Used in client
