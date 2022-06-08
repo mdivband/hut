@@ -380,22 +380,40 @@ var simulator = {
                     if (!loadedBefore) {
                         var port = 44100;
                         window.location.replace("http://" + window.location.hostname + ":" + port + "/redirect");
+                    } else if (self.scenarioNumber == 0) {
+                        self.views.map.clearAll()
+                        $.unblockUI();
+                        var scenario_abandoned_panel = document.createElement("div");
+                        scenario_abandoned_panel.innerHTML = _.template($("#scenario_abandoned_panel").html(), {
+                            title: "Scenario Ended",
+                            description: "Unfortunately, your teammate has left the study. Please press Close to start the tutorial scenario again with a new teammate, or feel free to close this webpage and return your submission to Prolific."
+                        });
+
+                        $.blockWithContent(scenario_abandoned_panel);
+                        self.completed = true;
+
+                        $('#abandon_scenario').on('click', function () {
+                            $.post("/reset");
+                            var port = 44100;
+                            window.location.replace("http://" + window.location.hostname + ":" + port + "/redirect");
+                        });
+                    } else {
+                        self.views.map.clearAll()
+                        $.unblockUI();
+                        var scenario_abandoned_panel = document.createElement("div");
+                        scenario_abandoned_panel.innerHTML = _.template($("#scenario_abandoned_panel").html(), {
+                            title: "Scenario Ended",
+                            description: "Unfortunately, your teammate has left the study so you are unable to continue. Please return your submission to Prolific, you will receive a part payment."
+                        });
+
+                        $.blockWithContent(scenario_abandoned_panel);
+                        self.completed = true;
+
+                        $('#abandon_scenario').on('click', function () {
+                            $.post("/reset");
+                            window.history.back();
+                        });
                     }
-                    self.views.map.clearAll()
-                    $.unblockUI();
-                    var scenario_end_panel = document.createElement("div");
-                    scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
-                        title: "Scenario Ended",
-                        description: "Unfortunately, your teammate has left the study so you are unable to continue. Please return your submission to Prolific, you will receive a part payment."
-                    });
-
-                    $.blockWithContent(scenario_end_panel);
-                    self.completed = true;
-
-                    $('#end_scenario').on('click', function () {
-                        $.post("/reset");
-                        window.history.back();
-                    });
                 }
                 if (self.passedThrough) {
                     // console.log("here passed through")
@@ -407,7 +425,6 @@ var simulator = {
                     if (loadedBefore) {
                         $.post("/preventabandon");
                     }
-                    sessionStorage.setItem('pageHasBeenLoaded', 'true');
                     // console.log("here not initialised")
                     $("#overlay_div").hide();
                     self.initialisedState = true;
@@ -455,19 +472,22 @@ var simulator = {
                         sessionStorage.setItem('prolificID', name);
                     }
 
-                    window.addEventListener('beforeunload', function(e) {
-                        if (!self.completed) {
-                            e.preventDefault();
-                            e.returnValue = '';
-                        }
-                    });
+                    if (!loadedBefore) {
+                        window.addEventListener('beforeunload', function(e) {
+                            if (!self.completed) {
+                                e.preventDefault();
+                                e.returnValue = '';
+                            }
+                        });
 
-                    window.addEventListener('pagehide', function () {
-                      if (!self.completed) {
-                        var blob= new Blob([JSON.stringify({userName: sessionStorage.getItem('prolificID')})], {type: 'application/json; charset=UTF-8'});
-                        navigator.sendBeacon('/abandon', blob);
-                      }
-                    });
+                        window.addEventListener('pagehide', function () {
+                          if (!self.completed) {
+                            var blob= new Blob([JSON.stringify({userName: sessionStorage.getItem('prolificID')})], {type: 'application/json; charset=UTF-8'});
+                            navigator.sendBeacon('/abandon', blob);
+                          }
+                        });
+                    }
+                    sessionStorage.setItem('pageHasBeenLoaded', 'true');
 
                     if (self.state.attributes.prov_doc == null) {
                         var api = new $.provStoreApi({
