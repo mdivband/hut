@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 public class RootHandler extends RestHandler {
+    private Timer abandonTimer;
 
     public RootHandler(String handlerName, Simulator simulator, Logger LOGGER) {
         super(handlerName, simulator, LOGGER);
@@ -51,6 +52,9 @@ public class RootHandler extends RestHandler {
                 break;
             case "/abandon":
                 handleAbandon(req, resp);
+                break;
+            case "/preventabandon":
+                handlePreventAbandon(req, resp);
                 break;
             default:
                 throw new UnregisteredPathException("No method for handling POST request on " + req.getPath());
@@ -231,11 +235,23 @@ public class RootHandler extends RestHandler {
         String userName = jsonReq.get("userName").getAsString();
 
         if (userName != null) {
-            simulator.getState().abandonScenario();
+            TimerTask abandonTask = new TimerTask() {
+                public void run() {
+                    simulator.getState().abandonScenario();
+                }
+            };
+            this.abandonTimer = new Timer();
+            this.abandonTimer.schedule(abandonTask, 20000L);
+            LOGGER.info(String.format("%s; ABDN; UserName has abandoned scenario (name/id); %s ", simulator.getState().getTime(), userName));
         }
+        resp.sendOkay();
+    }
+
+    private void handlePreventAbandon(Request req, Response resp) throws IOException {
+        this.abandonTimer.cancel();
 
         resp.sendOkay();
-        LOGGER.info(String.format("%s; ABDN; UserName has abandoned scenario (name/id); %s ", simulator.getState().getTime(), userName));
+        LOGGER.info(String.format("%s; ABDN; User has returned to scenario (probably page reload);", simulator.getState().getTime()));
     }
 
 }

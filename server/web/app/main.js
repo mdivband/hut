@@ -404,6 +404,10 @@ var simulator = {
                     self.passedThrough = false;
                     self.waitRun(waitTime, startTime, self);
                 } else if (!self.initialisedState) {
+                    var loadedBefore = sessionStorage.getItem('pageHasBeenLoaded');
+                    if (loadedBefore) {
+                        $.post("/preventabandon");
+                    }
                     sessionStorage.setItem('pageHasBeenLoaded', 'true');
                     // console.log("here not initialised")
                     $("#overlay_div").hide();
