@@ -8,7 +8,6 @@ var simulator = {
     waitingForPlanner: false,
     scenarioNumber: 0,
     passedThrough: false,
-    prolificID: "undefined",
     completed: false,
     init: function () {
         this.state = new App.Models.State();
@@ -437,11 +436,13 @@ var simulator = {
                        browser = "unknown";
                     }
 
-                    if (self.state.getUserNames().length == 0 && userRole == "planner") {
+                    if ((self.state.getUserNames().length == 0 && userRole == "planner") ||
+                        (self.state.getUserNames().length > 0 && self.state.getUserNames().length < self.state.getRequiredUsers() && userRole == "analyst")) {
                         // TODO get their name, also log it in backend
                         var name = null;
-                        if (self.prolificID != "undefined") {
-                            name = self.prolificID;
+                        var prolificID = sessionStorage.getItem('prolificID');
+                        if (prolificID) {
+                            name = prolificID;
                         }
                         while (name == null || name === "") {
                             name = prompt("Please enter your prolific ID", "");
@@ -451,21 +452,7 @@ var simulator = {
                             browser: browser,
                             userAgent: navigator.userAgent
                         });
-                        self.prolificID = name;
-                    } else if (self.state.getUserNames().length > 0 && self.state.getUserNames().length < self.state.getRequiredUsers()) {
-                        var name = null;
-                        if (self.prolificID != "undefined") {
-                            name = self.prolificID;
-                        }
-                        while (name == null || name === "") {
-                            name = prompt("Please enter your prolific ID", "");
-                        }
-                        $.post("/mode/scenario/registerUser", {
-                            userName: name,
-                            browser: browser,
-                            userAgent: navigator.userAgent
-                        });
-                        self.prolificID = name;
+                        sessionStorage.setItem('prolificID', name);
                     }
 
                     window.addEventListener('beforeunload', function(e) {
@@ -477,7 +464,7 @@ var simulator = {
 
                     window.addEventListener('pagehide', function () {
                       if (!self.completed) {
-                        var blob= new Blob([JSON.stringify({userName: self.prolificID})], {type: 'application/json; charset=UTF-8'});
+                        var blob= new Blob([JSON.stringify({userName: sessionStorage.getItem('prolificID')})], {type: 'application/json; charset=UTF-8'});
                         navigator.sendBeacon('/abandon', blob);
                       }
                     });
