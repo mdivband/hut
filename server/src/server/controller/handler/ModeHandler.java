@@ -41,6 +41,12 @@ public class ModeHandler extends RestHandler {
             case "/scenario/start":
                 handleScenarioStart(resp);
                 break;
+            case "/toggleExploredOverlay":
+                handleToggleExploredOverlay(req, resp);
+                break;
+            case "/toggleRegionPath":
+                handleToggleRegionPath(req, resp);
+                break;
             default:
                 throw new UnregisteredPathException("No method for handling POST request on " + req.getPath());
         }
@@ -147,5 +153,25 @@ public class ModeHandler extends RestHandler {
     private void handleInProgress(Response resp) throws IOException {
         resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
         resp.send(200, Boolean.toString(this.simulator.getState().isInProgress()));
+    }
+
+    private void handleToggleExploredOverlay(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Collections.singletonList("checked");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+        String checked = params.get("checked");
+        LOGGER.info(String.format("%s; XVRLY; Explored Overlay toggled (Overlay on); %s", simulator.getState().getTime(), checked));
+        resp.sendOkay();
+    }
+
+    private void handleToggleRegionPath(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Collections.singletonList("checked");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+        String checked = params.get("checked");
+        LOGGER.info(String.format("%s; RGNPTH; Region Path display toggled (Paths on); %s", simulator.getState().getTime(), checked));
+        resp.sendOkay();
     }
 }

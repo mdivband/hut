@@ -43,6 +43,9 @@ var MapTaskController = {
         this.state.completedTasks.on("add", function (task) {
             MapTaskController.onTaskCompleted(task);
         });
+        $('#region_path_toggle').change(function () {
+            $.post('/mode/toggleRegionPath', {checked: $(this).is(":checked")});
+        });
     },
     onTaskAdd: function (task) {
         if (userRole != "analyst") {

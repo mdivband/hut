@@ -17,6 +17,7 @@ var MapHazardController = {
     bindEvents: function () {
         $('#explored_overlay_toggle').change(function () {
             MapHazardController.setHeatmapVisibility(-1, $(this).is(":checked"));
+            $.post('/mode/toggleExploredOverlay', {checked: $(this).is(":checked")});
         });
         $('#hazard_overlay_toggle').change(function () {
             MapHazardController.setHeatmapVisibility(0, $(this).is(":checked"));
