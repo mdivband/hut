@@ -185,7 +185,6 @@ public class Simulator {
                     }
                 }
                 System.out.println("Num failed: " + numFailed);
-                modeller.outputResults();
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }
@@ -467,7 +466,7 @@ public class Simulator {
     }
 
     private void pushConfig(int port) {
-        //webRef = webRef+port;
+        // webRef = webRef+port;
         connectionController.init(port, webRef);
     }
 

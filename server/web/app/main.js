@@ -265,6 +265,7 @@ var simulator = {
                         self.initialisedState = true;
                         MapController.swapMode(self.state.getEditMode(), false);
 
+                        /*
                         if (self.state.getUserName() === "") {
                             // TODO get their name, also log it in backend
                             var name = null;
@@ -274,8 +275,9 @@ var simulator = {
                             $.post("/mode/scenario/registerUser", {
                                 userName: name
                             });
-
                         }
+
+                         */
 
                         if (self.state.attributes.prov_doc == null) {
                             var api = new $.provStoreApi({
@@ -318,7 +320,7 @@ var simulator = {
                             // Has a scenario to pass through too
                             scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                                 title: "Scenario Ended",
-                                description: "This scenario has ended, please press close to continue to the next experiment"
+                                description: "This scenario has ended, please press close"
                             });
                             $.blockWithContent(scenario_end_panel);
                             var endScenarioDiv = $("#end_scenario");
