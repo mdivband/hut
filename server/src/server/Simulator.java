@@ -269,11 +269,14 @@ public class Simulator {
                     }
                     // ELSE no hub
 
+                    // Disable agent stepping for this mode
+                    /*
                     synchronized (state.getAgents()) {
                         for (Agent agent : state.getAgents()) {
                             agent.step(getState().isFlockingEnabled());
                         }
                     }
+                     */
                 }
 
                 if (state.isCommunicationConstrained()) {
@@ -426,11 +429,11 @@ public class Simulator {
      * Just for ML work. This may need tweaking per scenario
      * The idea is to reset drone positions etc so you can run a loop of the scenario for RL
      */
-    public synchronized void softReset() {
+    public synchronized void softReset(MissionProgrammer missionProgrammer) {
         if (this.mainLoopThread != null) {
             this.mainLoopThread.interrupt();
         }
-        state.softReset(rlWrapper);
+        state.softReset(rlWrapper, missionProgrammer);
 
     }
 

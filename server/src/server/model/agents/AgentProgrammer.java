@@ -17,6 +17,8 @@ public class AgentProgrammer {
     // TODO subordinates here, with a method to handle them as reqd
     private Coordinate myTask;
 
+    private float cellWidth = (float) ((0.00016245471 * 111111));
+
     public AgentProgrammer(ProgrammerHandler programmerHandler) {
         a = programmerHandler;
     }
@@ -41,13 +43,9 @@ public class AgentProgrammer {
     public void step(){
         if (a.isStopped()) {
             if (myTask != null) {
-
-                //System.out.println("a " + a.getId());
                 a.setTask(Collections.singletonList(myTask));
                 a.resume();
             } else {
-
-                //System.out.println("b " + a.getId());
                 List<Coordinate> taskToDo = a.findOwnOrder();
                 if (taskToDo != null) {
                     myTask = taskToDo.get(0);
@@ -58,27 +56,33 @@ public class AgentProgrammer {
         }
     }
 
-    //private float[][] qTable; // No need for double precision; this may have a big performance improvement
-    //private int[][] freqTable;
-
-
-
-    public void setupRl(int numStates, int numAgents) {
-        /*
-        for (int i=0; i<numStates; i++) {
-            for (int j=0; j<numAgents; j++) {
-                qTable[i][j] = 0f;
+    public void gridMove(int i) {
+        switch (i) {
+            case 0 -> {
+                a.setHeading(0);
+                a.moveAlongHeading(cellWidth);
+            }
+            case 1 -> {
+                a.setHeading(180);
+                a.moveAlongHeading(cellWidth);
+            }
+            case 2 -> {
+                a.setHeading(90);
+                a.moveAlongHeading(cellWidth);
+            }
+            case 3 -> {
+                a.setHeading(270);
+                a.moveAlongHeading(cellWidth);
             }
         }
+    }
 
-        for (int i=0; i<numStates; i++) {
-            for (int j=0; j<numAgents; j++) {
-                freqTable[i][j] = 0;
-            }
-        }
-*/
+    public Coordinate getMyTask() {
+        return myTask;
+    }
 
-
+    public void manualSetTask(Coordinate myTask) {
+        this.myTask = myTask;
     }
 
     /**

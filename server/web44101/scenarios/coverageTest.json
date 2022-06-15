@@ -37,26 +37,6 @@
       "lat": 50.9303,
       "lng": -1.40925,
       "programmed": true
-    },
-    {
-      "lat": 50.9303,
-      "lng": -1.40875,
-      "programmed": true
-    },
-    {
-      "lat": 50.9302,
-      "lng": -1.4085,
-      "programmed": true
-    },
-    {
-      "lat": 50.9301,
-      "lng": -1.40825,
-      "programmed": true
-    },
-    {
-      "lat": 50.9291,
-      "lng": -1.40975,
-      "programmed": true
     }
   ],
   "hazards": [

@@ -198,6 +198,10 @@ public class AgentProgrammed extends Agent {
         taskController.deleteTaskByCoords(coord);
     }
 
+    public void manualSetTask(Coordinate c) {
+        programmerHandler.manualSetTask(c);
+    }
+
     /**
      * Adjust heading of agent towards the heading that will take it towards its goal.
      * @return isAligned - Whether the agent is aligned or needs to continue rotating.

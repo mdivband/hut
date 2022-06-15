@@ -164,7 +164,7 @@ public class State {
         hazardHits.init();
     }
 
-    public void softReset(RLWrapper rlWrapper) {
+    public void softReset(RLWrapper rlWrapper, MissionProgrammer missionProgrammer) {
         time = 0;
         editMode = 1;
 
@@ -185,7 +185,7 @@ public class State {
             if (a instanceof AgentProgrammed ap) {
                 ap.softReset();
             } else if (a instanceof AgentHubProgrammed ahp) {
-                ahp.softReset();
+                ahp.softReset(missionProgrammer);
             }
             a.setCoordinate(agentPositions.get(a));
 

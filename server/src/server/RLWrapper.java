@@ -42,7 +42,7 @@ public class RLWrapper {
 
     private void restart() {
         missionProgrammer.complete();
-        simulator.softReset();
+        simulator.softReset(missionProgrammer);
         simulator.startSimulation();
     }
 

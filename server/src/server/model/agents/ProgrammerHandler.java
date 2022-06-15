@@ -78,6 +78,10 @@ public class ProgrammerHandler implements Serializable {
         agentProgrammer.step();  // Where we actually call the user's code
     }
 
+    public void gridMove(int i) {
+        agentProgrammer.gridMove(i);
+    }
+
     /**
      * Checks for targets around this location using the TARGET_SENSE_RANGE constant
      * NOTE: Uses server-side code to check for target's actual positions, so don't access or edit this
@@ -1074,6 +1078,11 @@ public class ProgrammerHandler implements Serializable {
         }
     }
 
+    public void manualSetTask(Coordinate c) {
+        agentProgrammer.manualSetTask(c);
+
+    }
+
     /***
      * Gets the list of all agents (by network id) assigned ot the given task
      * @param task The task to check
@@ -1430,10 +1439,6 @@ public class ProgrammerHandler implements Serializable {
             }
         }
         return null;
-    }
-
-    public void setupRl(int numStates, int numAgents) {
-        agentProgrammer.setupRl(numStates, numAgents);
     }
 
     /***

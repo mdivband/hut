@@ -265,9 +265,9 @@ public class BackpropagationTrainer implements Trainer, Serializable {
         float prevTotalLoss = 0, totalLossChange;
         long startTraining, endTraining, trainingTime, startEpoch, endEpoch, epochTime;
 
-        LOGGER.info("------------------------------------------------------------------------------------------------------------------------------------------------");
-        LOGGER.info("TRAINING NEURAL NETWORK");
-        LOGGER.info("------------------------------------------------------------------------------------------------------------------------------------------------");
+        //LOGGER.info("------------------------------------------------------------------------------------------------------------------------------------------------");
+        //LOGGER.info("TRAINING NEURAL NETWORK");
+        //LOGGER.info("------------------------------------------------------------------------------------------------------------------------------------------------");
 
         fireTrainingEvent(TrainingEvent.Type.STARTED);
 
@@ -299,7 +299,7 @@ public class BackpropagationTrainer implements Trainer, Serializable {
                     neuralNet.applyWeightChanges();
 
                     float miniBatchError = lossFunction.getTotal();
-                    LOGGER.info("Epoch:" + epoch + ", Mini Batch:" + sampleCounter / batchSize + ", Batch Loss:" + miniBatchError);
+                    //LOGGER.info("Epoch:" + epoch + ", Mini Batch:" + sampleCounter / batchSize + ", Batch Loss:" + miniBatchError);
                 }
                 fireTrainingEvent(TrainingEvent.Type.ITERATION_FINISHED); // BATCH_FINISHED?
 
@@ -327,15 +327,15 @@ public class BackpropagationTrainer implements Trainer, Serializable {
 
             epochTime = endEpoch - startEpoch;
 
-            if (validationSet != null)
-                LOGGER.info("Epoch:" + epoch + ", Time:" + epochTime + "ms, TrainError:" + totalTrainingLoss + ", TrainErrorChange:" + totalLossChange + ", TrainAccuracy: " + trainAccuracy + ", ValError:" + valLoss + ", ValAccuracy: " + valAccuracy);
-            else
-                LOGGER.info("Epoch:" + epoch + ", Time:" + epochTime + "ms, TrainError:" + totalTrainingLoss + ", TrainErrorChange:" + totalLossChange + ", TrainAccuracy: " + trainAccuracy);
-
+            if (validationSet != null) {
+                //LOGGER.info("Epoch:" + epoch + ", Time:" + epochTime + "ms, TrainError:" + totalTrainingLoss + ", TrainErrorChange:" + totalLossChange + ", TrainAccuracy: " + trainAccuracy + ", ValError:" + valLoss + ", ValAccuracy: " + valAccuracy);
+            } else {
+                //LOGGER.info("Epoch:" + epoch + ", Time:" + epochTime + "ms, TrainError:" + totalTrainingLoss + ", TrainErrorChange:" + totalLossChange + ", TrainAccuracy: " + trainAccuracy);
+            }
 
             if (Float.isNaN(totalTrainingLoss)) {
                 stopTraining = true;
-                LOGGER.info("The training was interrupted due to NaN value before completing all Epochs. Epochs completed: " + epoch + "/" + maxEpochs);
+                //LOGGER.info("The training was interrupted due to NaN value before completing all Epochs. Epochs completed: " + epoch + "/" + maxEpochs);
             }
 
             fireTrainingEvent(TrainingEvent.Type.EPOCH_FINISHED);
@@ -371,9 +371,9 @@ public class BackpropagationTrainer implements Trainer, Serializable {
         endTraining = System.currentTimeMillis();
         trainingTime = endTraining - startTraining;
 
-        LOGGER.info(System.lineSeparator() + "TRAINING COMPLETED");
-        LOGGER.info("Total Training Time: " + trainingTime + "ms");
-        LOGGER.info("------------------------------------------------------------------------");
+        //LOGGER.info(System.lineSeparator() + "TRAINING COMPLETED");
+        //LOGGER.info("Total Training Time: " + trainingTime + "ms");
+        //LOGGER.info("------------------------------------------------------------------------");
 
         fireTrainingEvent(TrainingEvent.Type.STOPPED);
     }
