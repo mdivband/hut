@@ -261,7 +261,7 @@ public class Simulator {
 
                 } else {
                     // Step agents
-                    checkAgentsForTimeout();
+                    //checkAgentsForTimeout();
 
                     Hub hub = state.getHub();
                     synchronized (state.getHub()) {

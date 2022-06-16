@@ -4,6 +4,8 @@ import deepnetts.data.MLDataItem;
 import deepnetts.data.TabularDataSet;
 import deepnetts.net.FeedForwardNetwork;
 import deepnetts.net.layers.AbstractLayer;
+import deepnetts.net.layers.ConvolutionalLayer;
+import deepnetts.net.layers.MaxPoolingLayer;
 import deepnetts.net.layers.activation.ActivationType;
 import deepnetts.net.loss.LossType;
 import deepnetts.net.train.opt.OptimizerType;
@@ -29,6 +31,7 @@ public class MissionProgrammer {
     private final int SAMPLE_SIZE = 10;
     private final float LEARNING_RATE = 0.001f;
     private final int BUFFER_SIZE = 40;
+    private final int NUM_STEPS_PER_EPOCH = 500;
 
     private AgentHubProgrammed hub;
     private ProgrammerHandler programmerHandler;
@@ -73,10 +76,10 @@ public class MissionProgrammer {
             //randomAssignAll();
             qLearningSetup();
         } else {
-            if (stepCounter < 250) {
+            if (stepCounter < NUM_STEPS_PER_EPOCH) {
                 qLearningStep();
-                if (stepCounter % 10 == 0) {
-                    System.out.print(stepCounter + ",");
+                if (stepCounter % (NUM_STEPS_PER_EPOCH / 10) == 0) {
+                    System.out.print((stepCounter / (NUM_STEPS_PER_EPOCH / 100)) + ">");
                 }
                 stepCounter++;
             } else {
@@ -113,9 +116,6 @@ public class MissionProgrammer {
                                 + ", " + f.format(mvAv)
                                 + ", " + epochDuration + " \n");
                         fw.close();
-
-                        FileReader fr = new FileReader(csvOutputFile);
-
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -138,17 +138,24 @@ public class MissionProgrammer {
         }
     }
 
-    private void qLearningSetup() {
-        qNetwork = FeedForwardNetwork.builder()
+    private FeedForwardNetwork createNetwork() {
+        return FeedForwardNetwork.builder()
                 .addInputLayer(8)
+                .addLayer(new ConvolutionalLayer(2, 1, 1))
+                //.addFullyConnectedLayer(128, ActivationType.LINEAR)
+                //.addFullyConnectedLayer(128, ActivationType.LINEAR)
                 .addFullyConnectedLayer(64, ActivationType.LINEAR)
                 .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
+                .addFullyConnectedLayer(128, ActivationType.LINEAR)
+                .addFullyConnectedLayer(128, ActivationType.LINEAR)
                 .addOutputLayer(5, ActivationType.LINEAR)
                 .lossFunction(LossType.MEAN_SQUARED_ERROR)
                 .randomSeed(6400)
                 .build();
+    }
+
+    private void qLearningSetup() {
+        qNetwork = createNetwork();
 
         // SOMETHING IN MAX EPOCHS CASUSES PROBLEM
         qNetwork.getTrainer()
@@ -157,16 +164,7 @@ public class MissionProgrammer {
                 .setOptimizer(OptimizerType.SGD)
                 .setMaxEpochs(SAMPLE_SIZE);
 
-        targetNetwork = FeedForwardNetwork.builder()
-                .addInputLayer(8)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addOutputLayer(5, ActivationType.LINEAR)
-                .lossFunction(LossType.MEAN_SQUARED_ERROR)
-                .randomSeed(6400)
-                .build();
+        targetNetwork = createNetwork();
 
         targetNetwork.getTrainer()
                 .setBatchMode(false)
@@ -177,7 +175,18 @@ public class MissionProgrammer {
         assigned = true;
         counter = 0;
         epochStartTime = System.currentTimeMillis();
+    }
 
+    private void copyNets() {
+        targetNetwork = createNetwork();
+
+        for (AbstractLayer l : targetNetwork.getLayers()) {
+            l.setWeights(qNetwork.getLayers().get(targetNetwork.getLayers().indexOf(l)).getWeights());
+            l.setBiases(qNetwork.getLayers().get(targetNetwork.getLayers().indexOf(l)).getBiases());
+            l.setOptimizerType(OptimizerType.SGD);
+            l.setActivationType(ActivationType.LINEAR);
+            l.setLearningRate(LEARNING_RATE);
+        }
     }
 
     private void qLearningStep() {
@@ -192,7 +201,7 @@ public class MissionProgrammer {
                 int move;
                 float reward;
 
-                // TODO softmax
+
                 if (Simulator.instance.getRandom().nextDouble() < 0.9) {
                     float maxVal = -1;
                     move = -1;
@@ -207,8 +216,10 @@ public class MissionProgrammer {
                     move = Simulator.instance.getRandom().nextInt(5);
                 }
 
+                float rewardBefore = calculateReward() / MAX_REWARD;
                 if (ap.programmerHandler.gridMove(move)) {
-                    reward = calculateReward() / MAX_REWARD;
+                    reward = (calculateReward() / MAX_REWARD) - rewardBefore;
+
                 } else {
                     reward = -1f;
                 }
@@ -234,29 +245,8 @@ public class MissionProgrammer {
             System.out.println();
              */
             counter = 0;
-            buffer = new ExperienceRecord[BUFFER_SIZE];
-            pointer = 0;
-        }
-    }
-
-    private void copyNets() {
-        targetNetwork = FeedForwardNetwork.builder()
-                .addInputLayer(8)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addOutputLayer(5, ActivationType.LINEAR)
-                .lossFunction(LossType.MEAN_SQUARED_ERROR)
-                .randomSeed(6400)
-                .build();
-
-        for (AbstractLayer l : targetNetwork.getLayers()) {
-            l.setWeights(qNetwork.getLayers().get(targetNetwork.getLayers().indexOf(l)).getWeights());
-            l.setBiases(qNetwork.getLayers().get(targetNetwork.getLayers().indexOf(l)).getBiases());
-            l.setOptimizerType(OptimizerType.SGD);
-            l.setActivationType(ActivationType.LINEAR);
-            l.setLearningRate(LEARNING_RATE);
+            //buffer = new ExperienceRecord[BUFFER_SIZE];
+            //pointer = 0;
         }
     }
 
