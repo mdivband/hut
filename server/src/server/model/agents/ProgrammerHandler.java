@@ -78,8 +78,8 @@ public class ProgrammerHandler implements Serializable {
         agentProgrammer.step();  // Where we actually call the user's code
     }
 
-    public void gridMove(int i) {
-        agentProgrammer.gridMove(i);
+    public boolean gridMove(int i) {
+        return agentProgrammer.gridMove(i);
     }
 
     /**

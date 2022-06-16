@@ -19,7 +19,7 @@ public abstract class Agent extends MObject implements Serializable {
 
     private static final long serialVersionUID = 5561040348988016571L;
     //static final float unitTurningAngle = 0.1F; //Radians
-    static final float unitTurningAngle = 100F; //Radians
+    static final float unitTurningAngle = 0.1f; //Radians
     static final float unitTimeBatteryConsumption = 0.00025F;
     private static final double EPS = 1e-5;
 
@@ -55,7 +55,7 @@ public abstract class Agent extends MObject implements Serializable {
         // Sensible range 5-20m/s e.g.:
         // DJI Phantom 4 Pro V2.0 S-Mode = 20.1168 m/s
         // DJI Mavic 3 C-Mode = 5 m/s
-        speed = 10000.0;
+        speed = 10.0;
         heading = 0.0;
         battery = 1.0;
         altitude = 3.0;

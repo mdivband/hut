@@ -83,6 +83,10 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         return scheduledRemovals;
     }
 
+    public boolean checkCellValid(Coordinate coordinate) {
+        return missionProgrammer.checkInGrid(missionProgrammer.calculateEquivalentGridCell(coordinate));
+    }
+
     //TODO here we add handlers for the mission programmer
 
 }

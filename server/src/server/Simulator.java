@@ -47,7 +47,8 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 5;
+    private static final double gameSpeed = 99999;
+    private int stepCount;
     private Random random;
     private String nextFileName = "";
 
@@ -169,6 +170,7 @@ public class Simulator {
 
     private void mainLoop() {
         final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
+        stepCount = 0;
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
@@ -262,12 +264,14 @@ public class Simulator {
                     checkAgentsForTimeout();
 
                     Hub hub = state.getHub();
-                    if (hub instanceof AgentHub ah) {
-                        ah.step(state.isFlockingEnabled());
-                    } else if (hub instanceof AgentHubProgrammed ahp) {
-                        ahp.step(state.isFlockingEnabled());
+                    synchronized (state.getHub()) {
+                        if (hub instanceof AgentHubProgrammed ahp) {
+                            ahp.step(state.isFlockingEnabled());
+                        } else if (hub instanceof AgentHub ah) {
+                            ah.step(state.isFlockingEnabled());
+                        }
+                        // ELSE no hub
                     }
-                    // ELSE no hub
 
                     // Disable agent stepping for this mode
                     /*
@@ -277,6 +281,7 @@ public class Simulator {
                         }
                     }
                      */
+
                 }
 
                 if (state.isCommunicationConstrained()) {
@@ -321,6 +326,7 @@ public class Simulator {
                 imageController.checkForImages();
             }
 
+            stepCount++;
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));
             if (sleepTime < 0) {
@@ -328,6 +334,8 @@ public class Simulator {
             }
         } while (sleep(sleepTime));
     }
+
+
 
     public void updateMissionModel() {
         if (!state.getModelStyle().equals("off")) {
@@ -872,4 +880,9 @@ public class Simulator {
     public RLWrapper getRlWrapper() {
         return rlWrapper;
     }
+
+    public int getStepCount() {
+        return stepCount;
+    }
+
 }

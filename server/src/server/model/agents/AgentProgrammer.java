@@ -1,4 +1,5 @@
 package server.model.agents;
+import server.Simulator;
 import server.model.Coordinate;
 
 import java.util.Collections;
@@ -56,25 +57,39 @@ public class AgentProgrammer {
         }
     }
 
-    public void gridMove(int i) {
+    public boolean gridMove(int i) {
         switch (i) {
             case 0 -> {
-                a.setHeading(0);
-                a.moveAlongHeading(cellWidth);
-            }
-            case 1 -> {
-                a.setHeading(180);
-                a.moveAlongHeading(cellWidth);
-            }
-            case 2 -> {
-                a.setHeading(90);
-                a.moveAlongHeading(cellWidth);
-            }
-            case 3 -> {
-                a.setHeading(270);
-                a.moveAlongHeading(cellWidth);
+                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, 0))) {
+                    a.setHeading(0);
+                    a.moveAlongHeading(cellWidth);
+                } else {
+                    return false;
+                }
+            } case 1 -> {
+                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, Math.PI))) {
+                    a.setHeading(180);
+                    a.moveAlongHeading(cellWidth);
+                } else {
+                    return false;
+                }
+            } case 2 -> {
+                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, Math.PI / 2))) {
+                    a.setHeading(90);
+                    a.moveAlongHeading(cellWidth);
+                } else {
+                    return false;
+                }
+            } case 3 -> {
+                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, 3 * Math.PI / 2))) {
+                    a.setHeading(270);
+                    a.moveAlongHeading(cellWidth);
+                } else {
+                    return false;
+                }
             }
         }
+        return true;
     }
 
     public Coordinate getMyTask() {
