@@ -2,12 +2,12 @@ package server.model.agents;
 
 import deepnetts.data.MLDataItem;
 import deepnetts.data.TabularDataSet;
-import deepnetts.net.FeedForwardNetwork;
+import deepnetts.net.ConvolutionalNetwork;
 import deepnetts.net.layers.AbstractLayer;
-import deepnetts.net.layers.ConvolutionalLayer;
 import deepnetts.net.layers.activation.ActivationType;
 import deepnetts.net.loss.LossType;
 import deepnetts.net.train.opt.OptimizerType;
+import deepnetts.util.Tensor;
 import server.Simulator;
 import server.model.Coordinate;
 
@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.Objects;
 
 public class LearningAllocator {
-    private final float GAMMA = 0.9f;
-    private final int SAMPLE_SIZE = 10;
-    private final float LEARNING_RATE = 0.001f;
-    private final int BUFFER_SIZE = 40;
-    private final int NUM_STEPS_PER_EPOCH = 500;
-    private final int xSteps = 100;
-    private final  int ySteps = 100;
+    private static final int TRAIN_FREQUENCY = 1;
+    private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
+    private static final int SAMPLE_SIZE = 50;
+    private static final float LEARNING_RATE = 0.0001f;
+    private static final int BUFFER_SIZE = 1000;
+    private final int xSteps = 64;
+    private final  int ySteps = 64;
     private double xSpan;
     private double ySpan;
     private double xSquareSpan;
@@ -37,8 +37,8 @@ public class LearningAllocator {
     private float MAX_REWARD;
     private Coordinate botLeft;
     private Coordinate topRight;
-    private FeedForwardNetwork qNetwork;
-    private FeedForwardNetwork targetNetwork;
+    private ConvolutionalNetwork qNetwork;
+    private ConvolutionalNetwork targetNetwork;
     private MissionProgrammer.ExperienceRecord[] buffer;
     private boolean bufferFull = false;
     private int pointer;
@@ -81,20 +81,25 @@ public class LearningAllocator {
         stateSize = subordinates.size();
     }
 
-    private FeedForwardNetwork createNetwork() {
-        return FeedForwardNetwork.builder()
-                .addInputLayer(8)
-                .addLayer(new ConvolutionalLayer(2, 1, 1))
-                //.addFullyConnectedLayer(128, ActivationType.LINEAR)
-                //.addFullyConnectedLayer(128, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(128, ActivationType.LINEAR)
-                .addFullyConnectedLayer(128, ActivationType.LINEAR)
+    private ConvolutionalNetwork createNetwork() {
+        ConvolutionalNetwork net = ConvolutionalNetwork.builder()
+                .addInputLayer(64, 64, 4)
+                .addConvolutionalLayer(16, 16, 4,  4, ActivationType.LINEAR)
+                .addConvolutionalLayer(8, 8, 4,  4, ActivationType.LINEAR)
+                .addConvolutionalLayer(4, 4, 4,  4, ActivationType.LINEAR)
+                .addFullyConnectedLayer(256, ActivationType.LINEAR)
                 .addOutputLayer(5, ActivationType.LINEAR)
                 .lossFunction(LossType.MEAN_SQUARED_ERROR)
                 .randomSeed(6400)
                 .build();
+
+        net.getTrainer()
+                .setOptimizer(OptimizerType.SGD)
+                .setBatchSize(99999)
+                .setBatchMode(true)
+                .setLearningRate(LEARNING_RATE);
+
+        return net;
     }
 
     private void copyNets() {
@@ -110,20 +115,23 @@ public class LearningAllocator {
     }
 
     private void qLearningStep() {
-        for (AgentProgrammed a : subordinates) {
-            float[] input = getStateForThisAgent(a);
-            for (int i=0; i<input.length - 1;i+=2) {
-                input[i] /= xSteps;
-                input[i + 1] /= ySteps;
-            }
-            float[] output = compute(input);
+        Tensor inputTensor = getState();
+        float[][] outputs = new float[4][5];
+        int[] moves = new int[4];
+
+        float negReward = 0;
+
+        for (int j = 0; j < subordinates.size(); j++) {
+            AgentProgrammed a = subordinates.get(j);
+            //Tensor inputTensor = getStateForThisAgent(a);
+            float[] output = compute(inputTensor);
+            outputs[j] = output;
             int move;
-            float reward;
 
             if (Simulator.instance.getRandom().nextDouble() < 0.9) {
                 float maxVal = 4;
                 move = -1;
-                for (int i=0; i<5; i++) {
+                for (int i = 0; i < 5; i++) {
                     if (output[i] > maxVal) {
                         maxVal = output[i];
                         move = i;
@@ -133,46 +141,41 @@ public class LearningAllocator {
                 // EPSILON EXPLORATION
                 move = Simulator.instance.getRandom().nextInt(5);
             }
-
-            float rewardBefore = calculateReward() / MAX_REWARD;
-            //System.out.println("Ordering " + a.getId() + " to go " + move);
-            if (a.programmerHandler.gridMove(move)) {
-                reward = (calculateReward() / MAX_REWARD) - rewardBefore;
-
-            } else {
-                reward = -1f;
+            moves[j] = move;
+            if (!a.programmerHandler.gridMove(move)) {
+                negReward = -1f;
             }
-
-            float[] result = getStateForThisAgent(a);
-
-            for (int i=0; i<result.length - 1;i+=2) {
-                result[i] /= xSteps;
-                result[i + 1] /= ySteps;
-            }
-
-            train(new MissionProgrammer.ExperienceRecord(input, output, move, reward, result));
 
         }
+        Tensor result = getState();
+        // Balance to max reward and subtract up to 1 from this
+        float jointReward = (calculateReward() / MAX_REWARD) - (negReward / 4f);
+        for (int i=0; i<4; i++) {
+            buffer[pointer] = new MissionProgrammer.ExperienceRecord(inputTensor, outputs[i], moves[i], jointReward, result);
+            pointer++;
+            if (pointer >= BUFFER_SIZE) {
+                pointer = 0;
+                bufferFull = true;
+            }
+        }
+        if (counter % TRAIN_FREQUENCY == 0) {
+            train();
+        }
+
         counter++;
-        if (counter >= 100) {
+        if (counter >= 20) {
             copyNets();
             counter = 0;
         }
     }
 
-    private void train(MissionProgrammer.ExperienceRecord e) {
+    private void train() {
         // TODO we have to manually check due to this boolean unusually returning true whilst false (probably threading
         //  or branch prediction caused?)
         synchronized (this) {
             if (bufferFull && Arrays.stream(buffer).noneMatch(Objects::isNull)) {
                 qTrain(sample());
             }
-        }
-        buffer[pointer] = e;
-        pointer++;
-        if (pointer >= BUFFER_SIZE) {
-            pointer = 0;
-            bufferFull = true;
         }
     }
 
@@ -190,7 +193,7 @@ public class LearningAllocator {
     private void qTrain(List<MissionProgrammer.ExperienceRecord> sample) {
         List<MLDataItem> dataItems = new ArrayList<>();
         for (MissionProgrammer.ExperienceRecord e : sample) {
-            float[] targetQ = targetNetwork.predict(e.resultantState);
+            float[] targetQ = targetCompute(e.resultantState);
             float maxVal = -100000;
             int bestI = 4;
             for (int i = 0; i < 5; i++) {
@@ -202,11 +205,10 @@ public class LearningAllocator {
             float y = e.jointReward + (GAMMA * maxVal);
             float[] pred = e.actionValues.clone();
             pred[bestI] = y;
-            MLDataItem item = new TabularDataSet.Item(e.originState, pred);
+            MLDataItem item = new TabularDataSet.Item(e.originState, new Tensor(pred));
             dataItems.add(item);
         }
         DataSet<MLDataItem> dataSet = new BasicDataSet<>(dataItems);
-        qNetwork.train(dataSet);
     }
 
     /**
@@ -214,9 +216,14 @@ public class LearningAllocator {
      * @param input
      * @return
      */
-    private float[] compute(float[] input) {
-        return qNetwork.predict(input);
+    private float[] compute(Tensor input) {
+        qNetwork.setInput(input);
+        return qNetwork.getOutput();
+    }
 
+    private float[] targetCompute(Tensor input) {
+        targetNetwork.setInput(input);
+        return targetNetwork.getOutput();
     }
 
     /**
@@ -262,22 +269,48 @@ public class LearningAllocator {
         return cellWidth;
     }
 
-    private float[] getStateForThisAgent(Agent agent) {
-        //synchronized (this) {
-        float[] state = new float[stateSize * 2];
-        int[] agentPair = calculateEquivalentGridCell(agent.getCoordinate());
-        state[0] = (float) agentPair[0];
-        state[1] = (float) agentPair[1];
-        int i = 2;
-        for (AgentProgrammed a : subordinates) {
-            if (!(a.equals(agent))) {
-                int[] pair = calculateEquivalentGridCell(a.getCoordinate());
-                state[i] = (float) pair[0];
-                state[i + 1] = (float) pair[1];
-                i += 2;
+    private Tensor getStateForThisAgent(AgentProgrammed agent) {
+        float[][][] stateArray = new float[4][xSteps][ySteps];
+        List<AgentProgrammed> orderedAgents = new ArrayList<>();
+        orderedAgents.add(agent);
+        subordinates.forEach(a -> {
+            if (!a.equals(agent)) {
+                orderedAgents.add(a);
+            }
+        });
+
+        for (int d=0; d<orderedAgents.size(); d++) {
+            Coordinate refCoord = orderedAgents.get(d).getCoordinate();
+            for (int i=0; i<xSteps; i++) {
+                for (int j=0; j<ySteps; j++) {
+                    // TODO unsure if best to use binary classifier for coverage or some kind of radiated heatmap variant
+                    if (refCoord.getDistance(calculateEquivalentCoordinate(i, j)) < 250) {
+                        stateArray[d][i][j] = 1;
+                    } else {
+                        stateArray[d][i][j] = 0;
+                    }
+                }
             }
         }
-        return state;
+        return new Tensor(stateArray);
+    }
+
+    private Tensor getState() {
+        float[][][] stateArray = new float[4][xSteps][ySteps];
+        for (int d=0; d<subordinates.size(); d++) {
+            Coordinate refCoord = subordinates.get(d).getCoordinate();
+            for (int i=0; i<xSteps; i++) {
+                for (int j=0; j<ySteps; j++) {
+                    // TODO unsure if best to use binary classifier for coverage or some kind of radiated heatmap variant
+                    if (refCoord.getDistance(calculateEquivalentCoordinate(i, j)) < 250) {
+                        stateArray[d][i][j] = 1;
+                    } else {
+                        stateArray[d][i][j] = 0;
+                    }
+                }
+            }
+        }
+        return new Tensor(stateArray);
     }
 
     public boolean checkInGrid(int[] cell) {

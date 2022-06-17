@@ -9,6 +9,7 @@ import deepnetts.net.layers.MaxPoolingLayer;
 import deepnetts.net.layers.activation.ActivationType;
 import deepnetts.net.loss.LossType;
 import deepnetts.net.train.opt.OptimizerType;
+import deepnetts.util.Tensor;
 import server.Simulator;
 import server.model.Coordinate;
 
@@ -25,12 +26,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-
-    private final float GAMMA = 0.9f;
-    private final int SAMPLE_SIZE = 10;
-    private final float LEARNING_RATE = 0.001f;
-    private final int BUFFER_SIZE = 40;
-    private final int NUM_STEPS_PER_EPOCH = 500;
+    private final int NUM_STEPS_PER_EPOCH = 200;
 
     private AgentHubProgrammed hub;
     private ProgrammerHandler programmerHandler;
@@ -39,8 +35,8 @@ public class MissionProgrammer {
     //TODO these values can be passed through the AgentHubProgrammed and therefore can be scenario file defined
     private Coordinate botLeft = new Coordinate(50.918934561834035, -1.415377448133106);
     private Coordinate topRight = new Coordinate(50.937665618776656, -1.3991319762570154);
-    private int xSteps = 100;
-    private int ySteps = 100;
+    private int xSteps = 64;
+    private int ySteps = 64;
     private int runCounter = 0;
     private boolean bufferFull = false;
     private int pointer = 0;
@@ -84,10 +80,10 @@ public class MissionProgrammer {
                     epochStartTime = System.currentTimeMillis();
                     times.add(epochDuration);
                     double sum = 0;
-                    for (int i = Math.max(0, scores.size() - 50); i < scores.size(); i++) {
+                    for (int i = Math.max(0, scores.size() - 20); i < scores.size(); i++) {
                         sum += scores.get(i);
                     }
-                    double mvAv = sum / Math.min(scores.size(), 50);
+                    double mvAv = sum / Math.min(scores.size(), 20);
 
                     DecimalFormat f = new DecimalFormat("##.00");
                     System.out.println(
@@ -201,13 +197,13 @@ public class MissionProgrammer {
 
     public static class ExperienceRecord {
         // Buffer: <state, action, reward, state'>
-        float[] originState;
+        Tensor originState;
         float[] actionValues;
         int actionTaken;
         float jointReward;
-        float[] resultantState;
+        Tensor resultantState;
 
-        public ExperienceRecord(float[] originState, float[] actionValues, int actionTaken, float jointReward, float[] resultantState) {
+        public ExperienceRecord(Tensor originState, float[] actionValues, int actionTaken, float jointReward, Tensor resultantState) {
             this.originState = originState;
             this.actionValues = actionValues;
             this.actionTaken = actionTaken;
@@ -218,11 +214,11 @@ public class MissionProgrammer {
         @Override
         public String toString() {
             return "ExperienceRecord{" +
-                    "originState=" + Arrays.toString(originState) +
+                    "originState=" + originState +
                     ", actionValues=" + Arrays.toString(actionValues) +
                     ", actionTaken=" + actionTaken +
                     ", jointReward=" + jointReward +
-                    ", resultantState=" + Arrays.toString(resultantState) +
+                    ", resultantState=" + resultantState +
                     '}';
         }
     }
