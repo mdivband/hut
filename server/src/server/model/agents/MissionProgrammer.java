@@ -27,7 +27,6 @@ public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
 
     private final float GAMMA = 0.9f;
-    private final float MAX_REWARD;
     private final int SAMPLE_SIZE = 10;
     private final float LEARNING_RATE = 0.001f;
     private final int BUFFER_SIZE = 40;
@@ -42,11 +41,7 @@ public class MissionProgrammer {
     private Coordinate topRight = new Coordinate(50.937665618776656, -1.3991319762570154);
     private int xSteps = 100;
     private int ySteps = 100;
-    private boolean assigned;
     private int runCounter = 0;
-    private FeedForwardNetwork qNetwork;
-    private FeedForwardNetwork targetNetwork;
-    private ExperienceRecord[] buffer = new ExperienceRecord[BUFFER_SIZE];
     private boolean bufferFull = false;
     private int pointer = 0;
     private int counter;
@@ -59,31 +54,28 @@ public class MissionProgrammer {
     private double xSquareSpan = xSpan / xSteps;
     private double ySquareSpan = ySpan / ySteps;
     private int stateSize;
+    private boolean ready = false;
 
     private long epochStartTime;
+    private boolean set = false;
 
-    public MissionProgrammer(AgentHubProgrammed ahp, ProgrammerHandler progHandler) {
+    public MissionProgrammer(AgentHubProgrammed ahp) {
         hub = ahp;
-        programmerHandler = progHandler;
         agents = new ArrayList<>();
         Simulator.instance.getState().getAgents().forEach(a -> {if(a instanceof AgentProgrammed ap && (!(a instanceof Hub))) {agents.add(ap);}});
-        MAX_REWARD = xSteps * ySteps;
-        stateSize = 2*agents.size();
     }
 
     public void step() {
-        if (!assigned) {
-            //randomAssignAll();
-            qLearningSetup();
+        if (!ready) {
+            groupSetup();
         } else {
             if (stepCounter < NUM_STEPS_PER_EPOCH) {
-                qLearningStep();
+                groupStep();
                 if (stepCounter % (NUM_STEPS_PER_EPOCH / 10) == 0) {
                     System.out.print((stepCounter / (NUM_STEPS_PER_EPOCH / 100)) + ">");
                 }
                 stepCounter++;
             } else {
-
                 // SOFT RESET
                 double r = calculateReward();
                 scores.add(r);
@@ -114,226 +106,60 @@ public class MissionProgrammer {
                                 + ", " + r
                                 + ", " + f.format(scores.stream().mapToDouble(Double::doubleValue).average().getAsDouble())
                                 + ", " + f.format(mvAv)
-                                + ", " + epochDuration + " \n");
+                                + ", " + epochDuration
+                                + " \n");
                         fw.close();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
 
-                    Simulator.instance.softReset(this);
-                    agents = new ArrayList<>();
+                    Simulator.instance.softReset(this);  // This soft resets all agents
+                    agents.clear();
                     Simulator.instance.getState().getAgents().forEach(a -> {
                         if (a instanceof AgentProgrammed ap && (!(a instanceof Hub))) {
                             agents.add(ap);
+                            if (ap.programmerHandler.getAgentProgrammer().getLevel() == 1) {
+                                ap.programmerHandler.getAgentProgrammer().getLearningAllocator().reset();
+                            }
                         }
                     });
                     runCounter++;
                     stepCounter = 0;
-                    pointer = 0;
-                    bufferFull = false;
-                    buffer = new ExperienceRecord[BUFFER_SIZE];
                     Simulator.instance.startSimulation();
                 }
             }
         }
     }
 
-    private FeedForwardNetwork createNetwork() {
-        return FeedForwardNetwork.builder()
-                .addInputLayer(8)
-                .addLayer(new ConvolutionalLayer(2, 1, 1))
-                //.addFullyConnectedLayer(128, ActivationType.LINEAR)
-                //.addFullyConnectedLayer(128, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addFullyConnectedLayer(128, ActivationType.LINEAR)
-                .addFullyConnectedLayer(128, ActivationType.LINEAR)
-                .addOutputLayer(5, ActivationType.LINEAR)
-                .lossFunction(LossType.MEAN_SQUARED_ERROR)
-                .randomSeed(6400)
-                .build();
-    }
-
-    private void qLearningSetup() {
-        qNetwork = createNetwork();
-
-        // SOMETHING IN MAX EPOCHS CASUSES PROBLEM
-        qNetwork.getTrainer()
-                .setBatchMode(false)
-                .setLearningRate(LEARNING_RATE)
-                .setOptimizer(OptimizerType.SGD)
-                .setMaxEpochs(SAMPLE_SIZE);
-
-        targetNetwork = createNetwork();
-
-        targetNetwork.getTrainer()
-                .setBatchMode(false)
-                .setLearningRate(LEARNING_RATE)
-                .setOptimizer(OptimizerType.SGD)
-                .setMaxEpochs(SAMPLE_SIZE);;
-
-        assigned = true;
-        counter = 0;
-        epochStartTime = System.currentTimeMillis();
-    }
-
-    private void copyNets() {
-        targetNetwork = createNetwork();
-
-        for (AbstractLayer l : targetNetwork.getLayers()) {
-            l.setWeights(qNetwork.getLayers().get(targetNetwork.getLayers().indexOf(l)).getWeights());
-            l.setBiases(qNetwork.getLayers().get(targetNetwork.getLayers().indexOf(l)).getBiases());
-            l.setOptimizerType(OptimizerType.SGD);
-            l.setActivationType(ActivationType.LINEAR);
-            l.setLearningRate(LEARNING_RATE);
-        }
-    }
-
-    private void qLearningStep() {
-        for (Agent a : agents) {
-            if (a instanceof AgentProgrammed ap) {
-                float[] input = getStateForThisAgent(a);
-                for (int i=0; i<input.length - 1;i+=2) {
-                    input[i] /= xSteps;
-                    input[i + 1] /= ySteps;
-                }
-                float[] output = compute(input);
-                int move;
-                float reward;
-
-
-                if (Simulator.instance.getRandom().nextDouble() < 0.9) {
-                    float maxVal = -1;
-                    move = -1;
-                    for (int i=0; i<5; i++) {
-                        if (output[i] > maxVal) {
-                            maxVal = output[i];
-                            move = i;
-                        }
-                    }
-                } else {
-                    // EPSILON EXPLORATION
-                    move = Simulator.instance.getRandom().nextInt(5);
-                }
-
-                float rewardBefore = calculateReward() / MAX_REWARD;
-                if (ap.programmerHandler.gridMove(move)) {
-                    reward = (calculateReward() / MAX_REWARD) - rewardBefore;
-
-                } else {
-                    reward = -1f;
-                }
-
-                float[] result = getStateForThisAgent(a);
-
-                for (int i=0; i<result.length - 1;i+=2) {
-                    result[i] /= xSteps;
-                    result[i + 1] /= ySteps;
-                }
-
-                train(new ExperienceRecord(input, output, move, reward, result));
-
-            }
-        }
-        counter++;
-        if (counter >= 100) {
-            copyNets();
-            /*
-            System.out.println("============RESET================");
-            System.out.println("pred: " + Arrays.toString(qNetwork.predict(new float[]{.39f, .56f, .34f, .59f, .36f, .60f, .37f, .60f})));
-            System.out.println("targ: " + Arrays.toString(targetNetwork.predict(new float[]{.39f, .56f, .34f, .59f, .36f, .60f, .37f, .60f})));
-            System.out.println();
-             */
-            counter = 0;
-            //buffer = new ExperienceRecord[BUFFER_SIZE];
-            //pointer = 0;
-        }
-    }
-
-    private void train(ExperienceRecord e) {
-        // TODO we have to manually check due to this boolean unusually returning true whilst false (probably threading
-        //  or branch prediction caused?)
-        synchronized (this) {
-            if (bufferFull && Arrays.stream(buffer).noneMatch(Objects::isNull)) {
-                qTrain(sample());
-            }
-        }
-        buffer[pointer] = e;
-        pointer++;
-        if (pointer >= BUFFER_SIZE) {
-            pointer = 0;
-            bufferFull = true;
-        }
-    }
-
-    private List<ExperienceRecord> sample() {
-        List<ExperienceRecord> sample = new ArrayList<>();
-        while (sample.size() < SAMPLE_SIZE) {
-            ExperienceRecord e = buffer[Simulator.instance.getRandom().nextInt(BUFFER_SIZE)];
-            if (!sample.contains(e)) {
-                sample.add(e);
-            }
-        }
-        return sample;
-    }
-
-    private void qTrain(List<ExperienceRecord> sample) {
-        List<MLDataItem> dataItems = new ArrayList<>();
-        for (ExperienceRecord e : sample) {
-            float[] targetQ = targetNetwork.predict(e.resultantState);
-            float maxVal = -100000;
-            int bestI = 4;
-            for (int i = 0; i < 5; i++) {
-                if (targetQ[i] > maxVal) {
-                    maxVal = targetQ[i];
-                    bestI = i;
-                }
-            }
-            float y = e.jointReward + (GAMMA * maxVal);
-            float[] pred = e.actionValues.clone();
-            pred[bestI] = y;
-            MLDataItem item = new TabularDataSet.Item(e.originState, pred);
-            dataItems.add(item);
-        }
-        DataSet<MLDataItem> dataSet = new BasicDataSet<>(dataItems);
-        qNetwork.train(dataSet);
-    }
-
-    /**
-     * Takes state without the agent we want, then produces the best single state to match this (agent's action)
-     * @param input
-     * @return
-     */
-    private float[] compute(float[] input) {
-        return qNetwork.predict(input);
-
-    }
-
-    public void complete() {
-        System.out.println("Run " + runCounter++ + " completed, reward = " + calculateReward());
-        assigned = false;
-        // We must reset the network IDs of the agents too, as this is the only non-handler variable that is used (it
-        //  signifies that it hasn't been setup yet
-        hub.setNetworkID("");
-        Simulator.instance.getState().getAgents().forEach(a -> {if (a instanceof AgentProgrammed ap) {ap.setNetworkID("");}});
-    }
-
-    public void randomAssignAll() {
-        for (Agent a : agents) {
-            if (!programmerHandler.agentHasTask(a.getId())) {
-                int x = (int) Math.floor(programmerHandler.getNextRandomDouble() * xSteps);
-                int y = (int) Math.floor(programmerHandler.getNextRandomDouble() * ySteps);
-
-                Coordinate c = calculateEquivalentCoordinate(x, y);
-                programmerHandler.issueOrder(a.getId(), c);
+    private void groupSetup() {
+        // TODO Clumsy 1-level for now, in future bin these out to groups of 5 and allocate in groups
+        int level = 1;
+        AgentProgrammed leader = null;
+        for (AgentProgrammed ap : agents) {
+            if (level == 1) {
+                ap.programmerHandler.getAgentProgrammer().setLevel(1);
+                ap.programmerHandler.getAgentProgrammer().setup();
+                ap.programmerHandler.getAgentProgrammer().getLearningAllocator().setBounds(
+                        new Coordinate(50.918934561834035, -1.415377448133106),
+                        new Coordinate(50.937665618776656, -1.3991319762570154));
+                leader = ap;
+                level = 0;
+            } else {
+                ap.programmerHandler.getAgentProgrammer().setLevel(0);
             }
         }
 
-        // Stop trying to assign if every agent has a route
-        synchronized (Simulator.instance.getState().getAgents()) {
-            if (Simulator.instance.getState().getAgents().stream().anyMatch(a -> !(a instanceof Hub) && a.getRoute().isEmpty())) {
-                assigned = true;
+        for (AgentProgrammed ap : agents) {
+            if (ap.getProgrammerHandler().getAgentProgrammer().getLevel() == 0) {
+                leader.getProgrammerHandler().getAgentProgrammer().addSubordinate(ap);
             }
+        }
+        ready = true;
+    }
+
+    private void groupStep() {
+        for (AgentProgrammed ap : agents) {
+            ap.programmerHandler.getAgentProgrammer().step();
         }
     }
 
@@ -352,7 +178,7 @@ public class MissionProgrammer {
                 for (Agent a : agents) {
                     //if (!(a instanceof Hub)) {
                         Coordinate coord = a.getCoordinate();
-                        if (equiv.getDistance(coord) < programmerHandler.getSenseRange()) {
+                        if (equiv.getDistance(coord) < 250) {
                             // This square's centre is in range of an agent
                             numPointsCovered++;
                             break;
@@ -369,46 +195,8 @@ public class MissionProgrammer {
         return new Coordinate( botLeft.getLatitude() + (y * ySquareSpan), botLeft.getLongitude() + (x * xSquareSpan));
     }
 
-    public int[] calculateEquivalentGridCell(Coordinate c) {
-        return new int[]{
-                            (int) Math.floor(((c.getLongitude() - botLeft.getLongitude()) / (xSpan)) * xSteps),
-                            (int) Math.floor(((c.getLatitude() - botLeft.getLatitude()) / (ySpan)) * ySteps)
-                        };
-    }
-
-    public float[] getState() {
-        float[] state = new float[stateSize];
-        int i = 0;
-        for (Agent a : agents) {
-            int[] pair = calculateEquivalentGridCell(a.getCoordinate());
-            state[i] = (float) pair[0];
-            state[i + 1] = (float) pair[1];
-            i += 2;
-        }
-        return state;
-    }
-
-    private float[] getStateForThisAgent(Agent agent) {
-        //synchronized (this) {
-            float[] state = new float[stateSize];
-            int[] agentPair = calculateEquivalentGridCell(agent.getCoordinate());
-            state[0] = (float) agentPair[0];
-            state[1] = (float) agentPair[1];
-            int i = 2;
-            for (Agent a : agents) {
-                if (!(a.equals(agent))) {
-                    int[] pair = calculateEquivalentGridCell(a.getCoordinate());
-                    state[i] = (float) pair[0];
-                    state[i + 1] = (float) pair[1];
-                    i += 2;
-                }
-            }
-            return state;
-        //}
-    }
-
-    public boolean checkInGrid(int[] cell) {
-        return cell[0] >= 0 && cell[0] <= xSteps && cell[1] >= 0 && cell[1] <= ySteps;
+    public void complete() {
+        System.out.println("COMPLETE");
     }
 
     public static class ExperienceRecord {

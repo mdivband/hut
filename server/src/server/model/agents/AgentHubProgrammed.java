@@ -24,7 +24,7 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         for (Task t : Simulator.instance.getState().getTasks()) {
             addTaskFromUser(t);
         }
-        missionProgrammer = new MissionProgrammer(this, programmerHandler);
+        missionProgrammer = new MissionProgrammer(this);
         Simulator.instance.getRlWrapper().setMissionProgrammer(missionProgrammer);
     }
 
@@ -82,11 +82,5 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
         return scheduledRemovals;
     }
-
-    public boolean checkCellValid(Coordinate coordinate) {
-        return missionProgrammer.checkInGrid(missionProgrammer.calculateEquivalentGridCell(coordinate));
-    }
-
-    //TODO here we add handlers for the mission programmer
 
 }

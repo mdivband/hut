@@ -17,8 +17,10 @@ public class AgentProgrammer {
 
     // TODO subordinates here, with a method to handle them as reqd
     private Coordinate myTask;
+    private int level = 0;
 
-    private float cellWidth = (float) ((0.00016245471 * 111111));
+    private LearningAllocator learningAllocator = null;    // Importantly if we are level 1 then we use this for learning and
+                                                    // assignment of subordinates; if level 0, we refer to it as our env
 
     public AgentProgrammer(ProgrammerHandler programmerHandler) {
         a = programmerHandler;
@@ -30,11 +32,15 @@ public class AgentProgrammer {
      */
     public void setup() {
         if (a.isHub()) {
-            //LOGGER.severe("Sv: HUB " + a.agent.getId() + " assigned leadership and hub status");
             a.setLeader(true);
-        } else {
+        } else if (level == 1) {
             a.setLeader(true);
             a.setVisual("leader");
+            if (learningAllocator == null) {
+                learningAllocator = new LearningAllocator();
+                learningAllocator.setup();
+            }
+
         }
     }
 
@@ -42,48 +48,41 @@ public class AgentProgrammer {
      * Called at every time step (currently 200ms)
      */
     public void step(){
-        if (a.isStopped()) {
-            if (myTask != null) {
-                a.setTask(Collections.singletonList(myTask));
-                a.resume();
-            } else {
-                List<Coordinate> taskToDo = a.findOwnOrder();
-                if (taskToDo != null) {
-                    myTask = taskToDo.get(0);
-                }
-            }
-        } else {
-            a.followRoute();
+        //System.out.println("AP step l=" + level);
+        if (level == 0) {
+            // Do nothing. This is just a follower and will be manually moved by its leader (for now)
+        } else if (level == 1) {
+            learningAllocator.step();
         }
     }
 
     public boolean gridMove(int i) {
         switch (i) {
             case 0 -> {
-                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, 0))) {
+                if (learningAllocator.checkCellValid(a.getPosition().getCoordinate(getLearningAllocator().getCellWidth(), 0))) {
                     a.setHeading(0);
-                    a.moveAlongHeading(cellWidth);
+                    a.moveAlongHeading(getLearningAllocator().getCellWidth());
                 } else {
                     return false;
                 }
             } case 1 -> {
-                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, Math.PI))) {
+                if (learningAllocator.checkCellValid(a.getPosition().getCoordinate(getLearningAllocator().getCellWidth(), Math.PI))) {
                     a.setHeading(180);
-                    a.moveAlongHeading(cellWidth);
+                    a.moveAlongHeading(getLearningAllocator().getCellWidth());
                 } else {
                     return false;
                 }
             } case 2 -> {
-                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, Math.PI / 2))) {
+                if (learningAllocator.checkCellValid(a.getPosition().getCoordinate(getLearningAllocator().getCellWidth(), Math.PI / 2))) {
                     a.setHeading(90);
-                    a.moveAlongHeading(cellWidth);
+                    a.moveAlongHeading(getLearningAllocator().getCellWidth());
                 } else {
                     return false;
                 }
             } case 3 -> {
-                if (((AgentHubProgrammed) Simulator.instance.getState().getHub()).checkCellValid(a.getPosition().getCoordinate(cellWidth, 3 * Math.PI / 2))) {
+                if (learningAllocator.checkCellValid(a.getPosition().getCoordinate(getLearningAllocator().getCellWidth(), 3 * Math.PI / 2))) {
                     a.setHeading(270);
-                    a.moveAlongHeading(cellWidth);
+                    a.moveAlongHeading(getLearningAllocator().getCellWidth());
                 } else {
                     return false;
                 }
@@ -92,12 +91,20 @@ public class AgentProgrammer {
         return true;
     }
 
-    public Coordinate getMyTask() {
-        return myTask;
-    }
-
     public void manualSetTask(Coordinate myTask) {
         this.myTask = myTask;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public LearningAllocator getLearningAllocator() {
+        return learningAllocator;
     }
 
     /**
@@ -109,5 +116,23 @@ public class AgentProgrammer {
 
     }
 
+    public void addSubordinate(AgentProgrammed ap) {
+        if (level == 1) {
+            learningAllocator.addSubordinate(ap);
+            ap.programmerHandler.getAgentProgrammer().setAllocator(learningAllocator);
+        }
+    }
+
+    public void setAllocator(LearningAllocator learningAllocator) {
+        this.learningAllocator = learningAllocator;
+    }
+
+    public List<AgentProgrammed> getSubordinates() {
+        return learningAllocator.getSubordinates();
+    }
+
+    public void setSubordinates(List<AgentProgrammed> subs) {
+        learningAllocator.setSubordinates(subs);
+    }
 
 }

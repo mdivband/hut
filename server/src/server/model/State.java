@@ -181,11 +181,13 @@ public class State {
 
         // Restore positions to original
         HashMap<Agent, Coordinate> agentPositions = rlWrapper.getAgentPositions();
+
+        // TODO make this scale up to more levels
         agents.forEach(a -> {
-            if (a instanceof AgentProgrammed ap) {
-                ap.softReset();
-            } else if (a instanceof AgentHubProgrammed ahp) {
+            if (a instanceof AgentHubProgrammed ahp) {
                 ahp.softReset(missionProgrammer);
+            } else if (a instanceof AgentProgrammed ap) {
+                ap.softReset();
             }
             a.setCoordinate(agentPositions.get(a));
 

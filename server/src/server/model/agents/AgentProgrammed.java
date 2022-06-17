@@ -40,8 +40,17 @@ public class AgentProgrammed extends Agent {
     }
 
     public void softReset() {
-        super.softReset();
-        programmerHandler = new ProgrammerHandler(this);
+        if (!(this instanceof Hub)) {
+            super.softReset();
+            int level = programmerHandler.getAgentProgrammer().getLevel();
+            List<AgentProgrammed> subs = programmerHandler.getAgentProgrammer().getSubordinates();
+            LearningAllocator la = programmerHandler.getAgentProgrammer().getLearningAllocator();
+            programmerHandler = new ProgrammerHandler(this);
+            programmerHandler.getAgentProgrammer().setLevel(level);
+            programmerHandler.getAgentProgrammer().setAllocator(la);
+            programmerHandler.getAgentProgrammer().setSubordinates(subs);
+            programmerHandler.getAgentProgrammer().setup();
+        }
     }
 
     /***
@@ -288,6 +297,8 @@ public class AgentProgrammed extends Agent {
     protected List<Agent> senseNeighbours(double sensingRadius){
         return this.sensor.senseNeighbours(this, sensingRadius);
     }
+
+
 
     /**
      * Adjust heading of agent towards the average heading of its neighbours.

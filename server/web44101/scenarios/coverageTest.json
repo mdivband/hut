@@ -19,6 +19,11 @@
   },
   "agents": [
     {
+      "lat": 50.9289,
+      "lng": 1.409,
+      "programmed": true
+    },
+    {
       "lat": 50.9295,
       "lng": -1.409,
       "programmed": true
