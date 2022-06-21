@@ -4,7 +4,7 @@ import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
 import server.model.Sensor;
-import server.model.task.Task;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

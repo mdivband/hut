@@ -1,10 +1,6 @@
 package server.model.agents;
-import server.Simulator;
 import server.model.Coordinate;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -37,7 +33,7 @@ public class AgentProgrammer {
             a.setLeader(true);
             a.setVisual("leader");
             if (learningAllocator == null) {
-                learningAllocator = new LearningAllocator();
+                learningAllocator = new EvolutionaryAllocator();
                 learningAllocator.setup();
             }
 

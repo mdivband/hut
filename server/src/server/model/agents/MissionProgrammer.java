@@ -95,7 +95,7 @@ public class MissionProgrammer {
                         + ", epoch time = " + (epochDuration) + "ms"
                     );
 
-                    File csvOutputFile = new File("results.csv");
+                    File csvOutputFile = new File("results000001.csv");
                     try {
                         FileWriter fw = new FileWriter(csvOutputFile, true);
                         fw.write(runCounter
@@ -151,6 +151,7 @@ public class MissionProgrammer {
             }
         }
         ready = true;
+        epochStartTime = System.currentTimeMillis();
     }
 
     private void groupStep() {
@@ -172,14 +173,43 @@ public class MissionProgrammer {
                 //System.out.println("for (" + i + ", " + j + ")");
                 Coordinate equiv = calculateEquivalentCoordinate(i, j);
                 for (Agent a : agents) {
-                    //if (!(a instanceof Hub)) {
+                    if (!(a instanceof Hub)) {
                         Coordinate coord = a.getCoordinate();
                         if (equiv.getDistance(coord) < 250) {
                             // This square's centre is in range of an agent
                             numPointsCovered++;
                             break;
                         }
-                    //}
+                    }
+                }
+            }
+        }
+        return numPointsCovered;
+
+    }
+
+    public static float calculateRewardForNonProg() {
+        // TODO Note that a better system is to use actual circle geometry to find area of coverage. This can be
+        //  problematic though, as overlapping circles shouldn't be counted twice and can be tricky to deal with.
+        //  Certainly possible, but I'm leaving this for now for the sake of simplicity -WH
+        int numPointsCovered = 0;
+        for (int i = 0; i < 64; i++) {
+            for (int j = 0; j < 64; j++) {
+                //System.out.println("for (" + i + ", " + j + ")");
+                float span = (float) ((-1.3991319762570154 + 1.415377448133106) / 64);
+
+                Coordinate equiv = new Coordinate( new Coordinate(50.918934561834035, -1.415377448133106).getLatitude() + (j * span),
+                        new Coordinate(50.918934561834035, -1.415377448133106).getLongitude() + (i * span));
+
+                for (Agent a : Simulator.instance.getState().getAgents()) {
+                    if (!(a instanceof Hub)) {
+                        Coordinate coord = a.getCoordinate();
+                        if (equiv.getDistance(coord) < 250) {
+                            // This square's centre is in range of an agent
+                            numPointsCovered++;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -193,6 +223,10 @@ public class MissionProgrammer {
 
     public void complete() {
         System.out.println("COMPLETE");
+    }
+
+    public int getRunCounter() {
+        return runCounter;
     }
 
     public static class ExperienceRecord {

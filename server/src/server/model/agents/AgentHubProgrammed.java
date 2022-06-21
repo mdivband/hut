@@ -14,7 +14,7 @@ import java.util.Random;
  */
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {
     private int scheduledRemovals = 0;
-    private transient MissionProgrammer missionProgrammer;
+    protected transient MissionProgrammer missionProgrammer;
 
     public AgentHubProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
         super(id, position, sensor, random, taskController);

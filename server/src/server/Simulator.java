@@ -47,7 +47,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 99999;
+    private static final double gameSpeed = 999999;
     private int stepCount;
     private Random random;
     private String nextFileName = "";
@@ -263,6 +263,7 @@ public class Simulator {
                     // Step agents
                     //checkAgentsForTimeout();
 
+
                     Hub hub = state.getHub();
                     synchronized (state.getHub()) {
                         if (hub instanceof AgentHubProgrammed ahp) {
@@ -272,6 +273,8 @@ public class Simulator {
                         }
                         // ELSE no hub
                     }
+
+
 
                     // Disable agent stepping for this mode
                     /*
