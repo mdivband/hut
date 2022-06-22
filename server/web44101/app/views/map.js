@@ -287,7 +287,7 @@ App.Views.Map = Backbone.View.extend({
                 var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
                 var predPath = agent.getRoute();
 
-                // This statement later catches the invisble agent case
+                // This statement later catches the invisible agent case
                 if (predPath.length !== 0 && agent.isVisible()){
                     var newPath = [];
                     newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
@@ -343,69 +343,64 @@ App.Views.Map = Backbone.View.extend({
      * Draws persistent markers on the map for reference
      */
     drawMarkers: function () {
-        try {
-            var markers = this.state.getMarkers();
-            var self = this;
-            for (var i = 0; i < markers.length; i++) {
-                var thisMarker = markers[i];
-                var splitString = thisMarker.split(",")
-                if (splitString[0] === "circle") {
-                    var latX = splitString[1];
-                    var latY = splitString[2];
-                    var rad = splitString[3];
-                    var thisId = "circle" + latX + "," + latY + ", " + rad;
-                    var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[thisId];
+        self = this;
+        var markers = this.state.getMarkers();
+        for (var i = 0; i < markers.length; i++) {
+            var thisMarker = markers[i];
+            var splitString = thisMarker.split(",")
+            if (splitString[2] === "circle") {
+                var name = splitString[0];
+                var type = splitString[1];
+                var latX = splitString[2];
+                var latY = splitString[3];
+                var rad = splitString[4];
+                var thisId = name + ",circle" + latX + "," + latY + ", " + rad;
+                var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[thisId];
 
-                    if (!currentCircle) {
-                        self.$el.gmap("addShape", "Circle", {
-                            id: thisId,
-                            strokeColor: "#FF0000",
-                            strokeOpacity: 0.8,
-                            strokeWeight: 2,
-                            label: "Search here!",
-                            center: new google.maps.LatLng(latX, latY),
-                            radius: parseFloat(rad),
-                            visible: true
-                        });
-                    }
+                if (!currentCircle) {
+                    self.$el.gmap("addShape", "Circle", {
+                        id: thisId,
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        label: "Search here!",
+                        center: new google.maps.LatLng(latX, latY),
+                        radius: parseFloat(rad),
+                        visible: true
+                    });
                 }
+            } else if (splitString[2] === "polyline") {
+                var name = splitString[0];
+                var type =  splitString[1];
+                var x1 = splitString[3];
+                var y1 = splitString[4];
+                var x2 = splitString[5];
+                var y2 = splitString[6];
+                var thisId = name+","+type;
+                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[thisId];
 
-            }
-        } catch (e) {
-            alert(e);
-        }
+                var newPath = [];
+                newPath[0] = new google.maps.LatLng(x1, y1);
+                newPath[1] = new google.maps.LatLng(x2, y2);
 
-        // Clumsy, just add manually if using shapes for now. infutue should be done in the same way as above
-        if (this.state.getMarkers().length > 0) {
-            var marker = self.$el.gmap("get", "markers", [])["testMk1"];
-            if (!marker) {
-                this.$el.gmap("addMarker", {
-                    bounds: false,
-                    draggable: false,
-                    clickable: false,
-                    labelContent: "search here",
-                    labelClass: "labels",
-                    labelStyle: {opacity: 1.0},
-                    label: "There are casualties in this area!",
-                    id: "testMk1",
-                    position: new google.maps.LatLng(50.93007510846366, -1.412749970031315),
-                    zIndex: 3,
-                    visible: true
-                });
+                if (polyline) {
+                    // We found a path line we've already drawn, let's update it
+                    polyline.setOptions({path: newPath})
+                    polyline.setOptions({visible: true}) // In case it was hidden by the clearUncertainties() method
+                } else {
+                    // Otherwise make a new one
+                    self.$el.gmap("addShape", "Polyline", {
+                        path: newPath,
+                        id: thisId,
+                        strokeOpacity: 1,
+                        strokeColor: '#a91f1f',
+                        strokeWeight: 1,
+                        zIndex: 2,
+                        visible: true,
+                    });
+                }
             }
-            var marker = self.$el.gmap("get", "markers", [])["testMk2"];
-            if (!marker) {
-                this.$el.gmap("addMarker", {
-                    bounds: false,
-                    draggable: false,
-                    clickable: false,
-                    label: "There are casualties in this area!",
-                    labelAnchor: new google.maps.Point(50, -18),
-                    id: "testMk2",
-                    position: new google.maps.LatLng(50.93394037299629, -1.409213465112904),
-                    zIndex: 3
-                });
-            }
+
         }
     },
     /**
@@ -470,9 +465,9 @@ App.Views.Map = Backbone.View.extend({
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
             var sigma = radius; // Uncertainty radius in metres
-            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
+            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_unc"];
 
-            if(currentCircle) {
+            if (currentCircle) {
                 currentCircle.setOptions({center: agent.getPosition()});
                 currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
             } else {
@@ -512,27 +507,29 @@ App.Views.Map = Backbone.View.extend({
         var self = this;
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
-            var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_rng"];
+            if (agentId !== "HUB" && agentId !== "UAV-1") {
+                var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId + "_rng"];
 
-            if (agent.isVisible()) {
-                if (currentCircle) {
-                    currentCircle.setOptions({center: agent.getPosition()});
-                    currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
+                if (agent.isVisible()) {
+                    if (currentCircle) {
+                        currentCircle.setOptions({center: agent.getPosition()});
+                        currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
+                    } else {
+                        self.$el.gmap("addShape", "Circle", {
+                            id: agentId + "_rng",
+                            strokeColor: "#FF0000",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 0,
+                            fillColor: "#0033ff",
+                            fillOpacity: 0.2,
+                            center: agent.getPosition(),
+                            radius: range,
+                        });
+                    }
                 } else {
-                    self.$el.gmap("addShape", "Circle", {
-                        id: agentId + "_rng",
-                        strokeColor: "#FF0000",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 0,
-                        fillColor: "#0033ff",
-                        fillOpacity: 0.2,
-                        center: agent.getPosition(),
-                        radius: range,
-                    });
-                }
-            } else {
-                if (currentCircle) {
-                    currentCircle.setVisible(false);
+                    if (currentCircle) {
+                        currentCircle.setVisible(false);
+                    }
                 }
             }
         })

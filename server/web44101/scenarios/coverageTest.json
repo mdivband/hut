@@ -10,6 +10,15 @@
     "lat": 50.928955248687274,
     "lng": -1.40882186832185
   },
+  "markers": [
+    {
+      "name": "testCircle",
+      "shape": "circle",
+      "centreLat": 50.92911290233203,
+      "centreLng": -1.4127561898636043,
+      "radius": 120
+    }
+  ],
   "communicationConstrained": false,
   "communicationRange": 250.0,
   "uncertaintyRadius": 10,
@@ -20,7 +29,7 @@
   "agents": [
     {
       "lat": 50.9289,
-      "lng": 1.409,
+      "lng": -1.409,
       "programmed": true
     },
     {

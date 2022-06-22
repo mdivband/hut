@@ -26,17 +26,22 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 200;
+    private final int NUM_STEPS_PER_EPOCH = 300;
 
     private AgentHubProgrammed hub;
     private ProgrammerHandler programmerHandler;
     private List<AgentProgrammed> agents;
 
     //TODO these values can be passed through the AgentHubProgrammed and therefore can be scenario file defined
-    private Coordinate botLeft = new Coordinate(50.918934561834035, -1.415377448133106);
-    private Coordinate topRight = new Coordinate(50.937665618776656, -1.3991319762570154);
-    private int xSteps = 64;
-    private int ySteps = 64;
+    private Coordinate botLeft;
+    private Coordinate topRight;
+    protected int xSteps = 8;
+    protected int ySteps = 8;
+    private double X_SPAN = 0.01;
+    private double Y_SPAN = 0.006;
+    private double xSquareSpan;
+    private double ySquareSpan;
+    private float cellWidth;
     private int runCounter = 0;
     private boolean bufferFull = false;
     private int pointer = 0;
@@ -45,10 +50,6 @@ public class MissionProgrammer {
     private ArrayList<Double> scores = new ArrayList<>();
     private ArrayList<Long> times = new ArrayList<>();
 
-    private double xSpan = topRight.getLongitude() - botLeft.getLongitude();
-    private double ySpan = topRight.getLatitude() - botLeft.getLatitude();
-    private double xSquareSpan = xSpan / xSteps;
-    private double ySquareSpan = ySpan / ySteps;
     private int stateSize;
     private boolean ready = false;
 
@@ -95,7 +96,15 @@ public class MissionProgrammer {
                         + ", epoch time = " + (epochDuration) + "ms"
                     );
 
-                    File csvOutputFile = new File("results000001.csv");
+                    /*
+                    agents.forEach(a -> {
+                        if (a.programmerHandler.getAgentProgrammer().getLevel() == 1) {
+                            a.programmerHandler.getAgentProgrammer().getLearningAllocator().complete();
+                        }
+                    });
+                     */
+
+                    File csvOutputFile = new File("results.csv");
                     try {
                         FileWriter fw = new FileWriter(csvOutputFile, true);
                         fw.write(runCounter
@@ -109,6 +118,30 @@ public class MissionProgrammer {
                         throw new RuntimeException(e);
                     }
 
+                    /*
+                    if ((runCounter + 1) % 10 == 0) {
+                        agents.forEach(a -> {
+                            if (a.programmerHandler.getAgentProgrammer().getLevel() == 1) {
+                                ((EvolutionaryAllocator) a.programmerHandler.getAgentProgrammer().getLearningAllocator()).performBest();
+                            }
+                        });
+
+
+                        long c = -999999999;
+                        System.out.println("STARTING");
+                        for (int i = 0; i < 999999999; i++) {
+                            for (int j = 0; j < 50; j++) {
+                                while (c < 999999999) {
+                                    c++;
+                                }
+                            }
+                        }
+                        System.out.println("DONE - " + calculateReward());
+                    }
+
+                     */
+
+
                     Simulator.instance.softReset(this);  // This soft resets all agents
                     agents.clear();
                     Simulator.instance.getState().getAgents().forEach(a -> {
@@ -121,6 +154,7 @@ public class MissionProgrammer {
                     });
                     runCounter++;
                     stepCounter = 0;
+
                     Simulator.instance.startSimulation();
                 }
             }
@@ -135,9 +169,7 @@ public class MissionProgrammer {
             if (level == 1) {
                 ap.programmerHandler.getAgentProgrammer().setLevel(1);
                 ap.programmerHandler.getAgentProgrammer().setup();
-                ap.programmerHandler.getAgentProgrammer().getLearningAllocator().setBounds(
-                        new Coordinate(50.918934561834035, -1.415377448133106),
-                        new Coordinate(50.937665618776656, -1.3991319762570154));
+                ap.programmerHandler.getAgentProgrammer().getLearningAllocator().updateBounds(ap.getCoordinate());
                 leader = ap;
                 level = 0;
             } else {
@@ -150,8 +182,24 @@ public class MissionProgrammer {
                 leader.getProgrammerHandler().getAgentProgrammer().addSubordinate(ap);
             }
         }
+        updateBounds(leader.getCoordinate());
+
         ready = true;
         epochStartTime = System.currentTimeMillis();
+    }
+
+    public void updateBounds(Coordinate position) {
+        double topBound = position.getLatitude() + (Y_SPAN / 2);
+        double botBound = position.getLatitude() - (Y_SPAN / 2);
+        double rightBound = position.getLongitude() + (X_SPAN / 2);
+        double leftBound = position.getLongitude() - (X_SPAN / 2);
+
+        botLeft = new Coordinate(botBound, leftBound);
+        topRight = new Coordinate(topBound, rightBound);
+
+        xSquareSpan = X_SPAN / xSteps;
+        ySquareSpan = Y_SPAN / ySteps;
+        cellWidth = (float) ((xSquareSpan * 111111));
     }
 
     private void groupStep() {

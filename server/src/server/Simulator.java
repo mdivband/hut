@@ -267,7 +267,9 @@ public class Simulator {
                     Hub hub = state.getHub();
                     synchronized (state.getHub()) {
                         if (hub instanceof AgentHubProgrammed ahp) {
-                            ahp.step(state.isFlockingEnabled());
+                            synchronized (ahp) {
+                                ahp.step(state.isFlockingEnabled());
+                            }
                         } else if (hub instanceof AgentHub ah) {
                             ah.step(state.isFlockingEnabled());
                         }
@@ -750,12 +752,22 @@ public class Simulator {
             if (markers != null) {
                 for (Object markerJson : markers) {
                     String shape = GsonUtils.getValue(markerJson, "shape");
-                    Double cLat = GsonUtils.getValue(markerJson, "centreLat");
-                    Double cLng = GsonUtils.getValue(markerJson, "centreLng");
-                    Double radius = GsonUtils.getValue(markerJson, "radius");
-
-                    String shapeRep = shape+","+cLat+","+cLng+","+radius;
-
+                    String shapeRep = null;
+                    if (shape.equals("circle")) {
+                        String name = GsonUtils.getValue(markerJson, "name");
+                        Double cLat = GsonUtils.getValue(markerJson, "centreLat");
+                        Double cLng = GsonUtils.getValue(markerJson, "centreLng");
+                        Double radius = GsonUtils.getValue(markerJson, "radius");
+                        shapeRep = name+","+shape+",fromscenario,"+cLat+","+cLng+","+radius;
+                    } else if (shape.equals("polyline")) {
+                        String name = GsonUtils.getValue(markerJson, "name");
+                        Double x1 = GsonUtils.getValue(markerJson, "x1");
+                        Double y1 = GsonUtils.getValue(markerJson, "y1");
+                        Double x2 = GsonUtils.getValue(markerJson, "x2");
+                        Double y2 = GsonUtils.getValue(markerJson, "y2");
+                        shapeRep = name+","+shape+","+x1+","+y1+","+x2+","+y2;
+                    }
+                    
                     this.state.getMarkers().add(shapeRep);
                 }
             }

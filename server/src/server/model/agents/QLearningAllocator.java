@@ -50,6 +50,11 @@ public class QLearningAllocator extends LearningAllocator {
         buffer = new MissionProgrammer.ExperienceRecord[BUFFER_SIZE];
     }
 
+    @Override
+    public void complete() {
+
+    }
+
     public void step() {
         qLearningStep();
     }

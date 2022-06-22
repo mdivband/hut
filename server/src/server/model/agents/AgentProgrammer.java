@@ -1,6 +1,8 @@
 package server.model.agents;
+import server.Simulator;
 import server.model.Coordinate;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -16,7 +18,7 @@ public class AgentProgrammer {
     private int level = 0;
 
     private LearningAllocator learningAllocator = null;    // Importantly if we are level 1 then we use this for learning and
-                                                    // assignment of subordinates; if level 0, we refer to it as our env
+    // assignment of subordinates; if level 0, we refer to it as our env
 
     public AgentProgrammer(ProgrammerHandler programmerHandler) {
         a = programmerHandler;
@@ -34,6 +36,7 @@ public class AgentProgrammer {
             a.setVisual("leader");
             if (learningAllocator == null) {
                 learningAllocator = new EvolutionaryAllocator();
+                learningAllocator.setSupervisor(a.agent);
                 learningAllocator.setup();
             }
 
@@ -47,7 +50,15 @@ public class AgentProgrammer {
         //System.out.println("AP step l=" + level);
         if (level == 0) {
             // Do nothing. This is just a follower and will be manually moved by its leader (for now)
+            a.teleport(myTask);
         } else if (level == 1) {
+            /*
+            if (Simulator.instance.getRandom().nextInt(100) == 0) {
+                gridMove(Simulator.instance.getRandom().nextInt(4));
+                learningAllocator.updateBounds(a.getPosition());
+            }
+
+             */
             learningAllocator.step();
         }
     }

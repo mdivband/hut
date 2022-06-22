@@ -228,6 +228,9 @@ public abstract class AbstractLayer implements Layer, Serializable {
     }
 
     public void setWeights(Tensor weights) {
+        if (weights == null) {
+            System.out.println("null");
+        }
         this.weights = weights;
     }
 

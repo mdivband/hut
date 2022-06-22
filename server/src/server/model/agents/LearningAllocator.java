@@ -1,6 +1,7 @@
 package server.model.agents;
 
 import deepnetts.util.Tensor;
+import server.Simulator;
 import server.model.Coordinate;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 
 public abstract class LearningAllocator {
     protected List<AgentProgrammed> subordinates;
+    protected AgentProgrammed supervisor;
 
 
     protected int maxReward;
@@ -15,8 +17,8 @@ public abstract class LearningAllocator {
     private Coordinate topRight;
     protected int xSteps;
     protected int ySteps;
-    private double xSpan;
-    private double ySpan;
+    private double X_SPAN = 0.01;
+    private double Y_SPAN = 0.006;
     private double xSquareSpan;
     private double ySquareSpan;
     private float cellWidth;
@@ -31,19 +33,44 @@ public abstract class LearningAllocator {
 
     }
 
-    public void step() {
+    public abstract void complete();
 
-    }
+    public abstract void step();
 
-    public void setBounds(Coordinate botLeft, Coordinate topRight) {
-        this.botLeft = botLeft;
-        this.topRight = topRight;
-        xSpan = topRight.getLongitude() - botLeft.getLongitude();
-        ySpan = topRight.getLatitude() - botLeft.getLatitude();
-        xSquareSpan = xSpan / xSteps;
-        ySquareSpan = ySpan / ySteps;
+    public void updateBounds(Coordinate position) {
+        double topBound = position.getLatitude() + (Y_SPAN / 2);
+        double botBound = position.getLatitude() - (Y_SPAN / 2);
+        double rightBound = position.getLongitude() + (X_SPAN / 2);
+        double leftBound = position.getLongitude() - (X_SPAN / 2);
+
+        botLeft = new Coordinate(botBound, leftBound);
+        topRight = new Coordinate(topBound, rightBound);
+
+        xSquareSpan = X_SPAN / xSteps;
+        ySquareSpan = Y_SPAN / ySteps;
         maxReward = xSteps * ySteps;
-        cellWidth = (float) ((xSquareSpan * 111111));  //((0.00016245471 * 111111));
+        cellWidth = (float) ((xSquareSpan * 111111));
+
+        Simulator.instance.getState().getMarkers().removeIf(m -> m.contains(supervisor.getId()));
+
+        double bot = botLeft.getLatitude();
+        double top = topRight.getLatitude();
+        double left = botLeft.getLongitude();
+        double right = topRight.getLongitude();
+        String botLine = supervisor.getId()+"bot,"+",polyline,"
+                +bot+","+left+","+bot+","+right;
+        String rightLine = supervisor.getId()+"right,"+",polyline,"
+                +bot+","+right+","+top+","+right;
+        String topLine = supervisor.getId()+"top,"+",polyline,"
+                +top+","+right+","+top+","+left;
+        String leftLine = supervisor.getId()+"left,"+",polyline,"
+                +top+","+left+","+bot+","+left;
+
+        Simulator.instance.getState().getMarkers().add(botLine);
+        Simulator.instance.getState().getMarkers().add(rightLine);
+        Simulator.instance.getState().getMarkers().add(topLine);
+        Simulator.instance.getState().getMarkers().add(leftLine);
+
     }
 
     public float calculateReward() {
@@ -71,14 +98,14 @@ public abstract class LearningAllocator {
 
     }
 
-    private Coordinate calculateEquivalentCoordinate(int x, int y) {
+    public Coordinate calculateEquivalentCoordinate(int x, int y) {
         return new Coordinate( botLeft.getLatitude() + (y * ySquareSpan), botLeft.getLongitude() + (x * xSquareSpan));
     }
 
     public int[] calculateEquivalentGridCell(Coordinate c) {
         return new int[]{
-                (int) Math.floor(((c.getLongitude() - botLeft.getLongitude()) / (xSpan)) * xSteps),
-                (int) Math.floor(((c.getLatitude() - botLeft.getLatitude()) / (ySpan)) * ySteps)
+                (int) Math.floor(((c.getLongitude() - botLeft.getLongitude()) / (X_SPAN)) * xSteps),
+                (int) Math.floor(((c.getLatitude() - botLeft.getLatitude()) / (Y_SPAN)) * ySteps)
         };
     }
 
@@ -149,5 +176,13 @@ public abstract class LearningAllocator {
 
     public void setSubordinates(List<AgentProgrammed> subordinates) {
         this.subordinates = subordinates;
+    }
+
+    public AgentProgrammed getSupervisor() {
+        return supervisor;
+    }
+
+    public void setSupervisor(AgentProgrammed supervisor) {
+        this.supervisor = supervisor;
     }
 }

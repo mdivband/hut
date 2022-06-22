@@ -5,6 +5,15 @@
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
   },
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true,
+    "ranges": true
+  },
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
   "allocationMethod": "maxsum",
   "allocationStyle": "manual",
   "agents": [

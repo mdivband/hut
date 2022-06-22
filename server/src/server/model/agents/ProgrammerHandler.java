@@ -1445,6 +1445,10 @@ public class ProgrammerHandler implements Serializable {
         return agentProgrammer;
     }
 
+    public void teleport(Coordinate myTask) {
+        agent.setCoordinate(myTask);
+    }
+
     /***
      * We use an internal class to make handling positional information easier. Holds location, heading, and whether it
      * is stopped
