@@ -31,6 +31,10 @@ public class QLearningAllocator extends LearningAllocator {
     private int pointer;
     private int stateSize;
 
+    public QLearningAllocator(AgentProgrammed agent) {
+        super(agent);
+    }
+
     public void setup() {
         super.setup();
         xSteps = 64;

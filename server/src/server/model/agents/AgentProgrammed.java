@@ -42,13 +42,14 @@ public class AgentProgrammed extends Agent {
     public void softReset() {
         if (!(this instanceof Hub)) {
             super.softReset();
-            int level = programmerHandler.getAgentProgrammer().getLevel();
-            List<AgentProgrammed> subs = programmerHandler.getAgentProgrammer().getSubordinates();
+            // TODO I think the reassignment of the supervisor and subs is redundant
+            List<AgentProgrammed> subs = programmerHandler.getAgentProgrammer().getLearningAllocator().getSubordinates();
+            AgentProgrammed supervisor = programmerHandler.getAgentProgrammer().getLearningAllocator().getSupervisor();
             LearningAllocator la = programmerHandler.getAgentProgrammer().getLearningAllocator();
             programmerHandler = new ProgrammerHandler(this);
-            programmerHandler.getAgentProgrammer().setLevel(level);
             programmerHandler.getAgentProgrammer().setAllocator(la);
-            programmerHandler.getAgentProgrammer().setSubordinates(subs);
+            programmerHandler.getAgentProgrammer().getLearningAllocator().setSupervisor(supervisor);
+            programmerHandler.getAgentProgrammer().getLearningAllocator().setSubordinates(subs);
             programmerHandler.getAgentProgrammer().setup();
         }
     }
@@ -119,6 +120,23 @@ public class AgentProgrammed extends Agent {
         programmerHandler.completeTask(coordinate);
     }
 
+    public boolean moveTowards(Coordinate myTask) {
+        if (route.isEmpty()) {
+            route.add(myTask);
+        }
+        if (this.adjustHeadingTowardsGoal()) {
+            double distToMove = Math.min(speed / 5, getCoordinate().getDistance(getCurrentDestination()));
+            this.moveAlongHeading(distToMove);
+        }
+        incrementTimeInAir();
+        if (isCurrentDestinationReached()) {
+            route.clear();
+            stop();
+            return true;
+        }
+        return false;
+    }
+
     @Override
     void moveTowardsDestination() {
         //Move agents
@@ -127,9 +145,9 @@ public class AgentProgrammed extends Agent {
 
                 //Align agent, if aligned then moved towards target
                 if(!isStopped() && this.adjustHeadingTowardsGoal()) {
-                    // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
-                    // We also check if we are closer than 1 move step; in which case
-                    double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+                    // Always divide speed by 5, as waitTime = (int) (1000/(gameSpeed * 5)) in Simulator loop
+                    //
+                    double distToMove = Math.min(speed / 5, getCoordinate().getDistance(getCurrentDestination()));
                     this.moveAlongHeading(distToMove);
                     //this.moveAlongHeading(1);
                 }

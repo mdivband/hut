@@ -47,7 +47,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 999999;
+    private static final double gameSpeed = 1000;
     private int stepCount;
     private Random random;
     private String nextFileName = "";
@@ -267,9 +267,7 @@ public class Simulator {
                     Hub hub = state.getHub();
                     synchronized (state.getHub()) {
                         if (hub instanceof AgentHubProgrammed ahp) {
-                            synchronized (ahp) {
-                                ahp.step(state.isFlockingEnabled());
-                            }
+                            ahp.step(state.isFlockingEnabled());
                         } else if (hub instanceof AgentHub ah) {
                             ah.step(state.isFlockingEnabled());
                         }

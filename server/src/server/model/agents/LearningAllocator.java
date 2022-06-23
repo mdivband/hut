@@ -10,6 +10,7 @@ import java.util.List;
 public abstract class LearningAllocator {
     protected List<AgentProgrammed> subordinates;
     protected AgentProgrammed supervisor;
+    private  AgentProgrammed agent;
 
 
     protected int maxReward;
@@ -17,13 +18,19 @@ public abstract class LearningAllocator {
     private Coordinate topRight;
     protected int xSteps;
     protected int ySteps;
-    private double X_SPAN = 0.01;
-    private double Y_SPAN = 0.006;
+    //private double X_SPAN = 0.01;
+    //private double Y_SPAN = 0.006;
+    private double X_SPAN = 0.015;
+    private double Y_SPAN = 0.009;
     private double xSquareSpan;
     private double ySquareSpan;
     private float cellWidth;
 
     protected int counter;
+
+    public LearningAllocator(AgentProgrammed agent) {
+        this.agent = agent;
+    }
 
     public void setup() {
         subordinates = new ArrayList<>();
@@ -51,19 +58,20 @@ public abstract class LearningAllocator {
         maxReward = xSteps * ySteps;
         cellWidth = (float) ((xSquareSpan * 111111));
 
-        Simulator.instance.getState().getMarkers().removeIf(m -> m.contains(supervisor.getId()));
+        //Simulator.instance.getState().getMarkers().removeIf(m -> m.contains(supervisor.getId()));
+        Simulator.instance.getState().getMarkers().removeIf(m -> m.contains(agent.getId()));
 
         double bot = botLeft.getLatitude();
         double top = topRight.getLatitude();
         double left = botLeft.getLongitude();
         double right = topRight.getLongitude();
-        String botLine = supervisor.getId()+"bot,"+",polyline,"
+        String botLine = agent.getId()+"bot,"+",polyline,"
                 +bot+","+left+","+bot+","+right;
-        String rightLine = supervisor.getId()+"right,"+",polyline,"
+        String rightLine = agent.getId()+"right,"+",polyline,"
                 +bot+","+right+","+top+","+right;
-        String topLine = supervisor.getId()+"top,"+",polyline,"
+        String topLine = agent.getId()+"top,"+",polyline,"
                 +top+","+right+","+top+","+left;
-        String leftLine = supervisor.getId()+"left,"+",polyline,"
+        String leftLine = agent.getId()+"left,"+",polyline,"
                 +top+","+left+","+bot+","+left;
 
         Simulator.instance.getState().getMarkers().add(botLine);
@@ -185,4 +193,10 @@ public abstract class LearningAllocator {
     public void setSupervisor(AgentProgrammed supervisor) {
         this.supervisor = supervisor;
     }
+
+    public void clearAssociations() {
+        subordinates.clear();
+        supervisor = null;
+    }
+
 }

@@ -1449,6 +1449,10 @@ public class ProgrammerHandler implements Serializable {
         agent.setCoordinate(myTask);
     }
 
+    public boolean moveTowards(Coordinate myTask) {
+        return agent.moveTowards(myTask);
+    }
+
     /***
      * We use an internal class to make handling positional information easier. Holds location, heading, and whether it
      * is stopped

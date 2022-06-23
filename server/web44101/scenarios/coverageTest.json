@@ -51,6 +51,16 @@
       "lat": 50.931,
       "lng": -1.40925,
       "programmed": true
+    },
+    {
+      "lat": 50.9289,
+      "lng": -1.409,
+      "programmed": true
+    },
+    {
+      "lat": 50.9295,
+      "lng": -1.409,
+      "programmed": true
     }
   ],
   "hazards": [

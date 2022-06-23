@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+	<meta name="author" content="Feng Wu">
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<meta name="viewport"
+	content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width" />
+
+	<title>Reset Page</title>
+
+	<link rel="stylesheet" href="style.css" />
+
+    <script type="text/javascript" src="lib/jquery/jquery-1.9.1.min.js"></script>	
+ 	<script type="text/javascript">
+ 		$(document).ready(function(){
+	 		$("button").click(function() {
+				$.post("/reset");
+
+				 window.history.back()
+			}); 
+ 		});
+	</script>
+
+
+</head>
+<body>
+	<h1 style="text-align: center;"> Reset Server</h1>				
+	<div id="reset_server_e" class="reset_button" style="margin: auto;">
+		<button type="button">Reset Server</button>
+	</div>
+
+</body>
+</html>

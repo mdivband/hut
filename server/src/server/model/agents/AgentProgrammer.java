@@ -2,6 +2,7 @@ package server.model.agents;
 import server.Simulator;
 import server.model.Coordinate;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -15,7 +16,6 @@ public class AgentProgrammer {
 
     // TODO subordinates here, with a method to handle them as reqd
     private Coordinate myTask;
-    private int level = 0;
 
     private LearningAllocator learningAllocator = null;    // Importantly if we are level 1 then we use this for learning and
     // assignment of subordinates; if level 0, we refer to it as our env
@@ -31,35 +31,35 @@ public class AgentProgrammer {
     public void setup() {
         if (a.isHub()) {
             a.setLeader(true);
-        } else if (level == 1) {
+        } else  {
             a.setLeader(true);
             a.setVisual("leader");
-            if (learningAllocator == null) {
-                learningAllocator = new EvolutionaryAllocator();
-                learningAllocator.setSupervisor(a.agent);
-                learningAllocator.setup();
-            }
-
         }
+    }
+
+    public void setupAllocator() {
+        learningAllocator = new EvolutionaryAllocator(a.agent);
+        learningAllocator.setup();
     }
 
     /***
      * Called at every time step (currently 200ms)
      */
-    public void step(){
-        //System.out.println("AP step l=" + level);
-        if (level == 0) {
-            // Do nothing. This is just a follower and will be manually moved by its leader (for now)
-            a.teleport(myTask);
-        } else if (level == 1) {
-            /*
-            if (Simulator.instance.getRandom().nextInt(100) == 0) {
-                gridMove(Simulator.instance.getRandom().nextInt(4));
-                learningAllocator.updateBounds(a.getPosition());
+    public void step() {
+        if (myTask == null) {
+            a.stop();
+        } else {
+            if (a.moveTowards(myTask)) {
+                myTask = null;
             }
+        }
 
-             */
-            learningAllocator.step();
+        // If it's not empty then we are responsible for subordinates so should make a learning step of req'd
+        if (!getSubordinates().isEmpty()) {
+            if (learningAllocator.subordinates.stream().allMatch(Agent::isStopped)) {
+                learningAllocator.updateBounds(a.getPosition());
+                learningAllocator.step();
+            }
         }
     }
 
@@ -99,15 +99,8 @@ public class AgentProgrammer {
     }
 
     public void manualSetTask(Coordinate myTask) {
+        a.resume();
         this.myTask = myTask;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
     }
 
     public LearningAllocator getLearningAllocator() {
@@ -123,13 +116,6 @@ public class AgentProgrammer {
 
     }
 
-    public void addSubordinate(AgentProgrammed ap) {
-        if (level == 1) {
-            learningAllocator.addSubordinate(ap);
-            ap.programmerHandler.getAgentProgrammer().setAllocator(learningAllocator);
-        }
-    }
-
     public void setAllocator(LearningAllocator learningAllocator) {
         this.learningAllocator = learningAllocator;
     }
@@ -141,5 +127,4 @@ public class AgentProgrammer {
     public void setSubordinates(List<AgentProgrammed> subs) {
         learningAllocator.setSubordinates(subs);
     }
-
 }

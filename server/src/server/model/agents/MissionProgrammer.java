@@ -1,23 +1,13 @@
 package server.model.agents;
 
-import deepnetts.data.MLDataItem;
-import deepnetts.data.TabularDataSet;
-import deepnetts.net.FeedForwardNetwork;
-import deepnetts.net.layers.AbstractLayer;
-import deepnetts.net.layers.ConvolutionalLayer;
-import deepnetts.net.layers.MaxPoolingLayer;
-import deepnetts.net.layers.activation.ActivationType;
-import deepnetts.net.loss.LossType;
-import deepnetts.net.train.opt.OptimizerType;
 import deepnetts.util.Tensor;
 import server.Simulator;
 import server.model.Coordinate;
 
-import javax.visrec.ml.data.BasicDataSet;
-import javax.visrec.ml.data.DataSet;
 import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -26,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 300;
+    private final int NUM_STEPS_PER_EPOCH = 1000;
 
     private AgentHubProgrammed hub;
     private ProgrammerHandler programmerHandler;
@@ -52,9 +42,9 @@ public class MissionProgrammer {
 
     private int stateSize;
     private boolean ready = false;
-
     private long epochStartTime;
     private boolean set = false;
+    private AgentHierarchy hierarchy = null;
 
     public MissionProgrammer(AgentHubProgrammed ahp) {
         hub = ahp;
@@ -68,12 +58,21 @@ public class MissionProgrammer {
         } else {
             if (stepCounter < NUM_STEPS_PER_EPOCH) {
                 groupStep();
-                if (stepCounter % (NUM_STEPS_PER_EPOCH / 10) == 0) {
-                    System.out.print((stepCounter / (NUM_STEPS_PER_EPOCH / 100)) + ">");
+                if (agents.stream().allMatch(Agent::isStopped)) {
+                    if (stepCounter % (NUM_STEPS_PER_EPOCH / 10) == 0) {
+                        System.out.print((stepCounter / (NUM_STEPS_PER_EPOCH / 100)) + ">");
+                    }
+                    stepCounter++;
                 }
-                stepCounter++;
             } else {
                 // SOFT RESET
+
+                agents.forEach(a -> {
+                    if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
+                        ((EvolutionaryAllocator) a.programmerHandler.getAgentProgrammer().getLearningAllocator()).performBest();
+                    }
+                });
+
                 double r = calculateReward();
                 scores.add(r);
                 synchronized (this) {
@@ -147,11 +146,14 @@ public class MissionProgrammer {
                     Simulator.instance.getState().getAgents().forEach(a -> {
                         if (a instanceof AgentProgrammed ap && (!(a instanceof Hub))) {
                             agents.add(ap);
-                            if (ap.programmerHandler.getAgentProgrammer().getLevel() == 1) {
-                                ap.programmerHandler.getAgentProgrammer().getLearningAllocator().reset();
-                            }
                         }
                     });
+                    agents.forEach(a -> {
+                        if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
+                            a.programmerHandler.getAgentProgrammer().getLearningAllocator().reset();
+                        }
+                    });
+
                     runCounter++;
                     stepCounter = 0;
 
@@ -161,8 +163,48 @@ public class MissionProgrammer {
         }
     }
 
+    private void addNextAgent(AgentProgrammed ap) {
+        agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
+        hierarchy.addAgent(ap);
+        List<List<AgentProgrammed>> layers = hierarchy.layers;
+        List<AgentProgrammed> top = layers.get(layers.size() - 1);
+        for (int l = layers.size() - 2; l >= 0; l--) {
+            int c = 0;
+            for (AgentProgrammed a : layers.get(l)) {
+                top.get(c).programmerHandler.getAgentProgrammer().getLearningAllocator().addSubordinate(a);
+                a.programmerHandler.getAgentProgrammer().getLearningAllocator().setSupervisor(top.get(c));
+                c++;
+                if (c >= top.size()) {
+                    c = 0;
+                }
+            }
+            top = layers.get(l);
+        }
+    }
+
+    public void handleNextAgent(AgentProgrammed ap) {
+        ap.programmerHandler.getAgentProgrammer().setupAllocator();
+        addNextAgent(ap);
+    }
+
+    private void initialiseLearningAllocators() {
+        agents.forEach(a -> a.programmerHandler.getAgentProgrammer().setupAllocator());
+    }
+
     private void groupSetup() {
-        // TODO Clumsy 1-level for now, in future bin these out to groups of 5 and allocate in groups
+        initialiseLearningAllocators();
+        for (AgentProgrammed ap : agents) {
+            if (hierarchy == null) {
+                hierarchy = new AgentHierarchy(ap);
+            } else {
+                addNextAgent(ap);
+            }
+        }
+
+        ready = true;
+        epochStartTime = System.currentTimeMillis();
+
+        /*
         int level = 1;
         AgentProgrammed leader = null;
         for (AgentProgrammed ap : agents) {
@@ -183,6 +225,8 @@ public class MissionProgrammer {
             }
         }
         updateBounds(leader.getCoordinate());
+
+         */
 
         ready = true;
         epochStartTime = System.currentTimeMillis();
@@ -275,6 +319,57 @@ public class MissionProgrammer {
 
     public int getRunCounter() {
         return runCounter;
+    }
+
+    public static class AgentHierarchy {
+        List<List<AgentProgrammed>> layers = new ArrayList<>();
+
+        public AgentHierarchy(AgentProgrammed a1) {
+            ArrayList<AgentProgrammed> l1 = new ArrayList<>();
+            l1.add(a1);
+            layers.add(l1);
+        }
+
+        public void addAgent(AgentProgrammed toAdd) {
+            addAgent(toAdd, 0);
+        }
+
+        public void addAgent(AgentProgrammed toAdd, int layerIndex) {
+            // Check this layer for saturation
+            // IF this layer is too full:
+            //      Place agent in this layer;
+            //      Promote one to the next layer, using the same process
+            // ELSE:
+            //      Place in this layer
+
+            if (layerIndex == layers.size()) {
+                // Top layer is full; make a new one
+                ArrayList<AgentProgrammed> newLayer = new ArrayList<>();
+                newLayer.add(toAdd);
+                layers.add(newLayer);
+                return;
+            }
+            int layerTargetSize;
+            if (layerIndex + 1 == layers.size()) {
+                // This means there is no layer above. This is the frontier layer so is always max 4 (for allowing
+                //  separate trees), or 1 (for requiring a single top-level agents)
+                layerTargetSize =  1;
+            } else {
+                layerTargetSize = 4 * layers.get(layerIndex + 1).size();
+            }
+
+            if (layers.get(layerIndex).size() < layerTargetSize) {
+                // This layer has free space
+                layers.get(layerIndex).add(toAdd);
+            } else {
+                // This layer is full: place, and promote
+                AgentProgrammed toPromote = layers.get(layerIndex).get(0);
+                layers.get(layerIndex).remove(0);
+                layers.get(layerIndex).add(toAdd);
+                addAgent(toPromote, layerIndex+1);
+            }
+        }
+
     }
 
     public static class ExperienceRecord {

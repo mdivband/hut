@@ -22,16 +22,18 @@ import java.util.*;
 public class EvolutionaryAllocator extends LearningAllocator {
     private final ArrayList<Individual> population = new ArrayList<>();;
 
-    private float LEARNING_RATE = 0.001f;
+    private float LEARNING_RATE = 0.000001f;
     private final int BUFFER_SIZE = 100;
     private final int SAMPLE_SIZE = 20;
     private int populationSize = 100;
 
-    private ArrayList<Integer> indexHistory = new ArrayList<>();
-
     private EvoExpRecord[] buffer;
     private boolean bufferFull = false;
     private int pointer;
+
+    public EvolutionaryAllocator(AgentProgrammed agent) {
+        super(agent);
+    }
 
     public void setup() {
         super.setup();
@@ -96,7 +98,7 @@ public class EvolutionaryAllocator extends LearningAllocator {
         Individual child = crossover(parent1, parent2);
         mutate(child);
         // MAYBE TRAIN ON MINI-BATCH
-        train(child.net);
+        // train(child.net);
 
         // SELECT ACTION USING THIS INDIVIDUAL
         List<Coordinate> config = compute(child);
@@ -105,32 +107,11 @@ public class EvolutionaryAllocator extends LearningAllocator {
         for (int i = 0; i < subordinates.size(); i++) {
             AgentProgrammed ap = subordinates.get(i);
             ap.programmerHandler.manualSetTask(config.get(i));
-            ap.step(true);
+            //ap.step(true);
         }
 
         // RECORD REWARD AND STORE
-        float reward = calculateReward();
-        child.fitness = reward;
-        // Store if better than current buffer average
-        // TODO convert to inductive mean
-        if (bufferFull) {
-            if (reward > Arrays.stream(buffer).mapToDouble(evoExpRecord -> (double) evoExpRecord.reward).average().getAsDouble()) {
-                buffer[pointer] = new EvoExpRecord(getState(), reward);
-                pointer++;
-                if (pointer >= BUFFER_SIZE) {
-                    pointer = 0;
-                    bufferFull = true;
-                }
-            }
-        } else {
-            buffer[pointer] = new EvoExpRecord(getState(), reward);
-            pointer++;
-            if (pointer >= BUFFER_SIZE) {
-                pointer = 0;
-                bufferFull = true;
-            }
-        }
-
+        child.fitness = calculateReward();
         int indexToReplace = populationSize - rankOrderSelection() - 1;
         synchronized (population) {
             population.remove(indexToReplace);
@@ -149,8 +130,6 @@ public class EvolutionaryAllocator extends LearningAllocator {
                 }
             });
         }
-
-
     }
 
     private void train(ConvolutionalNetwork network) {
@@ -256,14 +235,12 @@ public class EvolutionaryAllocator extends LearningAllocator {
     }
 
     private Tensor computeNoise() {
-        float[][][] noise = new float[4][8][8];
-        for (int d=0; d<4; d++) {
+        float[][] noise = new float[8][8];
             for (int i=0; i<8; i++) {
                 for (int j=0; j<8; j++) {
-                    noise[d][i][j] = Simulator.instance.getRandom().nextFloat();
+                    noise[i][j] = Simulator.instance.getRandom().nextFloat();
                 }
             }
-        }
         return new Tensor(noise);
     }
 
@@ -330,25 +307,16 @@ public class EvolutionaryAllocator extends LearningAllocator {
     }
 
     private ConvolutionalNetwork createNetwork() {
-        ConvolutionalNetwork net = ConvolutionalNetwork.builder()
-                .addInputLayer(8, 8, 4)
-                .addConvolutionalLayer(8, 8 , 1, 4)
-                .addConvolutionalLayer(4, 4 , 1, 4)
-                .addConvolutionalLayer(2, 2, 1, 4)
-                .addFullyConnectedLayer(256, ActivationType.LINEAR)
+        return ConvolutionalNetwork.builder()
+                .addInputLayer(8, 8, 1)
+                .addConvolutionalLayer(8, 1)
+                .addConvolutionalLayer(4, 1)
+                .addConvolutionalLayer(2, 1)
+                .addFullyConnectedLayer(64, ActivationType.LINEAR)
                 .addOutputLayer(256, ActivationType.LINEAR)
                 .randomSeed(Simulator.instance.getRandom().nextInt(99999))
                 .lossFunction(LossType.MEAN_SQUARED_ERROR)
                 .build();
-
-        net.getTrainer()
-                .setOptimizer(OptimizerType.SGD)
-                .setBatchSize(99999)
-                .setBatchMode(false)
-                .setMaxError(9999999)
-                .setLearningRate(LEARNING_RATE);
-
-        return net;
     }
 
     public float calculateReward() {
