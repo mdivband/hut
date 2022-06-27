@@ -10,7 +10,7 @@ import java.util.List;
 public abstract class LearningAllocator {
     protected List<AgentProgrammed> subordinates;
     protected AgentProgrammed supervisor;
-    private  AgentProgrammed agent;
+    protected AgentProgrammed agent;
 
 
     protected int maxReward;
@@ -27,6 +27,7 @@ public abstract class LearningAllocator {
     private float cellWidth;
 
     protected int counter;
+    private int level; // level 0 is a bottom level; raising as we move up
 
     public LearningAllocator(AgentProgrammed agent) {
         this.agent = agent;
@@ -37,6 +38,7 @@ public abstract class LearningAllocator {
     }
 
     public void reset() {
+        updateBounds(agent.getCoordinate());
 
     }
 
@@ -45,16 +47,16 @@ public abstract class LearningAllocator {
     public abstract void step();
 
     public void updateBounds(Coordinate position) {
-        double topBound = position.getLatitude() + (Y_SPAN / 2);
-        double botBound = position.getLatitude() - (Y_SPAN / 2);
-        double rightBound = position.getLongitude() + (X_SPAN / 2);
-        double leftBound = position.getLongitude() - (X_SPAN / 2);
+        double topBound = position.getLatitude() + ((level * Y_SPAN) / 2);
+        double botBound = position.getLatitude() - ((level * Y_SPAN) / 2);
+        double rightBound = position.getLongitude() + ((level * X_SPAN) / 2);
+        double leftBound = position.getLongitude() - ((level * X_SPAN) / 2);
 
         botLeft = new Coordinate(botBound, leftBound);
         topRight = new Coordinate(topBound, rightBound);
 
-        xSquareSpan = X_SPAN / xSteps;
-        ySquareSpan = Y_SPAN / ySteps;
+        xSquareSpan = (level * X_SPAN) / xSteps;
+        ySquareSpan = (level * Y_SPAN) / ySteps;
         maxReward = xSteps * ySteps;
         cellWidth = (float) ((xSquareSpan * 111111));
 
@@ -78,7 +80,6 @@ public abstract class LearningAllocator {
         Simulator.instance.getState().getMarkers().add(rightLine);
         Simulator.instance.getState().getMarkers().add(topLine);
         Simulator.instance.getState().getMarkers().add(leftLine);
-
     }
 
     public float calculateReward() {
@@ -112,8 +113,8 @@ public abstract class LearningAllocator {
 
     public int[] calculateEquivalentGridCell(Coordinate c) {
         return new int[]{
-                (int) Math.floor(((c.getLongitude() - botLeft.getLongitude()) / (X_SPAN)) * xSteps),
-                (int) Math.floor(((c.getLatitude() - botLeft.getLatitude()) / (Y_SPAN)) * ySteps)
+                (int) Math.floor(((c.getLongitude() - botLeft.getLongitude()) / (level * X_SPAN)) * xSteps),
+                (int) Math.floor(((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN)) * ySteps)
         };
     }
 
@@ -197,6 +198,38 @@ public abstract class LearningAllocator {
     public void clearAssociations() {
         subordinates.clear();
         supervisor = null;
+    }
+
+    public void setLevel(int l) {
+        this.level = l;
+        if (l == 0) {
+            agent.getProgrammerHandler().setVisual("ghost");
+        } else if (l == 1) {
+            agent.getProgrammerHandler().setVisual("standard");
+        } else if (l == 2) {
+            agent.getProgrammerHandler().setVisual("leader");
+        }
+        updateBounds(agent.getCoordinate());
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    /**
+     * Recursively calls itself to check that each agent in the tree below is stopped
+     * @return
+     */
+    public boolean readyBelow() {
+        return agent.isStopped() && subordinates.stream().allMatch(a -> a.programmerHandler.getAgentProgrammer().getLearningAllocator().readyBelow());
+    }
+
+    protected void tempPrintBounds() {
+        System.out.println("bl = " + botLeft + ", tr = " + topRight + ", xss=" + xSquareSpan);
+    }
+
+    public Coordinate getBotLeft() {
+        return botLeft;
     }
 
 }

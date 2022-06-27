@@ -18,6 +18,7 @@ public class AgentProgrammer {
     private Coordinate myTask;
 
     private LearningAllocator learningAllocator = null;    // Importantly if we are level 1 then we use this for learning and
+    private boolean ready = false;
     // assignment of subordinates; if level 0, we refer to it as our env
 
     public AgentProgrammer(ProgrammerHandler programmerHandler) {
@@ -31,9 +32,6 @@ public class AgentProgrammer {
     public void setup() {
         if (a.isHub()) {
             a.setLeader(true);
-        } else  {
-            a.setLeader(true);
-            a.setVisual("leader");
         }
     }
 
@@ -49,18 +47,20 @@ public class AgentProgrammer {
         if (myTask == null) {
             a.stop();
         } else {
-            if (a.moveTowards(myTask)) {
-                myTask = null;
-            }
+            a.teleport(myTask);
+            myTask = null;
+            //if (a.moveTowards(myTask)) {
+            //    myTask = null;
+            //}
         }
+    }
 
-        // If it's not empty then we are responsible for subordinates so should make a learning step of req'd
-        if (!getSubordinates().isEmpty()) {
-            if (learningAllocator.subordinates.stream().allMatch(Agent::isStopped)) {
-                learningAllocator.updateBounds(a.getPosition());
-                learningAllocator.step();
-            }
-        }
+    public void learningStep(float jointReward) {
+        ((EvolutionaryAllocator) learningAllocator).step(jointReward);
+    }
+
+    public void learningStep() {
+        learningAllocator.step();
     }
 
     public boolean gridMove(int i) {
@@ -100,6 +100,7 @@ public class AgentProgrammer {
 
     public void manualSetTask(Coordinate myTask) {
         a.resume();
+        learningAllocator.updateBounds(myTask);
         this.myTask = myTask;
     }
 

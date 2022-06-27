@@ -30,6 +30,7 @@ public class EvolutionaryAllocator extends LearningAllocator {
     private EvoExpRecord[] buffer;
     private boolean bufferFull = false;
     private int pointer;
+    private Individual currentSolution = null;
 
     public EvolutionaryAllocator(AgentProgrammed agent) {
         super(agent);
@@ -89,6 +90,37 @@ public class EvolutionaryAllocator extends LearningAllocator {
     }
 
     public void step() {
+        step(-1);
+    }
+
+    public void step(float jointReward) {
+        // First train the previous step
+        // RECORD REWARD AND STORE
+        if (currentSolution != null) {
+            if (jointReward == -1) {
+                // If the reward is -1, we are being told to use local reward, not global
+                currentSolution.fitness = calculateReward();
+            }
+            int indexToReplace = populationSize - rankOrderSelection() - 1;
+            synchronized (population) {
+                population.remove(indexToReplace);
+                population.add(currentSolution);
+                // Use an inverse comparator for descending sort (so first elems are best)
+                population.sort(new Comparator<>() {
+                    @Override
+                    public int compare(Individual i1, Individual i2) {
+                        if (i1.fitness.equals(i2.fitness)) {
+                            return 0;
+                        } else if (i1.fitness > i2.fitness) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                });
+            }
+        }
+
         // SELECT 2 AND X-OVER
         int index1 = rankOrderSelection();
         Individual parent1 = population.get(index1);
@@ -109,27 +141,7 @@ public class EvolutionaryAllocator extends LearningAllocator {
             ap.programmerHandler.manualSetTask(config.get(i));
             //ap.step(true);
         }
-
-        // RECORD REWARD AND STORE
-        child.fitness = calculateReward();
-        int indexToReplace = populationSize - rankOrderSelection() - 1;
-        synchronized (population) {
-            population.remove(indexToReplace);
-            population.add(child);
-            // Use an inverse comparator for descending sort (so first elems are best)
-            population.sort(new Comparator<>() {
-                @Override
-                public int compare(Individual i1, Individual i2) {
-                    if (i1.fitness.equals(i2.fitness)) {
-                        return 0;
-                    } else if (i1.fitness > i2.fitness) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                }
-            });
-        }
+        currentSolution = child;
     }
 
     private void train(ConvolutionalNetwork network) {
@@ -262,7 +274,6 @@ public class EvolutionaryAllocator extends LearningAllocator {
                 }
             }
         }
-
         List<Coordinate> coords = new ArrayList<>();
         for (int[] cell : bestCells) {
             coords.add(calculateEquivalentCoordinate(cell[0], cell[1]));
@@ -320,6 +331,8 @@ public class EvolutionaryAllocator extends LearningAllocator {
     }
 
     public float calculateReward() {
+        //return ((AgentHubProgrammed) Simulator.instance.getState().getHub()).missionProgrammer.calculateReward();
+
         // TODO Note that a better system is to use actual circle geometry to find area of coverage. This can be
         //  problematic though, as overlapping circles shouldn't be counted twice and can be tricky to deal with.
         //  Certainly possible, but I'm leaving this for now for the sake of simplicity -WH
