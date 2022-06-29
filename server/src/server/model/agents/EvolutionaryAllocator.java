@@ -167,7 +167,6 @@ public class EvolutionaryAllocator extends LearningAllocator {
 
     private void qTrain(ConvolutionalNetwork net, List<EvoExpRecord> sample) {
         List<MLDataItem> dataItems = new ArrayList<>();
-        Tensor exampleSeed = computeNoise();
         for (EvoExpRecord e : sample) {
             Tensor n = computeNoise();
             Tensor s = flatten(e.state);
@@ -221,24 +220,28 @@ public class EvolutionaryAllocator extends LearningAllocator {
 
 
     private void mutate(Individual child) {
+        //System.out.println("========");
         for (int i=0; i<child.net.getLayers().size(); i++) {
             AbstractLayer layer = child.net.getLayers().get(i);
             if (layer instanceof FullyConnectedLayer || layer instanceof OutputLayer) {
                 float[] values = layer.getWeights().getValues();
                 for (int j = 0; j < values.length; j++) {
-                    if (Simulator.instance.getRandom().nextInt(100) == 0) {
-                        layer.getWeights().getValues()[j] = (Simulator.instance.getRandom().nextFloat() / 10);
+                    if (Simulator.instance.getRandom().nextInt(1000) == 0) {
+                        //System.out.println("mutating w");
+                        layer.getWeights().getValues()[j] = 0.1f - (Simulator.instance.getRandom().nextFloat() / 5);
                     }
                 }
                 float[] biases = layer.getBiases();
                 for (int j = 0; j < biases.length; j++) {
                     if (Simulator.instance.getRandom().nextInt(100) == 0) {
-                        layer.getBiases()[j] = Simulator.instance.getRandom().nextFloat();
+                        //System.out.println("mutating b");
+                        layer.getBiases()[j] = 0.5f - Simulator.instance.getRandom().nextFloat();
                     }
                 }
             } else if (layer instanceof ConvolutionalLayer cl) {
                 for(Tensor t : cl.getFilters()) {
                     if (Simulator.instance.getRandom().nextInt(100) == 0) {
+                        //System.out.println("mutating f");
                         t.randomize();
                     }
                 }

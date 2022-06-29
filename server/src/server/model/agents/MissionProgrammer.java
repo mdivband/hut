@@ -93,6 +93,7 @@ public class MissionProgrammer {
                         + ", total average = " + f.format(scores.stream().mapToDouble(Double::doubleValue).average().getAsDouble())
                         + ", moving average = " + f.format(mvAv)
                         + ", epoch time = " + (epochDuration) + "ms"
+                        + ", num agents = " + agents.size()
                     );
 
                     /*
@@ -103,7 +104,7 @@ public class MissionProgrammer {
                     });
                      */
 
-                    File csvOutputFile = new File("GlobalRewards21AgentsSeq3.csv");
+                    File csvOutputFile = new File("GlobalRewards85Testing.csv");
                     try {
                         FileWriter fw = new FileWriter(csvOutputFile, true);
                         fw.write(runCounter
@@ -142,7 +143,7 @@ public class MissionProgrammer {
     }
 
 
-    private void addNextAgent() {
+    private void regenerateHierarchy() {
         List<List<AgentProgrammed>> layers = hierarchy.layers;
         List<AgentProgrammed> top = layers.get(layers.size() - 1); // This is necessarily a singleton in current config
         top.forEach(a -> a.programmerHandler.getAgentProgrammer().getLearningAllocator().setLevel(layers.size() - 1));
@@ -164,33 +165,39 @@ public class MissionProgrammer {
     }
 
     private void addAgentIfRequired() {
-        if ((runCounter % 3 == 0) && agents.size() < 25) {
-            AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
-                    50.9289,
-                    -1.409,
-                    0);
+        if (runCounter > 0 && runCounter % 1 == 0) {
+            //for (int i=0; i<4; i++) {
+                if (agents.size() < 85) {
+                    AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
+                            50.9289,
+                            -1.409,
+                            0);
 
-            agents.add(ap);
-            ap.programmerHandler.getAgentProgrammer().setupAllocator();
-            agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
-            hierarchy.addAgent(ap);
+                    agents.add(ap);
+                    ap.programmerHandler.getAgentProgrammer().setupAllocator();
+                    agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
+                    hierarchy.addAgent(ap);
+                } else {
+                    agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
+                }
+            //}
         } else {
             agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
         }
-        addNextAgent();
+        regenerateHierarchy();
     }
 
     private void updateBounds() {
-        double topBound = hierarchy.getRoot().getCoordinate().getLatitude() + (((hierarchy.layers.size() - 1) * Y_SPAN) / 2);
-        double botBound = hierarchy.getRoot().getCoordinate().getLatitude() - (((hierarchy.layers.size() - 1) * Y_SPAN) / 2);
-        double rightBound = hierarchy.getRoot().getCoordinate().getLongitude() + (((hierarchy.layers.size() - 1) * X_SPAN) / 2);
-        double leftBound = hierarchy.getRoot().getCoordinate().getLongitude() - (((hierarchy.layers.size() - 1) * X_SPAN) / 2);
+        double topBound = hierarchy.getRoot().getCoordinate().getLatitude() + ((4 * Y_SPAN) / 2);
+        double botBound = hierarchy.getRoot().getCoordinate().getLatitude() - ((4 * Y_SPAN) / 2);
+        double rightBound = hierarchy.getRoot().getCoordinate().getLongitude() + ((4 * X_SPAN) / 2);
+        double leftBound = hierarchy.getRoot().getCoordinate().getLongitude() - ((4 * X_SPAN) / 2);
 
         botLeft = new Coordinate(botBound, leftBound);
         topRight = new Coordinate(topBound, rightBound);
 
-        xSquareSpan = ((hierarchy.layers.size() - 1) * X_SPAN) / xSteps;
-        ySquareSpan = ((hierarchy.layers.size() - 1) * Y_SPAN) / ySteps;
+        xSquareSpan = (4 * X_SPAN) / xSteps;
+        ySquareSpan = (4 * Y_SPAN) / ySteps;
         cellWidth = (float) ((xSquareSpan * 111111));
 
     }
@@ -207,7 +214,7 @@ public class MissionProgrammer {
             } else {
                 agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                 hierarchy.addAgent(ap);
-                addNextAgent();
+                regenerateHierarchy();
             }
         }
 
