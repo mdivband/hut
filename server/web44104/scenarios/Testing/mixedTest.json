@@ -1,0 +1,142 @@
+{
+  "gameId": "Mixed Control Test",
+  "gameDescription": "Contains both programmed and non-programmed agents with communication constraints",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true,
+    "ranges": true
+  },
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
+  "communicationRange": 250.0,
+  "communicationConstrained": true,
+  "uncertaintyRadius": 10,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.9295,
+      "lng": -1.409,
+      "programmed": true
+    },
+    {
+      "lat": 50.9301,
+      "lng": -1.40975,
+      "programmed": true
+    },
+    {
+      "lat": 50.9302,
+      "lng": -1.4095,
+      "programmed": false
+    },
+    {
+      "lat": 50.9303,
+      "lng": -1.40925,
+      "programmed": false
+    },
+    {
+      "lat": 50.9303,
+      "lng": -1.40875,
+      "programmed": true
+    },
+    {
+      "lat": 50.9302,
+      "lng": -1.4085,
+      "programmed": false
+    },
+    {
+      "lat": 50.9301,
+      "lng": -1.40825,
+      "programmed": true
+    },
+    {
+      "lat": 50.9291,
+      "lng": -1.40975,
+      "programmed": true
+    },
+    {
+      "lat": 50.9292,
+      "lng": -1.4095,
+      "programmed": true
+    },
+    {
+      "lat": 50.9293,
+      "lng": -1.40925,
+      "programmed": true
+    },
+    {
+      "lat": 50.9293,
+      "lng": -1.40875,
+      "programmed": true
+    },
+    {
+      "lat": 50.9292,
+      "lng": -1.4085,
+      "programmed": true
+    },
+    {
+      "lat": 50.9291,
+      "lng": -1.40825,
+      "programmed": true
+    }
+
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 0
+    }
+  ],
+  "targets": [
+    {
+      "lat": 50.92993483453923,
+      "lng": -1.4083502511379038,
+      "type": 0
+    },
+    {
+      "lat": 50.92918290193244,
+      "lng": -1.4116303880113037,
+      "type": 0
+    },
+    {
+      "lat": 50.93029188552423,
+      "lng": -1.4125745255845459,
+      "type": 0
+    },
+    {
+      "lat": 50.93117093909728,
+      "lng": -1.4113943536179931,
+      "type": 0
+    },
+    {
+      "lat": 50.93224606665045,
+      "lng": -1.4123277623551758,
+      "type": 0
+    },
+    {
+      "lat": 50.93334145406898,
+      "lng": -1.4108793694871338,
+      "type": 0
+    },
+    {
+      "lat": 50.93258415193955,
+      "lng": -1.4068131406205566,
+      "type": 0
+    },
+    {
+      "lat": 50.93359839306123,
+      "lng": -1.4084975678819092,
+      "type": 0
+    },
+    {
+      "lat": 50.937373017510055,
+      "lng": -1.39948078155528,
+      "type": 0
+    }
+  ]
+}

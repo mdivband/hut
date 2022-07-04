@@ -27,7 +27,7 @@ public class EvolutionaryAllocator extends LearningAllocator {
     private final int SAMPLE_SIZE = 20;
     private int populationSize = 100;
 
-    private EvoExpRecord[] buffer;
+    //private EvoExpRecord[] buffer;
     private boolean bufferFull = false;
     private int pointer;
     private Individual currentSolution = null;
@@ -42,7 +42,7 @@ public class EvolutionaryAllocator extends LearningAllocator {
         ySteps = 8;
         maxReward = xSteps * ySteps;
         counter = 0;
-        buffer = new EvoExpRecord[BUFFER_SIZE];
+        //buffer = new EvoExpRecord[BUFFER_SIZE];
         initialisePopulation();
     }
 
@@ -77,7 +77,6 @@ public class EvolutionaryAllocator extends LearningAllocator {
             ap.programmerHandler.manualSetTask(config.get(i));
             ap.step(true);
         }
-
     }
 
     private void initialisePopulation() {
@@ -100,6 +99,8 @@ public class EvolutionaryAllocator extends LearningAllocator {
             if (jointReward == -1) {
                 // If the reward is -1, we are being told to use local reward, not global
                 currentSolution.fitness = calculateReward();
+            } else {
+                currentSolution.fitness = jointReward;
             }
             int indexToReplace = populationSize - rankOrderSelection() - 1;
             synchronized (population) {
@@ -142,27 +143,6 @@ public class EvolutionaryAllocator extends LearningAllocator {
             //ap.step(true);
         }
         currentSolution = child;
-    }
-
-    private void train(ConvolutionalNetwork network) {
-        // TODO we have to manually check due to this boolean unusually returning true whilst false (probably threading
-        //  or branch prediction caused?)
-        synchronized (this) {
-            if (bufferFull && Arrays.stream(buffer).noneMatch(Objects::isNull)) {
-                qTrain(network, sample());
-            }
-        }
-    }
-
-    private List<EvoExpRecord> sample() {
-        List<EvoExpRecord> sample = new ArrayList<>();
-        while (sample.size() < SAMPLE_SIZE) {
-            EvoExpRecord e = buffer[Simulator.instance.getRandom().nextInt(BUFFER_SIZE)];
-            if (!sample.contains(e)) {
-                sample.add(e);
-            }
-        }
-        return sample;
     }
 
     private void qTrain(ConvolutionalNetwork net, List<EvoExpRecord> sample) {
@@ -220,13 +200,12 @@ public class EvolutionaryAllocator extends LearningAllocator {
 
 
     private void mutate(Individual child) {
-        //System.out.println("========");
-        for (int i=0; i<child.net.getLayers().size(); i++) {
+        for (int i = 0; i < child.net.getLayers().size(); i++) {
             AbstractLayer layer = child.net.getLayers().get(i);
             if (layer instanceof FullyConnectedLayer || layer instanceof OutputLayer) {
                 float[] values = layer.getWeights().getValues();
                 for (int j = 0; j < values.length; j++) {
-                    if (Simulator.instance.getRandom().nextInt(1000) == 0) {
+                    if (Simulator.instance.getRandom().nextInt(100) == 0) {
                         //System.out.println("mutating w");
                         layer.getWeights().getValues()[j] = 0.1f - (Simulator.instance.getRandom().nextFloat() / 5);
                     }
@@ -239,7 +218,7 @@ public class EvolutionaryAllocator extends LearningAllocator {
                     }
                 }
             } else if (layer instanceof ConvolutionalLayer cl) {
-                for(Tensor t : cl.getFilters()) {
+                for (Tensor t : cl.getFilters()) {
                     if (Simulator.instance.getRandom().nextInt(100) == 0) {
                         //System.out.println("mutating f");
                         t.randomize();
@@ -262,10 +241,10 @@ public class EvolutionaryAllocator extends LearningAllocator {
     private List<Coordinate> compute(ConvolutionalNetwork net, Tensor inputSeed) {
         net.setInput(inputSeed);
         float[] output = net.getOutput();
-        int[][] bestCells = new int[4][2];
-        float[] bestValues = {-1f, -1f, -1f, -1f};
+        int[][] bestCells = new int[MissionProgrammer.WIDTH][2];
+        float[] bestValues = {-1f, -1f, -1f};
 
-        for (int d=0; d<4; d++) {
+        for (int d=0; d<MissionProgrammer.WIDTH; d++) {
             for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
                     int equivalentFlatIndex = d*64 + i*8 + j;
@@ -289,8 +268,8 @@ public class EvolutionaryAllocator extends LearningAllocator {
     }
 
     private Tensor flatten(Tensor state) {
-        float[] output = new float[256];
-        for (int d=0; d<4; d++) {
+        float[] output = new float[64*MissionProgrammer.WIDTH];
+        for (int d=0; d<MissionProgrammer.WIDTH; d++) {
             for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
                     int equivalentFlatIndex = d*64 + i*8 + j;
@@ -323,11 +302,10 @@ public class EvolutionaryAllocator extends LearningAllocator {
     private ConvolutionalNetwork createNetwork() {
         return ConvolutionalNetwork.builder()
                 .addInputLayer(8, 8, 1)
-                .addConvolutionalLayer(8, 1)
                 .addConvolutionalLayer(4, 1)
                 .addConvolutionalLayer(2, 1)
                 .addFullyConnectedLayer(64, ActivationType.LINEAR)
-                .addOutputLayer(256, ActivationType.LINEAR)
+                .addOutputLayer(64 * MissionProgrammer.WIDTH, ActivationType.LINEAR)
                 .randomSeed(Simulator.instance.getRandom().nextInt(99999))
                 .lossFunction(LossType.MEAN_SQUARED_ERROR)
                 .build();

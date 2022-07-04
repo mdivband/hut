@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Camera</title>
+    <meta charset="utf-8">
+    <style type="text/css">
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+      
+      div.labels {
+		color: #222;
+		padding: 2px;
+		cursor: pointer;
+		font-size: 14px;
+		font-weight: bold;
+		text-align: center;
+		white-space: nowrap;
+		background-color: rgba(255, 255, 255, 0.75);
+	  }
+      
+      .gmnoprint a, .gmnoprint span {
+        display:none;
+      }
+      
+      .gmnoprint div {
+        background:none !important;
+      }
+      
+      img[src="http://maps.gstatic.com/mapfiles/api-3/images/google_white2.png"], a[href^="http://maps.google.com/maps"] {
+        display:none !important;
+      }
+    </style>
+    <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script type="text/javascript" src="lib/map/google/markerwithlabel_packed.js"></script>
+    <script type="text/javascript" src="lib/backbone/underscore-1.4.4.min.js"></script>
+    <script type="text/javascript" src="lib/jquery/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/jquery.noty.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/themes/default.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/layouts/bottomLeft.js"></script>
+    <script type="text/javascript">
+    	var args = {};
+    	try {
+    		var str = window.location.search.substring(1);
+    		args = JSON.parse('{"' + decodeURI(str).
+						replace(/"/g, '\\"').
+						replace(/&/g, '","').
+						replace(/=/g,'":"') + 
+			'"}');
+    	} catch (e) {}
+    
+	    var map;
+
+	    function initialize() {
+	      var zoom = 19;
+	      var lat = args['lat'] || 36.964645;
+	      var lng = args['lng'] || -122.01523;
+	      
+	      var mapOptions = {
+	        zoom: 19,
+	        tilt: 45,
+	        heading: 90,
+            draggable: false,
+            scrollwheel: false, 
+            disableDoubleClickZoom: true,
+	        disableDefaultUI: true,
+	        center: new google.maps.LatLng(lat, lng),
+	        mapTypeId: google.maps.MapTypeId.SATELLITE
+	      };
+	      map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+     
+	      update_agent();
+
+	    }
+
+
+
+	    function update_agent()	{
+	    	$.getJSON("/state.json", function(data) {
+	    		var id = args['id'];
+	    		if (map && data && data.agents && id) {
+	    			var coord, heading, altitude;
+	    			for (var i = 0; i < data.agents.length; ++i) {
+	    				if (data.agents[i].id === id) {
+	    					coord = data.agents[i].coordinate;
+	    					heading = data.agents[i].heading;
+	    					altitude = data.agents[i].altitude;
+	    					break;
+	    				}
+	    			}
+	    			
+	    			if (coord) {
+	    				map.setCenter(new google.maps.LatLng(coord.latitude, coord.longitude));
+	    				map.setHeading(heading * 180.0 / Math.PI);
+	    				map.setZoom(19);
+	    			}
+	    		}
+	    			    		console.log("hello");
+
+	    		if (map && data && data.game_id) {
+	    			if (data.game_id != window.game_id) {
+	    				//window.game_id = data.game_id;
+	    				update_tasks(map);
+	    				 // set up target on small screen 
+				     //	window.setTimeout(function(){ addTargets(map); },800);	 
+	    			}
+	    		}
+	    	}).done(function() {
+	    		//console.log("connect to server done.");
+	    	}).fail(function() {
+	    		console.log("connect to server failed.");
+	    	}).always(function() {
+	    		window.setTimeout(update_agent, 400);
+	    	});
+	    }
+	    
+	    function update_tasks() {
+
+	    	var markers = [];
+	        // $.getJSON("/jsonp?url=holt.mrl.nott.ac.uk:49992/game/" + game_id + "/status.json?task_only=true", function(data) {
+	        //     if (!data.tasks || data.tasks.length == 0) {
+	        //         console.log("status.json: task is empty.");
+	        //         console.log("checkout: http://holt.mrl.nott.ac.uk:49992/game/" + game_id + "/status.json?task_only=true");
+	        //     }
+	        //     var size = target_size; 
+	        //     _.each(data.tasks, function(val) {
+	        //         var icon = new google.maps.MarkerImage(
+	        //             "http://holt.mrl.nott.ac.uk:49992/img/task_icon" + (val.type+1) + ".png",
+	        //             new google.maps.Size(size,size), null, null, new google.maps.Size(size,size));
+	        //         var marker = new MarkerWithLabel({
+	        //         	position: new google.maps.LatLng(val.latitude, val.longitude),
+	        //         	labelStyle: {opacity: 1.0},
+	        //             labelAnchor: new google.maps.Point(12.5, -5),
+	        //         	icon: icon,
+	        //         	id: val.id,
+	        //         	size: size,
+	        //         	map: map
+	        //         });
+	        //         google.maps.event.addListener(marker, 'click', function() {
+	        //         	this.labelClass = "labels";
+	        //             this.labelContent = val.id;
+	        //             google.maps.event.trigger(this, "labelclass_changed");
+	        //             google.maps.event.trigger(this, "labelcontent_changed");
+	                    
+	        //         	console.log("click " + val.id);
+	        //             $.post("http://holt.mrl.nott.ac.uk:49992/game/" + game_id + "/find_target", '{"target_id":' + val.id + '}', function(str) {
+         //                    if (str) {
+         //                        var data = $.parseJSON(str);
+         //                        if (data.state === "ok") {
+         //                            pop_text(val.id + ": target submitted", 2, {type: "information"});
+         //                        } else if (data.state === "error") {
+         //                           	pop_text(val.id + ": " + data.msg, 2, {type: "error"});
+         //                        }
+         //                    }
+	        //             }).fail(function() {
+	        //                 pop_text(val.id + ": server failed", 2, {type: "error"});
+	        //             });
+	        //         });
+	        //         markers.push(marker);
+	        //     });
+	        // }).fail(function() {
+	        //     console.log("load status.json failed.");
+	        // });
+
+	        google.maps.event.addListener(map, 'zoom_changed', function() {
+	            var zoom = map.getZoom();
+	            if (zoom != 19) {
+	                map.setZoom(19);
+	            }
+
+	            var defZoom = 19;
+	            _.each(markers, function(marker) {
+	                var size = Math.round(marker.size*Math.pow(2,zoom-defZoom));
+	                marker.setIcon(new google.maps.MarkerImage(marker.getIcon().url, null, null, null,
+	                        new google.maps.Size(size, size)));
+	            });
+	        });
+	    }
+	    
+	    function pop_text(text, timeout, options) {
+			if (timeout && timeout >= 0) {
+				timeout = timeout * 1000;
+			} else {
+				timeout = false;
+			}
+			
+			options = options || {};
+			var type = options.type || 'alert';
+			var layout = options.layout || 'bottomLeft';
+			
+			noty({ text: text, timeout: timeout, type: type, layout: layout });
+	    }
+	
+	    google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+    </head>
+  <body>
+    <div id="map-canvas"></div>
+  </body>
+</html>

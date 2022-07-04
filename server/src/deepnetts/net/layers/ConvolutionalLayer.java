@@ -201,7 +201,7 @@ public final class ConvolutionalLayer extends AbstractLayer {
         for (int inRow = 0; inRow < inputs.getRows(); inRow += stride) { 
             outCol = 0; 
 
-            for (int inCol = 0; inCol < inputs.getCols(); inCol += stride) { 
+            for (int inCol = 0; inCol < inputs.getCols(); inCol += stride) {
                 outputs.set(outRow, outCol, ch, biases[ch]); 
 
                 for (int fz = 0; fz < filterDepth; fz++) { 

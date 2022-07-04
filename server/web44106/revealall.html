@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+	<meta name="author" content="Yukki Ikuno">
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<meta name="viewport"
+	content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width" />
+
+	<title>Reveal ALL Targets</title>
+
+    <script type="text/javascript" src="lib/jquery/jquery-1.9.1.min.js"></script>	
+    <script type="text/javascript" src="lib/backbone/underscore-1.4.4.min.js"></script>
+    <script type="text/javascript" src="lib/multiview/StateCache.js"></script>  
+
+
+	<script type="text/javascript" src="lib/jquery/noty/jquery.noty.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/themes/default.js"></script>x
+    <script type="text/javascript" src="lib/jquery/noty/layouts/bottomLeft.js"></script>
+
+	<script type="text/javascript" src="lib/prov/provapi.js"></script>
+	<script type="text/javascript" src="lib/prov/prov.js"></script>
+	<script type="text/javascript" src="lib/otherservice/PostService.js"></script>
+
+ 	<script type="text/javascript"> 	
+ 		var api = new $.provStoreApi({ username: 'atomicorchid', key: '2ce8131697d4edfcb22e701e78d72f512a94d310' });
+		var ps = PostService();
+ 	 	var state = new StateCache();
+ 		state.start();
+ 		var game_id, provdoc;
+ 		var data;
+ 		var currentdata = function (){
+		 		var r = $.Deferred();
+				setTimeout(function() {
+ 				game_id = state.get().game_id;	
+ 		 		data = state.get().targets; 
+ 		 		provdoc = state.get().prov_doc;
+ 		 		r.resolve();
+ 				}, 500);
+ 			return r; }
+
+		function pop_text(text, timeout, options) {
+			if (timeout && timeout >= 0) {
+				timeout = timeout * 1000;
+			} else {
+				timeout = false;
+			}
+
+			options = options || {};
+            var type = options.type || 'alert';
+            var layout = options.layout || 'bottomLeft';
+            
+            noty({ text: text, timeout: timeout, type: type, layout: layout });
+        }  
+
+
+	////////////////////// Main Code /////////////////////////////////
+ 		$(document).ready(function(){
+	 		$("button").click(function() {
+	 			if(window.confirm("Do you want to annotate all targets?")){
+	 				// reveal function
+	 			currentdata().done(function(){	
+					$.getJSON('targets_6_raw.json', function(d){
+		 					raw_data = d;
+		 				}).done(function(){
+			 				_.each(raw_data, function(raw_d){
+			 					_.each(data, function(cur_d){
+			 						if(raw_d[0] == parseInt(cur_d.id)){
+			 							if(cur_d.targetType == "-1"){
+			 								ps.postPROV(api, raw_d[0], raw_d[3], cur_d.prov_version, game_id, provdoc, 'uav_silver_commander');
+											ps.postPrePROV(raw_d[0], raw_d[3], cur_d.prov_version, game_id, raw_d[1], raw_d[2]);	
+											ps.postAO(raw_d[0], raw_d[3], game_id);
+			 								$.post("/targets/" + raw_d[0], {
+                                                type: raw_d[3]
+											});
+											//console.log(raw_d[0]);
+											//console.log(raw_d[3]);
+											//window.history.back();
+			 							}
+			 						}
+			 					});
+		 					});
+		 				});
+	 			});	
+	 			}
+				
+			}); 
+ 		});
+	</script>
+
+
+
+</head>
+<body>
+	<h1 style="text-align: center; colour: red;"> Reveal ALL Targets</h1>				
+	<div id="reset_server_e" class="reset_button" style="margin: auto; text-align:center;">
+		<button type="button">Reveal all targets</button>
+	</div>
+
+</body>
+</html>

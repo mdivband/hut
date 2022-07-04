@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Camera</title>
+    <meta charset="utf-8">
+    <style type="text/css">
+        html,
+        body {
+            height: 100%;
+            margin: 0px;
+            padding: 0px
+        }
+        .title {
+            background: #ffffff;
+            height: 20px;
+            width: 150px;
+            color: #000000;
+            float: left;
+            top: 0px;
+        }
+        .selected {
+            border: red solid 4px;
+        }
+        #map-canvas {
+            height: 95%;
+        }
+        #action-bar {
+            height: 5%;
+            width: 100%;
+        }
+        #map-containner {
+            height: 95%;
+            width: 100%;
+        }
+        .map-div {
+            position: relative;
+            background-color: "#FF0000" !important;
+            border-style: solid;
+            border-width: 2px;
+            text-align: center;
+            color: black;
+            font-size: 2;
+            font-family: Tahoma, Geneva, sans-serif;
+        }
+        .map {
+            position: absolute;
+        }
+        .flag {
+            position: absolute;
+            background: url("icons/flag_up.png");
+            display: inline-block;
+            padding: 0 0 0 0px;
+            bottom: 0px;
+            left: 0px;
+            width: 35px;
+            height: 35px;
+            z-index: 10;
+        }
+        .mainFlag {
+            position: absolute;
+            background: url("icons/flag_up.png");
+            display: inline-block;
+            padding: 0 0 0 0px;
+            bottom: 0px;
+            left: 327px;
+            width: 35px;
+            height: 35px;
+            z-index: 10;
+        }
+        .flagHover {
+            background: url("icons/flag_over.png");
+        }
+        .flagSelected {
+            background: url("icons/flag_down.png");
+        }
+        .sidebar {
+            display: inline;
+            padding-right: 2px;
+            padding-left: 2px;
+        }
+        .main-div {
+            display: inline;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+        div.labels {
+            color: #222;
+            padding: 2px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            background-color: rgba(255, 255, 255, 0.75);
+        }
+        .gmnoprint a,
+        .gmnoprint span {
+            display: none;
+        }
+        .gmnoprint div {
+            background: none !important;
+        }
+        .battery{
+            position:absolute;
+        right:0;
+        top:0;
+        width:30px;
+        }
+        
+        img[src="http://maps.gstatic.com/mapfiles/api-3/images/google_white2.png"],
+        a[href^="http://maps.google.com/maps"] {
+            display: none !important;
+        }
+    </style>
+    <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script type="text/javascript" src="lib/map/google/markerwithlabel_packed.js"></script>
+    <script type="text/javascript" src="lib/backbone/underscore-1.4.4.min.js"></script>
+    <script type="text/javascript" src="lib/jquery/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/jquery.noty.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/themes/default.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/layouts/bottomLeft.js"></script>
+    <script type="text/javascript" src="lib/multiview/StateCache.js"></script>
+    <script type="text/javascript" src="lib/map/google/maplabel.js"></script>
+
+    <script type="text/javascript" src="lib/prov/provapi.js"></script>
+    <script type="text/javascript" src="lib/prov/prov.js"></script>
+    <script type="text/javascript" src="lib/otherservice/PostService.js"></script>
+    
+
+    
+    </head>
+    
+    <script type="text/javascript">
+
+    /**************************************************************************************************************************/
+    /*                                               -------------------------                                                */
+    /*                                               | CODE STRUCTURE - INFO |                                                */
+    /*                                               -------------------------                                                */
+    /*                                                                                                                        */
+    /*       To ensure tasks and targets pervade across all maps in multiview.html, multiple data structures are used.        */
+    /*  The 'targets' array holds one marker per target per agent - so for 3 targets and 3 agents, 'targets' holds 9 markers. */
+    /* Each of these has ids indicating which target it represents, along with which agent it is visible to. So for 3 targets */
+    /*   and 3 agents, there will be 3 targets with the same target id, each with a different agent id (one for each agent).  */
+    /*                  This is the same for the 'tasks' array, which represent tasks as opposed to targets.                  */
+    /*                                                                                                                        */
+    /*      To display these same targets and tasks on the main camera view, we then have 'mainTargets' and 'mainTasks'.      */
+    /*  These contain a single marker for each target/task, as they only need to be displayed on a single map (the main map). */
+    /*              When the main view is changed, so too do the bounds within which we check for visible tasks.              */
+    /*    In the main view, this check needs only search through 'mainTargets' and 'mainTasks', finding those in the scope    */
+    /*                                           of the camera and displaying them.                                           */
+    /*                                                                                                                        */
+    /* To link the main camera view, the last map in the 'maps' array has a link value, indicating which agent it is showing. */
+    /*         To load the main view, this link value is checked and the map for the corresponding agent is assigned.         */
+    /*  Clicking on other camera views changes this link value, and such updates which agents is displayed for the main view  */
+    /*                                                                                                                        */
+    /**************************************************************************************************************************/
+
+
+
+        var state = new StateCache();
+        state.start();
+
+        var agents = [];
+        var titles = [];
+        var flags = [];
+        var maps = [];
+        var targets = [];
+        var mainTargets = [];
+        var circles = [];
+        var mainCircles = [];
+        var tasks = [];
+        var mainTasks = [];
+
+        var map_height = 100;
+
+        var game_id, provdoc;
+
+        var api = new $.provStoreApi({ username: 'atomicorchid', key: '2ce8131697d4edfcb22e701e78d72f512a94d310' });
+        var ps = PostService();
+
+        var label = new MapLabel({
+            map: null,
+            text: "agent-1",
+            position: null,
+            fontSize: 14
+        });
+
+        var infowindow = new google.maps.InfoWindow({
+            content: null,
+            id: null
+        });
+
+        window.setInterval(function(){ update_agent(); },200);
+
+        this.setTimeout(function() {
+            this.initialise();
+        }, 200);
+
+        function initialise() {
+            var data = state.get();
+            data.agents.sort(compare);
+
+            var iw = document.createElement("div");
+            var htmlElement = $("#info_window");
+
+            iw.innerHTML = htmlElement.html();
+            infowindow.setContent(iw);
+
+            google.maps.event.addListener(infowindow, 'domready', function() {
+                $(iw).on("click", "#target_update", function() {
+                    if ($("#target_list").find('option:selected').val() != null) {
+                        var icon, num;
+                        var p_version = get_prover(infowindow.id);
+                        var targetType = parseInt($("#target_list").find('option:selected').val());
+                        switch(parseInt($("#target_list").find('option:selected').val())) {
+                            case 0: // water
+                                icon = "icons/water.png";
+                                num = 0;
+                                break;
+                            case 1: //infra
+                                icon = "icons/infra.png";
+                                num = 1;
+                                break;
+                            case 2: // medical 
+                                icon = "icons/medical.png";
+                                num = 2;
+                                break;
+                            case 3: //crime
+                                icon = "icons/crime.png";
+                                num = 3
+                                break;
+                            case 4: //invalid
+                                icon = "icons/invalid.png";
+                                num=-1;
+                                break;
+                        }
+                        var obj = get_prover(infowindow.id);
+                        if(obj.type == -1){
+                            ps.postPROV(api, infowindow.id, num, obj.version, game_id, provdoc, 'uav_silver_monitor_commander', false);
+                        }else{
+                            ps.postPROV(api, infowindow.id, num, obj.version, game_id, provdoc, 'uav_silver_monitor_commander', true);
+                        }
+                        ps.postPrePROV(infowindow.id, num, obj.version, game_id, obj.lat, obj.lng);
+                        ps.postAO(infowindow.id, num, game_id);
+                        updateIcons(icon, targets);
+                        updateIcons(icon, mainTargets);
+
+                        $.post("/targets/" + infowindow.id, {
+                            type: targetType
+                        });
+
+                        infowindow.close();
+                    }
+                });
+                $(iw).on("click", "#target_delete", function() {
+                    if (confirm("Are you sure you want to delete this target?")) {
+                        $.ajax({
+                            url: "/targets/" + infowindow.id,
+                            type: 'DELETE'
+                        });
+                        removeTarget(infowindow.marker);
+                        ps.postPROV(api, infowindow.id, -1, obj.version, game_id, provdoc, 'uav_silver_monitor_commander', false);
+                        ps.postPrePROV(infowindow.id, -1, obj.version, game_id, obj.lat, obj.lng);
+                        ps.postAO(infowindow.id, -1, game_id);
+                        infowindow.close();
+                    }
+                });
+            });
+
+            for (var i = 0; i < data.agents.length; i++) {
+                var outer_div = $('<div>', {
+                    id: "outer_div_" + data.agents[i].id,
+                    height: ((map_height / Math.ceil(data.agents.length/2)) - 0.4) + "%",
+                    width: "100%",
+                    class: "map-div"
+                });
+
+                var map_div = $('<div>', {
+                    id: "map_div_" + data.agents[i].id,
+                    height: "93%",
+                    width: "100%",
+                    class: "map"
+                });
+
+                var div;
+                if (i < Math.ceil(data.agents.length / 2)) { div = $("#sidebar"); } 
+                    else { div = $("#sidebar2"); }
+
+                var title_div = $('<div>', {
+                    id: "title_div_" + data.agents[i].id,
+                    height: "7%",
+                    width: "100%",
+                    text: data.agents[i].id
+                });
+
+                titles.push(title_div);
+
+                var flagButton = $('<input />', {
+                    type: 'button',
+                    id: "flag_" + data.agents[i].id,
+                    name: "flag_" + data.agents[i].id,
+                    class: "flag"
+                });
+
+                flags.push(flagButton);
+
+                outer_div.append(title_div);
+                outer_div.append(map_div);
+                outer_div.append(flagButton);
+
+                div.append(outer_div);
+
+                 maps.push({
+                    id: "map_div_" + data.agents[i].id,
+                    div: map_div,
+                    map: create_map(data.agents[i].id),
+                    link: null
+                });
+
+                if (data.agents[i].id == "agent-1") {
+                   outer_div.addClass("selected");
+                }
+
+                outer_div.bind("click", function(data) {
+                    maps[maps.length-1].link = data.currentTarget.id.split("_")[2];
+                    $("#sidebar").children().removeClass("selected");
+                    $("#sidebar2").children().removeClass("selected");
+                    $(data.currentTarget).addClass("selected");
+                    $.post("/logger",{actor:"silver-monitor", msg:"MultivewMainMonitor:"+data.currentTarget.id.split("_")[2]});
+                    //Link main view flag status to selected view flag status
+                    for (var i = 0; i < flags.length; ++i) {
+                        if (flags[i].get(0).id.split("_")[1] == maps[maps.length - 1].link) {
+                            if (flags[i].hasClass("flagSelected")){
+                                flags[flags.length - 1].addClass("flagSelected");
+                            }else{ 
+                                flags[flags.length - 1].removeClass("flagSelected");
+                            }
+                        }
+                    }
+                });
+            }
+            var main = $('<div>', {
+                id: "main",
+                height: "100%",
+                width: "100%",
+                class: "map-div"
+            });
+
+            var flagButtonMain = $('<input />', {
+                type: 'button',
+                id: "flag_main",
+                name: "flag_main",
+                class: "mainFlag"
+            });
+
+            $("#main_view").append(main);
+            $("#main_view").append(flagButtonMain);
+
+            flags.push(flagButtonMain);
+            flagButtonMain.css("left", $("#sidebar").width() + 8);
+
+            maps.push({
+                id: "main",
+                div: main,
+                map: create_map("main"),
+                link: "agent-1"
+            });
+
+            for (var i = 0; i < data.targets.length; i++) {
+                mainTargets.push(new google.maps.Marker({
+                    id: data.targets[i].id,
+                    map: maps[maps.length - 1].map,
+                    position: new google.maps.LatLng(data.targets[i].coordinate.latitude, data.targets[i].coordinate.longitude),
+                    icon: "icons/target.png"
+                }));
+
+                mainCircles.push(new google.maps.Circle({
+                    id: data.targets[i].id,
+                    map: maps[maps.length - 1].map,
+                    center: new google.maps.LatLng(data.targets[i].coordinate.latitude + 0.000022, data.targets[i].coordinate.longitude),
+                    radius: 50,
+                    strokeOpacity: 0.01,
+                }));
+
+                for (var j = 0; j < data.agents.length; j++) {
+                    var map = null;
+                    for (var k = 0; k < maps.length; k++) {
+                        if (maps[k].id.split("_")[2] == data.agents[j].id) {
+                            map = maps[k].map;
+                        }
+                    }
+                    targets.push(new google.maps.Marker({
+                        id: data.targets[i].id,
+                        map: map,
+                        position: new google.maps.LatLng(data.targets[i].coordinate.latitude, data.targets[i].coordinate.longitude),
+                        icon: "icons/target.png",
+                        agent: data.agents[j].id
+                    }));
+
+                    circles.push(new google.maps.Circle({
+                        id: data.targets[i].id,
+                        map: map,
+                        center: new google.maps.LatLng(data.targets[i].coordinate.latitude + 0.00009, data.targets[i].coordinate.longitude),
+                        radius: 50,
+                        strokeOpacity: 0.01,
+                        agent: data.agents[j].id
+                    }));
+                    }
+            }
+
+            for (var i = 0; i < mainTargets.length; ++i) {
+               addClickFunction(mainTargets[i]);
+            }
+            game_id = data.game_id; 
+
+            for (var i = 0; i < data.agents.length + 1; ++i) {
+                if (data.agents[i] != null) addButtonToggle(data.agents[i].id);
+                    else addButtonToggle(null);
+            }
+
+            for (var i = 0; i < mainCircles.length; ++i) {
+                addMouseEvents(mainCircles[i]);
+            }
+        }
+
+    function get_prover(targetid){
+        var data = state.get();
+        var version, t_type, obj;
+        _.each(data.targets, function(t){
+            if(t.id == targetid){
+                console.log(t);
+                version = t.prov_version;
+                t_type = t.targetType;
+                obj = { version: version, 
+                    type: t_type,
+                    lat: t.coordinate.latitude,
+                    lng: t.coordinate.longitude };
+            }
+        });
+        return obj;
+    }
+
+        function addMouseEvents(circle) {
+            google.maps.event.addListener(circle, 'mouseover', function() {
+                for (var i = 0; i < mainTargets.length; ++i) {
+                    if (mainTargets[i].id == circle.id) {
+                        mainTargets[i].setOptions({opacity: 0.2});
+                    }
+                }
+            });
+
+            google.maps.event.addListener(circle, 'mouseout', function() {
+                for (var i = 0; i < mainTargets.length; ++i) {
+                    if (mainTargets[i].id == circle.id) {
+                        mainTargets[i].setOptions({opacity: 1});
+                    }
+                }
+            });
+        }
+
+        function addButtonToggle(agentId) {
+            if (agentId != null) {
+                for (var i = 0; i < flags.length; ++i) {
+                    if (flags[i].get(0).id.split("_")[1] == agentId) {
+                        var index = i;
+                        flags[i].click(function() {
+                            if (flags[index].hasClass("flagSelected")) {
+
+                                flags[index].removeClass("flagSelected");
+                                postFlag(agentId,false);
+                            } else {
+                                flags[index].addClass("flagSelected");
+                                postFlag(agentId,true);
+                            }
+                        });
+                    }
+                }
+            } else {
+                flags[flags.length - 1].click(function() {
+                    for (var i = 0; i < flags.length; ++i) {
+                        if (flags[i].get(0).id.split("_")[1] == maps[maps.length - 1].link) {
+                            if (flags[flags.length - 1].hasClass("flagSelected")) {
+                                flags[flags.length - 1].removeClass("flagSelected");
+                                flags[i].removeClass("flagSelected");
+                                postFlag(flags[i].get(0).id.split("_")[1], false);
+                            } else {  
+                                flags[flags.length - 1].addClass("flagSelected");
+                                flags[i].addClass("flagSelected");
+                                postFlag(flags[i].get(0).id.split("_")[1], true);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function postFlag(agentid, val){
+            console.log(agentid +" and "+ val);
+            // $.post("/agent_flag", {
+            //                 id: agentid,
+            //                 flag: val
+            //             });
+            $.post("/logger",{actor:"silver-monitor", msg:"Flagged:"+val+",id:"+agentid});
+        }
+
+        function compare(a,b) {
+          if (a.id < b.id) return -1;
+          if (a.id > b.id) return 1;
+          return 0;
+        }
+
+        function addClickFunction(marker) {
+            google.maps.event.addListener(marker, 'click', function() {
+                infowindow.open(marker.map, marker);
+                infowindow.setOptions({
+                    id: marker.id,
+                    marker: marker
+                });
+            });
+        }
+
+        function removeTarget(target) {
+            for (var i = 0; i < targets.length; ++i) {
+                if (targets[i].id == target.id) {
+                    targets[i].setMap(null);
+                }
+            }
+            target.setMap(null);
+        }
+
+        function updateIcons(icon, markers) {
+            for (var i = 0; i < markers.length; ++i) {
+                if (markers[i].id == infowindow.id) {
+                    markers[i].setOptions({
+                        icon: icon
+                    });
+                }
+            }
+        }
+
+        function update_agent() {
+            var data = state.get();
+            provdoc = data.prov_doc;
+
+            if (maps && data && data.agents) {
+                agents = data.agents;
+
+                updateFlags(data.agents);
+                clearMarkers(mainTasks);
+                clearMarkers(tasks);
+                mainTasks = [];
+                tasks = [];
+
+                for (var i = 0; i < data.tasks.length; i++) {
+
+                    /**-------------- IF TASK IS A REGION --------------**/
+                    if (data.tasks[i].nw) {
+                        var position = placeRegionMarker(data.agents, data.tasks[i], data.tasks[i].agents.length);
+                        var corner;
+
+                        if (data.tasks[i].agents.length == 2) {
+                            var thisAgent;
+                            for (var x = 0; x < agents.length; x++) {
+                                if (agents[x].id == data.tasks[i].agents[1]) thisAgent = agents[x];
+                            }
+                            corner = thisAgent.route[0];
+                        }
+
+                        //Add a marker for either top left (no agents) or corner assigned to first agent
+                        mainTasks.push(new google.maps.Marker({
+                            id: data.tasks[i].id,
+                            draggable: false,
+                            raiseOnDrag: false,
+                            map: null,
+                            position: position,
+                            icon: "icons/rectangle_red.png",
+                            region: true
+                        }));
+
+                        //Add another marker if 2 agents are assigned
+                        if (data.tasks[i].agents.length == 2) {
+                            mainTasks.push(new google.maps.Marker({
+                                id: data.tasks[i].id,
+                                draggable: false,
+                                raiseOnDrag: false,
+                                map: null,
+                                position: new google.maps.LatLng(corner.latitude, corner.longitude),
+                                icon: "icons/rectangle_red.png",
+                                region: true
+                            }));
+                        }
+
+                        //Add a marker for each other agent, so they can see other tasks
+                        for (var j = 0; j < agents.length; j++) {
+                            tasks.push(new google.maps.Marker({
+                                id: data.tasks[i].id,
+                                draggable: false,
+                                raiseOnDrag: false,
+                                map: null,
+                                position: position,
+                                agent: agents[j].id,
+                                icon: "icons/rectangle_red.png",
+                                region: true
+                            }));
+
+                            //Add second marker here, too
+                            if (data.tasks[i].agents.length == 2) {
+                                tasks.push(new google.maps.Marker({
+                                    id: data.tasks[i].id,
+                                    draggable: false,
+                                    raiseOnDrag: false,
+                                    map: null,
+                                    position: new google.maps.LatLng(corner.latitude, corner.longitude),
+                                    agent: agents[j].id,
+                                    icon: "icons/rectangle_red.png",
+                                region: true
+                                }));
+                            }
+                        }
+
+                    /**-------------- IF NOT A REGION --------------**/ 
+                    } else {
+                        mainTasks.push(new google.maps.Marker({
+                            id: data.tasks[i].id,
+                            draggable: false,
+                            raiseOnDrag: false,
+                            map: null,
+                            position: new google.maps.LatLng(data.tasks[i].coordinate.latitude, data.tasks[i].coordinate.longitude),
+                            icon: "icons/marker.png",
+                            region: false
+                        }));
+
+                        for (var j = 0; j < agents.length; j++) {
+                            tasks.push(new google.maps.Marker({
+                                id: data.tasks[i].id,
+                                draggable: false,
+                                raiseOnDrag: false,
+                                map: null,
+                                position: new google.maps.LatLng(data.tasks[i].coordinate.latitude, data.tasks[i].coordinate.longitude),
+                                agent: agents[j].id,
+                                icon: "icons/marker.png",
+                                region: false
+                            }));
+                        }
+                    }
+                }
+
+                //Remove any targets deleted in silver view overview map
+                updateTargets(targets, data.targets, false);
+                updateTargets(mainTargets, data.targets, true);
+
+             //   console.log("update target!")
+
+                var mainView;
+                for (var i = 0; i < data.agents.length; ++i) {
+                    updateLabels(data.agents[i]);
+
+                    var id = parseInt(data.agents[i].id.split("-")[1]) - 1;
+                    renderMap(id, i, data.agents, data.agents[i]);
+                    if (data.agents[i].id == maps[data.agents.length].link) {
+                        mainView = i;
+                    }
+                }
+                var id = data.agents.length;
+                renderMap(id, mainView, data.agents);
+            }
+        }
+
+        function updateFlags(agents) {
+            if (agents != null) {
+                for (var i = 0; i < agents.length; ++i) {
+                    //Find corresponding flag
+                    for (var j = 0; j < flags.length; ++j) {
+                        var thisFlag;
+
+                        if (flags[j].get(0).id.split("_")[1] == agents[i].id) {
+                            thisFlag = flags[j];
+                            if (agents[i].flag == true) {
+                                flags[j].addClass("flagSelected");
+                            } else {
+                                flags[j].removeClass("flagSelected");
+                            }
+                        }
+                    }
+
+                    //Update flag in main view
+                    if (agents[i].id == maps[maps.length - 1].link) {
+                        if (thisFlag.hasClass("flagSelected")) flags[flags.length - 1].addClass("flagSelected");
+                            else flags[flags.length - 1].removeClass("flagSelected");
+                    }
+                }
+            }
+        }
+
+        function updateTargets(targetMarkers, targetsData, main) {
+            var tempCircles, wIcon, iIcon, mIcon, cIcon;
+            var self = this;
+            
+            if (main) {
+                tempCircles = mainCircles;
+                wIcon = "icons/water.png";
+                iIcon = "icons/infra.png";
+                mIcon = "icons/medical.png";
+                cIcon = "icons/crime.png";
+                inIcon = "icons/invalid.png"
+            }
+            else {
+                tempCircles = circles;
+                wIcon = "icons/water_small.png";
+                iIcon = "icons/infra_small.png";
+                mIcon = "icons/medical_small.png";
+                cIcon = "icons/crime_small.png";
+                inIcon = "icons/invalid_small.png";
+            }
+
+            for (var i = 0; i < targetMarkers.length; i++) {
+                var available = false;
+                var icon = null;
+                
+                targetsData.forEach(function(target) {
+                    if (targetMarkers[i].id == target.id) {
+                        available = true;
+                        switch (target.targetType) {
+                            case -1:
+                                icon = "icons/redquestion5.png"; break;
+                            case 0:
+                                icon = wIcon; break;
+                            case 1:
+                                icon = iIcon; break;
+                            case 2:
+                                icon = mIcon; break;
+                            case 3:
+                                icon = cIcon; break;
+                            case 4:
+                                icon = inIcon; break;
+                        }
+                        if (targetMarkers[i].icon != icon) targetMarkers[i].setIcon(icon);
+                    }
+                });
+
+                if (!available) {
+                    targetMarkers[i].setMap(null);
+                    tempCircles[i].setMap(null);
+                }
+            }
+
+            targetsData.forEach(function(target) {
+                var isList = false;
+                _.each(targetMarkers, function(t_marker){
+                     if(target.id == t_marker.id){
+                        isList = true;
+                     }                  
+                });
+                if(!isList){
+                    // add update target
+                }
+            });
+
+        }
+
+        function placeRegionMarker(agents, task, numAgents) {
+            var corner, agent;
+
+            if (numAgents == 0) {
+                corner = new google.maps.LatLng(task.nw.latitude, task.nw.longitude);
+            } else {
+                for (var i = 0; i < agents.length; i++) {
+                    if (agents[i].id == task.agents[0]) agent = agents[i];
+                }
+                corner = new google.maps.LatLng(agent.route[0].latitude, agent.route[0].longitude);
+            }
+
+            return corner;
+        }
+
+        function clearMarkers(markers) {
+            for (var i = 0; i < markers.length; ++i) {
+                markers[i].setMap(null);
+            }
+        }
+
+        function updateLabels(agent) {
+            var text;
+
+            //Loop through labels, updating text based on agent allocation
+            for (var j = 0; j < titles.length; ++j) {
+                if (titles[j].get(0).id.split("_")[2] == agent.id) {
+                    if (agent.task == null) { text = "none" }
+                        else { text = agent.task.id }
+                    
+                    var percent = Math.ceil(agent.battery *100);       
+                   var status = "AUTO";
+                   if(agent.mode === 1) {
+                        status = "FR1"
+                   }
+                    // titles[j].get(0).innerHTML = "mode:" + status + "&nbsp;<span style='font-weight: bold'>" 
+                    //    +agent.id + " &#10143 " + text 
+                    //     + "</span>&nbsp;BA:" + percent + "%";
+                    titles[j].get(0).innerHTML = "mode:" + status + "&nbsp;<span style='font-weight: bold';font-size:120%;>" 
+                       +agent.id + " &#10143 " + text 
+                        + "</span>&nbsp;BA:" + percent + "%";
+
+
+                }
+            }
+        }
+
+        function renderMap(id, index, agents, agent) {
+            var coord, heading, altitude;
+            var mapIndex, zoom;
+            coord = agents[index].coordinate;
+            heading = agents[index].heading;
+            altitude = agents[index].altitude;
+
+            if (id != agents.length) {
+                for (var i = 0; i < maps.length; ++i) {                    
+                    if (maps[i].id.split("-")[1] == id+1) {
+                        mapIndex = i;
+                    }
+                }
+                zoom = 19;
+            } else {
+                mapIndex = id;
+                zoom = 19;
+            }
+            if (maps[mapIndex] != null) {
+                maps[mapIndex].map.setCenter(new google.maps.LatLng(coord.latitude, coord.longitude));
+                maps[mapIndex].map.setHeading(heading * 180.0 / Math.PI);
+                maps[mapIndex].map.setZoom(zoom);
+
+                if (id != agents.length) identifyTasks(maps[mapIndex].map, agents, agent);
+            }
+
+            if (id == agents.length) {
+                label.setOptions({
+                    map: maps[mapIndex].map,
+                    text: maps[mapIndex].link,
+                    position: new google.maps.LatLng(coord.latitude + 0.00051, coord.longitude),
+                    fontSize: 30,
+                    fontColor: "#C2C4C4"
+                });
+            }
+        }
+
+        function identifyTasks(map, agents, agent) {
+            if (map.getBounds() != null) {
+                var tempTasks = [];
+
+                for (var i = 0; i < tasks.length; ++i) {
+                    if (tasks[i].agent == agent.id) {
+                        tempTasks.push(tasks[i]);
+                    }
+                }
+
+                for (var i = 0; i < tempTasks.length; ++i) {
+                    var latitude = tempTasks[i].position.lat();
+                    var longitude = tempTasks[i].position.lng();
+
+                    //Add visible tasks to agent's camera view
+                    if (map.getBounds().contains(new google.maps.LatLng(latitude, longitude))) {
+                        tempTasks[i].setOptions({
+                            map: map,
+                            position: new google.maps.LatLng(latitude, longitude)
+                        });
+
+                        if (agent.task != null) {
+                            if (tempTasks[i].id == agent.task.id) {
+                                if (tempTasks[i].region == true) tempTasks[i].setOptions({ icon: "icons/rectangle_green.png" });
+                                    else tempTasks[i].setOptions({ icon: "icons/marker_green.png" });
+                            }
+
+                            //Add to main view too, if visible
+                            if (agent.id == maps[agents.length].link) {
+                                for (var j = 0; j < mainTasks.length; ++j) {
+                                    if (mainTasks[j].id == tempTasks[i].id) {
+                                        mainTasks[j].setOptions({
+                                            map: maps[agents.length].map,
+                                            position: new google.maps.LatLng(latitude, longitude)
+                                        });
+
+                                        if (mainTasks[j].id == agent.task.id) {
+                                            if (mainTasks[j].region == true) mainTasks[j].setOptions({ icon: "icons/rectangle_green.png" });
+                                                else mainTasks[j].setOptions({ icon: "icons/marker_green.png" });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        tempTasks[i].setMap(null);
+                    }
+                }
+            }
+        }
+
+        function create_map(map_id) {
+            if (map_id > agents.length) return null;
+
+            var lat = 54;
+            var lng = -3;
+
+            var mapOptions = {
+                zoom: 19,
+                tilt: 45,
+                heading: 90,
+                draggable: false,
+                scrollwheel: false,
+                disableDoubleClickZoom: true,
+                disableDefaultUI: true,
+                center: new google.maps.LatLng(lat, lng),
+                mapTypeId: google.maps.MapTypeId.SATELLITE
+            };
+
+            if (map_id == "main") {
+                return new google.maps.Map(document.getElementById(map_id),
+                    mapOptions);
+            }
+
+            return new google.maps.Map(document.getElementById('map_div_' + map_id), mapOptions);
+        }
+
+    
+
+ 
+
+        $(document).ready(function() {
+            update_agent();
+        });
+    </script>
+</head>
+
+<body>
+    <div id="sidebar" class="sidebar" style="width:19.5%; height:100%; float: left;"></div>
+    <div id="main_view" class="main-div" style="float: left; width:60%; height:100%"></div>
+    <div id="sidebar2" class="sidebar" style="width:19.5%; height:100%; float: left;"></div>
+    <script type="text/template" id="info_window">
+        <table style="border: 1px solid #CCCCCC; margin: 5px; width: 98%; height: 100px;">
+            <tr>
+                <td>Choose target category:</td>
+                <td>
+                    <select id="target_list">
+                      <option value="0">Water Source</option>                    
+                      <option value="1">Infrastructure damage</option>
+                      <option value="2">Medical care, Injury</option>
+                      <option value="3">Crime, Unrest</option>
+                      <option value="4">Invalid</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <div align="right" style="margin: 5px;">
+            <button id="target_update">Update</button>
+            <button id="target_delete" style="float: left">Remove</button>
+        </div>
+    </script>
+</body>
+
+</html>

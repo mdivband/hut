@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta name="author" content="Yukki">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="viewport"
+  content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width" />
+
+  <title>Controller View</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script type="text/javascript" src="lib/jquery/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="lib/backbone/underscore-1.4.4.min.js"></script>
+    <script type="text/javascript" src="lib/jquery/ui/jquery-ui-1.10.1.min.js"></script>
+    <script type="text/javascript" src="lib/jquery/layout/jquery.layout-1.3.0.min.js"></script>
+	<script type="text/javascript" src="lib/jquery/noty/jquery.noty.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/themes/default.js"></script>
+    <script type="text/javascript" src="lib/jquery/noty/layouts/bottomLeft.js"></script>
+
+    <script type="text/javascript" src="lib/jquery/joystick/joystick.jquery.js"></script>
+    <script type="text/javascript" src="lib/joystick/JoyStick.js"></script>
+    <script type="text/javascript" src="lib/jquery/touch/jquery.ui.touch-punch.min.js"></script>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="lib/joystick/JoyStick.css" />
+    <link rel="stylesheet" href="lib/joystick/switch.css" />
+    <script type="text/javascript" src="lib/multiview/StateCache.js"></script>    
+
+
+	<script type="text/javascript" src="lib/prov/provapi.js"></script>
+	<script type="text/javascript" src="lib/prov/prov.js"></script>
+
+	<script type="text/javascript" src="lib/otherservice/PostService.js"></script>
+	<script type="text/javascript" src="lib/joystick/controllerhtml.js"></script>
+
+    <!-- ROS library -->
+    	<script type="text/javascript" src="lib/ros/eventemitter2.min.js"></script>
+    	<script type="text/javascript" src="lib/ros/roslib.min.js"></script>
+
+	<!-- RabbitMQ library -->
+	<script src="lib/rmq/sockjs.min.js"></script>
+	<script src="lib/rmq/stomp.min.js"></script>
+
+<style type="text/css">
+
+
+.joystickc {
+    position: absolute;
+    height: 10px;
+    width: 10px;
+    background: red;
+    left: calc( 50% - 5px );
+    top: calc( 50% - 5px );
+    border-radius: 5px;
+}
+
+.joysticki {
+    position: absolute;
+    border: 1px solid #ddd;
+    background: #eee url(lib/joystick/ui-bg_highlight-soft_100_eeeeee_1x100.png) 25% top repeat-x;
+    color: #333;
+}
+
+.JoyStick {
+    position: relative;
+    background: gray;
+}
+
+#control_camera_view{
+	width: 100%;
+	height:100%;
+	background-color: gray;
+}
+
+/*#tabs, #tab_controller1,  #tab_controller2{
+  padding:0px; 
+}
+*/
+#tab_controller1 {
+	width: 100%;
+	height: 100%;
+}
+#control_map_view{
+	border: 5px solid lightgray;
+	width: 280px ;
+	height: 280px ;
+}
+
+#airplane {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: 10;
+}
+
+
+#map_content{
+	width: 280px ;
+	height: 280px ;
+	position: relative;
+
+}
+
+/*.first_row{
+	float: left;
+}*/
+#control_panel_info{
+	margin-top: -290px;
+	margin-left: 290px;
+	width: 155px;
+	height: 290px;
+	background-color: lightgray;
+	position:relative;
+}
+#altitude_slider_manual {
+	height: 270px !important;
+	margin-top: -305px;
+	margin-left: 360px;
+}
+#altitude_slider_manual .ui-slider-range {
+	background: lightgray;
+}
+
+#manual #joystick1{
+	margin-top: 310px;
+	margin-left: 30px;
+	z-index: 10;
+	float: left;
+}
+#manu_alti_title{
+	margin-left: 330px;
+	font-size: smaller;
+}
+.auto_info{
+	margin-left: 30px;
+}
+.title{
+	font-size: 100%;
+	font-weight: bold;
+}
+.info_box{
+	text-align: center;
+}
+#canvas_small_info_tasks_box_c{
+	height: 55px;
+	margin-top: 10px
+}
+#canvas_small_info_mode_c{
+	position: absolute;
+	bottom: 5px;
+	vertical-align: middle;
+}
+#canvas_small_info_speed_box_c{
+	height: 55px;
+}
+
+#canvas_small_info_battery_c > img{
+	height: 20px;
+
+}
+.ui-layout-east, .ui-layout-center, .ui-layout-west{
+	padding: 0px!important;
+}
+.flag_btns{
+	background-color: lightgray;
+	height: 105px;
+	width: 100%;
+	text-align: center;
+	border: 1px solid black;
+}
+.flagged{
+	background-color: red;
+	color: white;
+	
+}
+.selected{
+	background-color: blue;
+	color: white;
+}
+
+@media (max-width: 768px) {
+	.col-xs-hidden {
+		display: none;
+	}
+}
+
+
+</style>
+
+
+</head>
+<body>
+
+	<div class="col-xs-1" style="padding:0; height:100%; overflow-y:auto;">
+		<div id="control_flag" ></div>
+    </div>
+
+
+	<div class="col-xs-11 col-sm-7" style="padding:0; height:100%">
+		<div id="control_camera_view" ></div>
+
+	</div>
+
+
+	<div class="col-xs-hidden col-sm-4">
+	<!--	<div id="tabs">
+ 			<ul>
+				<li><a href="#tab_controller1">Controller</a></li>
+ 				<li><a href="#tab_controller2">Status</a></li>
+ 			</ul> -->
+
+			<div id="tab_controller1" >
+				<div id="control_map_view" class="first_row">
+					<div id="map_content">
+						<div id="airplane"><img src="icons/plane.png"></div>
+					</div></div>
+				
+				<div id="control_panel_info" class="first_row">
+					<div class="info_box">
+						<span class="title">Agent ID</span>
+						<div id="spi_agent_id_c"></div> 
+<!-- 						<label class="title" for="spi_agent_id_c">Agent ID</label><br>
+						<select id="spi_agent_id_c" name="spi_agent_id_c">
+						</select>
+ -->					</div>
+					<div id="canvas_small_info_tasks_box_c" class="info_box">  
+						<span class="title">Assigned Tasks</span>
+						<div id="canvas_small_info_tasks_c"></div>
+					</div>
+
+					<div id="canvas_small_info_speed_box_c" class="info_box">
+						<span class="title">Speed</span>
+						<div id="canvas_small_info_speed_val_c"></div>
+					</div>
+
+					<div id="canvas_small_info_battery_box_c" class="info_box">  
+						<span class="title">Battery</span>
+						<div id="canvas_small_info_battery_c">
+							<img id="img" />
+							<span id="canvas_small_info_battery_text_c"></span>
+						</div>
+					</div>
+
+					<div id="canvas_small_info_mode_c" class="info_box">
+						<span class="title">Mode</span>
+						<div class="onoffswitch">
+						    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch_c" checked>
+						    <label class="onoffswitch-label" for="myonoffswitch_c">
+						        <span class="onoffswitch-inner"></span>
+						        <span class="onoffswitch-switch"></span>
+						    </label>
+						</div>
+					</div>
+
+				</div>
+
+				<div id="auto" >	
+					<div class="auto_info">				
+						<p class="ui-state-default ui-corner-all ui-helper-clearfix" style="margin-bottom: 10px;"><b>Speed:</b> <span id="speed_value">1.0</span></p>
+						<div id="speed_slider"></div>
+					</div>
+					<br>
+					<div class="auto_info">
+						<p class="ui-state-default ui-corner-all ui-helper-clearfix" style="margin-bottom: 10px;"><b>Altitude:</b> <span id="altitude_value">3</span></p>
+						<div id="altitude_slider"></div> 
+					</div>
+				</div>	
+
+				<div id="manual" style="display:none;">
+					<div id="joystick1" class="JoyStick" > </div>
+					<span id="manu_alti_title">Altitude:<span id="altitude_value_manu">3</span></span>
+ 					<div id="altitude_slider_manual"></div>
+	 			</div>	
+
+			</div>	
+
+<!--  			<div id="tab_controller2">
+				<p>content </p>
+			</div>
+ 	</div> -->
+	</div>
+
+</body>
+</html>

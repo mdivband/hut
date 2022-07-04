@@ -46,6 +46,10 @@ public abstract class LearningAllocator {
 
     public abstract void step();
 
+    public void step(float jointReward) {
+        System.out.println("NOT IMPLEMENTED");
+    }
+
     public void updateBounds(Coordinate position) {
         double topBound = position.getLatitude() + ((level * Y_SPAN) / 2);
         double botBound = position.getLatitude() - ((level * Y_SPAN) / 2);
@@ -231,5 +235,4 @@ public abstract class LearningAllocator {
     public Coordinate getBotLeft() {
         return botLeft;
     }
-
 }

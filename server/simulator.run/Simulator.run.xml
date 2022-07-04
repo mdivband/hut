@@ -1,6 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Simulator" type="Application" factoryName="Application" singleton="false">
     <option name="ALTERNATIVE_JRE_PATH" value="openjdk-17" />
+    <envs>
+      <env name="_JAVA_OPTIONS" value="-Xmx12g" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="server.Simulator" />
     <module name="hut" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/server" />

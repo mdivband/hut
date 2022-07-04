@@ -36,7 +36,7 @@ public class AgentProgrammer {
     }
 
     public void setupAllocator() {
-        learningAllocator = new EvolutionaryAllocator(a.agent);
+        learningAllocator = new TensorRLearner(a.agent);
         learningAllocator.setup();
     }
 
@@ -56,7 +56,10 @@ public class AgentProgrammer {
     }
 
     public void learningStep(float jointReward) {
-        ((EvolutionaryAllocator) learningAllocator).step(jointReward);
+        if (!getSubordinates().isEmpty()) {
+            learningAllocator.step(jointReward);
+        }
+
     }
 
     public void learningStep() {
