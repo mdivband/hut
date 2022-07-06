@@ -21,7 +21,7 @@ import java.util.Objects;
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
     private static final int SAMPLE_SIZE = 4;
-    private static final float LEARNING_RATE = 0.001f;
+    private static final float LEARNING_RATE = 0.01f;
     private static final int BUFFER_SIZE = 4;
     private ConvolutionalNetwork qNetwork;
     private ExperienceRecord[] buffer;
@@ -218,6 +218,10 @@ public class TensorRLearner extends LearningAllocator {
         // TODO consider conv and max pooling if it works
         ConvolutionalNetwork net = ConvolutionalNetwork.builder()
                 .addInputLayer(16, 16, 3)
+                .addConvolutionalLayer(4, 4, 3)
+                .addMaxPoolingLayer(4, 4, 3)
+                .addConvolutionalLayer(2, 2, 3)
+                .addMaxPoolingLayer(2, 2, 3)
                 .addConvolutionalLayer(1, 1, 3)
                 .addMaxPoolingLayer(1, 1, 3)
                 .addFullyConnectedLayer(256, ActivationType.LINEAR)
