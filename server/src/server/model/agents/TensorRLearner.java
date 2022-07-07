@@ -20,9 +20,9 @@ import java.util.Objects;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
-    private static final int SAMPLE_SIZE = 4;
+    private static final int SAMPLE_SIZE = 20;
     private static final float LEARNING_RATE = 0.01f;
-    private static final int BUFFER_SIZE = 4;
+    private static final int BUFFER_SIZE = 100;
     private ConvolutionalNetwork qNetwork;
     private ExperienceRecord[] buffer;
     private boolean bufferFull = false;
@@ -66,12 +66,13 @@ public class TensorRLearner extends LearningAllocator {
 
          */
 
+        /*
         boolean perform = false;
         switch (getLevel()) {
             case 0 -> perform = false;
             case 1 -> perform = true;
             case 2 -> {
-                if (stepCount % 4 == 0) {
+                if (stepCount % 3 == 0) {
                     perform = true;
                 }
             }
@@ -80,12 +81,14 @@ public class TensorRLearner extends LearningAllocator {
                     perform = true;
                 }
             } default -> {
-                if (stepCount % 16 == 0) {
+                if (stepCount % 24 == 0) {
                     perform = true;
                 }
             }
         }
 
+         */
+        boolean perform = true;
         if (perform) {
             if (!miniBuffer.isEmpty()) {
                 for (ExperienceRecord e : miniBuffer) {
@@ -219,9 +222,7 @@ public class TensorRLearner extends LearningAllocator {
         ConvolutionalNetwork net = ConvolutionalNetwork.builder()
                 .addInputLayer(16, 16, 3)
                 .addConvolutionalLayer(4, 4, 3)
-                .addMaxPoolingLayer(4, 4, 3)
                 .addConvolutionalLayer(2, 2, 3)
-                .addMaxPoolingLayer(2, 2, 3)
                 .addConvolutionalLayer(1, 1, 3)
                 .addMaxPoolingLayer(1, 1, 3)
                 .addFullyConnectedLayer(256, ActivationType.LINEAR)

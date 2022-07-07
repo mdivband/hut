@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 50;
+    private final int NUM_STEPS_PER_EPOCH = 25;
     public static final int WIDTH = 4;
 
     private AgentHubProgrammed hub;
@@ -80,12 +80,19 @@ public class MissionProgrammer {
                         double mvAv = sum / Math.min(scores.size(), 100);
                         DecimalFormat f = new DecimalFormat("##.00");
 
-                        File csvOutputFile = new File("FullE50UpAndDownwithoutPEl01.csv");
+                        double sum10 = 0;
+                        for (int i = Math.max(0, scores.size() - 10); i < scores.size(); i++) {
+                            sum10 += scores.get(i);
+                        }
+                        double mvAv10 = sum10 / Math.min(scores.size(), 10);
+
+                        File csvOutputFile = new File("NewTest85to341E25withPEl01R3.csv");
                         try {
                             FileWriter fw = new FileWriter(csvOutputFile, true);
                             fw.write(//runCounter
                                     r
                                     + ", " + f.format(mvAv)
+                                    + ", " + f.format(mvAv10)
                                     //+ ", " + epochDuration
                                     + " \n");
                             fw.close();
@@ -114,10 +121,18 @@ public class MissionProgrammer {
                     sum += scores.get(i);
                 }
                 double mvAv = sum / Math.min(scores.size(), 100);
+
+                double sum10 = 0;
+                for (int i = Math.max(0, scores.size() - 10); i < scores.size(); i++) {
+                    sum10 += scores.get(i);
+                }
+                double mvAv10 = sum10 / Math.min(scores.size(), 10);
+
                 System.out.println(
                         "run = " + runCounter
                                 + ", steps = " + (stepCounter * runCounter)
-                                + ", moving average = " + f.format(mvAv)
+                                + ", moving average (100) = " + f.format(mvAv)
+                                + ", moving average (10) = " + f.format(mvAv10)
                                 + ", epoch time = " + (epochDuration) + "ms"
                                 + ", num agents = " + agents.size()
                                 + ", hierarchy dims = " + Arrays.toString(hierarchy.getDims())
@@ -220,27 +235,24 @@ public class MissionProgrammer {
     }
 
     private void addAgentIfRequired() {
-        if (runCounter == 1 || runCounter == 5 || runCounter == 9) {
+        if (runCounter == 7  || runCounter == 11 ||  runCounter == 15 || runCounter == 19 || runCounter == 23) {
             // Run 4(1) AND Run 8(5) -> Remove 1/3 of agents
             List<Agent> toRemove = new ArrayList<>();
-            Simulator.instance.getState().getAgents().forEach(a -> {
-                if (!(a instanceof Hub)) {
-                    int num = Integer.parseInt(a.getId().split("-")[1]);
-                    if (runCounter == 1) {
-                        if (num % 3 == 0) {
-                            toRemove.add(a);
-                        }
-                    } else if (runCounter == 5) {
-                        if (num % 3 == 1) {
-                            toRemove.add(a);
+            for (Agent agent : Simulator.instance.getState().getAgents()) {
+                if (!(agent instanceof Hub)) {
+                    //int num = Integer.parseInt(a.getId().split("-")[1]);
+                    if (runCounter == 11 || runCounter == 17  || runCounter == 23) {
+                        // Big drop
+                        if (Simulator.instance.getRandom().nextInt(2) == 0) {
+                            toRemove.add(agent);
                         }
                     } else {
-                        if (num % 3 == 2) {
-                            toRemove.add(a);
+                        if (Simulator.instance.getRandom().nextInt(4) == 0) {
+                            toRemove.add(agent);
                         }
                     }
                 }
-            });
+            }
             toRemove.forEach(a -> {
                 Simulator.instance.getState().getAgents().remove(a);
                 agents.remove((AgentProgrammed) a);
@@ -259,11 +271,15 @@ public class MissionProgrammer {
                     regenerateHierarchy();
                 }
             }
-        } else if (runCounter == 3 || runCounter == 7 || runCounter == 11) {
+        } else if (runCounter == 9 || runCounter == 13 || runCounter == 17 || runCounter == 21 || runCounter == 25 || runCounter == 27) {
             // Run 6(3) AND 10(7) -> Restore all agents
-            int numToAdd = 113;
+            int numToAdd = 500;
             for (int i = 0; i < numToAdd; i++) {
-                if (agents.size() < 341) {
+                int lim = 85;
+                if (runCounter == 27) {
+                    lim = 341;
+                }
+                if (agents.size() < lim) {
                     AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
                             50.9289,
                             -1.409,
@@ -273,8 +289,8 @@ public class MissionProgrammer {
                     ap.programmerHandler.getAgentProgrammer().setupAllocator();
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                     // HERE is the promotion setting
-                    hierarchy.addAgentWithoutPromotion(ap);
-                    //hierarchy.addAgent(ap);
+                    //hierarchy.addAgentWithoutPromotion(ap);
+                    hierarchy.addAgent(ap);
                 } else {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                 }
@@ -326,8 +342,8 @@ public class MissionProgrammer {
 
     private void groupSetup() {
 
-        while (Simulator.instance.getState().getAgents().size() < 341 + 1) {
-            if (agents.size() < 341) {
+        while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
+            if (agents.size() < 85) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
                         50.9289,
                         -1.409,
@@ -486,13 +502,16 @@ public class MissionProgrammer {
         }
 
         public void addAgentWithoutPromotion(AgentProgrammed ap) {
-            for (int i=0; i<layers.size(); i++) {
+            for (int i=0; i<layers.size() - 1; i++) {
                 int layerTargetSize = MissionProgrammer.WIDTH * layers.get(i + 1).size();
                 if (layers.get(i).size() < layerTargetSize) {
                     layers.get(i).add(ap);
                     break;
                 }
             }
+            // If full:
+            layers.add(0, new ArrayList<>());
+            layers.get(0).add(ap);
         }
 
         public void addAgent(AgentProgrammed toAdd) {
