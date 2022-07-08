@@ -563,7 +563,7 @@ var simulator = {
                     if (self.scenarioNumber != 0) {
                         $("#overlay_div").show();
                         closeSurvey.on('click', function () {
-                            var isSure = confirm("Have you completed and submitted the survey?");
+                            var isSure = confirm("Have you completed and submitted the survey? Warning: All surveys are mandatory. Skipping surveys will result in submission rejection.");
                             if (isSure) {
                                 self.surveyDone = true;
                                 $.post("/mode/scenario/closeSurvey", {}, function () {

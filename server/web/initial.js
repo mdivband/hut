@@ -8,7 +8,7 @@ $(document).ready(function () {
     var surveySource = initialSurvey;
     var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
     closeSurvey.on('click', function () {
-        var isSure = confirm("Have you completed and submitted the survey?");
+        var isSure = confirm("Have you completed and submitted the survey? Warning: All surveys are mandatory. Skipping surveys will result in submission rejection.");
         if (isSure) {
             $("#overlay_div").empty();
             var closeVideo = $('<button id="close_video" style="cursor: pointer;">Close Video</button>').appendTo($("#overlay_div"));
@@ -24,7 +24,7 @@ $(document).ready(function () {
                     var surveySource = videoSurvey;
                     var videoSurveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
                     closeVideoSurvey.on('click', function () {
-                        var isSure = confirm("Have you completed and submitted the survey?");
+                        var isSure = confirm("Have you completed and submitted the survey? Warning: All surveys are mandatory. Skipping surveys will result in submission rejection.");
                         if (isSure) {
                             $("#overlay_div").empty();
                             $("#overlay_div").hide();
