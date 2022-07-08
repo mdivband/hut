@@ -7,7 +7,7 @@
     "lng": -1.40882186832185
   },
   "uncertaintyRadius": 20.0,
-  "timeLimitSeconds": 180,
+  "timeLimitSeconds": 300,
   "deepAllowed": false,
   "reviewPanel": true,
   "gameCentre": {
