@@ -412,14 +412,13 @@ App.Views.Map = Backbone.View.extend({
         self = this;
         var completed = this.state.getHandledTargets();
         for (var i = 0; i < completed.length; i++) {
-            var thisId = completed + "_done"
+            var thisId = completed[i] + "_done"
             var marker = self.$el.gmap("get", "markers")[thisId];
             if (marker) {
                 marker.setVisible(false)
                 marker.setMap(null);
                 delete marker;
             }
-
         }
         //marker.setVisible(false);
         /*
