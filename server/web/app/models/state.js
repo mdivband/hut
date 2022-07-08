@@ -46,7 +46,8 @@ App.Models.State  = Backbone.Model.extend({
         missionBoundedSuccessOverChance: 100.00,
         missionBoundedSuccessUnderChance: 100.00,
         scoreInfo: {},
-        modelStyle: "off"
+        modelStyle: "off",
+        handledTargets: {}
     },
     url: function () {
         return "state.json?" + _.time();
@@ -198,6 +199,9 @@ App.Models.State  = Backbone.Model.extend({
     },
     getStoredImages: function () {
         return this.get("storedImages")
+    },
+    getHandledTargets: function () {
+        return this.get("handledTargets")
     },
     pushMode: function(modeFlag) {
         // modeflag 1 = monitor

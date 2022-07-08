@@ -2,6 +2,9 @@ package server.model.agents;
 import com.mysql.jdbc.log.Log;
 import server.Simulator;
 import server.model.Coordinate;
+import server.model.target.AdjustableTarget;
+import server.model.target.Target;
+import server.model.task.Task;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -22,6 +25,7 @@ public class AgentProgrammer {
     private int dupeLimit;
     private boolean hasNearbyLeader = false;
     private boolean returner = false;
+    protected String targetName = "";
 
 
     /***
@@ -102,6 +106,10 @@ public class AgentProgrammer {
         double prio = Simulator.instance.getTaskController().getAllTasksAt(c).get(0).getPriority();
         LOGGER.info(String.format("%s; APCMP; Ground agent completed pickup at (x, y, priority); %s; %s; %s",
                 Simulator.instance.getState().getTime(), c.getLatitude(), c.getLongitude(), prio));
+
+        String id = Simulator.instance.getState().getPendingMap().get(c);
+        Simulator.instance.getState().addToHandledTargets(id);
+
         a.goHome();
     }
 

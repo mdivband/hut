@@ -133,7 +133,7 @@ public class ImageController extends AbstractController {
     }
 
     public void classifyWithPrio(String ref, int prio) {
-        System.out.println("BACKEND: " + ref + " getting prioriy: " + prio);
+        //System.out.println("BACKEND: " + ref + " getting prioriy: " + prio);
 
         Map<String, String> map = simulator.getState().getStoredImages();
         String id = map
@@ -156,6 +156,8 @@ public class ImageController extends AbstractController {
         shallowScannedTargets.remove(id);
         map.remove(id);
 
+        simulator.getState().addToPendingMap(id, simulator.getState().getTarget(id).getCoordinate());
+
         // Foreach loop automatically handles the null case (no tasks found) by not entering
         for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
             t.complete();
@@ -172,8 +174,7 @@ public class ImageController extends AbstractController {
 
     /**
      * Called when an image is classified. Handles the addition of the record of this image and removes its target
-     * @param ref File reference
-     * @param status Whether it was classified P or N
+
      */
     /*
     public void classify(String ref, boolean status) {

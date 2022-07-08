@@ -100,6 +100,8 @@ public class State {
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
     private final List<String> pendingIds = new ArrayList<>(16);
+    private ArrayList<String> handledTargets = new ArrayList<>();
+    private HashMap<Coordinate, String> pendingMap = new HashMap<>();
 
     public State() {
         agents = new ArrayList<>();
@@ -782,6 +784,18 @@ public class State {
 
     public boolean isShowReviewPanel() {
         return showReviewPanel;
+    }
+
+    public void addToHandledTargets(String trgId) {
+        handledTargets.add(trgId);
+    }
+
+    public void addToPendingMap(String id, Coordinate coordinate) {
+        pendingMap.put(coordinate, id);
+    }
+
+    public HashMap<Coordinate, String> getPendingMap() {
+        return pendingMap;
     }
 
     private class HazardHit {

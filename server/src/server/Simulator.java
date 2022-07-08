@@ -52,6 +52,7 @@ public class Simulator {
     private String nextFileName = "";
 
     private Thread mainLoopThread;
+    private int completedTargets = 0;
 
     public Simulator() {
         instance = this;
@@ -174,8 +175,10 @@ public class Simulator {
             long startTime = System.currentTimeMillis();
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
-                System.out.println("DONE BY TIME: " + state.getTime());
-                System.out.println("agents = " + state.getAgents());
+                //System.out.println("DONE BY TIME: " + state.getTime());
+                //System.out.println("agents = " + state.getAgents());
+
+                LOGGER.info(String.format("%s; CMP; Complete. (Tasks done); %s ", getState().getTime(), completedTargets));
                 int numFailed = 0;
                 for (Agent a : state.getAgents()) {
                     if (a instanceof AgentVirtual av) {
@@ -184,7 +187,7 @@ public class Simulator {
                         }
                     }
                 }
-                System.out.println("Num failed: " + numFailed);
+                //System.out.println("Num failed: " + numFailed);
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }
@@ -857,5 +860,9 @@ public class Simulator {
 
     public ScoreController getScoreController() {
         return scoreController;
+    }
+
+    public void incrementCompletedTargets() {
+        completedTargets++;
     }
 }

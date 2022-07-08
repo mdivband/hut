@@ -238,6 +238,5 @@ public class TaskController extends AbstractController {
         GroundTask groundTask = new GroundTask(generateUID(), coordinate);
         groundTask.setPriority(prio);
         simulator.getState().add(groundTask);
-
     }
 }

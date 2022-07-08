@@ -261,7 +261,7 @@ var MapController = {
     onTick: function () {
         // TODO this is a temp feature and should be hardcoded
         var tempTime = this.state.getTime();
-        var tempLimit = this.state.getTimeLimit();
+        var tempLimit = this.state.getTimeLimit() * 6;
         var time = $.fromTime(tempTime);
         var limit = $.fromTime(tempLimit);
         /*
@@ -289,6 +289,7 @@ var MapController = {
         }
 
         this.drawMarkers();
+        this.clearHandledTargetMarkers();
 
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);

@@ -408,6 +408,43 @@ App.Views.Map = Backbone.View.extend({
             }
         }
     },
+    clearHandledTargetMarkers: function () {
+        self = this;
+        var completed = this.state.getHandledTargets();
+        for (var i = 0; i < completed.length; i++) {
+            var thisId = completed + "_done"
+            var marker = self.$el.gmap("get", "markers")[thisId];
+            if (marker) {
+                marker.setVisible(false)
+                marker.setMap(null);
+                delete marker;
+            }
+
+        }
+        //marker.setVisible(false);
+        /*
+        for (var m = 0; m<markers.length; m++) {
+            var target = markers[m];
+            var thisCrd = target.getPosition();
+            alert("m="+target+" thisCrd: " + target.getPosition())
+
+            var crds = self.state.getCompletedCoords();
+            for (var i = 0; i < crds.length; i++) {
+                alert("Checking: " + thisCrd.lat() + " === " + crds[i][0] + " && " + thisCrd.lng() + " === " + crds[i][1])
+
+                if (thisCrd.lat() === crds[i][0] && thisCrd.lng() === crds[i][1]) {
+                    var thisId = target.id + "_done";
+                    alert("removing " + thisId)
+                    var marker = self.$el.gmap("get", "markers", [])[thisId];
+                    marker.setVisible(false);
+
+                }
+            }
+        }
+
+         */
+
+    },
     /**
      * Draws the predicted route of this ghost as an arrow on the map. Uses a black transparent line
      * @param predDepth The maximum number of points of the route to draw
