@@ -233,6 +233,7 @@ public class RootHandler extends RestHandler {
     private void handleAbandon(Request req, Response resp) throws IOException {
         JsonObject jsonReq = new JsonParser().parse(req.getBodyContent()).getAsJsonObject();
         String userName = jsonReq.get("userName").getAsString();
+        String reason = jsonReq.get("reason").getAsString();
 
         if (userName != null) {
             TimerTask abandonTask = new TimerTask() {
@@ -241,17 +242,20 @@ public class RootHandler extends RestHandler {
                 }
             };
             this.abandonTimer = new Timer();
-            this.abandonTimer.schedule(abandonTask, 20000L);
-            LOGGER.info(String.format("%s; ABDN; UserName has abandoned scenario (name/id); %s ", simulator.getState().getTime(), userName));
+            this.abandonTimer.schedule(abandonTask, 30000L);
+            LOGGER.info(String.format("%s; ABDN; UserName has abandoned scenario (name/id, reason); %s, %s ", simulator.getState().getTime(), userName, reason));
         }
         resp.sendOkay();
     }
 
     private void handlePreventAbandon(Request req, Response resp) throws IOException {
-        this.abandonTimer.cancel();
-
-        resp.sendOkay();
-        LOGGER.info(String.format("%s; ABDN; User has returned to scenario (probably page reload);", simulator.getState().getTime()));
+        if (!simulator.getState().isAbandoned()) {
+            this.abandonTimer.cancel();
+            JsonObject jsonReq = new JsonParser().parse(req.getBodyContent()).getAsJsonObject();
+            String userName = jsonReq.get("userName").getAsString();
+            resp.sendOkay();
+            LOGGER.info(String.format("%s; ABDN; User has returned to scenario (name/id); %s", simulator.getState().getTime(), userName));
+        }
     }
 
 }

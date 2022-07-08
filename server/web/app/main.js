@@ -178,6 +178,25 @@ var simulator = {
             });
         });
 
+        var timeout;
+        var inactive = false;
+        document.onmousemove = function(){
+            window.clearTimeout(timeout);
+            if (inactive) {
+                $.post("/preventabandon", JSON.stringify({userName: sessionStorage.getItem('prolificID')}));
+                inactive = false;
+            }
+            timeout = window.setTimeout(function(){
+                $.post('/abandon', JSON.stringify({userName: sessionStorage.getItem('prolificID'), reason: "inactivity"}));
+                inactive = true;
+                var isPresent = confirm("You have been inactive for a period of 1 minute, please click OK within the next 30s to confirm you are still paying attention.");
+                if (isPresent) {
+                    $.post("/preventabandon", JSON.stringify({userName: sessionStorage.getItem('prolificID')}));
+                    inactive = false;
+                }
+            }, 60000);
+        }
+
         var self = this;
         this.state.on("change:chatLog", function () {
             $("#chat_history").empty();
@@ -403,7 +422,7 @@ var simulator = {
                         var scenario_abandoned_panel = document.createElement("div");
                         scenario_abandoned_panel.innerHTML = _.template($("#scenario_abandoned_panel").html(), {
                             title: "Scenario Ended",
-                            description: "Unfortunately, your teammate has left the study so you are unable to continue. Please return your submission to Prolific, you will receive a part payment."
+                            description: "Either your teammate has left the study, or you have been inactive for a period of longer than 90s. You are unable to continue this study. Please return your submission to Prolific."
                         });
 
                         $.blockWithContent(scenario_abandoned_panel);
@@ -423,7 +442,7 @@ var simulator = {
                 } else if (!self.initialisedState) {
                     var loadedBefore = sessionStorage.getItem('pageHasBeenLoaded');
                     if (loadedBefore) {
-                        $.post("/preventabandon");
+                        $.post("/preventabandon", JSON.stringify({userName: sessionStorage.getItem('prolificID')}));
                     }
                     // console.log("here not initialised")
                     $("#overlay_div").hide();
@@ -482,7 +501,7 @@ var simulator = {
 
                         window.addEventListener('pagehide', function () {
                           if (!self.completed) {
-                            var blob= new Blob([JSON.stringify({userName: sessionStorage.getItem('prolificID')})], {type: 'application/json; charset=UTF-8'});
+                            var blob= new Blob([JSON.stringify({userName: sessionStorage.getItem('prolificID'), reason: "pagehide"})], {type: 'application/json; charset=UTF-8'});
                             navigator.sendBeacon('/abandon', blob);
                           }
                         });

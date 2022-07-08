@@ -557,6 +557,10 @@ public class State {
         this.abandoned = true;
     }
 
+    public boolean isAbandoned() {
+        return this.abandoned;
+    }
+
     private class HazardHit {
         private Coordinate location;
         private double weight;
