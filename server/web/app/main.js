@@ -178,25 +178,6 @@ var simulator = {
             });
         });
 
-        var timeout;
-        var inactive = false;
-        document.onmousemove = function(){
-            window.clearTimeout(timeout);
-            if (inactive) {
-                $.post("/preventabandon", JSON.stringify({userName: sessionStorage.getItem('prolificID')}));
-                inactive = false;
-            }
-            timeout = window.setTimeout(function(){
-                $.post('/abandon', JSON.stringify({userName: sessionStorage.getItem('prolificID'), reason: "inactivity"}));
-                inactive = true;
-                var isPresent = confirm("You have been inactive for a period of 1 minute, please click OK within the next 30s to confirm you are still paying attention.");
-                if (isPresent) {
-                    $.post("/preventabandon", JSON.stringify({userName: sessionStorage.getItem('prolificID')}));
-                    inactive = false;
-                }
-            }, 60000);
-        }
-
         var self = this;
         this.state.on("change:chatLog", function () {
             $("#chat_history").empty();
@@ -316,7 +297,7 @@ var simulator = {
             // Return to menu
             scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                 title: "Scenario Ended",
-                description: "This scenario has ended, thank you for taking part in this experiment. Please press Close to return to Prolific."
+                description: "This scenario has ended, thank you for taking part in this demo."
             });
 
             $.blockWithContent(scenario_end_panel);
@@ -324,7 +305,6 @@ var simulator = {
 
             $('#end_scenario').on('click', function () {
                 $.post("/reset");
-                window.location.replace("https://app.prolific.co/submissions/complete?cc=67A764B4");
             });
         } else {
             // Has a scenario to pass through too
@@ -441,10 +421,6 @@ var simulator = {
                     self.waitRun(waitTime, startTime, self);
                 } else if (!self.initialisedState) {
                     var loadedBefore = sessionStorage.getItem('pageHasBeenLoaded');
-                    if (loadedBefore) {
-                        $.post("/preventabandon", JSON.stringify({userName: sessionStorage.getItem('prolificID')}));
-                    }
-                    // console.log("here not initialised")
                     $("#overlay_div").hide();
                     self.initialisedState = true;
                     MapController.swapMode(self.state.getEditMode(), false);
@@ -481,7 +457,7 @@ var simulator = {
                             name = prolificID;
                         }
                         while (name == null || name === "") {
-                            name = prompt("Please enter your prolific ID", "");
+                            name = userRole;
                         }
                         $.post("/mode/scenario/registerUser", {
                             userName: name,
@@ -491,21 +467,6 @@ var simulator = {
                         sessionStorage.setItem('prolificID', name);
                     }
 
-                    if (!loadedBefore) {
-                        window.addEventListener('beforeunload', function(e) {
-                            if (!self.completed) {
-                                e.preventDefault();
-                                e.returnValue = '';
-                            }
-                        });
-
-                        window.addEventListener('pagehide', function () {
-                          if (!self.completed) {
-                            var blob= new Blob([JSON.stringify({userName: sessionStorage.getItem('prolificID'), reason: "pagehide"})], {type: 'application/json; charset=UTF-8'});
-                            navigator.sendBeacon('/abandon', blob);
-                          }
-                        });
-                    }
                     sessionStorage.setItem('pageHasBeenLoaded', 'true');
 
                     if (self.state.attributes.prov_doc == null) {
@@ -579,20 +540,7 @@ var simulator = {
                         var surveySource = postScenario2Survey;
                     }
                     var surveyFrame = $('<iframe width="40%" height= "90%" src=' + surveySource + ' frameborder= "0" marginwidth= "0" marginheight= "0" style= "border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>').appendTo($("#overlay_div"));
-                    if (self.scenarioNumber != 0) {
-                        $("#overlay_div").show();
-                        closeSurvey.on('click', function () {
-                            var isSure = confirm("Have you completed and submitted the survey? Warning: All surveys are mandatory. Skipping surveys will result in submission rejection.");
-                            if (isSure) {
-                                self.surveyDone = true;
-                                $.post("/mode/scenario/closeSurvey", {}, function () {
-                                    self.passthrough(self);
-                                });
-                            }
-                        });
-                    } else {
-                        self.passthrough(self);
-                    }
+                    self.passthrough(self);
                 }
             })
             .fail(function (xhr, status, error) {
