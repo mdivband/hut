@@ -86,7 +86,7 @@ public class MissionProgrammer {
                         }
                         double mvAv10 = sum10 / Math.min(scores.size(), 10);
 
-                        File csvOutputFile = new File("OnePoolingIncWithPEr3.csv");
+                        File csvOutputFile = new File("RoleRetention.csv");
                         try {
                             FileWriter fw = new FileWriter(csvOutputFile, true);
                             fw.write(//runCounter
@@ -100,6 +100,9 @@ public class MissionProgrammer {
                             throw new RuntimeException(e);
                         }
                     }
+                    agents.forEach(a -> {
+                        ((TensorRLearner) a.programmerHandler.getAgentProgrammer().getLearningAllocator()).incrementMemory();
+                    });
                 }
             } else {
                 // SOFT RESET
@@ -187,6 +190,7 @@ public class MissionProgrammer {
 
 
                      */
+
                     Simulator.instance.softReset(this);  // This soft resets all agents
                     agents.clear();
                     Simulator.instance.getState().getAgents().forEach(a -> {
@@ -202,11 +206,16 @@ public class MissionProgrammer {
                     });
 
                     addAgentIfRequired();
+                    //reorderHierarchy();
+                    //regenerateHierarchy();
 
                     runCounter++;
                     stepCounter = 0;
 
                     Simulator.instance.startSimulation();
+
+                    //hierarchy.layers.forEach(System.out::println);
+
                 }
 
         }
@@ -232,6 +241,70 @@ public class MissionProgrammer {
             top = layers.get(l);
         }
         updateBounds();
+    }
+
+    private void reorderHierarchy() {
+        hierarchy.layers.forEach(List::clear);
+        agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
+
+        ArrayList<Integer> ascendingWidths = new ArrayList<>();
+        int layer = 0;
+        while (ascendingWidths.stream().mapToInt(Integer::intValue).sum() < agents.size()) {
+            ascendingWidths.add((int) Math.pow(MissionProgrammer.WIDTH, layer));
+            layer++;
+        }
+
+        ArrayList<Integer> widths = new ArrayList<>();
+        for (int i = ascendingWidths.size() - 1; i > -1 ; i--) {
+            widths.add(ascendingWidths.get(i));
+        }
+
+        List<AgentProgrammed> toAssign = new ArrayList<>(agents);
+        HashMap<AgentProgrammed, HashMap<Integer, Integer>> memoryMap = new HashMap<>();
+        toAssign.forEach(a -> {
+            HashMap<Integer, Integer> mems = ((TensorRLearner) a.programmerHandler.getAgentProgrammer().getLearningAllocator()).getLevelMemory();
+            for (int i=0; i<hierarchy.layers.size(); i++) {
+                if (!mems.containsKey(i)) {
+                    mems.put(i, hierarchy.layers.size() - i);
+                }
+            }
+            memoryMap.put(a, mems);
+        });
+
+
+        while (!toAssign.isEmpty()) {
+            List<AgentProgrammed> toRemove = new ArrayList<>();
+
+            for (AgentProgrammed agent : toAssign) {
+                HashMap<Integer, Integer> mems = memoryMap.get(agent);
+                Map.Entry<Integer, Integer> bestEntry = Collections.max(mems.entrySet(), new Comparator<Map.Entry<Integer, Integer>>() {
+                    public int compare(Map.Entry<Integer, Integer> e1, Map.Entry<Integer, Integer> e2) {
+                        return e1.getValue().compareTo(e2.getValue());
+                    }
+                });
+
+                int level = bestEntry.getKey();
+                if (hierarchy.layers.get(level).size() < widths.get(level)) {
+                    // This means there is room
+                    hierarchy.layers.get(level).add(agent);
+                    agent.setCoordinate(new Coordinate(50.9289, -1.409));
+                    toRemove.add(agent);
+                } else {
+                    memoryMap.get(agent).remove(level);
+                }
+            }
+            toRemove.forEach(toAssign::remove);
+        }
+
+        // Now there is a chance that we don't have a workable hierarchy (e.g. 2 parents to 10 children => one needs to be promoted)
+
+        for (int i=hierarchy.layers.size()-1; i>0; i++) {
+            while (hierarchy.layers.get(i).size() * 4 < hierarchy.layers.get(i-1).size()) {
+                // SELECT BEST OPTION FROM THE LAYERS BELOW
+                
+            }
+        }
+
     }
 
     private void addAgentIfRequired() {
@@ -341,7 +414,7 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-/*
+
         while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
             if (agents.size() < 85) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
@@ -353,7 +426,7 @@ public class MissionProgrammer {
             }
         }
 
- */
+
 
         initialiseLearningAllocators();
         for (AgentProgrammed ap : agents) {

@@ -13,10 +13,7 @@ import server.model.Coordinate;
 
 import javax.visrec.ml.data.BasicDataSet;
 import javax.visrec.ml.data.DataSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
@@ -29,10 +26,24 @@ public class TensorRLearner extends LearningAllocator {
     private int pointer;
     private int stepCount = 0;
 
+    private HashMap<Integer, Integer> levelMemory = new HashMap<>();
+
     private ArrayList<ExperienceRecord> miniBuffer = new ArrayList<>();
 
     public TensorRLearner(AgentProgrammed agent) {
         super(agent);
+    }
+
+    public void incrementMemory() {
+        if (levelMemory.containsKey(getLevel())) {
+            levelMemory.put(getLevel(), levelMemory.get(getLevel()) + 1);
+        } else {
+            levelMemory.put(getLevel(), 1);
+        }
+    }
+
+    public HashMap<Integer, Integer> getLevelMemory() {
+        return levelMemory;
     }
 
     public void setup() {
@@ -238,7 +249,7 @@ public class TensorRLearner extends LearningAllocator {
 
         return net;
     }
-    
+
     private class ExperienceRecord {
         float[][][] inputState;
         float[] actionValues;
