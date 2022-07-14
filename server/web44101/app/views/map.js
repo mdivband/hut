@@ -37,17 +37,43 @@ App.Views.Map = Backbone.View.extend({
         MapTargetController.bind(this);
         MapImageController.bind(this);
 
+        // The MapTypeId is the default setting (ROADMAP and SATELLITE are the standard two)
+        // The _Control variables enable and disable buttons for the user to change this
         this.mapOptions = {
             zoom: 18,
             center: new google.maps.LatLng(50.939025, -1.461583),
             mapTypeId: google.maps.MapTypeId.ROADMAP,
-            overviewMapControl: false,
-            streetViewControl: false,
-            mapTypeControl: false,
-            scaleControl: false,
+
+            zoomControl: true,
+            zoomControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_BOTTOM,
+            },
+
+            overviewMapControl: true,
+            overviewMapControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP,
+            },
+
+            streetViewControl: true,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP,
+            },
+
+            scaleControl: true,
+
+            rotateControl: true,
+            rotateControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP,
+            },
             scrollwheel: true,
             disableDoubleClickZoom: false,
             disableDefaultUI: true,
+
+
+            fullscreenControl: true
+
+
         };
         $.extend(this.wOptions, options.mapOptions || {});
 
