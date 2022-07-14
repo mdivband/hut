@@ -1,0 +1,85 @@
+{
+  "gameId": "Coverage",
+  "gameDescription": "Standard use case for a set off programmed drones",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true,
+    "ranges": true
+  },
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
+  "markers": [
+    {
+      "name": "testCircle",
+      "shape": "circle",
+      "centreLat": 50.92911290233203,
+      "centreLng": -1.4127561898636043,
+      "radius": 120
+    }
+  ],
+  "communicationConstrained": false,
+  "communicationRange": 250.0,
+  "uncertaintyRadius": 10,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.9289,
+      "lng": -1.409,
+      "programmed": true
+    },
+    {
+      "lat": 50.9295,
+      "lng": -1.409,
+      "programmed": true
+    },
+    {
+      "lat": 50.930,
+      "lng": -1.40975,
+      "programmed": true
+    },
+    {
+      "lat": 50.9305,
+      "lng": -1.4095,
+      "programmed": true
+    },
+    {
+      "lat": 50.9305,
+      "lng": -1.4095,
+      "programmed": true
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 0
+    }
+  ],
+  "targets": [
+    {
+      "lat": 50.92993483453923,
+      "lng": -1.4083502511379038,
+      "type": 0
+    },
+    {
+      "lat": 50.92918290193244,
+      "lng": -1.4116303880113037,
+      "type": 0
+    },
+    {
+      "lat": 50.93029188552423,
+      "lng": -1.4125745255845459,
+      "type": 0
+    },
+    {
+      "lat": 50.93117093909728,
+      "lng": -1.4113943536179931,
+      "type": 0
+    }
+  ]
+}

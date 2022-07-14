@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 25;
+    private final int NUM_STEPS_PER_EPOCH = 10;
     public static final int WIDTH = 4;
 
     private AgentHubProgrammed hub;
@@ -86,7 +86,7 @@ public class MissionProgrammer {
                         }
                         double mvAv10 = sum10 / Math.min(scores.size(), 10);
 
-                        File csvOutputFile = new File("NewTest85to341E25withPEl01R3.csv");
+                        File csvOutputFile = new File("OnePoolingIncWithPEr3.csv");
                         try {
                             FileWriter fw = new FileWriter(csvOutputFile, true);
                             fw.write(//runCounter
@@ -235,13 +235,13 @@ public class MissionProgrammer {
     }
 
     private void addAgentIfRequired() {
-        if (runCounter == 7  || runCounter == 11 ||  runCounter == 15 || runCounter == 19 || runCounter == 23) {
+        if (runCounter == 7  || runCounter == 11 ||  runCounter == 15 || runCounter == 19 || runCounter == 23  || runCounter == 29  || runCounter == 33 || runCounter == 37) {
             // Run 4(1) AND Run 8(5) -> Remove 1/3 of agents
             List<Agent> toRemove = new ArrayList<>();
             for (Agent agent : Simulator.instance.getState().getAgents()) {
                 if (!(agent instanceof Hub)) {
                     //int num = Integer.parseInt(a.getId().split("-")[1]);
-                    if (runCounter == 11 || runCounter == 17  || runCounter == 23) {
+                    if (runCounter == 11 || runCounter == 19 || runCounter == 29  || runCounter == 37) {
                         // Big drop
                         if (Simulator.instance.getRandom().nextInt(2) == 0) {
                             toRemove.add(agent);
@@ -271,12 +271,12 @@ public class MissionProgrammer {
                     regenerateHierarchy();
                 }
             }
-        } else if (runCounter == 9 || runCounter == 13 || runCounter == 17 || runCounter == 21 || runCounter == 25 || runCounter == 27) {
+        } else if (runCounter == 9 || runCounter == 13 || runCounter == 17 || runCounter == 21 || runCounter == 25 || runCounter == 27 || runCounter == 31 || runCounter == 35 || runCounter == 39) {
             // Run 6(3) AND 10(7) -> Restore all agents
             int numToAdd = 500;
             for (int i = 0; i < numToAdd; i++) {
                 int lim = 85;
-                if (runCounter == 27) {
+                if (runCounter == 27 || runCounter == 31 || runCounter == 35 || runCounter == 39) {
                     lim = 341;
                 }
                 if (agents.size() < lim) {
@@ -296,7 +296,7 @@ public class MissionProgrammer {
                 }
             }
             regenerateHierarchy();
-        } else if (runCounter < -1 && agents.size() < 341) {
+        } else if (runCounter < 4 && agents.size() < 85) {
             int numToAdd = (int) Math.pow(4, hierarchy.layers.size());
             for (int i=0; i<numToAdd; i++) {
                 if (agents.size() < 341) {
@@ -341,7 +341,7 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-
+/*
         while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
             if (agents.size() < 85) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
@@ -353,10 +353,7 @@ public class MissionProgrammer {
             }
         }
 
-
-
-
-
+ */
 
         initialiseLearningAllocators();
         for (AgentProgrammed ap : agents) {
@@ -506,7 +503,7 @@ public class MissionProgrammer {
                 int layerTargetSize = MissionProgrammer.WIDTH * layers.get(i + 1).size();
                 if (layers.get(i).size() < layerTargetSize) {
                     layers.get(i).add(ap);
-                    break;
+                    return;
                 }
             }
             // If full:

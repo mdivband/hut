@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Config Maxsum-GUI Map</title>
+
+
+    <!-- Bootstrap Core CSS -->
+    <link href="lib/configmap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/configmap/css/configmap.css" rel="stylesheet">
+
+    <!-- js -->
+    <script src="lib/configmap/js/jquery.js"></script>
+    <script src="lib/configmap/js/bootstrap.js"></script>
+    <script src="lib/configmap/js/underscore-min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD2yeEfntFMTpYXQudVggCAQtG2qDowZY&libraries=places"></script>
+
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="">Config MaxSumGUI Map</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+               <ul class="nav navbar-nav">
+                    <li><button id="adduav" name=0 type="button" class="btn btn-primary btn3d"><span class="glyphicon glyphicon-plane"></span><span style="font-size:smaller;"> Add</button>
+                    </li>
+                    <li>
+                        <button id="deluav" name=1 type="button" class="btn btn-danger btn3d"><span class="glyphicon glyphicon-remove"></span><span style="font-size:smaller;"> Delete</button>
+                    </li>
+              </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <form action="#">
+                            <button id="setupmap" class="btn btn-success navbar-btn">Start Demo</button>
+                        </form>
+                </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- google map search box -->
+    <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+    <div id="map"></div>
+
+
+
+
+    <!-- Page Content -->
+    <div class="container">
+
+        <div class="row">
+
+            <div class="col-md-12">
+                <div id="row">
+                </div><!--  end of row  -->
+
+            </div>
+
+        </div>
+
+    </div>
+    <!-- /.container -->
+
+</body>
+    <script src="lib/configmap/js/configmap.js"></script>
+
+</html>
