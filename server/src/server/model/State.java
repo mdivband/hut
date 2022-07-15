@@ -154,6 +154,7 @@ public class State {
         hazards.clear();
         allocation.clear();
         tempAllocation.clear();
+        droppedAllocation.clear();
         hazardHits.clear();
 
         storedImages.clear();
