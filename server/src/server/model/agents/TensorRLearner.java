@@ -17,9 +17,9 @@ import java.util.*;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
-    private static final int SAMPLE_SIZE = 4;
+    private static final int SAMPLE_SIZE = 200;
     private static final float LEARNING_RATE = 0.01f;
-    private static final int BUFFER_SIZE = 4;
+    private static final int BUFFER_SIZE = 20;
     private ConvolutionalNetwork qNetwork;
     private ExperienceRecord[] buffer;
     private boolean bufferFull = false;
@@ -69,6 +69,7 @@ public class TensorRLearner extends LearningAllocator {
 
     @Override
     public void step(float jointReward) {
+        System.out.println(agent.getId() + " instep");
         /*
         if (Simulator.instance.getStepCount() > 2000) {
             qNetwork.getTrainer().setLearningRate(0.001f);
@@ -151,7 +152,7 @@ public class TensorRLearner extends LearningAllocator {
             }
         }
 
-
+        System.out.println(agent.getId() + " outstep");
         stepCount++;
     }
 

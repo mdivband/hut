@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 10;
+    private final int NUM_STEPS_PER_EPOCH = 50;
     public static final int WIDTH = 4;
 
     private AgentHubProgrammed hub;
@@ -86,7 +86,7 @@ public class MissionProgrammer {
                         }
                         double mvAv10 = sum10 / Math.min(scores.size(), 10);
 
-                        File csvOutputFile = new File("RoleRetention.csv");
+                        File csvOutputFile = new File("BotFirstWithMaxingE50L01ER200(20).csv");
                         try {
                             FileWriter fw = new FileWriter(csvOutputFile, true);
                             fw.write(//runCounter
@@ -206,8 +206,6 @@ public class MissionProgrammer {
                     });
 
                     addAgentIfRequired();
-                    //reorderHierarchy();
-                    //regenerateHierarchy();
 
                     runCounter++;
                     stepCounter = 0;
@@ -341,6 +339,7 @@ public class MissionProgrammer {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                     ap.setCoordinate(new Coordinate(50.9289, -1.409));
                     hierarchy.addAgent(ap);
+                    //hierarchy.addAgentFromTop(ap);
                     regenerateHierarchy();
                 }
             }
@@ -363,6 +362,7 @@ public class MissionProgrammer {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                     // HERE is the promotion setting
                     //hierarchy.addAgentWithoutPromotion(ap);
+                    //hierarchy.addAgentFromTop(ap);
                     hierarchy.addAgent(ap);
                 } else {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
@@ -382,6 +382,7 @@ public class MissionProgrammer {
                     ap.programmerHandler.getAgentProgrammer().setupAllocator();
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                     hierarchy.addAgent(ap);
+                    //hierarchy.addAgentFromTop(ap);
                 } else {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                 }
@@ -414,7 +415,7 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-
+/*
         while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
             if (agents.size() < 85) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
@@ -425,6 +426,8 @@ public class MissionProgrammer {
                 agents.add(ap);
             }
         }
+
+ */
 
 
 
@@ -584,8 +587,42 @@ public class MissionProgrammer {
             layers.get(0).add(ap);
         }
 
+        public void addAgentFromTop(AgentProgrammed toAdd) {
+            addAgentFromTop(toAdd, layers.size() - 1);
+        }
+
+        public void addAgentFromTop(AgentProgrammed toAdd, int layerIndex) {
+            // Check this layer for saturation
+            // IF this layer is too full:
+            //      Place agent in this layer;
+            //      Promote one to the next layer, using the same process
+            // ELSE:
+            //      Place in this layer
+
+            if (layerIndex == -1) {
+                // Bottom layer is full; make a new one
+                ArrayList<AgentProgrammed> newLayer = new ArrayList<>();
+                newLayer.add(toAdd);
+                layers.add(0, newLayer);
+                return;
+            }
+
+            int layerTargetSize = (int) Math.pow(MissionProgrammer.WIDTH, (layers.size() - 1 - layerIndex));  // 1 if top, otherwise the required width
+            if (layers.get(layerIndex).size() < layerTargetSize) {
+                // This layer has free space
+                layers.get(layerIndex).add(toAdd);
+            } else {
+                // This layer is full: place, and demote
+                AgentProgrammed toDemote = layers.get(layerIndex).get(Simulator.instance.getRandom().nextInt(layers.get(layerIndex).size()));
+                layers.get(layerIndex).remove(toDemote);
+                layers.get(layerIndex).add(toAdd);
+                addAgentFromTop(toDemote, layerIndex-1);
+            }
+        }
+
         public void addAgent(AgentProgrammed toAdd) {
             addAgent(toAdd, 0);
+            maximizeUpperLayers();
         }
 
         public void addAgent(AgentProgrammed toAdd, int layerIndex) {
@@ -622,6 +659,23 @@ public class MissionProgrammer {
                 layers.get(layerIndex).add(toAdd);
                 addAgent(toPromote, layerIndex+1);
             }
+        }
+
+        public void maximizeUpperLayers() {
+            /*
+            System.out.println("START: " + Arrays.toString(getDims()));
+            for (int i=layers.size()-1; i>0; i--) {
+                int layerTargetSize = (int) Math.pow(MissionProgrammer.WIDTH, (layers.size() - 1 - i));  // 1 if top, otherwise the required width
+                System.out.println("Target for layer " + i + " is " + layerTargetSize);
+                while (layers.get(i).size() < layerTargetSize && !layers.get(i-1).isEmpty()) {
+                    AgentProgrammed toPromote = layers.get(i-1).get(0);
+                    layers.get(i-1).remove(toPromote);
+                    layers.get(i).add(toPromote);
+                    System.out.println(Arrays.toString(getDims()));
+                }
+            }
+
+             */
         }
 
         public AgentProgrammed getRoot() {
