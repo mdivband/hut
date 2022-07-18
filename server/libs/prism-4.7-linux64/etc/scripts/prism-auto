@@ -633,7 +633,7 @@ def runPrism(args, bmArgs, dir=""):
             # So we use the not-as-secure mktemp...
             # We use . as directory because PRISM / Java can not handle
             # cygwin style paths (/tmp/...)
-            logFile = tempfile.mktemp(dir='')
+            logFile = tempfile.mktemp(dir='.')
         else:
             # Not on Windows, use NamedTemporaryFile
             f = tempfile.NamedTemporaryFile(delete=False)
@@ -965,7 +965,7 @@ def benchmarkModelFile(modelFile, modelArgs=[], dir=""):
     logging.debug("Benchmarking model file " + modelFile + " " + str(modelArgs))
     if dir == "":
         dir = os.path.dirname(modelFile)
-        if dir == "": dir = ""
+        if dir == "": dir = "."
     # Expand model file based on any .args file
     argLists = getMatchingArgListsForFile(modelFile)
     logging.debug("Arg lists: " + str(argLists))
@@ -1004,7 +1004,7 @@ def benchmarkModelFile(modelFile, modelArgs=[], dir=""):
 def benchmarkAutoFile(autoFile):
     logging.debug("Benchmarking auto file " + autoFile)
     dir = os.path.dirname(autoFile)
-    if dir == "": dir = ""
+    if dir == "": dir = "."
     if options.matching:
         matchingModelFiles = getMatchingModelsInDir(dir, autoFile)
         modelFiles = map(lambda file: [file,[]], matchingModelFiles)
@@ -1031,7 +1031,7 @@ def benchmarkAutoFile(autoFile):
 def benchmarkPropertiesFile(propertiesFile):
     logging.debug("Benchmarking properties file " + propertiesFile)
     dir = os.path.dirname(propertiesFile)
-    if dir == "": dir = ""
+    if dir == "": dir = "."
     # Expand properties file based on any .args file
     argLists = getMatchingArgListsForFile(propertiesFile)
     for args in argLists:
