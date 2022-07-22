@@ -17,9 +17,9 @@ import java.util.*;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
-    private static final int SAMPLE_SIZE = 200;
-    private static final float LEARNING_RATE = 0.01f;
-    private static final int BUFFER_SIZE = 20;
+    private static final int SAMPLE_SIZE = 4;
+    private static final float LEARNING_RATE = 1f;
+    private static final int BUFFER_SIZE = 4;
     private ConvolutionalNetwork qNetwork;
     private ExperienceRecord[] buffer;
     private boolean bufferFull = false;
@@ -69,7 +69,6 @@ public class TensorRLearner extends LearningAllocator {
 
     @Override
     public void step(float jointReward) {
-        System.out.println(agent.getId() + " instep");
         /*
         if (Simulator.instance.getStepCount() > 2000) {
             qNetwork.getTrainer().setLearningRate(0.001f);
@@ -98,8 +97,23 @@ public class TensorRLearner extends LearningAllocator {
                 }
             }
         }
+        */
+
+        /*
+        if (getLevel() == 1) {
+            qNetwork.getTrainer().setLearningRate(1f);
+        } else if (getLevel() == 2) {
+            qNetwork.getTrainer().setLearningRate(0.5f);
+        } else if (getLevel() == 3) {
+            qNetwork.getTrainer().setLearningRate(0.25f);
+        } else if (getLevel() == 4) {
+            qNetwork.getTrainer().setLearningRate(0.1f);
+        }
 
          */
+
+
+
         boolean perform = true;
         if (perform) {
             if (!miniBuffer.isEmpty()) {
@@ -152,7 +166,6 @@ public class TensorRLearner extends LearningAllocator {
             }
         }
 
-        System.out.println(agent.getId() + " outstep");
         stepCount++;
     }
 
@@ -243,7 +256,7 @@ public class TensorRLearner extends LearningAllocator {
 
         net.getTrainer()
                 .setOptimizer(OptimizerType.SGD)
-                .setBatchSize(50)
+                .setBatchSize(20)
                 .setBatchMode(true)
                 .setMaxError(999999)
                 .setLearningRate(LEARNING_RATE);

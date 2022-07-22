@@ -85,8 +85,8 @@ public class MissionProgrammer {
                             sum10 += scores.get(i);
                         }
                         double mvAv10 = sum10 / Math.min(scores.size(), 10);
-
-                        File csvOutputFile = new File("BotFirstWithMaxingE50L01ER200(20).csv");
+                        // BotFirstE50ER200(20)L01R3
+                        File csvOutputFile = new File("NewFullAdE50LfR3.csv");
                         try {
                             FileWriter fw = new FileWriter(csvOutputFile, true);
                             fw.write(//runCounter
@@ -338,8 +338,9 @@ public class MissionProgrammer {
                 } else {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                     ap.setCoordinate(new Coordinate(50.9289, -1.409));
-                    hierarchy.addAgent(ap);
+                    //hierarchy.addAgent(ap);
                     //hierarchy.addAgentFromTop(ap);
+                    hierarchy.addAgentWithoutPromotion(ap);
                     regenerateHierarchy();
                 }
             }
@@ -361,9 +362,9 @@ public class MissionProgrammer {
                     ap.programmerHandler.getAgentProgrammer().setupAllocator();
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                     // HERE is the promotion setting
-                    //hierarchy.addAgentWithoutPromotion(ap);
+                    hierarchy.addAgentWithoutPromotion(ap);
                     //hierarchy.addAgentFromTop(ap);
-                    hierarchy.addAgent(ap);
+                    //hierarchy.addAgent(ap);
                 } else {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                 }
@@ -381,7 +382,8 @@ public class MissionProgrammer {
                     agents.add(ap);
                     ap.programmerHandler.getAgentProgrammer().setupAllocator();
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
-                    hierarchy.addAgent(ap);
+                    //hierarchy.addAgent(ap);
+                    hierarchy.addAgentWithoutPromotion(ap);
                     //hierarchy.addAgentFromTop(ap);
                 } else {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
@@ -415,7 +417,7 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-/*
+
         while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
             if (agents.size() < 85) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
@@ -426,8 +428,6 @@ public class MissionProgrammer {
                 agents.add(ap);
             }
         }
-
- */
 
 
 
@@ -457,7 +457,7 @@ public class MissionProgrammer {
         for (AgentProgrammed ap : agents) {
             int lvl = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel();
             if (lvl > 0) {
-                float subTreeReward = calculateSubTreeReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1);
+                float subTreeReward = calculateSubTreeReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
                 //System.out.println("subrwd for " + ap.getId() + " mul="+(ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1) + " rwd" + subTreeReward);
                 ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward);
             }
@@ -492,7 +492,7 @@ public class MissionProgrammer {
 
     }
 
-    public float calculateSubTreeReward(Coordinate centre, int multiplier) {
+    public float calculateSubTreeReward(Coordinate centre, int multiplier, List<AgentProgrammed> subordinates) {
         // TODO Note that a better system is to use actual circle geometry to find area of coverage. This can be
         //  problematic though, as overlapping circles shouldn't be counted twice and can be tricky to deal with.
         //  Certainly possible, but I'm leaving this for now for the sake of simplicity -WH
@@ -501,7 +501,8 @@ public class MissionProgrammer {
             for (int j = 0; j < ySteps; j++) {
                 //System.out.println("for (" + i + ", " + j + ")");
                 Coordinate equiv = calculateEquivalentCoordinate(centre, i, j, multiplier);
-                for (Agent a : agents) {
+                //for (Agent a : agents) {
+                for (Agent a : subordinates) {
                     if (!(a instanceof Hub)) {
                         Coordinate coord = a.getCoordinate();
                         if (equiv.getDistance(coord) < 250) {
@@ -585,6 +586,8 @@ public class MissionProgrammer {
             // If full:
             layers.add(0, new ArrayList<>());
             layers.get(0).add(ap);
+
+            maximizeUpperLayers();
         }
 
         public void addAgentFromTop(AgentProgrammed toAdd) {
@@ -662,20 +665,20 @@ public class MissionProgrammer {
         }
 
         public void maximizeUpperLayers() {
-            /*
-            System.out.println("START: " + Arrays.toString(getDims()));
+
+            //System.out.println("START: " + Arrays.toString(getDims()));
             for (int i=layers.size()-1; i>0; i--) {
                 int layerTargetSize = (int) Math.pow(MissionProgrammer.WIDTH, (layers.size() - 1 - i));  // 1 if top, otherwise the required width
-                System.out.println("Target for layer " + i + " is " + layerTargetSize);
+                //System.out.println("Target for layer " + i + " is " + layerTargetSize);
                 while (layers.get(i).size() < layerTargetSize && !layers.get(i-1).isEmpty()) {
                     AgentProgrammed toPromote = layers.get(i-1).get(0);
                     layers.get(i-1).remove(toPromote);
                     layers.get(i).add(toPromote);
-                    System.out.println(Arrays.toString(getDims()));
+                    //System.out.println(Arrays.toString(getDims()));
                 }
             }
 
-             */
+
         }
 
         public AgentProgrammed getRoot() {
