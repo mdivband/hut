@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 50;
+    private final int NUM_STEPS_PER_EPOCH = 1000;
     public static final int WIDTH = 4;
 
     private AgentHubProgrammed hub;
@@ -80,18 +80,26 @@ public class MissionProgrammer {
                         double mvAv = sum / Math.min(scores.size(), 100);
                         DecimalFormat f = new DecimalFormat("##.00");
 
+                        double sum50 = 0;
+                        for (int i = Math.max(0, scores.size() - 50); i < scores.size(); i++) {
+                            sum50 += scores.get(i);
+                        }
+                        double mvAv50 = sum50 / Math.min(scores.size(), 50);
+
                         double sum10 = 0;
                         for (int i = Math.max(0, scores.size() - 10); i < scores.size(); i++) {
                             sum10 += scores.get(i);
                         }
                         double mvAv10 = sum10 / Math.min(scores.size(), 10);
                         // BotFirstE50ER200(20)L01R3
-                        File csvOutputFile = new File("NewFullAdE50LfR3.csv");
+                        //
+                        File csvOutputFile = new File("newTest.csv");
                         try {
                             FileWriter fw = new FileWriter(csvOutputFile, true);
                             fw.write(//runCounter
                                     r
                                     + ", " + f.format(mvAv)
+                                    + ", " + f.format(mvAv50)
                                     + ", " + f.format(mvAv10)
                                     //+ ", " + epochDuration
                                     + " \n");
@@ -125,6 +133,12 @@ public class MissionProgrammer {
                 }
                 double mvAv = sum / Math.min(scores.size(), 100);
 
+                double sum50 = 0;
+                for (int i = Math.max(0, scores.size() - 50); i < scores.size(); i++) {
+                    sum50 += scores.get(i);
+                }
+                double mvAv50 = sum50 / Math.min(scores.size(), 50);
+
                 double sum10 = 0;
                 for (int i = Math.max(0, scores.size() - 10); i < scores.size(); i++) {
                     sum10 += scores.get(i);
@@ -135,6 +149,7 @@ public class MissionProgrammer {
                         "run = " + runCounter
                                 + ", steps = " + (stepCounter * runCounter)
                                 + ", moving average (100) = " + f.format(mvAv)
+                                + ", moving average (50) = " + f.format(mvAv50)
                                 + ", moving average (10) = " + f.format(mvAv10)
                                 + ", epoch time = " + (epochDuration) + "ms"
                                 + ", num agents = " + agents.size()
@@ -306,73 +321,20 @@ public class MissionProgrammer {
     }
 
     private void addAgentIfRequired() {
-        if (runCounter == 7  || runCounter == 11 ||  runCounter == 15 || runCounter == 19 || runCounter == 23  || runCounter == 29  || runCounter == 33 || runCounter == 37) {
-            // Run 4(1) AND Run 8(5) -> Remove 1/3 of agents
-            List<Agent> toRemove = new ArrayList<>();
-            for (Agent agent : Simulator.instance.getState().getAgents()) {
-                if (!(agent instanceof Hub)) {
-                    //int num = Integer.parseInt(a.getId().split("-")[1]);
-                    if (runCounter == 11 || runCounter == 19 || runCounter == 29  || runCounter == 37) {
-                        // Big drop
-                        if (Simulator.instance.getRandom().nextInt(2) == 0) {
-                            toRemove.add(agent);
-                        }
-                    } else {
-                        if (Simulator.instance.getRandom().nextInt(4) == 0) {
-                            toRemove.add(agent);
-                        }
-                    }
-                }
-            }
-            toRemove.forEach(a -> {
+        // Inc  -> R0=5; R1=21; R2=85; R3=341; ... ; R6(5)=85; ... ; R9(8)=341 ; ... ; R11(10)=85
+        // Full ->                     R0=341; ... ; R3(2)=85; ... ; R6(5)=341 ; ... ; R8(7)=85
+/*
+        if (runCounter == 8 || runCounter == 16 || runCounter == 30|| runCounter == 32 || runCounter == 40) {
+            hierarchy.layers.get(0).forEach(a -> {
                 Simulator.instance.getState().getAgents().remove(a);
-                agents.remove((AgentProgrammed) a);
-                //hierarchy.layers.forEach(l -> {
-                //    l.remove((AgentProgrammed) a);
-                //});
+                agents.remove(a);
             });
-            hierarchy = null;
-            for (AgentProgrammed ap : agents) {
-                if (hierarchy == null) {
-                    hierarchy = new AgentHierarchy(ap);
-                } else {
-                    agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
-                    ap.setCoordinate(new Coordinate(50.9289, -1.409));
-                    //hierarchy.addAgent(ap);
-                    //hierarchy.addAgentFromTop(ap);
-                    hierarchy.addAgentWithoutPromotion(ap);
-                    regenerateHierarchy();
-                }
-            }
-        } else if (runCounter == 9 || runCounter == 13 || runCounter == 17 || runCounter == 21 || runCounter == 25 || runCounter == 27 || runCounter == 31 || runCounter == 35 || runCounter == 39) {
-            // Run 6(3) AND 10(7) -> Restore all agents
-            int numToAdd = 500;
-            for (int i = 0; i < numToAdd; i++) {
-                int lim = 85;
-                if (runCounter == 27 || runCounter == 31 || runCounter == 35 || runCounter == 39) {
-                    lim = 341;
-                }
-                if (agents.size() < lim) {
-                    AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
-                            50.9289,
-                            -1.409,
-                            0);
-
-                    agents.add(ap);
-                    ap.programmerHandler.getAgentProgrammer().setupAllocator();
-                    agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
-                    // HERE is the promotion setting
-                    hierarchy.addAgentWithoutPromotion(ap);
-                    //hierarchy.addAgentFromTop(ap);
-                    //hierarchy.addAgent(ap);
-                } else {
-                    agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
-                }
-            }
+            hierarchy.layers.remove(0);
+            agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
             regenerateHierarchy();
-        } else if (runCounter < 4 && agents.size() < 85) {
+        } else if ((runCounter == 2 || runCounter == 4 || runCounter == 6 || runCounter == 10 || runCounter == 18 || runCounter == 34 || runCounter == 36 || runCounter == 50) && agents.size() < 341) {
             int numToAdd = (int) Math.pow(4, hierarchy.layers.size());
-            for (int i=0; i<numToAdd; i++) {
+            for (int i = 0; i < numToAdd; i++) {
                 if (agents.size() < 341) {
                     AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
                             50.9289,
@@ -382,18 +344,40 @@ public class MissionProgrammer {
                     agents.add(ap);
                     ap.programmerHandler.getAgentProgrammer().setupAllocator();
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
-                    //hierarchy.addAgent(ap);
-                    hierarchy.addAgentWithoutPromotion(ap);
+                    hierarchy.addAgent(ap);
+                    //hierarchy.addAgentWithoutPromotion(ap);
                     //hierarchy.addAgentFromTop(ap);
                 } else {
                     agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
                 }
             }
             regenerateHierarchy();
+
+
         } else {
+ */
             agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
             regenerateHierarchy();
-        }
+
+
+/*
+            hierarchy = null;
+            Collections.shuffle(agents);
+            agents.forEach(a -> {
+                if (hierarchy == null) {
+                    hierarchy = new AgentHierarchy(a);
+                } else {
+                    hierarchy.addAgent(a);
+                    a.setCoordinate(new Coordinate(50.9289, -1.409));
+                }
+            });
+            agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
+            agents.forEach(a -> a.setCoordinate(new Coordinate(50.9289, -1.409)));
+            regenerateHierarchy();
+
+ */
+
+ //       }
 
     }
 
@@ -409,7 +393,6 @@ public class MissionProgrammer {
         xSquareSpan = (5 * X_SPAN) / xSteps;
         ySquareSpan = (5 * Y_SPAN) / ySteps;
         cellWidth = (float) ((xSquareSpan * 111111));
-
     }
 
     private void initialiseLearningAllocators() {
@@ -417,9 +400,9 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-
-        while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
-            if (agents.size() < 85) {
+/*
+        while (Simulator.instance.getState().getAgents().size() < 341 + 1) {
+            if (agents.size() < 341) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
                         50.9289,
                         -1.409,
@@ -428,6 +411,10 @@ public class MissionProgrammer {
                 agents.add(ap);
             }
         }
+
+ */
+
+
 
 
 
@@ -457,9 +444,11 @@ public class MissionProgrammer {
         for (AgentProgrammed ap : agents) {
             int lvl = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel();
             if (lvl > 0) {
-                float subTreeReward = calculateSubTreeReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
-                //System.out.println("subrwd for " + ap.getId() + " mul="+(ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1) + " rwd" + subTreeReward);
+                //float subTreeReward = calculateSubTreeReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                float subTreeReward = calculateSimulatedReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                //System.out.println("For agent at level " + ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + ", rwd = " + subTreeReward);
                 ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward);
+                //ap.programmerHandler.getAgentProgrammer().learningStep(balancedReward);
             }
         }
     }
@@ -492,10 +481,7 @@ public class MissionProgrammer {
 
     }
 
-    public float calculateSubTreeReward(Coordinate centre, int multiplier, List<AgentProgrammed> subordinates) {
-        // TODO Note that a better system is to use actual circle geometry to find area of coverage. This can be
-        //  problematic though, as overlapping circles shouldn't be counted twice and can be tricky to deal with.
-        //  Certainly possible, but I'm leaving this for now for the sake of simplicity -WH
+    public float calculateSimulatedReward(Coordinate centre, int multiplier, List<AgentProgrammed> subordinates) {
         int numPointsCovered = 0;
         for (int i = 0; i < xSteps; i++) {
             for (int j = 0; j < ySteps; j++) {
@@ -503,6 +489,47 @@ public class MissionProgrammer {
                 Coordinate equiv = calculateEquivalentCoordinate(centre, i, j, multiplier);
                 //for (Agent a : agents) {
                 for (Agent a : subordinates) {
+                    if (!(a instanceof Hub)) {
+                        Coordinate coord = a.getCoordinate();
+                        if (equiv.getDistance(coord) < 250 * (multiplier - 1)) {
+                            // This square's centre is in range of an agent
+                            numPointsCovered++;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return numPointsCovered;
+    }
+
+    public float calculateSubTreeReward(Coordinate centre, int multiplier, List<AgentProgrammed> subordinates) {
+        // TODO Note that a better system is to use actual circle geometry to find area of coverage. This can be
+        //  problematic though, as overlapping circles shouldn't be counted twice and can be tricky to deal with.
+        //  Certainly possible, but I'm leaving this for now for the sake of simplicity -WH
+
+        List<AgentProgrammed> agentsToConsider = new ArrayList<>();
+        List<AgentProgrammed> toAdd = new ArrayList<>(subordinates);
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            agentsToConsider.addAll(toAdd);
+            List<AgentProgrammed> nextBatch = new ArrayList<>();
+            for (AgentProgrammed agent : toAdd) {
+                if (!agent.getProgrammerHandler().getAgentProgrammer().getSubordinates().isEmpty()) {
+                    changed = true;
+                    nextBatch.addAll(agent.getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                }
+            }
+            toAdd = nextBatch;
+        }
+        int numPointsCovered = 0;
+        for (int i = 0; i < xSteps; i++) {
+            for (int j = 0; j < ySteps; j++) {
+                //System.out.println("for (" + i + ", " + j + ")");
+                Coordinate equiv = calculateEquivalentCoordinate(centre, i, j, multiplier);
+                //for (Agent a : agents) {
+                for (Agent a : agentsToConsider) {
                     if (!(a instanceof Hub)) {
                         Coordinate coord = a.getCoordinate();
                         if (equiv.getDistance(coord) < 250) {

@@ -117,8 +117,8 @@ public abstract class LearningAllocator {
 
     public int[] calculateEquivalentGridCell(Coordinate c) {
         return new int[]{
-                (int) Math.floor(((c.getLongitude() - botLeft.getLongitude()) / (level * X_SPAN)) * xSteps),
-                (int) Math.floor(((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN)) * ySteps)
+                (int) Math.round(((c.getLongitude() - botLeft.getLongitude()) / (level * X_SPAN)) * xSteps),
+                (int) Math.round(((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN)) * ySteps)
         };
     }
 

@@ -3,7 +3,7 @@ package server.model.agents;
 import deepnetts.data.MLDataItem;
 import deepnetts.data.TabularDataSet;
 import deepnetts.net.ConvolutionalNetwork;
-import deepnetts.net.layers.AbstractLayer;
+import deepnetts.net.FeedForwardNetwork;
 import deepnetts.net.layers.activation.ActivationType;
 import deepnetts.net.loss.LossType;
 import deepnetts.net.train.opt.OptimizerType;
@@ -13,22 +13,29 @@ import server.model.Coordinate;
 
 import javax.visrec.ml.data.BasicDataSet;
 import javax.visrec.ml.data.DataSet;
+import java.awt.*;
 import java.util.*;
+
+
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.List;
+import javax.imageio.ImageIO;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
-    private static final int SAMPLE_SIZE = 4;
-    private static final float LEARNING_RATE = 1f;
-    private static final int BUFFER_SIZE = 4;
-    private ConvolutionalNetwork qNetwork;
-    private ExperienceRecord[] buffer;
+    private static final int SAMPLE_SIZE = 1;
+    private static final float LEARNING_RATE = 0.1f;
+    private static final int BUFFER_SIZE = 1;
+    private FeedForwardNetwork qNetwork;
+    private ShortExperienceRecord[] buffer;
     private boolean bufferFull = false;
     private int pointer;
     private int stepCount = 0;
 
     private HashMap<Integer, Integer> levelMemory = new HashMap<>();
 
-    private ArrayList<ExperienceRecord> miniBuffer = new ArrayList<>();
+    private ArrayList<ShortExperienceRecord> miniBuffer = new ArrayList<>();
 
     public TensorRLearner(AgentProgrammed agent) {
         super(agent);
@@ -52,7 +59,7 @@ public class TensorRLearner extends LearningAllocator {
         ySteps = 16;
         maxReward = 64 * 64;
         qNetwork = createNetwork();
-        buffer = new ExperienceRecord[BUFFER_SIZE];
+        buffer = new ShortExperienceRecord[BUFFER_SIZE];
         pointer = 0;
         counter = 0;
     }
@@ -69,55 +76,10 @@ public class TensorRLearner extends LearningAllocator {
 
     @Override
     public void step(float jointReward) {
-        /*
-        if (Simulator.instance.getStepCount() > 2000) {
-            qNetwork.getTrainer().setLearningRate(0.001f);
-            System.out.println("SWITCH");
-        }
-
-         */
-
-        /*
-        boolean perform = false;
-        switch (getLevel()) {
-            case 0 -> perform = false;
-            case 1 -> perform = true;
-            case 2 -> {
-                if (stepCount % 3 == 0) {
-                    perform = true;
-                }
-            }
-            case 3 -> {
-                if (stepCount % 8 == 0) {
-                    perform = true;
-                }
-            } default -> {
-                if (stepCount % 24 == 0) {
-                    perform = true;
-                }
-            }
-        }
-        */
-
-        /*
-        if (getLevel() == 1) {
-            qNetwork.getTrainer().setLearningRate(1f);
-        } else if (getLevel() == 2) {
-            qNetwork.getTrainer().setLearningRate(0.5f);
-        } else if (getLevel() == 3) {
-            qNetwork.getTrainer().setLearningRate(0.25f);
-        } else if (getLevel() == 4) {
-            qNetwork.getTrainer().setLearningRate(0.1f);
-        }
-
-         */
-
-
-
         boolean perform = true;
         if (perform) {
             if (!miniBuffer.isEmpty()) {
-                for (ExperienceRecord e : miniBuffer) {
+                for (ShortExperienceRecord e : miniBuffer) {
                     if (pointer >= BUFFER_SIZE) {
                         pointer = 0;
                         bufferFull = true;
@@ -132,47 +94,164 @@ public class TensorRLearner extends LearningAllocator {
                 train();
             }
 
+            // Choose a hero
+            int rnd = Simulator.instance.getRandom().nextInt(4);
+
+            AgentProgrammed hero = subordinates.get(rnd);
+            // Create state rep
+            //float[][] state = allZeros();
+            float[] state = new float[256];
+            for (int i=0; i<256; i++) {
+                state[i] = 0;
+            }
+            subordinates.forEach(a -> {
+                if (a != hero) {
+                    int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+                    //state[cell[0]][cell[1]] = 1;
+                    state[(cell[1] * 8) + cell[0]] = 1;
+                }
+            });
+
+            // Create a state for each action (N,S,E,W,St)
+            //float[][][] futureStates = new float[5][16][16];
+            float[][] futureStates = new float[5][256];
+            for (int i = 0; i < 5; i++) {
+                futureStates[i] = state.clone();
+            }
+
+            int[] heroCell = calculateEquivalentGridCell(hero.getCoordinate());
+            boolean[] excluded = {false, false, false, false, false};
+            try {
+                //futureStates[0][heroCell[0]][heroCell[1]] = 1;  // 0 = St
+                futureStates[0][((heroCell[1] * 16) + heroCell[0])] = 1;  // 0 = St
+            } catch (Exception e) {
+                excluded[0] = true;
+            }
+            try {
+                futureStates[1][((heroCell[1] * 16) + heroCell[0] + 1)] = 1;  // 1 = N
+            } catch (Exception e) {
+                excluded[1] = true;
+            }
+            try {
+                futureStates[2][((heroCell[1] * 16) + heroCell[0] - 1)] = 1;  // 2 = S
+            } catch (Exception e) {
+                excluded[2] = true;
+            }
+            try {
+                futureStates[3][(((heroCell[1] + 1) * 16) + heroCell[0])] = 1;  // 3 = E
+            } catch (Exception e) {
+                excluded[3] = true;
+            }
+            try {
+                futureStates[4][(((heroCell[1] - 1) * 16) + heroCell[0])] = 1;  // 4 = W
+            } catch (Exception e) {
+                excluded[4] = true;
+            }
+
+            // We now have our futureStates populated
+
+            float[] values = new float[5];
+            int best = -1;
+            float bestVal = -1000;
+            for (int i = 0; i < 5; i++) {
+                if (!excluded[i]) {
+                    values[i] = compute(new Tensor(futureStates[i]));
+                    if (values[i] > bestVal) {
+                        bestVal = values[i];
+                        best = i;
+                    }
+                }
+            }
+
+            // System we have our best value
+            // TODO epsilon exploration
+
+            // Record prediction
+
+            // Make move
+
+
             boolean eps = Simulator.instance.getRandom().nextInt(5) == 0;
-
-
-            // Map the tensor of layers (16x16x3) to a best response (256 -> 16x16)
-            float[][][] config = new float[4][16][16];
-            List<Coordinate> moves = new ArrayList<>();
-            for (int i = 0; i < 4; i++) {
-                float[][][] state = new float[3][16][16];
-                System.arraycopy(config, 0, state, 0, i);
-                for (int d = i; d < 3; d++) {
-                    float[][] input = allZeros();
-                    state[d] = input;
+            if (eps) {
+                best = -1;
+                while (best == -1 || excluded[best]) {
+                    best = Simulator.instance.getRandom().nextInt(5);
                 }
-                float[] result = compute(new Tensor(state));
-                int[] best;
-                if (!eps) {
-                    best = calculateBestCoord(result);
-                    config[i] = allZeros();
-                    config[i][best[0]][best[1]] = 1f;
-                    // ^ Placed a 1 in the cell used
-                    moves.add(calculateEquivalentCoordinate(best[0], best[1]));
-                } else {
-                    best = new int[]{Simulator.instance.getRandom().nextInt(16), Simulator.instance.getRandom().nextInt(16)};
-                    moves.add(calculateEquivalentCoordinate(best[0], best[1]));
-                }
-                miniBuffer.add(new ExperienceRecord(state, result, best[0] * 16 + best[1], -1));
+
             }
 
-            for (int i = 0; i < subordinates.size(); i++) {
-                AgentProgrammed ap = subordinates.get(i);
-                ap.programmerHandler.manualSetTask(moves.get(i));
+
+            if (best == 0) {
+                // No move
+            } else if (best == 1) {
+                if (heroCell[0] > 15 || heroCell[0] < 0 || heroCell[1] + 1 > 15 || heroCell[1] + 1 < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1] + 1));
+            } else if (best == 2) {
+                if (heroCell[0] > 15 || heroCell[0] < 0 || heroCell[1] - 1 > 15 || heroCell[1] - 1 < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1] - 1));
+            } else if (best == 3) {
+                if (heroCell[0] + 1 > 15 || heroCell[0] + 1 < 0 || heroCell[1] > 15 || heroCell[1] < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0] + 1, heroCell[1]));
+            } else if (best == 4) {
+                if (heroCell[0] - 1 > 15 || heroCell[0] - 1 < 0 || heroCell[1] > 15 || heroCell[1] < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0] - 1, heroCell[1]));
             }
+
+            miniBuffer.add(new ShortExperienceRecord(state, bestVal, -1));
+
         }
 
         stepCount++;
     }
 
-    private List<ExperienceRecord> sample() {
-        List<ExperienceRecord> sample = new ArrayList<>();
+    public static BufferedImage resize(BufferedImage img, int newW, int newH) {
+        BufferedImage resizedImage = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics2D = resizedImage.createGraphics();
+        graphics2D.drawImage(img, 0, 0, newW, newH, null);
+        graphics2D.dispose();
+        return resizedImage;
+    }
+
+    private void writeImage(int d, float[] result) {
+        float[][] matrix = new float[xSteps][ySteps];
+        for (int i=0;i<xSteps;i++) {
+            if (ySteps >= 0) System.arraycopy(result, (i * xSteps), matrix[i], 0, ySteps);
+        }
+
+        try {
+            BufferedImage image = new BufferedImage(xSteps, ySteps, BufferedImage.TYPE_INT_RGB);
+            for(int i=0; i<matrix.length; i++) {
+                for(int j=0; j<matrix.length; j++) {
+                    float a = matrix[i][j];
+                    int intensity = (int) Math.floor((0.5 + a/2) * 255);
+                    intensity = Math.min(intensity, 255);
+                    intensity = Math.max(0, intensity);
+                    //System.out.println(a);
+                    Color newColor = new Color(intensity,intensity,intensity);
+                    image.setRGB(j,i,newColor.getRGB());
+                }
+            }
+            BufferedImage scaled = resize(image, 256, 256);
+            File output = new File("decision"+d+".jpg");
+            ImageIO.write(scaled, "jpg", output);
+        } catch(Exception ignored) {
+            System.out.println(ignored);
+        }
+
+    }
+
+    private List<ShortExperienceRecord> sample() {
+        List<ShortExperienceRecord> sample = new ArrayList<>();
         while (sample.size() < SAMPLE_SIZE) {
-            ExperienceRecord e = buffer[Simulator.instance.getRandom().nextInt(BUFFER_SIZE)];
+            ShortExperienceRecord e = buffer[Simulator.instance.getRandom().nextInt(BUFFER_SIZE)];
             if (!sample.contains(e)) {
                 sample.add(e);
             }
@@ -181,33 +260,15 @@ public class TensorRLearner extends LearningAllocator {
     }
 
     private void train() {
-        List<ExperienceRecord> sample = sample();
+        List<ShortExperienceRecord> sample = sample();
         List<MLDataItem> dataItems = new ArrayList<>();
-        for (ExperienceRecord e : sample) {
-            float[] results = e.actionValues.clone();
-            results[e.indexTaken] = (e.jointReward / (64*64));
-            MLDataItem item = new TabularDataSet.Item(new Tensor(e.inputState), new Tensor(results));
+        for (ShortExperienceRecord e : sample) {
+            MLDataItem item = new TabularDataSet.Item(new Tensor(e.inputState), new Tensor(e.jointReward / (xSteps*ySteps)));
             dataItems.add(item);
         }
         DataSet<MLDataItem> dataSet = new BasicDataSet<>(dataItems);
-
-        /*
-        float[][][] state = new float[3][8][8];
-        for (int d = 0; d < 3; d++) {
-            float[][] input = allZeros();
-            state[d] = input;
-        }
-         */
-        //int[] before = calculateBestCoord(compute(new Tensor(state)));
         qNetwork.train(dataSet);
         qNetwork.applyWeightChanges();
-        //int[] after = calculateBestCoord(compute(new Tensor(state)));
-        /*
-        if (!Arrays.equals(after, before)) {
-            System.out.println("Before: " + Arrays.toString(before));
-            System.out.println("After:  " + Arrays.toString(after));
-        }
-         */
     }
 
     private int[] calculateBestCoord(float[] result) {
@@ -227,9 +288,9 @@ public class TensorRLearner extends LearningAllocator {
         return crd;
     }
 
-    private float[] compute(Tensor input) {
+    private float compute(Tensor input) {
         qNetwork.setInput(input);
-        return qNetwork.getOutput();
+        return qNetwork.getOutput()[0];
     }
 
     private float[][] allZeros() {
@@ -242,21 +303,19 @@ public class TensorRLearner extends LearningAllocator {
         return res;
     }
 
-    private ConvolutionalNetwork createNetwork() {
+    private FeedForwardNetwork createNetwork() {
         // TODO consider conv and max pooling if it works
-        ConvolutionalNetwork net = ConvolutionalNetwork.builder()
-                .addInputLayer(16, 16, 3)
-                .addConvolutionalLayer(1, 1, 3)
-                .addMaxPoolingLayer(1, 1, 3)
+        FeedForwardNetwork net = FeedForwardNetwork.builder()
+                .addInputLayer(256)
                 .addFullyConnectedLayer(256, ActivationType.LINEAR)
-                .addOutputLayer(256, ActivationType.LINEAR)
+                .addOutputLayer(1, ActivationType.LINEAR)
                 .lossFunction(LossType.MEAN_SQUARED_ERROR)
                 .randomSeed(Simulator.instance.getRandom().nextInt(9999))
                 .build();
 
         net.getTrainer()
                 .setOptimizer(OptimizerType.SGD)
-                .setBatchSize(20)
+                .setBatchSize(1)
                 .setBatchMode(true)
                 .setMaxError(999999)
                 .setLearningRate(LEARNING_RATE);
@@ -274,6 +333,18 @@ public class TensorRLearner extends LearningAllocator {
             this.inputState = inputState;
             this.actionValues = actionValues;
             this.indexTaken = indexTaken;
+            this.jointReward = jointReward;
+        }
+    }
+
+    private class ShortExperienceRecord {
+        float[] inputState;
+        float value;
+        float jointReward;
+
+        public ShortExperienceRecord(float[] inputState, float value, float jointReward) {
+            this.inputState = inputState;
+            this.value = value;
             this.jointReward = jointReward;
         }
     }
