@@ -5,6 +5,7 @@ import server.Simulator;
 import server.model.Coordinate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class LearningAllocator {
@@ -111,8 +112,72 @@ public abstract class LearningAllocator {
 
     }
 
+    public float calculateGridReward() {
+        int numPointsCovered = 0;
+        for (int i = 0; i < xSteps; i++) {
+            for (int j = 0; j < ySteps; j++) {
+                for (AgentProgrammed a : subordinates) {
+                    int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+                    if (cell[0] - 4 <= i && cell[0] + 4 >= i && cell[1] - 4 <= j && cell[1] + 4 >= j) {
+                        numPointsCovered++;
+                        break;
+                    }
+                }
+            }
+        }
+        return numPointsCovered;
+    }
+
+    public float calculateGridRewardWithPunishment() {
+        int numPointsCovered = 0;
+        for (int i = 0; i < xSteps; i++) {
+            for (int j = 0; j < ySteps; j++) {
+                boolean here = false;
+                for (AgentProgrammed a : subordinates) {
+                    int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+                    if (cell[0] - 4 <= i && cell[0] + 4 >= i && cell[1] - 4 <= j && cell[1] + 4 >= j) {
+                        if (!here) {
+                            numPointsCovered++;
+                            here = true;
+                        } else {
+                            numPointsCovered--;
+                        }
+                    }
+                }
+            }
+        }
+        return numPointsCovered;
+    }
+
+    public void outputAgentPositions() {
+        System.out.println("Positions:");
+
+        for (int i = 0; i < xSteps; i++) {
+            char[] line = new char[16];
+            for (int j = 0; j < ySteps; j++) {
+                boolean here = false;
+                for (AgentProgrammed a : subordinates) {
+                    if (calculateEquivalentGridCell(a.getCoordinate())[0] == j && calculateEquivalentGridCell(a.getCoordinate())[1] == i) {
+                        here = true;
+                        break;
+                    }
+                }
+                if (here) {
+                    line[j] = 'X';
+                } else {
+                    line[j] = '-';
+                }
+            }
+            System.out.println(String.valueOf(line));
+        }
+    }
+
     public Coordinate calculateEquivalentCoordinate(int x, int y) {
         return new Coordinate( botLeft.getLatitude() + (y * ySquareSpan), botLeft.getLongitude() + (x * xSquareSpan));
+    }
+
+    public Coordinate calculateEquivalentCoordinate(Coordinate centre, int x, int y) {
+        return new Coordinate( (centre.getLatitude() - ((ySteps * ySquareSpan) / 2)) + (y * ySquareSpan), (centre.getLongitude() - ((xSteps * xSquareSpan) / 2)) + (x * xSquareSpan));
     }
 
     public int[] calculateEquivalentGridCell(Coordinate c) {

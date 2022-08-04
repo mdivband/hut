@@ -16,8 +16,10 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 1000;
+    private final int NUM_STEPS_PER_EPOCH = 250;
     public static final int WIDTH = 4;
+
+    float bestReward = 0f;
 
     private AgentHubProgrammed hub;
     private ProgrammerHandler programmerHandler;
@@ -26,8 +28,8 @@ public class MissionProgrammer {
     //TODO these values can be passed through the AgentHubProgrammed and therefore can be scenario file defined
     private Coordinate botLeft;
     private Coordinate topRight;
-    protected int xSteps = 64;
-    protected int ySteps = 64;
+    protected int xSteps = 16;
+    protected int ySteps = 16;
     private double X_SPAN = 0.01;
     private double Y_SPAN = 0.006;
     private double xSquareSpan;
@@ -69,48 +71,49 @@ public class MissionProgrammer {
 
                      */
                     stepCounter++;
-                    double r = calculateReward();
-                    scores.add(r);
-                    synchronized (this) {
-                        //times.add(epochDuration);
-                        double sum = 0;
-                        for (int i = Math.max(0, scores.size() - 100); i < scores.size(); i++) {
-                            sum += scores.get(i);
-                        }
-                        double mvAv = sum / Math.min(scores.size(), 100);
-                        DecimalFormat f = new DecimalFormat("##.00");
+                    if (stepCounter % 10 == 0) {
+                        //double r = calculateGlobalGridReward();
+                        double r = calculateSubGridReward(hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                        scores.add(r);
+                        synchronized (this) {
+                            //times.add(epochDuration);
+                            double sum = 0;
+                            for (int i = Math.max(0, scores.size() - 100); i < scores.size(); i++) {
+                                sum += scores.get(i);
+                            }
+                            double mvAv = sum / Math.min(scores.size(), 100);
+                            DecimalFormat f = new DecimalFormat("##.00");
 
-                        double sum50 = 0;
-                        for (int i = Math.max(0, scores.size() - 50); i < scores.size(); i++) {
-                            sum50 += scores.get(i);
-                        }
-                        double mvAv50 = sum50 / Math.min(scores.size(), 50);
+                            double sum50 = 0;
+                            for (int i = Math.max(0, scores.size() - 50); i < scores.size(); i++) {
+                                sum50 += scores.get(i);
+                            }
+                            double mvAv50 = sum50 / Math.min(scores.size(), 50);
 
-                        double sum10 = 0;
-                        for (int i = Math.max(0, scores.size() - 10); i < scores.size(); i++) {
-                            sum10 += scores.get(i);
+                            double sum10 = 0;
+                            for (int i = Math.max(0, scores.size() - 10); i < scores.size(); i++) {
+                                sum10 += scores.get(i);
+                            }
+                            double mvAv10 = sum10 / Math.min(scores.size(), 10);
+                            File csvOutputFile = new File("Full341R3.csv");
+                            try {
+                                FileWriter fw = new FileWriter(csvOutputFile, true);
+                                fw.write(//runCounter
+                                        r
+                                                + ", " + f.format(mvAv)
+                                                + ", " + f.format(mvAv50)
+                                                + ", " + f.format(mvAv10)
+                                                //+ ", " + epochDuration
+                                                + " \n");
+                                fw.close();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
-                        double mvAv10 = sum10 / Math.min(scores.size(), 10);
-                        // BotFirstE50ER200(20)L01R3
-                        //
-                        File csvOutputFile = new File("newTest.csv");
-                        try {
-                            FileWriter fw = new FileWriter(csvOutputFile, true);
-                            fw.write(//runCounter
-                                    r
-                                    + ", " + f.format(mvAv)
-                                    + ", " + f.format(mvAv50)
-                                    + ", " + f.format(mvAv10)
-                                    //+ ", " + epochDuration
-                                    + " \n");
-                            fw.close();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                        agents.forEach(a -> {
+                            ((TensorRLearner) a.programmerHandler.getAgentProgrammer().getLearningAllocator()).incrementMemory();
+                        });
                     }
-                    agents.forEach(a -> {
-                        ((TensorRLearner) a.programmerHandler.getAgentProgrammer().getLearningAllocator()).incrementMemory();
-                    });
                 }
             } else {
                 // SOFT RESET
@@ -157,54 +160,20 @@ public class MissionProgrammer {
                 );
 
                 /*
-                double r = calculateReward();
-                scores.add(r);
-                synchronized (this) {
-                    long epochDuration = System.currentTimeMillis() - epochStartTime;
-                    epochStartTime = System.currentTimeMillis();
-                    times.add(epochDuration);
-                    double sum = 0;
-                    for (int i = Math.max(0, scores.size() - 10); i < scores.size(); i++) {
-                        sum += scores.get(i);
+                agents.forEach(a -> {
+                            if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
+                                System.out.println(a.programmerHandler.getAgentProgrammer().getLearningAllocator().calculateGridReward());
+                            }
+                        });
+
+                agents.forEach(a -> {
+                    if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
+                        a.programmerHandler.getAgentProgrammer().getLearningAllocator().outputAgentPositions();
                     }
-                    double mvAv = sum / Math.min(scores.size(), 10);
+                });
 
-                    DecimalFormat f = new DecimalFormat("##.00");
-                    System.out.println(
-                        "run = " + runCounter
-                        + ", steps = " + (stepCounter*runCounter)
-                        + ", reward = " + r
-                        + ", total average = " + f.format(scores.stream().mapToDouble(Double::doubleValue).average().getAsDouble())
-                        + ", moving average = " + f.format(mvAv)
-                        + ", epoch time = " + (epochDuration) + "ms"
-                        + ", num agents = " + agents.size()
-                    );
+                 */
 
-
-                    agents.forEach(a -> {
-                        if (a.programmerHandler.getAgentProgrammer().getLevel() == 1) {
-                            a.programmerHandler.getAgentProgrammer().getLearningAllocator().complete();
-                        }
-                    });
-
-
-
-                    File csvOutputFile = new File("noBatchl1.csv");
-                    try {
-                        FileWriter fw = new FileWriter(csvOutputFile, true);
-                        fw.write(runCounter
-                                + ", " + r
-                                + ", " + f.format(scores.stream().mapToDouble(Double::doubleValue).average().getAsDouble())
-                                + ", " + f.format(mvAv)
-                                + ", " + epochDuration
-                                + " \n");
-                        fw.close();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-
-
-                     */
 
                     Simulator.instance.softReset(this);  // This soft resets all agents
                     agents.clear();
@@ -214,10 +183,10 @@ public class MissionProgrammer {
                         }
                     });
                     agents.forEach(a -> {
-                        if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
+                        //if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
                             a.setCoordinate(new Coordinate(50.9289, -1.409));
                             a.programmerHandler.getAgentProgrammer().getLearningAllocator().reset();
-                        }
+                        //}
                     });
 
                     addAgentIfRequired();
@@ -323,8 +292,9 @@ public class MissionProgrammer {
     private void addAgentIfRequired() {
         // Inc  -> R0=5; R1=21; R2=85; R3=341; ... ; R6(5)=85; ... ; R9(8)=341 ; ... ; R11(10)=85
         // Full ->                     R0=341; ... ; R3(2)=85; ... ; R6(5)=341 ; ... ; R8(7)=85
-/*
-        if (runCounter == 8 || runCounter == 16 || runCounter == 30|| runCounter == 32 || runCounter == 40) {
+
+
+        if (runCounter == 24 || runCounter == 32 || runCounter == 40) {
             hierarchy.layers.get(0).forEach(a -> {
                 Simulator.instance.getState().getAgents().remove(a);
                 agents.remove(a);
@@ -332,7 +302,9 @@ public class MissionProgrammer {
             hierarchy.layers.remove(0);
             agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
             regenerateHierarchy();
-        } else if ((runCounter == 2 || runCounter == 4 || runCounter == 6 || runCounter == 10 || runCounter == 18 || runCounter == 34 || runCounter == 36 || runCounter == 50) && agents.size() < 341) {
+
+
+        } else if ((runCounter == 4 || runCounter == 8 || runCounter == 12 || runCounter == 16 || runCounter == 28 || runCounter == 36 || runCounter == 44) && agents.size() < 341) {
             int numToAdd = (int) Math.pow(4, hierarchy.layers.size());
             for (int i = 0; i < numToAdd; i++) {
                 if (agents.size() < 341) {
@@ -355,7 +327,7 @@ public class MissionProgrammer {
 
 
         } else {
- */
+
             agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
             regenerateHierarchy();
 
@@ -377,7 +349,7 @@ public class MissionProgrammer {
 
  */
 
- //       }
+        }
 
     }
 
@@ -400,7 +372,7 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-/*
+
         while (Simulator.instance.getState().getAgents().size() < 341 + 1) {
             if (agents.size() < 341) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
@@ -411,11 +383,6 @@ public class MissionProgrammer {
                 agents.add(ap);
             }
         }
-
- */
-
-
-
 
 
         initialiseLearningAllocators();
@@ -445,12 +412,83 @@ public class MissionProgrammer {
             int lvl = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel();
             if (lvl > 0) {
                 //float subTreeReward = calculateSubTreeReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
-                float subTreeReward = calculateSimulatedReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                //float subTreeReward = calculateSimulatedReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
                 //System.out.println("For agent at level " + ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + ", rwd = " + subTreeReward);
+
+
+                //float subTreeReward = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
+
+
+                float subTreeReward = calculateSubGridReward(ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                //float subTreeReward = calculateGlobalGridReward();
+
+                /*
+                if (subTreeReward > bestReward) {
+                    bestReward = subTreeReward;
+                    System.out.println("BEST = " + bestReward);
+                    ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().outputAgentPositions();
+                }
+
+                 */
                 ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward);
                 //ap.programmerHandler.getAgentProgrammer().learningStep(balancedReward);
             }
         }
+    }
+
+    private float calculateGlobalGridReward() {
+        int numPointsCovered = 0;
+        for (int i = 0; i < xSteps; i++) {
+            for (int j = 0; j < ySteps; j++) {
+                for (AgentProgrammed a : agents) {
+                    int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+                    if (cell[0] - 4 <= i && cell[0] + 4 >= i && cell[1] - 4 <= j && cell[1] + 4 >= j) {
+                        numPointsCovered++;
+                        break;
+                    }
+                }
+            }
+        }
+        return numPointsCovered;
+    }
+
+    private float calculateSubGridReward(List<AgentProgrammed> subordinates) {
+        List<AgentProgrammed> agentsToConsider = new ArrayList<>();
+        List<AgentProgrammed> toAdd = new ArrayList<>(subordinates);
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            agentsToConsider.addAll(toAdd);
+            List<AgentProgrammed> nextBatch = new ArrayList<>();
+            for (AgentProgrammed agent : toAdd) {
+                if (!agent.getProgrammerHandler().getAgentProgrammer().getSubordinates().isEmpty()) {
+                    changed = true;
+                    nextBatch.addAll(agent.getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                }
+            }
+            toAdd = nextBatch;
+        }
+
+        int numPointsCovered = 0;
+        for (int i = 0; i < xSteps; i++) {
+            for (int j = 0; j < ySteps; j++) {
+                for (AgentProgrammed a : agentsToConsider) {
+                    int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+                    if (cell[0] - 0 <= i && cell[0] + 0 >= i && cell[1] - 0 <= j && cell[1] + 0 >= j) {
+                        numPointsCovered++;
+                        break;
+                    }
+                }
+            }
+        }
+        return numPointsCovered;
+    }
+
+    public int[] calculateEquivalentGridCell(Coordinate c) {
+        return new int[]{
+                (int) Math.round(((c.getLongitude() - botLeft.getLongitude()) / (5 * X_SPAN)) * xSteps),
+                (int) Math.round(((c.getLatitude() - botLeft.getLatitude()) / (5 * Y_SPAN)) * ySteps)
+        };
     }
 
     /**

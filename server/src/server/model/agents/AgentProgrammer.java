@@ -105,6 +105,7 @@ public class AgentProgrammer {
         a.resume();
         learningAllocator.updateBounds(myTask);
         this.myTask = myTask;
+        ((TensorRLearner) learningAllocator).moveSubordinates();
     }
 
     public LearningAllocator getLearningAllocator() {

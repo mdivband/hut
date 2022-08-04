@@ -47,7 +47,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 999999;
+    private static final double gameSpeed = 9999999;
     private int stepCount;
     private Random random;
     private String nextFileName = "";
@@ -93,7 +93,7 @@ public class Simulator {
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         } else {
-            port = 44101;
+            port = 44106;
         }
         new Simulator().start(port);
     }

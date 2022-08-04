@@ -2,7 +2,6 @@ package server.model.agents;
 
 import deepnetts.data.MLDataItem;
 import deepnetts.data.TabularDataSet;
-import deepnetts.net.ConvolutionalNetwork;
 import deepnetts.net.FeedForwardNetwork;
 import deepnetts.net.layers.activation.ActivationType;
 import deepnetts.net.loss.LossType;
@@ -20,18 +19,23 @@ import java.util.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.imageio.ImageIO;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
-    private static final int SAMPLE_SIZE = 1;
-    private static final float LEARNING_RATE = 0.1f;
-    private static final int BUFFER_SIZE = 1;
+    private static final int SAMPLE_SIZE = 10;
+    //private static final float LEARNING_RATE = 0.000001f;
+    private static final float LEARNING_RATE = 0.000001f;
+
+    private static final int BUFFER_SIZE = 100;
     private FeedForwardNetwork qNetwork;
     private ShortExperienceRecord[] buffer;
     private boolean bufferFull = false;
     private int pointer;
     private int stepCount = 0;
+    private int xCell = 8;
+    private int yCell = 8;
 
     private HashMap<Integer, Integer> levelMemory = new HashMap<>();
 
@@ -57,11 +61,17 @@ public class TensorRLearner extends LearningAllocator {
         super.setup();
         xSteps = 16;
         ySteps = 16;
-        maxReward = 64 * 64;
+        maxReward = 16 * 16;
         qNetwork = createNetwork();
         buffer = new ShortExperienceRecord[BUFFER_SIZE];
         pointer = 0;
         counter = 0;
+    }
+
+    public void reset() {
+        super.reset();
+        xCell = xSteps / 2;
+        yCell = ySteps / 2;
     }
 
     @Override
@@ -104,13 +114,21 @@ public class TensorRLearner extends LearningAllocator {
             for (int i=0; i<256; i++) {
                 state[i] = 0;
             }
+            AtomicBoolean fail = new AtomicBoolean(false);
             subordinates.forEach(a -> {
                 if (a != hero) {
                     int[] cell = calculateEquivalentGridCell(a.getCoordinate());
                     //state[cell[0]][cell[1]] = 1;
+                    if (cell[0] - 1 > 15 || cell[0] - 1 < 0 || cell[1] > 15 || cell[1] < 0) {
+                        fail.set(true);
+                        return;
+                    }
                     state[(cell[1] * 8) + cell[0]] = 1;
                 }
             });
+            if (fail.get()) {
+                return;
+            }
 
             // Create a state for each action (N,S,E,W,St)
             //float[][][] futureStates = new float[5][16][16];
@@ -174,35 +192,49 @@ public class TensorRLearner extends LearningAllocator {
             boolean eps = Simulator.instance.getRandom().nextInt(5) == 0;
             if (eps) {
                 best = -1;
-                while (best == -1 || excluded[best]) {
+                if (excluded[0] && excluded[1] && excluded[2] && excluded[3] && excluded[4]) {
+                    // All wrong
                     best = Simulator.instance.getRandom().nextInt(5);
+                } else {
+                    while (best == -1 || excluded[best]) {
+                        best = Simulator.instance.getRandom().nextInt(5);
+                    }
                 }
-
+                bestVal = values[best];
             }
-
 
             if (best == 0) {
                 // No move
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0]);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
             } else if (best == 1) {
                 if (heroCell[0] > 15 || heroCell[0] < 0 || heroCell[1] + 1 > 15 || heroCell[1] + 1 < 0) {
                     return;
                 }
                 hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1] + 1));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0]);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1] + 1);
             } else if (best == 2) {
                 if (heroCell[0] > 15 || heroCell[0] < 0 || heroCell[1] - 1 > 15 || heroCell[1] - 1 < 0) {
                     return;
                 }
                 hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1] - 1));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0]);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1] - 1);
             } else if (best == 3) {
                 if (heroCell[0] + 1 > 15 || heroCell[0] + 1 < 0 || heroCell[1] > 15 || heroCell[1] < 0) {
                     return;
                 }
                 hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0] + 1, heroCell[1]));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0] + 1);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
             } else if (best == 4) {
                 if (heroCell[0] - 1 > 15 || heroCell[0] - 1 < 0 || heroCell[1] > 15 || heroCell[1] < 0) {
                     return;
                 }
                 hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0] - 1, heroCell[1]));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0] - 1);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
             }
 
             miniBuffer.add(new ShortExperienceRecord(state, bestVal, -1));
@@ -210,6 +242,16 @@ public class TensorRLearner extends LearningAllocator {
         }
 
         stepCount++;
+    }
+
+    public void moveSubordinates() {
+        for (AgentProgrammed sub : subordinates) {
+            int x = ((TensorRLearner) sub.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getxCell();
+            int y = ((TensorRLearner) sub.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getyCell();
+            x = Math.max(0, Math.min(x, 16));
+            y = Math.max(0, Math.min(y, 16));
+            sub.manualSetTask(calculateEquivalentCoordinate(x, y));
+        }
     }
 
     public static BufferedImage resize(BufferedImage img, int newW, int newH) {
@@ -265,6 +307,7 @@ public class TensorRLearner extends LearningAllocator {
         for (ShortExperienceRecord e : sample) {
             MLDataItem item = new TabularDataSet.Item(new Tensor(e.inputState), new Tensor(e.jointReward / (xSteps*ySteps)));
             dataItems.add(item);
+            //System.out.println("Expected = " + e.value + ", actual = " + (e.jointReward / (xSteps*ySteps)) + " diff = " + ((e.jointReward - e.value)/ (xSteps*ySteps)));
         }
         DataSet<MLDataItem> dataSet = new BasicDataSet<>(dataItems);
         qNetwork.train(dataSet);
@@ -315,12 +358,28 @@ public class TensorRLearner extends LearningAllocator {
 
         net.getTrainer()
                 .setOptimizer(OptimizerType.SGD)
-                .setBatchSize(1)
+                .setBatchSize(SAMPLE_SIZE)
                 .setBatchMode(true)
                 .setMaxError(999999)
                 .setLearningRate(LEARNING_RATE);
 
         return net;
+    }
+
+    public int getxCell() {
+        return xCell;
+    }
+
+    public int getyCell() {
+        return yCell;
+    }
+
+    public void setxCell(int xCell) {
+        this.xCell = xCell;
+    }
+
+    public void setyCell(int yCell) {
+        this.yCell = yCell;
     }
 
     private class ExperienceRecord {
