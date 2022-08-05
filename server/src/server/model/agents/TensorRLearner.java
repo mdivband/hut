@@ -2,6 +2,7 @@ package server.model.agents;
 
 import deepnetts.data.MLDataItem;
 import deepnetts.data.TabularDataSet;
+import deepnetts.net.ConvolutionalNetwork;
 import deepnetts.net.FeedForwardNetwork;
 import deepnetts.net.layers.activation.ActivationType;
 import deepnetts.net.loss.LossType;
@@ -24,12 +25,12 @@ import javax.imageio.ImageIO;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
-    private static final int SAMPLE_SIZE = 10;
+    private static final int SAMPLE_SIZE = 50;
     //private static final float LEARNING_RATE = 0.000001f;
-    private static final float LEARNING_RATE = 0.000001f;
+    private static final float LEARNING_RATE = 0.0001f;
 
-    private static final int BUFFER_SIZE = 100;
-    private FeedForwardNetwork qNetwork;
+    private static final int BUFFER_SIZE = 500;
+    private ConvolutionalNetwork qNetwork;
     private ShortExperienceRecord[] buffer;
     private boolean bufferFull = false;
     private int pointer;
@@ -40,6 +41,7 @@ public class TensorRLearner extends LearningAllocator {
     private HashMap<Integer, Integer> levelMemory = new HashMap<>();
 
     private ArrayList<ShortExperienceRecord> miniBuffer = new ArrayList<>();
+    private boolean[] excluded;
 
     public TensorRLearner(AgentProgrammed agent) {
         super(agent);
@@ -111,7 +113,7 @@ public class TensorRLearner extends LearningAllocator {
             // Create state rep
             //float[][] state = allZeros();
             float[] state = new float[256];
-            for (int i=0; i<256; i++) {
+            for (int i = 0; i < 256; i++) {
                 state[i] = 0;
             }
             AtomicBoolean fail = new AtomicBoolean(false);
@@ -123,73 +125,92 @@ public class TensorRLearner extends LearningAllocator {
                         fail.set(true);
                         return;
                     }
-                    state[(cell[1] * 8) + cell[0]] = 1;
+                    state[(cell[1] * 16) + cell[0]] = 1;
                 }
             });
             if (fail.get()) {
                 return;
             }
 
-            // Create a state for each action (N,S,E,W,St)
-            //float[][][] futureStates = new float[5][16][16];
-            float[][] futureStates = new float[5][256];
-            for (int i = 0; i < 5; i++) {
-                futureStates[i] = state.clone();
-            }
-
+            // 1. Populate moves in a list
             int[] heroCell = calculateEquivalentGridCell(hero.getCoordinate());
-            boolean[] excluded = {false, false, false, false, false};
-            try {
-                //futureStates[0][heroCell[0]][heroCell[1]] = 1;  // 0 = St
-                futureStates[0][((heroCell[1] * 16) + heroCell[0])] = 1;  // 0 = St
-            } catch (Exception e) {
-                excluded[0] = true;
-            }
-            try {
-                futureStates[1][((heroCell[1] * 16) + heroCell[0] + 1)] = 1;  // 1 = N
-            } catch (Exception e) {
-                excluded[1] = true;
-            }
-            try {
-                futureStates[2][((heroCell[1] * 16) + heroCell[0] - 1)] = 1;  // 2 = S
-            } catch (Exception e) {
-                excluded[2] = true;
-            }
-            try {
-                futureStates[3][(((heroCell[1] + 1) * 16) + heroCell[0])] = 1;  // 3 = E
-            } catch (Exception e) {
-                excluded[3] = true;
-            }
-            try {
-                futureStates[4][(((heroCell[1] - 1) * 16) + heroCell[0])] = 1;  // 4 = W
-            } catch (Exception e) {
-                excluded[4] = true;
+            float[][] states = ennumerateStates(state, heroCell);
+            HashMap<Integer, Float> startValues = new HashMap<>();
+            for (int i=0; i<5; i++) {
+                float[] modelledState = states[i];
+                int[] modelledHeroPos = heroCell.clone();
+                if (i == 0) {
+
+                } else if (i == 1) {
+                    modelledHeroPos[1] += 1;
+                } else if (i == 2) {
+                    modelledHeroPos[1] -= 1;
+                } else if (i == 3) {
+                    modelledHeroPos[0] += 1;
+                } else if (i == 4) {
+                    modelledHeroPos[0] -= 1;
+                }
+                float bestVal = -1;
+                float totalReward = 0;
+                for (int d = 0; d < 1; d++) {
+                    // For each step forward in time:
+                    float[][] modelledFutureStates = ennumerateStates(modelledState, modelledHeroPos);
+                    float[] values = new float[5];
+                    int best = -1;
+                    bestVal = -1000;
+
+                    // Compute best move
+                    for (int m = 0; m < 5; m++) {
+                        if (!excluded[m]) {
+                            float[][] thisState = new float[16][16];
+                            for (int j = 0; j < 16; j++) {
+                                float[] row = new float[16];
+                                System.arraycopy(modelledFutureStates[m], j * 16, row, 0, 16);
+                                thisState[j] = row;
+                            }
+
+                            //values[i] = compute(new Tensor(thisState));
+                            values[i] = calculateActualRewardFromArray(thisState);
+                            if (values[i] > bestVal) {
+                                bestVal = values[i];
+                                best = i;
+                            }
+                        }
+                    }
+
+                    // Take the best and model it
+                    if (best == 0) {
+
+                    } else if (best == 1) {
+                        modelledHeroPos[1] += 1;
+                    } else if (best == 2) {
+                        modelledHeroPos[1] -= 1;
+                    } else if (best == 3) {
+                        modelledHeroPos[0] += 1;
+                    } else if (best == 4) {
+                        modelledHeroPos[0] -= 1;
+                    }
+                    //totalReward += (bestVal * (Math.pow(GAMMA, d-1)));
+
+                }
+
+                startValues.put(i, bestVal);
+
             }
 
-            // We now have our futureStates populated
-
-            float[] values = new float[5];
             int best = -1;
             float bestVal = -1000;
-            for (int i = 0; i < 5; i++) {
-                if (!excluded[i]) {
-                    values[i] = compute(new Tensor(futureStates[i]));
-                    if (values[i] > bestVal) {
-                        bestVal = values[i];
-                        best = i;
-                    }
+            for (Map.Entry<Integer, Float> entry : startValues.entrySet()) {
+                Integer k = entry.getKey();
+                Float v = entry.getValue();
+                if (v > bestVal) {
+                    best = k;
+                    bestVal = v;
                 }
             }
 
-            // System we have our best value
-            // TODO epsilon exploration
 
-            // Record prediction
-
-            // Make move
-
-
-            boolean eps = Simulator.instance.getRandom().nextInt(5) == 0;
+            boolean eps = Simulator.instance.getRandom().nextInt(10) == 0;
             if (eps) {
                 best = -1;
                 if (excluded[0] && excluded[1] && excluded[2] && excluded[3] && excluded[4]) {
@@ -200,8 +221,9 @@ public class TensorRLearner extends LearningAllocator {
                         best = Simulator.instance.getRandom().nextInt(5);
                     }
                 }
-                bestVal = values[best];
+                bestVal = startValues.get(best);
             }
+
 
             if (best == 0) {
                 // No move
@@ -239,9 +261,48 @@ public class TensorRLearner extends LearningAllocator {
 
             miniBuffer.add(new ShortExperienceRecord(state, bestVal, -1));
 
+            stepCount++;
+        }
+    }
+
+    private float[][] ennumerateStates(float[] state, int[] heroCell) {
+        // Create a state for each action (N,S,E,W,St)
+        //float[][][] futureStates = new float[5][16][16];
+        float[][] futureStates = new float[5][256];
+        for (int i = 0; i < 5; i++) {
+            futureStates[i] = state.clone();
         }
 
-        stepCount++;
+        excluded = new boolean[]{false, false, false, false, false};
+        try {
+            //futureStates[0][heroCell[0]][heroCell[1]] = 1;  // 0 = St
+            futureStates[0][((heroCell[1] * 16) + heroCell[0])] = 1;  // 0 = St
+        } catch (Exception e) {
+            excluded[0] = true;
+        }
+        try {
+            futureStates[1][((heroCell[1] * 16) + heroCell[0] + 1)] = 1;  // 1 = N
+        } catch (Exception e) {
+            excluded[1] = true;
+        }
+        try {
+            futureStates[2][((heroCell[1] * 16) + heroCell[0] - 1)] = 1;  // 2 = S
+        } catch (Exception e) {
+            excluded[2] = true;
+        }
+        try {
+            futureStates[3][(((heroCell[1] + 1) * 16) + heroCell[0])] = 1;  // 3 = E
+        } catch (Exception e) {
+            excluded[3] = true;
+        }
+        try {
+            futureStates[4][(((heroCell[1] - 1) * 16) + heroCell[0])] = 1;  // 4 = W
+        } catch (Exception e) {
+            excluded[4] = true;
+        }
+
+        // We now have our futureStates populated
+        return futureStates;
     }
 
     public void moveSubordinates() {
@@ -336,6 +397,99 @@ public class TensorRLearner extends LearningAllocator {
         return qNetwork.getOutput()[0];
     }
 
+    public void checkTestRewards() {
+        float[] state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(4 * 16) + 4] = 1;
+        state[(4 * 16) + 12] = 1;
+        state[(12 * 16) + 4] = 1;
+        state[(12 * 16) + 12] = 1;
+
+        float[][] thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        float res = compute(new Tensor(thisState));
+
+        System.out.println("PERFECT = " + res);
+        System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
+
+        state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(4 * 16) + 4] = 1;
+        state[(12 * 16) + 12] = 1;
+
+        thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        res = compute(new Tensor(thisState));
+
+        System.out.println("OVERLAP CORNERS = " + res);
+        System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
+
+
+        state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(6 * 16) + 6] = 1;
+        state[(6 * 16) + 10] = 1;
+        state[(10 * 16) + 6] = 1;
+        state[(10 * 16) + 10] = 1;
+
+        thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        res = compute(new Tensor(thisState));
+
+        System.out.println("MEDIUM= = " + res);
+        System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
+        System.out.println();
+
+
+    }
+
+    private float calculateActualRewardFromArray(float[][] state) {
+        List<int[]> agents = new ArrayList<>();
+        for (int i = 0; i < xSteps; i++) {
+            for (int j = 0; j < ySteps; j++) {
+                if (state[i][j] == 1) {
+                    agents.add(new int[]{i, j});
+                }
+            }
+        }
+
+        int numPointsCovered = 0;
+        for (int i = 0; i < xSteps; i++) {
+            for (int j = 0; j < ySteps; j++) {
+                for (int[] cell : agents) {
+                    if (cell[0] - 4 <= i && cell[0] + 4 >= i && cell[1] - 4 <= j && cell[1] + 4 >= j) {
+                        numPointsCovered++;
+                        break;
+                    }
+                }
+
+            }
+        }
+
+        return numPointsCovered;
+    }
+
     private float[][] allZeros() {
         float[][] res = new float[16][16];
         for (int i=0; i<16; i++) {
@@ -346,11 +500,15 @@ public class TensorRLearner extends LearningAllocator {
         return res;
     }
 
-    private FeedForwardNetwork createNetwork() {
+    private ConvolutionalNetwork createNetwork() {
         // TODO consider conv and max pooling if it works
-        FeedForwardNetwork net = FeedForwardNetwork.builder()
-                .addInputLayer(256)
-                .addFullyConnectedLayer(256, ActivationType.LINEAR)
+        ConvolutionalNetwork net = ConvolutionalNetwork.builder()
+                .addInputLayer(16, 16, 1)
+                .addConvolutionalLayer(4, 1)
+                .addMaxPoolingLayer(4, 1)
+                .addConvolutionalLayer(2, 1)
+                .addMaxPoolingLayer(2, 1)
+                .addFullyConnectedLayer(128)
                 .addOutputLayer(1, ActivationType.LINEAR)
                 .lossFunction(LossType.MEAN_SQUARED_ERROR)
                 .randomSeed(Simulator.instance.getRandom().nextInt(9999))

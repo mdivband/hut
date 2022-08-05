@@ -29,6 +29,7 @@ public abstract class LearningAllocator {
 
     protected int counter;
     private int level; // level 0 is a bottom level; raising as we move up
+    private int bestRwd = 0;
 
     public LearningAllocator(AgentProgrammed agent) {
         this.agent = agent;
@@ -125,7 +126,59 @@ public abstract class LearningAllocator {
                 }
             }
         }
+
+        /*
+        if (numPointsCovered > bestRwd) {
+            bestRwd = numPointsCovered;
+            System.out.println("==============");
+            outputAgentPositions();
+            System.out.println("rw = " + numPointsCovered);
+            System.out.println();
+        }
+
+
+         */
+
+
         return numPointsCovered;
+    }
+
+    public float calculatetwobytwoReward() {
+        int points = 0;
+        for (AgentProgrammed a : subordinates) {
+            int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+            if (cell[0] < 8 && cell[1] < 8) {
+                points++;
+                break;
+            }
+        }
+
+        for (AgentProgrammed a : subordinates) {
+            int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+            if (cell[0] < 8 && cell[1] >= 8) {
+                points++;
+                break;
+            }
+        }
+
+        for (AgentProgrammed a : subordinates) {
+            int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+            if (cell[0] >= 8 && cell[1] < 8) {
+                points++;
+                break;
+            }
+        }
+
+        for (AgentProgrammed a : subordinates) {
+            int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+            if (cell[0] >= 8 && cell[1] >= 8) {
+                points++;
+                break;
+            }
+        }
+
+        return points * 64;
+
     }
 
     public float calculateGridRewardWithPunishment() {

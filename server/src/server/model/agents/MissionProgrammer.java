@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 250;
+    private final int NUM_STEPS_PER_EPOCH = 500;
     public static final int WIDTH = 4;
 
     float bestReward = 0f;
@@ -73,7 +73,9 @@ public class MissionProgrammer {
                     stepCounter++;
                     if (stepCounter % 10 == 0) {
                         //double r = calculateGlobalGridReward();
-                        double r = calculateSubGridReward(hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getSubordinates());
+
+                        //double r = calculateSubGridReward(hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getSubordinates());
+                        double r = hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
                         scores.add(r);
                         synchronized (this) {
                             //times.add(epochDuration);
@@ -95,7 +97,7 @@ public class MissionProgrammer {
                                 sum10 += scores.get(i);
                             }
                             double mvAv10 = sum10 / Math.min(scores.size(), 10);
-                            File csvOutputFile = new File("Full341R3.csv");
+                            File csvOutputFile = new File("tst.csv");
                             try {
                                 FileWriter fw = new FileWriter(csvOutputFile, true);
                                 fw.write(//runCounter
@@ -125,6 +127,8 @@ public class MissionProgrammer {
                 });
 
                  */
+
+                //((TensorRLearner) hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).checkTestRewards();
 
                 long epochDuration = System.currentTimeMillis() - epochStartTime;
                 epochStartTime = System.currentTimeMillis();
@@ -293,7 +297,7 @@ public class MissionProgrammer {
         // Inc  -> R0=5; R1=21; R2=85; R3=341; ... ; R6(5)=85; ... ; R9(8)=341 ; ... ; R11(10)=85
         // Full ->                     R0=341; ... ; R3(2)=85; ... ; R6(5)=341 ; ... ; R8(7)=85
 
-
+/*
         if (runCounter == 24 || runCounter == 32 || runCounter == 40) {
             hierarchy.layers.get(0).forEach(a -> {
                 Simulator.instance.getState().getAgents().remove(a);
@@ -304,10 +308,10 @@ public class MissionProgrammer {
             regenerateHierarchy();
 
 
-        } else if ((runCounter == 4 || runCounter == 8 || runCounter == 12 || runCounter == 16 || runCounter == 28 || runCounter == 36 || runCounter == 44) && agents.size() < 341) {
+        } else if ((runCounter == 4 || runCounter == 8 || runCounter == 12 || runCounter == 16 || runCounter == 28 || runCounter == 36 || runCounter == 44) && agents.size() < 85) {
             int numToAdd = (int) Math.pow(4, hierarchy.layers.size());
             for (int i = 0; i < numToAdd; i++) {
-                if (agents.size() < 341) {
+                if (agents.size() < 85) {
                     AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
                             50.9289,
                             -1.409,
@@ -326,13 +330,17 @@ public class MissionProgrammer {
             regenerateHierarchy();
 
 
+
+
         } else {
 
+
+ */
             agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
             regenerateHierarchy();
 
+      /*
 
-/*
             hierarchy = null;
             Collections.shuffle(agents);
             agents.forEach(a -> {
@@ -347,23 +355,25 @@ public class MissionProgrammer {
             agents.forEach(a -> a.setCoordinate(new Coordinate(50.9289, -1.409)));
             regenerateHierarchy();
 
- */
 
-        }
+          */
+
+
+        //}
 
     }
 
     private void updateBounds() {
-        double topBound = hierarchy.getRoot().getCoordinate().getLatitude() + ((5 * Y_SPAN) / 2);
-        double botBound = hierarchy.getRoot().getCoordinate().getLatitude() - ((5 * Y_SPAN) / 2);
-        double rightBound = hierarchy.getRoot().getCoordinate().getLongitude() + ((5 * X_SPAN) / 2);
-        double leftBound = hierarchy.getRoot().getCoordinate().getLongitude() - ((5 * X_SPAN) / 2);
+        double topBound = hierarchy.getRoot().getCoordinate().getLatitude() + ((4 * Y_SPAN) / 2);
+        double botBound = hierarchy.getRoot().getCoordinate().getLatitude() - ((4 * Y_SPAN) / 2);
+        double rightBound = hierarchy.getRoot().getCoordinate().getLongitude() + ((4 * X_SPAN) / 2);
+        double leftBound = hierarchy.getRoot().getCoordinate().getLongitude() - ((4 * X_SPAN) / 2);
 
         botLeft = new Coordinate(botBound, leftBound);
         topRight = new Coordinate(topBound, rightBound);
 
-        xSquareSpan = (5 * X_SPAN) / xSteps;
-        ySquareSpan = (5 * Y_SPAN) / ySteps;
+        xSquareSpan = (4 * X_SPAN) / xSteps;
+        ySquareSpan = (4 * Y_SPAN) / ySteps;
         cellWidth = (float) ((xSquareSpan * 111111));
     }
 
@@ -372,9 +382,9 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-
-        while (Simulator.instance.getState().getAgents().size() < 341 + 1) {
-            if (agents.size() < 341) {
+/*
+        while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
+            if (agents.size() < 85) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
                         50.9289,
                         -1.409,
@@ -384,6 +394,7 @@ public class MissionProgrammer {
             }
         }
 
+ */
 
         initialiseLearningAllocators();
         for (AgentProgrammed ap : agents) {
@@ -411,27 +422,11 @@ public class MissionProgrammer {
         for (AgentProgrammed ap : agents) {
             int lvl = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel();
             if (lvl > 0) {
-                //float subTreeReward = calculateSubTreeReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
-                //float subTreeReward = calculateSimulatedReward(ap.getCoordinate(), ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + 1, ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
-                //System.out.println("For agent at level " + ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() + ", rwd = " + subTreeReward);
 
+                float subTreeReward = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
+                //float subTreeReward = calculateSubGridReward(ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
 
-                //float subTreeReward = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
-
-
-                float subTreeReward = calculateSubGridReward(ap.getProgrammerHandler().getAgentProgrammer().getSubordinates());
-                //float subTreeReward = calculateGlobalGridReward();
-
-                /*
-                if (subTreeReward > bestReward) {
-                    bestReward = subTreeReward;
-                    System.out.println("BEST = " + bestReward);
-                    ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().outputAgentPositions();
-                }
-
-                 */
                 ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward);
-                //ap.programmerHandler.getAgentProgrammer().learningStep(balancedReward);
             }
         }
     }
@@ -474,7 +469,7 @@ public class MissionProgrammer {
             for (int j = 0; j < ySteps; j++) {
                 for (AgentProgrammed a : agentsToConsider) {
                     int[] cell = calculateEquivalentGridCell(a.getCoordinate());
-                    if (cell[0] - 0 <= i && cell[0] + 0 >= i && cell[1] - 0 <= j && cell[1] + 0 >= j) {
+                    if (cell[0] - 1 <= i && cell[0] + 1 >= i && cell[1] - 1 <= j && cell[1] + 1 >= j) {
                         numPointsCovered++;
                         break;
                     }
@@ -486,8 +481,8 @@ public class MissionProgrammer {
 
     public int[] calculateEquivalentGridCell(Coordinate c) {
         return new int[]{
-                (int) Math.round(((c.getLongitude() - botLeft.getLongitude()) / (5 * X_SPAN)) * xSteps),
-                (int) Math.round(((c.getLatitude() - botLeft.getLatitude()) / (5 * Y_SPAN)) * ySteps)
+                (int) Math.round(((c.getLongitude() - botLeft.getLongitude()) / (4 * X_SPAN)) * xSteps),
+                (int) Math.round(((c.getLatitude() - botLeft.getLatitude()) / (4 * Y_SPAN)) * ySteps)
         };
     }
 
