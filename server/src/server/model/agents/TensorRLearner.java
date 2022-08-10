@@ -1,13 +1,14 @@
 package server.model.agents;
 
-import deepnetts.data.MLDataItem;
-import deepnetts.data.TabularDataSet;
-import deepnetts.net.ConvolutionalNetwork;
-import deepnetts.net.FeedForwardNetwork;
-import deepnetts.net.layers.activation.ActivationType;
-import deepnetts.net.loss.LossType;
-import deepnetts.net.train.opt.OptimizerType;
-import deepnetts.util.Tensor;
+
+import org.neuroph.core.Layer;
+import org.neuroph.core.NeuralNetwork;
+import org.neuroph.core.data.DataSetRow;
+import org.neuroph.core.learning.error.MeanSquaredError;
+import org.neuroph.nnet.ConvolutionalNetwork;
+import org.neuroph.nnet.MultiLayerPerceptron;
+import org.neuroph.nnet.learning.ConvolutionalBackpropagation;
+import org.neuroph.util.Neuroph;
 import server.Simulator;
 import server.model.Coordinate;
 
@@ -25,11 +26,11 @@ import javax.imageio.ImageIO;
 
 public class TensorRLearner extends LearningAllocator {
     private static final float GAMMA = 0.9f;  // TODO trying gamma=1 might help?
-    private static final int SAMPLE_SIZE = 50;
+    private static final int SAMPLE_SIZE = 10;
     //private static final float LEARNING_RATE = 0.000001f;
     private static final float LEARNING_RATE = 0.0001f;
 
-    private static final int BUFFER_SIZE = 500;
+    private static final int BUFFER_SIZE = 1000;
     private ConvolutionalNetwork qNetwork;
     private ShortExperienceRecord[] buffer;
     private boolean bufferFull = false;
@@ -42,6 +43,7 @@ public class TensorRLearner extends LearningAllocator {
 
     private ArrayList<ShortExperienceRecord> miniBuffer = new ArrayList<>();
     private boolean[] excluded;
+    private ShortExperienceRecord lastRec;
 
     public TensorRLearner(AgentProgrammed agent) {
         super(agent);
@@ -86,8 +88,7 @@ public class TensorRLearner extends LearningAllocator {
         step(-1);
     }
 
-    @Override
-    public void step(float jointReward) {
+    public void step(float jointReward, int epsilon) {
         boolean perform = true;
         if (perform) {
             if (!miniBuffer.isEmpty()) {
@@ -96,15 +97,33 @@ public class TensorRLearner extends LearningAllocator {
                         pointer = 0;
                         bufferFull = true;
                     }
+                    float[] state = new float[256];
+                    for (int i = 0; i < 256; i++) {
+                        state[i] = 0;
+                    }
+                    subordinates.forEach(a -> {
+                        int[] cell = calculateEquivalentGridCell(a.getCoordinate());
+                        cell[0] = Math.max(0, Math.min(cell[0], 15));
+                        cell[1] = Math.max(0, Math.min(cell[1], 15));
+                        state[(cell[1] * 16) + cell[0]] = 1;
+                    });
+                    e.inputState = state;
                     e.jointReward = jointReward;
                     buffer[pointer] = e;
                     pointer++;
                 }
                 miniBuffer.clear();
             }
+
             if (bufferFull && Arrays.stream(buffer).noneMatch(Objects::isNull)) {
                 train();
             }
+            /*else if (lastRec != null) {
+                trainOnIncompleteBuffer();
+                //trainOnThis(lastRec);
+            }
+
+             */
 
             // Choose a hero
             int rnd = Simulator.instance.getRandom().nextInt(4);
@@ -120,11 +139,8 @@ public class TensorRLearner extends LearningAllocator {
             subordinates.forEach(a -> {
                 if (a != hero) {
                     int[] cell = calculateEquivalentGridCell(a.getCoordinate());
-                    //state[cell[0]][cell[1]] = 1;
-                    if (cell[0] - 1 > 15 || cell[0] - 1 < 0 || cell[1] > 15 || cell[1] < 0) {
-                        fail.set(true);
-                        return;
-                    }
+                    cell[0] = Math.max(0, Math.min(cell[0], 15));
+                    cell[1] = Math.max(0, Math.min(cell[1], 15));
                     state[(cell[1] * 16) + cell[0]] = 1;
                 }
             });
@@ -169,8 +185,22 @@ public class TensorRLearner extends LearningAllocator {
                                 thisState[j] = row;
                             }
 
-                            //values[i] = compute(new Tensor(thisState));
-                            values[i] = calculateActualRewardFromArray(thisState);
+                            double[] stateAsDoubleArray = new double[256];
+                            for (int e=0; e<256; e++) {
+                                stateAsDoubleArray[e] = modelledFutureStates[m][e];
+                            }
+
+                            /*
+                            if (subordinates.get(0).getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getSubordinates().isEmpty()) {
+                                values[i] = calculateActualRewardFromArray(thisState);
+                            } else {
+                                values[i] = compute(stateAsDoubleArray);
+                            }
+                             */
+
+                            values[i] = compute(stateAsDoubleArray);
+                            //values[i] = calculateActualRewardFromArray(thisState);
+
                             if (values[i] > bestVal) {
                                 bestVal = values[i];
                                 best = i;
@@ -195,6 +225,7 @@ public class TensorRLearner extends LearningAllocator {
                 }
 
                 startValues.put(i, bestVal);
+                //startValues.put(i, totalReward);
 
             }
 
@@ -209,8 +240,12 @@ public class TensorRLearner extends LearningAllocator {
                 }
             }
 
+            boolean eps = false;
+            if (epsilon != -1) {
+                eps = Simulator.instance.getRandom().nextInt(epsilon) == 0;
+            }
+            //boolean eps = Simulator.instance.getRandom().nextInt(epsilon) == 0;
 
-            boolean eps = Simulator.instance.getRandom().nextInt(10) == 0;
             if (eps) {
                 best = -1;
                 if (excluded[0] && excluded[1] && excluded[2] && excluded[3] && excluded[4]) {
@@ -259,8 +294,16 @@ public class TensorRLearner extends LearningAllocator {
                 ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
             }
 
-            miniBuffer.add(new ShortExperienceRecord(state, bestVal, -1));
+            ShortExperienceRecord e = new ShortExperienceRecord(state, bestVal, -1);
+            miniBuffer.add(e);
+            /*
+            if (stepCount % 5 == 0) {
+                miniBuffer.add(e);
+            } else {
+                lastRec = e;
+            }
 
+             */
             stepCount++;
         }
     }
@@ -362,18 +405,166 @@ public class TensorRLearner extends LearningAllocator {
         return sample;
     }
 
+    private void trainOnIncompleteBuffer() {
+        try {
+            List<ShortExperienceRecord> sample = new ArrayList<>();
+            int head = 0;
+            while ((buffer[head] != null) && (head < BUFFER_SIZE)) {
+                head++;
+            }
+
+            while (sample.size() < Math.min(head, SAMPLE_SIZE)) {
+                ShortExperienceRecord e = buffer[Simulator.instance.getRandom().nextInt(head)];
+                if (!sample.contains(e)) {
+                    sample.add(e);
+                }
+            }
+
+            org.neuroph.core.data.DataSet ds = new org.neuroph.core.data.DataSet(256, 1);
+            //List<DataSetRow> dataItems = new ArrayList<>();
+            for (ShortExperienceRecord e : sample) {
+                double[] inSt = new double[256];
+                for (int i = 0; i < 256; i++) {
+                    inSt[i] = e.inputState[i];
+                }
+
+                //double scaledReward = (Math.pow(e.jointReward, 2) / (xSteps*ySteps*xSteps*ySteps));
+                //double scaledReward = e.jointReward / (xSteps*ySteps);
+                double scaledReward = e.jointReward / (64f);
+                DataSetRow item = new DataSetRow(inSt, new double[]{scaledReward});
+                //DataSetRow item = new DataSetRow(inSt, new double[] {(e.jointReward / (xSteps*ySteps))});
+                ds.add(item);
+                //System.out.println("Expected = " + e.value + ", actual = " + (e.jointReward / (xSteps*ySteps)) + " diff = " + ((e.jointReward - e.value)/ (xSteps*ySteps)));
+            }
+        } catch (Exception e) {
+            bufferFull = true;
+        }
+    }
+
+    private void trainOnThis(ShortExperienceRecord e) {
+        org.neuroph.core.data.DataSet ds = new org.neuroph.core.data.DataSet(256, 1);
+        double[] inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = e.inputState[i];
+        }
+
+        //double scaledReward = (Math.pow(e.jointReward, 2) / (xSteps*ySteps*xSteps*ySteps));
+        //double scaledReward = e.jointReward / (xSteps*ySteps);
+        double scaledReward = e.jointReward / (64f);
+        DataSetRow item = new DataSetRow(inSt, new double[] {scaledReward});
+        //DataSetRow item = new DataSetRow(inSt, new double[] {(e.jointReward / (xSteps*ySteps))});
+        ds.add(item);
+    }
+
     private void train() {
         List<ShortExperienceRecord> sample = sample();
-        List<MLDataItem> dataItems = new ArrayList<>();
+        org.neuroph.core.data.DataSet ds = new org.neuroph.core.data.DataSet(256, 1);
+        //List<DataSetRow> dataItems = new ArrayList<>();
+
         for (ShortExperienceRecord e : sample) {
-            MLDataItem item = new TabularDataSet.Item(new Tensor(e.inputState), new Tensor(e.jointReward / (xSteps*ySteps)));
-            dataItems.add(item);
+            double[] inSt = new double[256];
+            for (int i=0; i<256; i++) {
+                inSt[i] = e.inputState[i];
+            }
+
+            //double scaledReward = (Math.pow(e.jointReward, 2) / (xSteps*ySteps*xSteps*ySteps));
+            //double scaledReward = e.jointReward / (xSteps*ySteps);
+            double scaledReward = e.jointReward / (64f);
+            DataSetRow item = new DataSetRow(inSt, new double[] {scaledReward});
+            //DataSetRow item = new DataSetRow(inSt, new double[] {(e.jointReward / (xSteps*ySteps))});
+            ds.add(item);
             //System.out.println("Expected = " + e.value + ", actual = " + (e.jointReward / (xSteps*ySteps)) + " diff = " + ((e.jointReward - e.value)/ (xSteps*ySteps)));
         }
-        DataSet<MLDataItem> dataSet = new BasicDataSet<>(dataItems);
-        qNetwork.train(dataSet);
-        qNetwork.applyWeightChanges();
+/*
+
+        float[] state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(4 * 16) + 4] = 1;
+        state[(4 * 16) + 12] = 1;
+        state[(12 * 16) + 4] = 1;
+        state[(12 * 16) + 12] = 1;
+
+        float[][] thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        double[] inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = state[i];
+        }
+        DataSetRow item = new DataSetRow(inSt, new double[] {1d});
+        ds.add(item);
+
+        state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(6 * 16) + 6] = 1;
+        state[(6 * 16) + 10] = 1;
+        state[(10 * 16) + 6] = 1;
+        state[(10 * 16) + 10] = 1;
+
+        thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+        DataSetRow item2 = new DataSetRow(inSt, new double[] {169f / 256f});
+        ds.add(item2);
+
+
+        state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(1 * 16) + 1] = 1;
+        state[(3 * 16) + 2] = 1;
+
+        thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = state[i];
+        }
+        DataSetRow item3 = new DataSetRow(inSt, new double[] {144f / 256f});
+        ds.add(item3);
+
+        state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(4 * 16) + 4] = 1;
+        state[(12 * 16) + 12] = 1;
+
+        thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = state[i];
+        }
+        DataSetRow item4 = new DataSetRow(inSt, new double[] {56f / 256f});
+        ds.add(item4);
+
+ */
+        qNetwork.learn(ds);
     }
+
 
     private int[] calculateBestCoord(float[] result) {
         float bestValue = -1f;
@@ -392,9 +583,11 @@ public class TensorRLearner extends LearningAllocator {
         return crd;
     }
 
-    private float compute(Tensor input) {
+    private float compute(double[] input) {
         qNetwork.setInput(input);
-        return qNetwork.getOutput()[0];
+        qNetwork.calculate();
+        double[] networkOutputOne = qNetwork.getOutput();
+        return (float) networkOutputOne[0];
     }
 
     public void checkTestRewards() {
@@ -414,28 +607,13 @@ public class TensorRLearner extends LearningAllocator {
             thisState[j] = row;
         }
 
-        float res = compute(new Tensor(thisState));
+        double[] inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = state[i];
+        }
+        float res = compute(inSt);
 
         System.out.println("PERFECT = " + res);
-        System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
-
-        state = new float[256];
-        for (int i = 0; i < 256; i++) {
-            state[i] = 0;
-        }
-        state[(4 * 16) + 4] = 1;
-        state[(12 * 16) + 12] = 1;
-
-        thisState = new float[16][16];
-        for (int j = 0; j < 16; j++) {
-            float[] row = new float[16];
-            System.arraycopy(state, j * 16, row, 0, 16);
-            thisState[j] = row;
-        }
-
-        res = compute(new Tensor(thisState));
-
-        System.out.println("OVERLAP CORNERS = " + res);
         System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
 
 
@@ -455,11 +633,60 @@ public class TensorRLearner extends LearningAllocator {
             thisState[j] = row;
         }
 
-        res = compute(new Tensor(thisState));
+        inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = state[i];
+        }
+        res = compute(inSt);
 
         System.out.println("MEDIUM= = " + res);
         System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
-        System.out.println();
+
+        state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(4 * 16) + 4] = 1;
+        state[(12 * 16) + 12] = 1;
+
+        thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = state[i];
+        }
+        res = compute(inSt);
+
+        System.out.println("OVERLAP CORNERS = " + res);
+        System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
+
+        state = new float[256];
+        for (int i = 0; i < 256; i++) {
+            state[i] = 0;
+        }
+        state[(1 * 16) + 1] = 1;
+        state[(3 * 16) + 2] = 1;
+
+        thisState = new float[16][16];
+        for (int j = 0; j < 16; j++) {
+            float[] row = new float[16];
+            System.arraycopy(state, j * 16, row, 0, 16);
+            thisState[j] = row;
+        }
+
+        inSt = new double[256];
+        for (int i=0; i<256; i++) {
+            inSt[i] = state[i];
+        }
+        res = compute(inSt);
+
+        System.out.println("BAD = " + res);
+        System.out.println("--Actual = " + calculateActualRewardFromArray(thisState));
 
 
     }
@@ -501,7 +728,38 @@ public class TensorRLearner extends LearningAllocator {
     }
 
     private ConvolutionalNetwork createNetwork() {
-        // TODO consider conv and max pooling if it works
+
+        // Passable:
+        /*
+        ConvolutionalNetwork convolutionNetwork = new ConvolutionalNetwork.Builder()
+                .withInputLayer(16, 16, 1)
+                .withConvolutionLayer(1, 1, 1)
+                .withFullConnectedLayer(256)
+                .withFullConnectedLayer(1)
+                .build();
+         */
+        ConvolutionalNetwork convolutionNetwork = new ConvolutionalNetwork.Builder()
+                .withInputLayer(16, 16, 1)
+                .withConvolutionLayer(5, 5, 1)
+                .withPoolingLayer(5,5)
+                .withFullConnectedLayer(1)
+                .build();
+
+
+        ConvolutionalBackpropagation backPropagation = new ConvolutionalBackpropagation();
+        backPropagation.setLearningRate(LEARNING_RATE);
+        backPropagation.setBatchMode(false);
+        backPropagation.setMaxIterations(1);
+        //backPropagation.addListener(new LearningListener(convolutionNetwork, testSet));
+        backPropagation.setErrorFunction(new MeanSquaredError());
+
+        convolutionNetwork.setLearningRule(backPropagation);
+
+        return convolutionNetwork;
+
+
+
+/*
         ConvolutionalNetwork net = ConvolutionalNetwork.builder()
                 .addInputLayer(16, 16, 1)
                 .addConvolutionalLayer(4, 1)
@@ -522,6 +780,8 @@ public class TensorRLearner extends LearningAllocator {
                 .setLearningRate(LEARNING_RATE);
 
         return net;
+
+ */
     }
 
     public int getxCell() {
@@ -538,6 +798,12 @@ public class TensorRLearner extends LearningAllocator {
 
     public void setyCell(int yCell) {
         this.yCell = yCell;
+    }
+
+    public double evaluateNet() {
+        NetTester netTester = new NetTester(qNetwork);
+        return netTester.test(stepCount, 1000);
+        //System.out.println(agent.getId() + " -> Average delta = " + netTester.test(stepCount, 1000));
     }
 
     private class ExperienceRecord {

@@ -59,7 +59,12 @@ public class AgentProgrammer {
         if (!getSubordinates().isEmpty()) {
             learningAllocator.step(jointReward);
         }
+    }
 
+    public void learningStep(float jointReward, int epsilon) {
+        if (!getSubordinates().isEmpty()) {
+            ((TensorRLearner) learningAllocator).step(jointReward, epsilon);
+        }
     }
 
     public void learningStep() {

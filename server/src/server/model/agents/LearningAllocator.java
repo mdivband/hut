@@ -1,6 +1,5 @@
 package server.model.agents;
 
-import deepnetts.util.Tensor;
 import server.Simulator;
 import server.model.Coordinate;
 
@@ -242,52 +241,6 @@ public abstract class LearningAllocator {
 
     public float getCellWidth() {
         return cellWidth;
-    }
-
-    private Tensor getStateForThisAgent(AgentProgrammed agent) {
-        float[][][] stateArray = new float[4][xSteps][ySteps];
-        List<AgentProgrammed> orderedAgents = new ArrayList<>();
-        orderedAgents.add(agent);
-        subordinates.forEach(a -> {
-            if (!a.equals(agent)) {
-                orderedAgents.add(a);
-            }
-        });
-
-        for (int d=0; d<orderedAgents.size(); d++) {
-            Coordinate refCoord = orderedAgents.get(d).getCoordinate();
-            int[] cell = calculateEquivalentGridCell(refCoord);
-            for (int i=0; i<xSteps; i++) {
-                for (int j=0; j<ySteps; j++) {
-                    // TODO unsure if best to use binary classifier for coverage or some kind of radiated heatmap variant
-                    if (cell[0] == i && cell[1] == j) {
-                        stateArray[d][i][j] = 1;
-                    } else {
-                        stateArray[d][i][j] = 0;
-                    }
-                }
-            }
-        }
-        return new Tensor(stateArray);
-    }
-
-    protected Tensor getState() {
-        float[][][] stateArray = new float[4][xSteps][ySteps];
-        for (int d=0; d<subordinates.size(); d++) {
-            Coordinate refCoord = subordinates.get(d).getCoordinate();
-            int[] cell = calculateEquivalentGridCell(refCoord);
-            for (int i=0; i<xSteps; i++) {
-                for (int j=0; j<ySteps; j++) {
-                    // TODO unsure if best to use binary classifier for coverage or some kind of radiated heatmap variant
-                    if (cell[0] == i && cell[1] == j) {
-                        stateArray[d][i][j] = 1;
-                    } else {
-                        stateArray[d][i][j] = 0 ;
-                    }
-                }
-            }
-        }
-        return new Tensor(stateArray);
     }
 
     public boolean checkInGrid(int[] cell) {
