@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  */
 public class MissionProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
-    private final int NUM_STEPS_PER_EPOCH = 500;
+    private final int NUM_STEPS_PER_EPOCH = 100000000;
     public static final int WIDTH = 4;
 
     float bestReward = 0f;
@@ -27,8 +27,8 @@ public class MissionProgrammer {
     //TODO these values can be passed through the AgentHubProgrammed and therefore can be scenario file defined
     private Coordinate botLeft;
     private Coordinate topRight;
-    protected int xSteps = 64;
-    protected int ySteps = 64;
+    protected int xSteps = 16;
+    protected int ySteps = 16;
     private double X_SPAN = 0.01;
     private double Y_SPAN = 0.006;
     private double xSquareSpan;
@@ -73,12 +73,14 @@ public class MissionProgrammer {
                      */
                     stepCounter++;
                     //if (stepCounter % ((NUM_STEPS_PER_EPOCH * (hierarchy.layers.size() - 1) / 10)) == 0) {
-                    if (stepCounter % NUM_STEPS_PER_EPOCH / 10 == 0) {
-                        double r = calculateGlobalGridRewardOfLevelOne();
+                    if (stepCounter % 10000 == 0) {
+                        //double r = calculateGlobalGridRewardOfLevelOne();
 
                         //double r = calculateSubGridReward(hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getSubordinates());
-                        //double r = hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
+                        double r = hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
                         //scores.add(r);
+                        System.out.println("run = " + stepCounter + ", reward at end = " + r + ", hierarchy dims = " + Arrays.toString(hierarchy.getDims()));
+                        //((TensorRLearner) hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).debugOut();
                         synchronized (this) {
                             //times.add(epochDuration);
                             /*
@@ -325,6 +327,7 @@ public class MissionProgrammer {
         // Inc  -> R0=5; R1=21; R2=85; R3=341; ... ; R6(5)=85; ... ; R9(8)=341 ; ... ; R11(10)=85
         // Full ->                     R0=341; ... ; R3(2)=85; ... ; R6(5)=341 ; ... ; R8(7)=85
 
+        /*
         if (runCounter == 15 || runCounter == 25) {
         //if (runCounter == 20 || runCounter == 30) {
             // Drop layer
@@ -361,6 +364,8 @@ public class MissionProgrammer {
 
 
 
+
+         */
             agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().clearAssociations());
             regenerateHierarchy();
       /*
@@ -379,7 +384,7 @@ public class MissionProgrammer {
             regenerateHierarchy();
           */
 
-        }
+        //}
 
     }
 
@@ -447,17 +452,21 @@ public class MissionProgrammer {
             int lvl = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel();
             if (lvl > 0) {
 
-                //float subTreeReward = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
+                float subTreeReward = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
 
                 // We must scale this down depending on level, otherwise they get increasing reward when promoted and it nullifies old learning
                 // e.g. level 1 -> (reward for 4 agents below)                       -> 4 * (average reward per agent)
                 //      level 2 -> (reward for 16 combined agents below) / 4         -> 4 * (average reward per agent)
                 //      level 3 -> (reward for 64 combined agents below) / 16        -> 4 * (average reward per agent)
-                float subTreeReward = (float) (calculateSubGridReward(ap.getProgrammerHandler().getAgentProgrammer().getSubordinates()) / Math.pow(4, lvl-1));
+                //float subTreeReward = (float) (calculateSubGridReward(ap.getProgrammerHandler().getAgentProgrammer().getSubordinates()) / Math.pow(4, lvl-1));
+
+
+
                 //if (stepCounter < 4000) {
                 // After 80% time we stop exploring
                // if (stepCounter < Math.floor((NUM_STEPS_PER_EPOCH * (hierarchy.layers.size() - 1)) * 0.25)) {
-                if (stepCounter < (Math.floor(NUM_STEPS_PER_EPOCH) * 0.75)) {
+                //if (stepCounter < (Math.floor(NUM_STEPS_PER_EPOCH) * 0.75)) {
+                if (stepCounter < 1000000) {
                     ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 100);
                     //} else if (stepCounter < Math.floor((NUM_STEPS_PER_EPOCH * (hierarchy.layers.size() - 1)) * 0.5) ) {
                 //} else if (stepCounter < (Math.floor(NUM_STEPS_PER_EPOCH) * 0.5))  {

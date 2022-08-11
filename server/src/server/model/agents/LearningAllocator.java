@@ -225,7 +225,7 @@ public abstract class LearningAllocator {
     }
 
     public Coordinate calculateEquivalentCoordinate(int x, int y) {
-        return new Coordinate( botLeft.getLatitude() + (y * ySquareSpan), botLeft.getLongitude() + (x * xSquareSpan));
+        return new Coordinate( botLeft.getLatitude() + (y * ySquareSpan) + (ySquareSpan / 2), botLeft.getLongitude() + (x * xSquareSpan) + (xSquareSpan / 2));
     }
 
     public Coordinate calculateEquivalentCoordinate(Coordinate centre, int x, int y) {
@@ -306,4 +306,5 @@ public abstract class LearningAllocator {
     public Coordinate getBotLeft() {
         return botLeft;
     }
+
 }
