@@ -80,7 +80,11 @@ public class MissionProgrammer {
                         double r = hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
                         //scores.add(r);
                         System.out.println("run = " + stepCounter + ", reward at end = " + r + ", hierarchy dims = " + Arrays.toString(hierarchy.getDims()));
-                        //((TensorRLearner) hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).debugOut();
+                        agents.forEach(a -> {
+                            if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
+                                ((TensorRLearner) a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).debugOut();
+                            }
+                        });
                         synchronized (this) {
                             //times.add(epochDuration);
                             /*
@@ -407,9 +411,9 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-/*
-        while (Simulator.instance.getState().getAgents().size() < 85 + 1) {
-            if (agents.size() < 85) {
+
+        while (Simulator.instance.getState().getAgents().size() < 21 + 1) {
+            if (agents.size() < 21) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
                         50.9289,
                         -1.409,
@@ -419,7 +423,9 @@ public class MissionProgrammer {
             }
         }
 
- */
+
+
+
 
 
 
@@ -466,14 +472,16 @@ public class MissionProgrammer {
                 // After 80% time we stop exploring
                // if (stepCounter < Math.floor((NUM_STEPS_PER_EPOCH * (hierarchy.layers.size() - 1)) * 0.25)) {
                 //if (stepCounter < (Math.floor(NUM_STEPS_PER_EPOCH) * 0.75)) {
-                if (stepCounter < 1000000) {
+
+                ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 100);
+                /*
+                if (stepCounter < 100000) {
                     ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 100);
-                    //} else if (stepCounter < Math.floor((NUM_STEPS_PER_EPOCH * (hierarchy.layers.size() - 1)) * 0.5) ) {
-                //} else if (stepCounter < (Math.floor(NUM_STEPS_PER_EPOCH) * 0.5))  {
-                //    ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 100);
                 } else {
                     ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, -1);
                 }
+
+                 */
 
             }
         }

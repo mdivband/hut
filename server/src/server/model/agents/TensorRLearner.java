@@ -70,12 +70,16 @@ public class TensorRLearner extends LearningAllocator {
         buffer = new ShortExperienceRecord[BUFFER_SIZE];
         pointer = 0;
         counter = 0;
+        xCell = Simulator.instance.getRandom().nextInt(2);
+        yCell = Simulator.instance.getRandom().nextInt(2);
     }
 
     public void reset() {
         super.reset();
-        xCell = xSteps / 2;
-        yCell = ySteps / 2;
+        xCell = Simulator.instance.getRandom().nextInt(2);
+        yCell = Simulator.instance.getRandom().nextInt(2);
+        //xCell = xSteps / 2;
+        //yCell = ySteps / 2;
     }
 
     @Override
@@ -141,9 +145,28 @@ public class TensorRLearner extends LearningAllocator {
             AtomicBoolean fail = new AtomicBoolean(false);
             subordinates.forEach(a -> {
                 if (a != hero) {
+                    int[] cell = new int[] {((TensorRLearner) a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).xCell, ((TensorRLearner) a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).yCell};
+                    if (cell[0] < 0 || cell[0] > 1 || cell[1] < 0 || cell[1] > 1) {
+                        System.out.println(agent.getId() + " -> " + a.getId() + " = " + Arrays.toString(cell));
+                    }
+
+                    Coordinate c = calculateEquivalentCoordinate(cell[0], cell[1]);
+                    int[] remapped = calculateEquivalentGridCell(c);
+                    if (!Arrays.equals(remapped, cell)) {
+                        System.out.println("ERROR1: " +Arrays.toString(cell) + " -> " + c + " -> " + Arrays.toString(remapped));
+                    }
+
+                    //System.out.println(Arrays.toString(cell) + " -> " + c + " -> " + Arrays.toString(remapped));
+                    /*
                     int[] cell = calculateEquivalentGridCell(a.getCoordinate());
-                    cell[0] = Math.max(0, Math.min(cell[0], 1));
-                    cell[1] = Math.max(0, Math.min(cell[1], 1));
+                    if (cell[0] < 0 || cell[0] > 1 || cell[1] < 0 || cell[1] > 1) {
+                        System.out.println(agent.getId() + " -> " + a.getId() + " = " + Arrays.toString(cell));
+                    }
+
+                     */
+
+                    //cell[0] = Math.max(0, Math.min(cell[0], 1));
+                    //cell[1] = Math.max(0, Math.min(cell[1], 1));
                     state[(cell[1] * 2) + cell[0]] = 1;
                 }
             });
@@ -157,7 +180,15 @@ public class TensorRLearner extends LearningAllocator {
             }
 
             // 1. Populate moves in a list
-            int[] heroCell = calculateEquivalentGridCell(hero.getCoordinate());
+            int[] heroCell = new int[] {((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).xCell,
+                    ((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).yCell};
+            Coordinate c = calculateEquivalentCoordinate(heroCell[0], heroCell[1]);
+            int[] remapped = calculateEquivalentGridCell(c);
+            if (!Arrays.equals(remapped, heroCell)) {
+                System.out.println("ERROR: " + Arrays.toString(heroCell) + " -> " + c + " -> " + Arrays.toString(remapped));
+            }
+
+            //calculateEquivalentGridCell(hero.getCoordinate());
             float[][] states = ennumerateStates(state, heroCell);
             int best;
             float bestVal;
@@ -168,15 +199,21 @@ public class TensorRLearner extends LearningAllocator {
                 eps = (Simulator.instance.getRandom().nextInt(epsilon) == 0);
             }
 
+/*
             float[] actualState = state.clone();
-            actualState[((heroCell[1] * 2) + heroCell[0])] = 1;
+            actualState[(heroCell[1] * 2) + heroCell[0]] = 1;
 
-            //System.out.println(hero.getId() + " (" + Arrays.toString(actualState) + "), this at [" + ((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getxCell() + ", "
-            //        + ((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getyCell() + "] :");
+            System.out.println(hero.getId() + " (" + Arrays.toString(actualState) + "), this at [" + ((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getxCell() + ", "
+                    + ((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getyCell() + "] :");
+
+
+ */
+
             if (!eps) {
                 bestVal = -1000000;
                 best = 0;
 
+                System.out.println(agent.getId() + " -> " + hero.getId() + " " + Arrays.toString(states[0]));
                 for (int i = 0; i < 5; i++) {
                     if (!excluded[i]) {
                         double[] thisState = new double[4];
@@ -185,8 +222,9 @@ public class TensorRLearner extends LearningAllocator {
                         }
 
                         float val = compute(thisState);
-                        //System.out.println(i + " -> " + val + " (" + Arrays.toString(thisState) + ")");
-                        if (val > bestVal) {
+
+                        System.out.println(i + " -> " + Arrays.toString(thisState) + " -> " + val);
+                        if (val >= bestVal) {
                             bestVal = val;
                             best = i;
                         }
@@ -196,12 +234,16 @@ public class TensorRLearner extends LearningAllocator {
                 best = Simulator.instance.getRandom().nextInt(5);
                 bestVal = -1;
             }
-            //System.out.println("bv = " + bestVal + ", best = " + best);
+            System.out.println("bv = " + bestVal + ", best = " + best + " for herocell = " + Arrays.toString(heroCell));
 
 
 
             if (best == 0) {
                 // No move
+                if (heroCell[0] > 1 || heroCell[0] < 0 || heroCell[1] > 1 || heroCell[1] < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1]));
                 ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0]);
                 ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
             } else if (best == 1) {
@@ -250,7 +292,7 @@ public class TensorRLearner extends LearningAllocator {
     }
 
     public void debugOut() {
-        /*
+        System.out.println("============================= " + agent.getId() + "=============================");
         System.out.println("Current config: "
                 + "[" + ((TensorRLearner) subordinates.get(0).getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getxCell() + ", "
                 + ((TensorRLearner) subordinates.get(0).getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getyCell() + "]"
@@ -264,7 +306,9 @@ public class TensorRLearner extends LearningAllocator {
                 + "[" + ((TensorRLearner) subordinates.get(3).getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getxCell() + ", "
                 + ((TensorRLearner) subordinates.get(3).getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getyCell() + "]"
         );
-         */
+
+
+
 
         List<Double> deltas = new ArrayList<>();
         for (int r = 0; r < 1000; r++) {
@@ -297,6 +341,13 @@ public class TensorRLearner extends LearningAllocator {
             deltas.add(delta);
         }
         System.out.println("Max delta -> " + (deltas.stream().mapToDouble(Double::doubleValue).max().getAsDouble()));
+        System.out.println("Average delta -> " + (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble()));
+
+
+        System.out.println("SAMPLE STEP:");
+        step(0.25f, -1);
+        System.out.println("done");
+
 
     }
 
@@ -317,19 +368,19 @@ public class TensorRLearner extends LearningAllocator {
         }
         try {
             //futureStates[2][((heroCell[1] * 2) + heroCell[0] - 1)] = 1;  // 1 = N
-            if (heroCell[1] - 1 < 0) {
+            if (heroCell[1] + 1 < 0) {
                 throw new Exception();
             }
-            futureStates[1][(((heroCell[1] - 1) * 2) + heroCell[0])] = 1;  // 1 = N
+            futureStates[1][(((heroCell[1] + 1) * 2) + heroCell[0])] = 1;  // 1 = N
         } catch (Exception e) {
             excluded[1] = true;
         }
         try {
             //futureStates[1][((heroCell[1] * 2) + heroCell[0] + 1)] = 1;  // 2 = S
-            if (heroCell[1] + 1 > 1) {
+            if (heroCell[1] - 1 > 1) {
                 throw new Exception();
             }
-            futureStates[2][(((heroCell[1] + 1) * 2) + heroCell[0])] = 1;  // 2 = S
+            futureStates[2][(((heroCell[1] - 1) * 2) + heroCell[0])] = 1;  // 2 = S
         } catch (Exception e) {
             excluded[2] = true;
         }
@@ -360,8 +411,8 @@ public class TensorRLearner extends LearningAllocator {
         for (AgentProgrammed sub : subordinates) {
             int x = ((TensorRLearner) sub.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getxCell();
             int y = ((TensorRLearner) sub.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getyCell();
-            x = Math.max(0, Math.min(x, 2));
-            y = Math.max(0, Math.min(y, 2));
+            x = Math.max(0, Math.min(x, 1));
+            y = Math.max(0, Math.min(y, 1));
             sub.manualSetTask(calculateEquivalentCoordinate(x, y));
         }
     }
@@ -694,9 +745,9 @@ public class TensorRLearner extends LearningAllocator {
                 if (state[i][j] == 1) {
                     numPointsCovered++;
                 }
-
             }
         }
+        //System.out.println(Arrays.deepToString(state) + " -> " + numPointsCovered);
         /*
         List<int[]> agents = new ArrayList<>();
         for (int i = 0; i < xSteps; i++) {

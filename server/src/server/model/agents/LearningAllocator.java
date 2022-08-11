@@ -233,6 +233,15 @@ public abstract class LearningAllocator {
     }
 
     public int[] calculateEquivalentGridCell(Coordinate c) {
+        c = new Coordinate(c.getLatitude() - (ySquareSpan / 2), c.getLongitude() - (xSquareSpan / 2));
+        //System.out.println(agent.getId());
+        //System.out.println(c.getLongitude() + " - " +  botLeft.getLongitude() + " = " + (c.getLongitude() - botLeft.getLongitude())
+        //        + ", / " + (level * X_SPAN) + " = " + ((c.getLongitude() - botLeft.getLongitude()) / (level * X_SPAN))
+        //        + " * " + xSteps + " = " + Math.round(((c.getLongitude() - botLeft.getLongitude()) / (level * X_SPAN)) * xSteps));
+        //System.out.println(c.getLatitude() + " - " +  botLeft.getLatitude() + " = " + (c.getLatitude() - botLeft.getLatitude())
+        //        + ", / " + (level * Y_SPAN) + " = " + ((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN))
+        //        + " * " + ySteps + " = " + Math.round(((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN)) * ySteps));
+
         return new int[]{
                 (int) Math.round(((c.getLongitude() - botLeft.getLongitude()) / (level * X_SPAN)) * xSteps),
                 (int) Math.round(((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN)) * ySteps)
