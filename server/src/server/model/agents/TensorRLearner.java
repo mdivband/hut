@@ -45,6 +45,7 @@ public class TensorRLearner extends LearningAllocator {
     private ArrayList<ShortExperienceRecord> miniBuffer = new ArrayList<>();
     private boolean[] excluded;
     private ShortExperienceRecord lastRec;
+    private boolean debug = false;
 
     public TensorRLearner(AgentProgrammed agent) {
         super(agent);
@@ -213,7 +214,9 @@ public class TensorRLearner extends LearningAllocator {
                 bestVal = -1000000;
                 best = 0;
 
-                System.out.println(agent.getId() + " -> " + hero.getId() + " " + Arrays.toString(states[0]));
+                if (debug) {
+                    System.out.println(agent.getId() + " -> " + hero.getId() + " " + Arrays.toString(states[0]));
+                }
                 for (int i = 0; i < 5; i++) {
                     if (!excluded[i]) {
                         double[] thisState = new double[4];
@@ -222,8 +225,9 @@ public class TensorRLearner extends LearningAllocator {
                         }
 
                         float val = compute(thisState);
-
-                        System.out.println(i + " -> " + Arrays.toString(thisState) + " -> " + val);
+                        if (debug) {
+                            System.out.println(i + " -> " + Arrays.toString(thisState) + " -> " + val);
+                        }
                         if (val >= bestVal) {
                             bestVal = val;
                             best = i;
@@ -234,7 +238,9 @@ public class TensorRLearner extends LearningAllocator {
                 best = Simulator.instance.getRandom().nextInt(5);
                 bestVal = -1;
             }
-            System.out.println("bv = " + bestVal + ", best = " + best + " for herocell = " + Arrays.toString(heroCell));
+            if (debug) {
+                System.out.println("bv = " + bestVal + ", best = " + best + " for herocell = " + Arrays.toString(heroCell));
+            }
 
 
 
@@ -345,7 +351,9 @@ public class TensorRLearner extends LearningAllocator {
 
 
         System.out.println("SAMPLE STEP:");
+        debug = true;
         step(0.25f, -1);
+        debug = false;
         System.out.println("done");
 
 
@@ -805,7 +813,7 @@ public class TensorRLearner extends LearningAllocator {
 
 
         convolutionNetwork.getLearningRule().setMaxIterations(1);
-        convolutionNetwork.getLearningRule().setLearningRate(0.01d);
+        convolutionNetwork.getLearningRule().setLearningRate(0.1d);
         /*
         ConvolutionalBackpropagation backPropagation = new ConvolutionalBackpropagation();
         backPropagation.setLearningRate(LEARNING_RATE);

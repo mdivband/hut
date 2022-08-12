@@ -52,16 +52,16 @@ public abstract class LearningAllocator {
     }
 
     public void updateBounds(Coordinate position) {
-        double topBound = position.getLatitude() + ((level * Y_SPAN) / 2);
-        double botBound = position.getLatitude() - ((level * Y_SPAN) / 2);
-        double rightBound = position.getLongitude() + ((level * X_SPAN) / 2);
-        double leftBound = position.getLongitude() - ((level * X_SPAN) / 2);
+        double topBound = position.getLatitude() + ((Math.pow(2, level-1) * Y_SPAN) / 2);
+        double botBound = position.getLatitude() - ((Math.pow(2, level-1) * Y_SPAN) / 2);
+        double rightBound = position.getLongitude() + ((Math.pow(2, level-1) * X_SPAN) / 2);
+        double leftBound = position.getLongitude() - ((Math.pow(2, level-1) * X_SPAN) / 2);
 
         botLeft = new Coordinate(botBound, leftBound);
         topRight = new Coordinate(topBound, rightBound);
 
-        xSquareSpan = (level * X_SPAN) / xSteps;
-        ySquareSpan = (level * Y_SPAN) / ySteps;
+        xSquareSpan = (Math.pow(2, level-1) * X_SPAN) / xSteps;
+        ySquareSpan = (Math.pow(2, level-1) * Y_SPAN) / ySteps;
         maxReward = xSteps * ySteps;
         cellWidth = (float) ((xSquareSpan * 111111));
 
@@ -243,8 +243,8 @@ public abstract class LearningAllocator {
         //        + " * " + ySteps + " = " + Math.round(((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN)) * ySteps));
 
         return new int[]{
-                (int) Math.round(((c.getLongitude() - botLeft.getLongitude()) / (level * X_SPAN)) * xSteps),
-                (int) Math.round(((c.getLatitude() - botLeft.getLatitude()) / (level * Y_SPAN)) * ySteps)
+                (int) Math.round(((c.getLongitude() - botLeft.getLongitude()) / (Math.pow(2, level-1) * X_SPAN)) * xSteps),
+                (int) Math.round(((c.getLatitude() - botLeft.getLatitude()) / (Math.pow(2, level-1) * Y_SPAN)) * ySteps)
         };
     }
 

@@ -80,11 +80,14 @@ public class MissionProgrammer {
                         double r = hierarchy.getRoot().getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
                         //scores.add(r);
                         System.out.println("run = " + stepCounter + ", reward at end = " + r + ", hierarchy dims = " + Arrays.toString(hierarchy.getDims()));
+
                         agents.forEach(a -> {
                             if (!a.programmerHandler.getAgentProgrammer().getSubordinates().isEmpty()) {
                                 ((TensorRLearner) a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).debugOut();
                             }
                         });
+
+
                         synchronized (this) {
                             //times.add(epochDuration);
                             /*
@@ -423,14 +426,6 @@ public class MissionProgrammer {
             }
         }
 
-
-
-
-
-
-
-
-
         initialiseLearningAllocators();
         for (AgentProgrammed ap : agents) {
             if (hierarchy == null) {
@@ -452,6 +447,19 @@ public class MissionProgrammer {
         }
     }
 
+    private float calculateRecursiveReward(AgentProgrammed ap, float subTreeReward) {
+        if (ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getLevel() == 1) {
+            // Base case
+            return ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
+        } else {
+            // Iteration over subordinates, which each make a recursive call to this
+            for (AgentProgrammed s : ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getSubordinates()) {
+                subTreeReward += calculateRecursiveReward(s, 0);
+            }
+            return subTreeReward;
+        }
+    }
+
     private void groupLearningStep() {
         // TODO try the reward being from the whole subtree (or the region below this)
         for (AgentProgrammed ap : agents) {
@@ -459,6 +467,11 @@ public class MissionProgrammer {
             if (lvl > 0) {
 
                 float subTreeReward = ap.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().calculateGridReward();
+                // TODO delete rewards for duplicate positions
+                //float subTreeReward = calculateRecursiveReward(ap, 0);
+                //if (stepCounter % 10000 == 0) {
+                    //System.out.println("REWARD: " + ap.getId() + " -> " + subTreeReward);
+               // }
 
                 // We must scale this down depending on level, otherwise they get increasing reward when promoted and it nullifies old learning
                 // e.g. level 1 -> (reward for 4 agents below)                       -> 4 * (average reward per agent)
@@ -473,15 +486,17 @@ public class MissionProgrammer {
                // if (stepCounter < Math.floor((NUM_STEPS_PER_EPOCH * (hierarchy.layers.size() - 1)) * 0.25)) {
                 //if (stepCounter < (Math.floor(NUM_STEPS_PER_EPOCH) * 0.75)) {
 
-                ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 100);
-                /*
-                if (stepCounter < 100000) {
-                    ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 100);
+                ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 10);
+/*
+                if (stepCounter < 1000000) {
+                    ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 10);
                 } else {
-                    ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, -1);
+                    ap.programmerHandler.getAgentProgrammer().learningStep(subTreeReward, 100);
                 }
 
-                 */
+
+ */
+
 
             }
         }
