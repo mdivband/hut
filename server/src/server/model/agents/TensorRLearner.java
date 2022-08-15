@@ -217,7 +217,7 @@ public class TensorRLearner extends LearningAllocator {
                 if (debug) {
                     System.out.println(agent.getId() + " -> " + hero.getId() + " " + Arrays.toString(states[0]));
                 }
-                for (int i = 0; i < 5; i++) {
+                for (int i = 4; i >= 0; i--) {
                     if (!excluded[i]) {
                         double[] thisState = new double[4];
                         for (int p = 0; p < 4; p++) {
@@ -538,8 +538,8 @@ public class TensorRLearner extends LearningAllocator {
 
             //double scaledReward = (Math.pow(e.jointReward, 2) / (xSteps*ySteps*xSteps*ySteps));
             //double scaledReward = e.jointReward / 4f;
-            double scaledReward = calculateActualRewardFromArray(new float[][]{{lastRec.inputState[0], lastRec.inputState[1]}, {lastRec.inputState[2], lastRec.inputState[3]}}) / 4f;
-            DataSetRow item = new DataSetRow(inSt, new double[] {scaledReward});
+            //double scaledReward = calculateActualRewardFromArray(new float[][]{{lastRec.inputState[0], lastRec.inputState[1]}, {lastRec.inputState[2], lastRec.inputState[3]}}) / 4f;
+            DataSetRow item = new DataSetRow(inSt, new double[] {lastRec.jointReward});
             //DataSetRow item = new DataSetRow(inSt, new double[] {(e.jointReward / (xSteps*ySteps))});
             ds.add(item);
             //System.out.println(Arrays.toString(inSt) + " -> A:" + (scaledReward) + " -> " + lastRec.value + " DELTA = " + (scaledReward - lastRec.value) + ", t= " + counter);
