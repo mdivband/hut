@@ -134,7 +134,7 @@ public class AgentVirtual extends Agent {
             xAlign = xSum/magnitude;
             yAlign = ySum/magnitude;
 
-            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 25.0);
+            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 100.0);
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
             if (tooCloseNeighbours.size() > 0) {
