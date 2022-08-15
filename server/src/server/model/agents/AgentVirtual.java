@@ -73,8 +73,8 @@ public class AgentVirtual extends Agent {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
             double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) / Simulator.instance.getGameSpeed();
-            double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
-            this.moveAlongHeading(distToMove);
+            //double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
+            this.moveAlongHeading(possDistToMove);
         }
     }
 
@@ -114,7 +114,7 @@ public class AgentVirtual extends Agent {
         double yAttract = 0.0;
         double targetHeading = Math.toRadians(this.heading);
 
-        List<Agent> neighbours = this.sensor.senseNeighbours(this, 50.0);
+        List<Agent> neighbours = this.sensor.senseNeighbours(this, 250.0);
 
         if (neighbours.size() > 0) {
 
@@ -134,7 +134,7 @@ public class AgentVirtual extends Agent {
             xAlign = xSum/magnitude;
             yAlign = ySum/magnitude;
 
-            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 5.0);
+            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 25.0);
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
             if (tooCloseNeighbours.size() > 0) {
