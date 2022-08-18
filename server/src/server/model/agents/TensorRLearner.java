@@ -134,7 +134,7 @@ public class TensorRLearner extends LearningAllocator {
              */
 
             // Choose a hero
-            int rnd = Simulator.instance.getRandom().nextInt(4);
+            int rnd = Simulator.instance.getRandom().nextInt(subordinates.size());
 
             AgentProgrammed hero = subordinates.get(rnd);
             // Create state rep
