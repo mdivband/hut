@@ -54,7 +54,7 @@ public class ImageController extends AbstractController {
     public void takeImage(Coordinate coordinate, boolean isDeep) {
         Target t = simulator.getTargetController().getTargetAt(coordinate);
         if (t instanceof AdjustableTarget at) {  // This also asserts that t is not null
-            synchronized (simulator.getState().getStoredImages()) {
+            synchronized (simulator.getState().getTargetData()) {
                 double timeToAdd;
                 String fileToAdd;
 
@@ -85,10 +85,10 @@ public class ImageController extends AbstractController {
     private void addImage(String id, String fileName, boolean isDeep) {
         if (isDeep && !deepScannedTargets.contains(id)) {
             deepScannedTargets.add(id);
-            simulator.getState().addToStoredImages(id, fileName, true);
+            simulator.getState().addToTargetData(id, fileName, true);
         } else if (!isDeep && !shallowScannedTargets.contains(id) && !deepScannedTargets.contains(id)) {
             shallowScannedTargets.add(id);
-            simulator.getState().addToStoredImages(id, fileName, false);
+            simulator.getState().addToTargetData(id, fileName, false);
         }
     }
 
@@ -138,8 +138,11 @@ public class ImageController extends AbstractController {
      * @param status Whether it was classified P or N
      */
     public void classify(String ref, boolean status) {
+        // TODO line below
+        System.out.println("TODO -  Use this info from " + ref + " to log properly");
+        /*
         try {
-            Map<String, String> map = simulator.getState().getStoredImages();
+            Map<String, List<String>> map = simulator.getState().getTargetData();
             String id = map
                     .entrySet()
                     .stream()
@@ -167,6 +170,8 @@ public class ImageController extends AbstractController {
             LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
 
         } catch (Exception ignored) {}
+
+         */
 
     }
 

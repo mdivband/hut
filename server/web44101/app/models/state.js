@@ -27,7 +27,7 @@ App.Models.State  = Backbone.Model.extend({
         },
         uiOptions: {},
         uncertaintyRadius: 0,
-        storedImages : {},
+        targetData : {},
         deepScannedIds: {},
         pendingIds: {},
         passthrough: false,
@@ -149,8 +149,8 @@ App.Models.State  = Backbone.Model.extend({
     getUncertaintyRadius: function () {
         return this.get("uncertaintyRadius");
     },
-    getStoredImages: function () {
-        return this.get("storedImages")
+    getTargetData: function () {
+        return this.get("targetData")
     },
     getDeepScannedIds: function () {
         return this.get("deepScannedIds");

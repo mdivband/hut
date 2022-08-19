@@ -68,8 +68,8 @@ var MapImageController = {
      * @param iRef
      * @param update
      */
-    triggerImage: function (id, iRef, update) {
-        MapController.pushImage(id, iRef, update);
+    triggerImage: function (id, update) {
+        MapController.pushImage(id, update);
     },
     getCurrentImageId: function () {
         return this.views.review.currentImageName;

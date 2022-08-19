@@ -72,8 +72,7 @@ public class State {
     private Coordinate hubLocation;
 
     //                   ID->ImageName
-    private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
-    private final List<String> deepScannedIds = new ArrayList<>(16);
+    private final Map<String, List<String>> targetData = new ConcurrentHashMap<>(16);
     private final List<String> pendingIds = new ArrayList<>(16);
 
     private String userName = "";
@@ -118,7 +117,7 @@ public class State {
         tempAllocation.clear();
         hazardHits.clear();
 
-        storedImages.clear();
+        targetData.clear();
         uiOptions.clear();
 
         hazardHits.init();
@@ -402,15 +401,21 @@ public class State {
         return hubLocation;
     }
 
-    public Map<String, String> getStoredImages() {
-        return storedImages;
+    public Map<String, List<String>> getTargetData() {
+        return targetData;
     }
 
-    public void addToStoredImages(String id, String filename, boolean isDeep) {
-        storedImages.put(id, filename);
-        if (isDeep) {
-            deepScannedIds.add(id);
+    public void addToTargetData(String id, String filename, boolean isDeep) {
+        if (!targetData.containsKey(id)) {
+            targetData.put(id, new ArrayList<>());
         }
+        //targetData.get(id).add(filename);
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT1.png");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT2.png");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT3.png");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT1.png");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT2.png");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT3.png");
     }
 
     public void setDeepAllowed(Boolean deepAllowed) {

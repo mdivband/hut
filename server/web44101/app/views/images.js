@@ -8,9 +8,7 @@ App.Views.Images = Backbone.View.extend({
         this.viewButtons = document.getElementById("button_panel");
         this.pendingPanel = document.getElementById("pending_scans");
         this.addedIds = [];
-        this.addedRefs = [];
         this.pendingIds = [];
-        this.addedPendingIds = [];
         this.addedDeepIds = [];
         this.render();
 
@@ -32,17 +30,10 @@ App.Views.Images = Backbone.View.extend({
         });
 
         this.checkAndUpdateDeepButton();
-
-        //this.bind("update", this.update);
-    },
-    setup: function() {
-
     },
     reset: function () {
         this.addedIds = [];
-        this.addedRefs = [];
         this.pendingIds = [];
-        this.addedPendingIds = [];
         this.render();
     },
     update: function() {
@@ -50,124 +41,30 @@ App.Views.Images = Backbone.View.extend({
         this.updatePendingList();
         var self = this;
         try {
-            var knownImages = self.state.getStoredImages();
-            var deepIds = self.state.getDeepScannedIds();
+            var targetData = self.state.getTargetData();
             this.state.targets.each(function (target) {
                 var id = target.getId()
-                var iRef = knownImages[id]
-                if (iRef !== undefined) {
-                    if (!self.addedIds.includes(id) && deepIds.includes(id)) {
-                        console.log("Adding deep: " + id);
+                var data = targetData[id];
+
+                if (data !== undefined) {
+                    if (!self.addedIds.includes(id)) {
+                        console.log("Adding ref: " + id);
                         // A new scan and is deep
                         var button = document.createElement("button");
                         button.id = id;
-                        button.innerHTML = id + "(high)";
+                        button.innerHTML = id;
                         button.className = "image_select_buttons";
                         self.viewButtons.append(button);
 
                         button.addEventListener("click", function (event) {
-                            console.log("Selecting an image that is deep scanned - " + iRef);
-                            MapImageController.triggerImage(id, iRef, true);
-                            $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
+                            MapImageController.triggerImage(id, true);
                             button.focus();
-                            $("#rev_deep").prop('disabled', true);
                         });
                         self.addedIds.push(id)
-
-                    } else if (!self.addedIds.includes(id)) {
-                        console.log("Adding shallow " + id);
-                        // A new scan and is shallow
-                        var button = document.createElement("button");
-                        button.id = id;
-                        button.innerHTML = id + "(low)";
-                        button.className = "image_select_buttons";
-                        self.viewButtons.append(button);
-
-                        button.addEventListener("click", function (event) {
-                            console.log("Selecting an image that is shallow scanned - " + iRef);
-                            MapImageController.triggerImage(id, iRef, true);
-                            $("#rev_deep").removeClass("rev_buttons_greyed").addClass("rev_buttons");
-                            button.focus();
-                            $("#rev_deep").prop('disabled', false);
-                        });
-                        self.addedIds.push(id)
-
-                    } else if (deepIds.includes(id) && !self.addedDeepIds.includes(id)) {
-                        // An update scan from shallow to deep
-                        console.log("Updating to deep " + id);
-                        var button = document.createElement("button");
-                        button.id = id;
-                        button.innerHTML = id + "(high)";
-                        button.className = "image_select_buttons";
-                        self.viewButtons.append(button);
-
-                        if (MapImageController.getCurrentImageId() === id) {
-                            console.log("    -looking update");
-                            // We are looking at this image, but it needs updating
-                            MapImageController.triggerImage(id, iRef, true);
-                            $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
-                            $("#rev_deep").prop('disabled', true);
-                        }
-                        button.addEventListener("click", function (event) {
-                            console.log("    case 4 pressed");
-                            MapImageController.triggerImage(id, iRef, true);
-                            $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
-                            button.focus();
-                            $("#rev_deep").prop('disabled', true);
-                        });
-                        self.addedDeepIds.push(id);
-
 
                     } else {
                         // An update to a shallow (just switching image)
                         console.log("Condition 4, unexpected " + id)
-                        /*
-                        var buttonForThisId = document.getElementById(id);
-                        if (buttonForThisId) {
-                            console.log(1);
-                        }
-                        if (self.addedIds.includes(id)) {
-                            console.log(2);
-                        }
-                        if (self.pendingIds.includes(id)) {
-                            console.log(3);
-                        }
-                        if (self.addedPendingIds.includes(id)) {
-                            console.log(4);
-                        }
-                        if (self.addedRefs.includes(iRef)) {
-                            console.log(5);
-                        }
-                        console.log()
-                        if (buttonForThisId && !self.addedIds.includes(id) && !self.addedRefs.includes(iRef) && !self.pendingIds.includes(id) && !self.addedPendingIds.includes(id)) {
-                            console.log("EXTRA ADD!!!")
-                            buttonForThisId.addEventListener("click", function (event) {
-                                //console.log("Selecting an image that is deep scanned - " + iRef);
-                                MapImageController.triggerImage(id, iRef, true);
-                                $("#rev_deep").removeClass("rev_buttons").addClass("rev_buttons_greyed");
-                                buttonForThisId.focus();
-                                $("#rev_deep").prop('disabled', true);
-                            });
-                            // self.addedIds.push(id)
-                        }
-
-                         */
-
-                        /*
-                        if (buttonForThisId) {
-                            // We have a button for this id
-                            buttonForThisId.remove()
-
-
-                        }
-
-                        if (!self.addedIds.includes(id)) {
-
-                            console.log("Not in here")
-                        }
-                        MapTargetController.checkIcon(id);
-
-                         */
                     }
 
                 }
