@@ -187,6 +187,8 @@ var simulator = {
             $(this).css({top: newT, left: newL, position:'relative'});
         });
 
+
+
         this.views.control = new App.Views.Control({
             el: $("#control"),
             state: this.state,

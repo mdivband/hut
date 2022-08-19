@@ -410,12 +410,38 @@ public class State {
             targetData.put(id, new ArrayList<>());
         }
         //targetData.get(id).add(filename);
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT1.png");
+        //targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT1.png");
+        //targetData.get(id).add("First drone says 78% chance");
+        /*
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT2.png");
+        targetData.get(id).add("Weather report:\nIt's cloudy here\nHumidity high");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT2.png");
+        targetData.get(id).add("Fourth drone says it can see nothing");
+
+         */
+        /*
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT2.png");
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT3.png");
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT1.png");
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT2.png");
+
+         */
+        //targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT3.png");
+
+        /*
+        targetData.get(id).add("Weather report:\nIt's cloudy here\nHumidity high");
+        targetData.get(id).add("Third drone says 90% chance");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT2.png");
+        targetData.get(id).add("Fourth drone says it can see nothing");
+         */
+
+        targetData.get(id).add("First drone says 78% chance");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT3.png");
+        targetData.get(id).add("Weather report:\nIt's cloudy here\nHumidity high");
+        targetData.get(id).add("Fourth drone says it can see nothing");
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT3.png");
+        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT1.png");
+
     }
 
     public void setDeepAllowed(Boolean deepAllowed) {
