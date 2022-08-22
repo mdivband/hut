@@ -60,7 +60,7 @@ public class Allocator {
         for (Agent agent : agentsToAllocate) {
             if (agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)) {
                 // Remove
-            } else if (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)) {
+            } else if (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN ) {
                 // Remove, but reassign own task
                 agent.getTask().addAgent(agent);
                 agent.setWorking(true);
@@ -75,9 +75,6 @@ public class Allocator {
         //  Note that the sequential nature of logical conjunctions protects against exceptions in this instance
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
-
-        // Remove and ignore deep scans that have been assigned
-        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) task).isBeingWorked());
 
         String allocationMethod = simulator.getState().getAllocationMethod();
 
@@ -186,10 +183,6 @@ public class Allocator {
                 if(simulator.getState().isFlockingEnabled()) {
                     agent.resume();
                 }
-            }
-        for(Task task : simulator.getState().getTasks())
-            if (!((task instanceof DeepScanTask) && ((DeepScanTask) task).isBeingWorked())) {
-                task.getAgents().clear();
             }
 
         //Allocate agents to tasks
@@ -750,16 +743,6 @@ public class Allocator {
     public boolean isSaturated() {
         // Add 1 to account for hub
         return (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
-    }
-
-    public void clearAllAgents() {
-        for (Agent a : simulator.getState().getAgents()) {
-            if (a.getTask() != null && !(a.getTask() instanceof DeepScanTask)) {
-                a.getTask().clearAgents();
-                a.setAllocatedTaskId(null);
-                a.stop();
-            }
-        }
     }
 
     private Agent getClosestAgentTo(Task t) {

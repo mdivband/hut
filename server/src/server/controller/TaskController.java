@@ -36,12 +36,6 @@ public class TaskController extends AbstractController {
                 case Task.TASK_MONITOR:
                     task = new MonitorTask(id, new Coordinate(lat, lng));
                     break;
-                case Task.TASK_DEEP_SCAN:
-                    synchronized (simulator.getState().getTasks()) {
-                        task = new DeepScanTask(id, new Coordinate(lat, lng));
-                    }
-                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
-                    break;
                 case Task.TASK_SHALLOW_SCAN:
                     task = new ShallowScanTask(id, new Coordinate(lat, lng));
                     simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
@@ -51,13 +45,6 @@ public class TaskController extends AbstractController {
             }
             simulator.getState().add(task);
 
-            if (task instanceof DeepScanTask) {
-                task.setPriority(100);
-                simulator.getAllocator().dynamicReassign(task);
-                String trgId = simulator.getTargetController().getTargetAt(new Coordinate(lat, lng)).getId();
-                LOGGER.info(String.format("%s; DPSCN; Creating a deep scan task of id and for target (id, targetId); %s; %s", Simulator.instance.getState().getTime(), id, trgId));
-
-            }
             for (Agent a : simulator.getState().getAgents()) {
                 if (!(a instanceof AgentHub) && a.getTask() != null) {
                     a.resume();

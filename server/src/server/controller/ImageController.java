@@ -15,9 +15,7 @@ import java.util.logging.FileHandler;
 public class ImageController extends AbstractController {
 
     private final int SHALLOW_SCAN_TIME = 18;  // In-game seconds, so use 6*real-life seconds
-    private final int DEEP_SCAN_TIME = 18;
 
-    private final List<String> deepScannedTargets = new ArrayList<>(16);
     private final List<String> shallowScannedTargets = new ArrayList<>(16);
     private final Map<String, Boolean> decisions = new HashMap<>(16);
     private HashMap<Double, ScheduledImage> scheduledImages = new HashMap<>(16);
@@ -28,7 +26,6 @@ public class ImageController extends AbstractController {
     }
 
     public void reset() {
-        deepScannedTargets.clear();
         shallowScannedTargets.clear();
         decisions.clear();
         scheduledImages.clear();
@@ -44,33 +41,24 @@ public class ImageController extends AbstractController {
         }
         if (!match) {
             //simulator.getState().getPendingIds().add(id);
-            takeImage(simulator.getState().getTarget(id).getCoordinate(), false);
+            takeImage(simulator.getState().getTarget(id).getCoordinate());
         }
     }
 
     /**
      * This finds the target, checks if it's a TP or FP, "takes an image", and stores it in the hashmap for inspection
      */
-    public void takeImage(Coordinate coordinate, boolean isDeep) {
+    public void takeImage(Coordinate coordinate) {
         Target t = simulator.getTargetController().getTargetAt(coordinate);
         if (t instanceof AdjustableTarget at) {  // This also asserts that t is not null
             synchronized (simulator.getState().getTargetData()) {
-                double timeToAdd;
-                String fileToAdd;
+                List<String> dataToAdd = at.getData();
+                double timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
 
-                if (isDeep) {
-                    fileToAdd = "images/" + at.getHighResFileName();
-                } else {
-                    fileToAdd = "images/" + at.getLowResFileName();
-                }
-                if (at.isReal()) {
-                    timeToAdd = simulator.getState().getTime() + DEEP_SCAN_TIME;
-                } else {
-                    timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
-                }
+                // TODO this is where we will decide how much info to share
+                scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), dataToAdd));
 
-                scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), fileToAdd, isDeep));
-                LOGGER.info(String.format("%s; TKIMG; Taking image for target of deep/shallow type with actual classification (id, filename, isDeep, isReal); %s; %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), fileToAdd, isDeep, at.isReal()));
+                LOGGER.info(String.format("%s; TKIMG; Taking image for target of deep/shallow type with actual classification (id, filename, isReal); %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), dataToAdd, at.isReal()));
 
             }
         }
@@ -79,17 +67,9 @@ public class ImageController extends AbstractController {
     /**
      * Adds the given image to the required maps by target id, filename, and tagged as deep or not
      * @param id
-     * @param fileName
-     * @param isDeep
      */
-    private void addImage(String id, String fileName, boolean isDeep) {
-        if (isDeep && !deepScannedTargets.contains(id)) {
-            deepScannedTargets.add(id);
-            simulator.getState().addToTargetData(id, fileName, true);
-        } else if (!isDeep && !shallowScannedTargets.contains(id) && !deepScannedTargets.contains(id)) {
-            shallowScannedTargets.add(id);
-            simulator.getState().addToTargetData(id, fileName, false);
-        }
+    private void addImage(String id, List<String> data) {
+        simulator.getState().addToTargetData(id, data);
     }
 
     /**
@@ -97,7 +77,7 @@ public class ImageController extends AbstractController {
      * @param scheduledImage
      */
     private void addImage(ScheduledImage scheduledImage) {
-        addImage(scheduledImage.getId(), scheduledImage.fileName, scheduledImage.isDeep);
+        addImage(scheduledImage.getId(), scheduledImage.data);
     }
 
     /**
@@ -134,32 +114,18 @@ public class ImageController extends AbstractController {
 
     /**
      * Called when an image is classified. Handles the addition of the record of this image and removes its target
-     * @param ref File reference
+     * @param id NOT the file ref; this is now the target ID
      * @param status Whether it was classified P or N
      */
-    public void classify(String ref, boolean status) {
-        // TODO line below
-        System.out.println("TODO -  Use this info from " + ref + " to log properly");
-        /*
+    public void classify(String id, boolean status) {
         try {
-            Map<String, List<String>> map = simulator.getState().getTargetData();
-            String id = map
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> ref.equals(entry.getValue()))
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .get();
-
             // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
             decisions.put(id, status);
 
-            boolean isDeep = deepScannedTargets.contains(id);
             boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
 
-            deepScannedTargets.remove(id);
             shallowScannedTargets.remove(id);
-            map.remove(id);
+            Simulator.instance.getState().getTargetData().remove(id);
 
             // Foreach loop automatically handles the null case (no tasks found) by not entering
             for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
@@ -167,11 +133,10 @@ public class ImageController extends AbstractController {
             }
             simulator.getTargetController().deleteTarget(id);
 
-            LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
-
+            LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, classifiedStatus, ActualStatus); %s; %s; %s;", Simulator.instance.getState().getTime(), id, status, isReal));
         } catch (Exception ignored) {}
 
-         */
+
 
     }
 
@@ -181,21 +146,18 @@ public class ImageController extends AbstractController {
 
     private class ScheduledImage {
         private String id;
-        private String fileName;
-        private boolean isDeep;
+        private List<String> data;
 
-        public ScheduledImage(String id, String fileName, boolean isDeep) {
+        public ScheduledImage(String id, List<String> data) {
             this.id = id;
-            this.fileName = fileName;
-            this.isDeep = isDeep;
+            this.data = data;
         }
 
         @Override
         public String toString() {
             return "ScheduledImage{" +
                     "id='" + id + '\'' +
-                    ", fileName='" + fileName + '\'' +
-                    ", isDeep=" + isDeep +
+                    ", fileName='" + data + '\'' +
                     '}';
         }
 
@@ -207,20 +169,12 @@ public class ImageController extends AbstractController {
             this.id = id;
         }
 
-        public String getFileName() {
-            return fileName;
+        public List<String> getData() {
+            return data;
         }
 
-        public void setFileName(String fileName) {
-            this.fileName = fileName;
-        }
-
-        public boolean isDeep() {
-            return isDeep;
-        }
-
-        public void setDeep(boolean deep) {
-            isDeep = deep;
+        public void setData(List<String> data) {
+            this.data = data;
         }
     }
 

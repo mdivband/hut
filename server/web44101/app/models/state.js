@@ -28,7 +28,6 @@ App.Models.State  = Backbone.Model.extend({
         uiOptions: {},
         uncertaintyRadius: 0,
         targetData : {},
-        deepScannedIds: {},
         pendingIds: {},
         passthrough: false,
         nextFileName: "",
@@ -151,9 +150,6 @@ App.Models.State  = Backbone.Model.extend({
     },
     getTargetData: function () {
         return this.get("targetData")
-    },
-    getDeepScannedIds: function () {
-        return this.get("deepScannedIds");
     },
     isPassthrough: function () {
         return this.get("passthrough");

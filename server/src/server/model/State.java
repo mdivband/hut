@@ -405,42 +405,29 @@ public class State {
         return targetData;
     }
 
-    public void addToTargetData(String id, String filename, boolean isDeep) {
+    public void addToTargetData(String id, List<String> data) {
         if (!targetData.containsKey(id)) {
             targetData.put(id, new ArrayList<>());
         }
-        //targetData.get(id).add(filename);
-        //targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT1.png");
-        //targetData.get(id).add("First drone says 78% chance");
-        /*
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT2.png");
-        targetData.get(id).add("Weather report:\nIt's cloudy here\nHumidity high");
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT2.png");
-        targetData.get(id).add("Fourth drone says it can see nothing");
+        // TODO Select the number of data elements to show based on number of agents etc
+        targetData.get(id).addAll(data);
+        while (targetData.size() > 6) {
+            targetData.get(id).remove(0);
+        }
 
-         */
-        /*
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT2.png");
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT3.png");
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT1.png");
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT2.png");
-
-         */
-        //targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT3.png");
+        while (!(targetData.get(id).size() == 1 || targetData.get(id).size() == 4 || targetData.get(id).size() == 6)) {
+            targetData.get(id).add("");
+        }
 
         /*
-        targetData.get(id).add("Weather report:\nIt's cloudy here\nHumidity high");
-        targetData.get(id).add("Third drone says 90% chance");
-        targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT2.png");
-        targetData.get(id).add("Fourth drone says it can see nothing");
-         */
-
         targetData.get(id).add("First drone says 78% chance");
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT3.png");
         targetData.get(id).add("Weather report:\nIt's cloudy here\nHumidity high");
         targetData.get(id).add("Fourth drone says it can see nothing");
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighNT3.png");
         targetData.get(id).add("images/Complex/Complex - High Res/ComplexHighT1.png");
+
+         */
 
     }
 

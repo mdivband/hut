@@ -444,16 +444,21 @@ public class Simulator {
                     Double lat = GsonUtils.getValue(targetJson, "lat");
                     Double lng = GsonUtils.getValue(targetJson, "lng");
                     int type = ((Double) GsonUtils.getValue(targetJson, "type")).intValue();
-                    String highRes = GsonUtils.getValue(targetJson, "highRes");
-                    String lowRes = GsonUtils.getValue(targetJson, "lowRes");
                     Target target;
                     if (GsonUtils.hasKey(targetJson, "real")) {
                         boolean isReal = GsonUtils.getValue(targetJson, "real");
                         target = targetController.addTarget(lat, lng, type, isReal);
-                        ((AdjustableTarget) target).setFilenames(lowRes, highRes);
                     } else {
                         target = targetController.addTarget(lat, lng, type);
                     }
+
+                    List<Object> dataList = GsonUtils.getValue(targetJson, "data");
+                    for (Object dataItem : dataList) {
+                        String dataString = (String) dataItem;
+                        ((AdjustableTarget) target).addData(dataString);
+                    }
+
+
 
                     //Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), false);

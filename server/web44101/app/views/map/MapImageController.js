@@ -77,12 +77,12 @@ var MapImageController = {
     classify: function (status) {
         var self = this;
         try {
-            var img = MapController.getCurrentImage();
-            var tgtId = this.views.review.currentImageName;
+            //var img = MapController.getCurrentImage();
+            var tgtId = this.views.review.currentTargetId;
             if (!MapTargetController.classifiedIds.includes(tgtId)) {
                 MapTargetController.classifiedIds.push(tgtId);
                 $.post("/review/classify", {
-                    ref: img,
+                    ref: tgtId,
                     status: status,
                 });
             }

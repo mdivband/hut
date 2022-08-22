@@ -8,8 +8,7 @@ App.Views.Review = Backbone.View.extend({
         this.canvas = options.canvas;
         this.ctx = options.ctx;
 
-        this.currentImageName = "";
-        this.currentImageRef = "";
+        this.currentTargetId = "";
 
         this.originalWidth = 0;
         this.originalHeight = 0;
@@ -25,8 +24,7 @@ App.Views.Review = Backbone.View.extend({
 
     },
     reset: function () {
-        this.currentImageName = "";
-        this.currentImageRef = "";
+        this.currentTargetId = "";
 
         this.originalWidth = 0;
         this.originalHeight = 0;
@@ -37,7 +35,7 @@ App.Views.Review = Backbone.View.extend({
     },
     displayImage: function (id, update) {
         if (update) {
-            this.currentImageName = id;
+            this.currentTargetId = id;
         }
         // TODO:
         //  1. Get the knownImages and knownText arrays (This will require backend changes too
@@ -48,6 +46,7 @@ App.Views.Review = Backbone.View.extend({
         var totalWidth = 1920;
         var totalHeight = 1080;
         try {
+            console.log(data)
             if (data.length === 1) {
                 // We need to determine what type of data this is
                 self.scale = 1;
@@ -137,8 +136,8 @@ App.Views.Review = Backbone.View.extend({
                         let img = new Image();
                         img.onload = function () {
                             self.ctx.lineWidth = 3;
-                            self.ctx.drawImage(img, (img.width / 2) * x, (img.height / 2) * y, img.width / 2, img.height / 2);
-                            self.ctx.strokeRect((img.width / 2) * x, (img.height / 2) * y, img.width / 2, img.height / 2);
+                            self.ctx.drawImage(img, (self.canvas.width / 2) * x, (self.canvas.height / 2) * y, self.canvas.width / 2, self.canvas.height / 2);
+                            self.ctx.strokeRect((self.canvas.width / 2) * x, (self.canvas.height / 2) * y, self.canvas.width / 2, self.canvas.height / 2);
                             console.log("i = " + i + "placing at " + x + ", " + y)
                         };
                         console.log("img.src = " + data[i] + " img = " + img)

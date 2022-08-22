@@ -1,13 +1,17 @@
 package server.model.target;
 
+import server.Simulator;
 import server.model.Coordinate;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class AdjustableTarget extends Target {
 
     //private int status = 0;
     private final boolean real;
-    private String lowResFileName = "";
-    private String highResFileName = "";
+    private List<String> data = new ArrayList<>();
 
     public AdjustableTarget(String id, Coordinate coordinate, boolean isReal) {
         super(id, coordinate, Target.ADJUSTABLE);
@@ -18,16 +22,11 @@ public class AdjustableTarget extends Target {
         return real;
     }
 
-    public void setFilenames(String lowRes, String highRes) {
-        lowResFileName = lowRes;
-        highResFileName = highRes;
+    public List<String> getData() {
+        return data;
     }
 
-    public String getLowResFileName() {
-        return lowResFileName;
-    }
-
-    public String getHighResFileName() {
-        return highResFileName;
+    public void addData(String dataString) {
+        data.add(dataString);
     }
 }

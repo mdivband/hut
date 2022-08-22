@@ -18,7 +18,7 @@ App.Views.Images = Backbone.View.extend({
             self.updatePendingList();
         });
 
-        this.state.on("change:storedImages", function () {
+        this.state.on("change:targetData", function () {
             self.checkForRemoval();
             self.update();
         });
