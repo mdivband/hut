@@ -12,7 +12,9 @@ var MapAgentController = {
     bind: function (context) {
         this.bindEvents = _.bind(this.bindEvents, context);
         this.onAgentAdd = _.bind(this.onAgentAdd, context);
+        this.onGhostAdd = _.bind(this.onGhostAdd, context);
         this.onAgentChange = _.bind(this.onAgentChange, context);
+        this.onGhostChange = _.bind(this.onGhostChange, context);
         this.onAgentRemove = _.bind(this.onAgentRemove, context);
         this.onAgentTimeOut = _.bind(this.onAgentTimeOut, context);
         this.onAgentReconnect = _.bind(this.onAgentReconnect, context);
@@ -21,11 +23,9 @@ var MapAgentController = {
         this.onAgentMarkerDrag = _.bind(this.onAgentMarkerDrag, context);
         this.onAgentMarkerDragEnd = _.bind(this.onAgentMarkerDragEnd, context);
         this.updateAgentMarkerIcon = _.bind(this.updateAgentMarkerIcon, context);
+        this.updateAgentMarkerVisibility = _.bind(this.updateAgentMarkerVisibility, context);
         this.updateAllAgentMarkerIcons = _.bind(this.updateAllAgentMarkerIcons, context);
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
-        this.updateAgentMarkerVisibility = _.bind(this.updateAgentMarkerVisibility, context);
-        this.onGhostAdd = _.bind(this.onGhostAdd, context);
-        this.onGhostChange = _.bind(this.onGhostChange, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -46,9 +46,6 @@ var MapAgentController = {
         this.state.agents.on("remove", function (agent) {
             MapAgentController.onAgentRemove(agent);
         });
-        this.state.ghosts.on("remove", function (agent) {
-            MapAgentController.onAgentRemove(agent);
-        });
         this.state.agents.on("change:timedOut", function (agent) {
             if (agent.isTimedOut())
                 MapAgentController.onAgentTimeOut(agent);
@@ -61,7 +58,6 @@ var MapAgentController = {
         this.state.ghosts.on("change:visible", function (agent) {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
-
     },
     onAgentAdd: function (agent) {
         console.log('Agent added ' + agent.getId());
@@ -80,7 +76,6 @@ var MapAgentController = {
             heading: agent.getHeading(),
             raiseOnDrag: false,
             zIndex: 2,
-            visible: agent.isVisible(),
         });
 
         //If real agent is added, zoom to it
@@ -185,12 +180,12 @@ var MapAgentController = {
         });
     },
     onAgentMarkerLeftClick: function (marker) {
-        var agent = this.state.agents.get(marker.id);
-        if (agent.getId() === this.views.clickedAgent)
-            this.updateClickedAgent(null);
-        else
-            this.updateClickedAgent(agent);
-        MapAgentController.updateAllAgentMarkerIcons();
+         var agent = this.state.agents.get(marker.id);
+         if (agent.getId() === this.views.clickedAgent)
+             this.updateClickedAgent(null);
+         else
+             this.updateClickedAgent(agent);
+         MapAgentController.updateAllAgentMarkerIcons();
     },
     onAgentMarkerRightClick: function (marker) {
         var self = this;
@@ -213,7 +208,7 @@ var MapAgentController = {
                     deleteButton.hide();
                     dropoutButton.hide();
                 }
-                else if (!self.state.isEdit())
+                else if (self.state.getEditMode() === 1)
                     deleteButton.hide();
 
                 if(agent.isTimedOut())
@@ -239,7 +234,7 @@ var MapAgentController = {
     },
     onAgentMarkerDrag: function (marker) {
         var agent = this.state.agents.get(marker.id);
-        if(this.state.isEdit() && !agent.isTimedOut() && !agent.getManuallyControlled()) {
+        if(this.state.getEditMode() === 2 && !agent.isTimedOut() && !agent.getManuallyControlled()) {
             //Agent marker dragging is used for manual allocation
             MapAgentController.isManuallyAllocating = true;
 
@@ -315,6 +310,8 @@ var MapAgentController = {
                 marker.setOptions({clickable: false, draggable: false})
             } else if(agent.getManuallyControlled() || agent.getType() === "leader") {
                 icon = this.icons.UAVManual;
+            } else if (agent.getType() === "withpack") {
+                icon = this.icons.UAVWithPack;
             } else if(agent.isTimedOut()) {
                 icon = this.icons.UAVTimedOut;
             } else

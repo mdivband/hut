@@ -6,10 +6,12 @@ import java.util.logging.Logger;
 
 /**
  * Here is where the user should program agent behaviour to be run on each programmed agent
+ * @author William Hunt
  */
 public class AgentProgrammer {
     private final transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
     ProgrammerHandler a;
+
     public AgentProgrammer(ProgrammerHandler programmerHandler) {
         a = programmerHandler;
     }

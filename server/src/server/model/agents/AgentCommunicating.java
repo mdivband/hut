@@ -2,6 +2,7 @@ package server.model.agents;
 
 import server.model.Coordinate;
 import server.model.Sensor;
+import server.model.task.VisitTask;
 
 import java.util.List;
 import java.util.Random;
@@ -12,6 +13,7 @@ import java.util.logging.Logger;
  *  manually together with programmed agents.
  *
  *  This does contain some redundancy, probably should be replaced with a static library or more inheritance in future
+ * @author William Hunt
  */
 public class AgentCommunicating extends AgentVirtual {
     private String networkID = "";

@@ -2,13 +2,19 @@ package server.controller;
 
 import server.Simulator;
 import server.model.Coordinate;
+import server.model.target.AdjustableTarget;
 import server.model.target.HumanTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
+/**
+ * Controller for targets that the user must find
+ */
+/* Edited by Will */
 public class TargetController extends AbstractController {
 
     private static Map<String, Integer> uniqueTargetNumbers = new HashMap<>();
@@ -33,6 +39,25 @@ public class TargetController extends AbstractController {
             case Target.HUMAN:
                 target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
                 break;
+            case Target.ADJUSTABLE:
+                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), true);
+                break;
+            default:
+                throw new RuntimeException("Unrecognized target type - " + type);
+        }
+        simulator.getState().add(target);
+        return target;
+    }
+
+    public synchronized Target addTarget(double lat, double lng, int type, boolean isReal) {
+        Target target;
+        switch(type) {
+            case Target.HUMAN:
+                target = new HumanTarget(generateUID("Human"), new Coordinate(lat, lng));
+                break;
+            case Target.ADJUSTABLE:
+                target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), isReal);
+                break;
             default:
                 throw new RuntimeException("Unrecognized target type - " + type);
         }
@@ -52,10 +77,13 @@ public class TargetController extends AbstractController {
             return false;
         }
         simulator.getState().remove(target);
-        LOGGER.info("Deleted agent " + id);
+        LOGGER.info(String.format("%s; DELTRG; Deleted target (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, target.getCoordinate().getLatitude(), target.getCoordinate().getLongitude()));
         return true;
     }
 
+    public synchronized void resetTargetNumbers() {
+        this.uniqueTargetNumbers = new HashMap<>();
+    }
     /**
      * Searches for any target with the given coordinate
      * @param coordinate The coordinate to check
@@ -63,6 +91,52 @@ public class TargetController extends AbstractController {
      */
     public Target findTargetByCoord(Coordinate coordinate) {
         return simulator.getState().getTargetByCoordinate(coordinate);
+    }
+
+    /**
+     * Set the task at this location to this type
+     * @param taskType
+     * @param lat
+     * @param lng
+     */
+    public void adjustForTask(int taskType, double lat, double lng) {
+        for (Target t : Simulator.instance.getState().getTargets()) {
+            try {
+                if (t.getCoordinate().getLatitude() == lat && t.getCoordinate().getLongitude() == lng) {
+                    t.setType(taskType);
+                }
+            } catch (Exception e) {
+                System.out.println("Error changing sprite. Probably due to casting error");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Returns the target at this coordinate (within 5m)
+     * @param c
+     * @return
+     */
+    public Target getTargetAt(Coordinate c) {
+        for (Target t : Simulator.instance.getState().getTargets()) {
+            if(t.getCoordinate().getDistance(c) < 5) {  // TODO work out appropriate epsilon value
+                return t;
+            }
+        }
+        System.out.println("IMAGE ERROR: No target found near coordinate: " + c);
+        return null;
+    }
+
+    public void requestImage(String id) {
+        simulator.getImageController().requestImage(id);
+    }
+
+    /**
+     * Removes target if it has this id
+     * @param id
+     */
+    public void removeTarget(String id) {
+        simulator.getState().getTargets().removeIf(tgt -> tgt.getId().equals(id));
     }
 
 }

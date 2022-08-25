@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Define a rectangular region to search the interior of
+ */
 public class RegionTask extends PatrolTask {
 
     private static final double baseStep = 40;

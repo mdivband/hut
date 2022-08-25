@@ -6,6 +6,7 @@ import server.model.*;
 import server.model.agents.Agent;
 import server.model.agents.AgentCommunicating;
 import server.model.agents.AgentProgrammed;
+import server.model.agents.AgentVirtual;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -15,8 +16,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
+ * Abstract class for all tasks
  * @author Feng Wu, Yuai Liu
  */
+/* Edited by Will */
 public abstract class Task extends MObject implements Serializable {
 
     private static final long serialVersionUID = 5561040348988016571L;
@@ -31,6 +34,9 @@ public abstract class Task extends MObject implements Serializable {
     public static final int TASK_MONITOR = 1;
     public static final int TASK_PATROL = 2;
     public static final int TASK_REGION = 3;
+    public static final int TASK_DEEP_SCAN = 4;
+    public static final int TASK_SHALLOW_SCAN = 5;
+    public static final int TASK_VISIT = 6;
 
     //Used in client
     private final List<Agent> agents; //Serialised to just agent ids.
@@ -59,30 +65,30 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
-        if (!Simulator.instance.getState().isCommunicationConstrained()) {  // If we can instantly complete
-            Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-            LOGGER.info("Task " + this.getId() + " has been completed");
-        } else {
-            for (Agent agent : getAgents()) {
-                if (agent instanceof AgentProgrammed ap) {
-                    ap.registerCompleteTask(getCoordinate());
-                } else if (agent instanceof AgentCommunicating ac) {
-                    ac.registerCompleteTask(getCoordinate());
-                }
+        Agent a = agents.get(0);
+        if (a instanceof AgentVirtual av) {
+            Task t = av.getNextTaskFromQueue();
+            if (t != null) {
+                Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
+                Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
+            } else {
+                a.stop();
             }
         }
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-
+        LOGGER.info(String.format("%s; TSKCMP; Task completed (id); %s", Simulator.instance.getState().getTime(), this.getId()));
     }
 
     /**
      * Gets all agents within [10m] of this agent
      * @return ArrayList of arrived agents
      */
-    private ArrayList<Agent> getArrivedAgents(){
+    protected ArrayList<Agent> getArrivedAgents(){
         ArrayList<Agent> arrivedAgents = new ArrayList<>();
         for (Agent a : Simulator.instance.getState().getAgents()) {
-            if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+            //if (a.getCoordinate().getDistance(this.getCoordinate()) < 10) {  //  10m for now
+            // 10m doesn't work for an agent speed that's too high. Maybe a better option is for the agent to slow down
+            if (a.getCoordinate().getDistance(this.getCoordinate()) < a.getSpeed()) {
                 arrivedAgents.add(a);
             }
         }
@@ -101,15 +107,15 @@ public abstract class Task extends MObject implements Serializable {
             // Completed and should be reported
             return true;
         }
-
         ArrayList<Agent> arrivedAgents = getArrivedAgents();
         if (arrivedAgents.size() > 0) {
             // An agent has found this task
             if (Simulator.instance.getState().isCommunicationConstrained()) {
                 // It is NOT programmed or communicating
                 setStatus(Task.STATUS_DONE_PENDING);
-            } else {
-                setStatus(Task.STATUS_DONE);
+                if (this instanceof VisitTask vt) {
+                    vt.triggerReturnHome();
+                }
             }
         }
 

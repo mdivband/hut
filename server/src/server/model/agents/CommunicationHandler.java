@@ -2,7 +2,6 @@ package server.model.agents;
 
 import server.Simulator;
 import server.model.Coordinate;
-import server.model.Hub;
 import server.model.target.Target;
 
 import java.util.*;
@@ -14,6 +13,7 @@ import java.util.logging.Logger;
  *  allowing a mixture of agent types.
  * A neater solution would inherit more information, as this way does incur some duplication of code (bad practise),
  *  but for now this is easier
+ * @author William Hunt
  */
 public class CommunicationHandler {
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
@@ -464,10 +464,9 @@ public class CommunicationHandler {
     }
 
     protected void completeTask(){
-        System.out.println("Comm agent completing");
         // A very important check here, otherwise return home tasks mess up the propagation of completed tasks and it
         //  stops tasks being checked properly
-        if (currentTask.size() > 0) {    // TODO this needs to get thje info properly
+        if (currentTask.size() > 0) {    // TODO this needs to get the info properly
             List<Coordinate> coords = currentTask;
             tasks.remove(currentTask);
 

@@ -1,23 +1,30 @@
 package server.model.agents;
 
+import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
-import server.model.Hub;
 import server.model.Sensor;
 import server.model.task.Task;
 
+import java.util.List;
 import java.util.Random;
 
 /**
  * Programmed version of the hub
+ * @author William Hunt
  */
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {
+
+    private int scheduledRemovals = 0;
 
     public AgentHubProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
         super(id, position, sensor, random, taskController);
         type = "hub";
         stop();
         visible = true;
+        for (Task t : Simulator.instance.getState().getTasks()) {
+            addTaskFromUser(t);
+        }
     }
 
     /**
@@ -44,10 +51,31 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         if(!isTimedOut())
             heartbeat();
         this.battery = this.battery > 0 ? this.battery - unitTimeBatteryConsumption : 0;
+
+        List<Agent> agents = sensor.senseNeighbours(this, programmerHandler.getSenseRange());
+        agents.removeIf(agent -> !agent.isStopped());
+        if (!agents.isEmpty()) {
+            if (scheduledRemovals > 0) {
+                Agent agentToRemove = agents.get(0);
+                //System.out.println("removing " + agentToRemove.getId());
+                Simulator.instance.getState().remove(agentToRemove);
+                scheduledRemovals--;
+            }
+        }
     }
 
+    /**
+     * Checks whether this agent is connected to the hub. Intended as a backed method
+     * @param agent
+     * @return
+     */
     public boolean checkForConnection(Agent agent) {
         return programmerHandler.checkForConnection(agent);
     }
 
+    public int scheduleRemoval(int numRemovals) {
+        scheduledRemovals += numRemovals;
+        //System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
+        return scheduledRemovals;
+    }
 }

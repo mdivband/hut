@@ -146,3 +146,9 @@ $RECYCLE.BIN/
 server/classes/
 
 server/src/META-INF/
+
+server/classes/
+
+server/src/META-INF/
+
+server/web44101/ModelFiles/*.txt

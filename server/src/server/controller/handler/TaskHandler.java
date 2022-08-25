@@ -9,6 +9,9 @@ import tool.HttpServer.Response;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * REST handler for tasks
+ */
 public class TaskHandler extends RestHandler {
 
     public TaskHandler(String handlerName, Simulator simulator) {

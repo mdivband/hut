@@ -13,14 +13,18 @@ import server.model.task.Task;
 import tool.GsonUtils;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+/**
+ * This is actually where all of the important information is. This is what is passed to the frontend for representation
+ *  and is probably sufficient to save and load scenarios
+ */
+/* Edited by Will */
 public class State {
 
     public static final int GAME_TYPE_SANDBOX = 0;
@@ -31,10 +35,21 @@ public class State {
     private String gameId;
     private String gameDescription;
     private int gameType;
-    private String allocationMethod = "maxsum";
-    private Boolean flockingEnabled = false;
+    private String allocationMethod;
+    private String allocationStyle;
+    private String modelStyle;
+    private Boolean flockingEnabled;
     private double time;
-    private boolean editMode;
+    private double timeLimit;
+    private long scenarioEndTime;
+    private int editMode;
+    // editMode 1 = monitor
+    //          2 = edit
+    //          3 = images
+    private boolean passthrough = false;
+    private String nextFileName = "";
+    private boolean deepAllowed = false;
+    private boolean showReviewPanel = false;
 
     private String prov_doc;
 
@@ -63,14 +78,33 @@ public class State {
     private HazardHitCollection hazardHits;
 
     private ArrayList<String> uiOptions = new ArrayList<>();
+    private Map<String, Double> varianceOptions = new HashMap<>();
+    private Map<String, Double> noiseOptions = new HashMap<>();
     private double uncertaintyRadius = 0;
     private double communicationRange = 0;
     private boolean communicationConstrained = false;
+    private double successChance;
+    private double missionSuccessChance;
+    private double missionSuccessOverChance;
+    private double missionSuccessUnderChance;
+    private double missionBoundedSuccessChance;
+    private double missionBoundedSuccessUnderChance;
+    private double missionBoundedSuccessOverChance;
+
+    private Map<String, Double> scoreInfo;
 
     // We could combine these, but it might be little more efficient to let them stay separate
     private Hub hub;
     private Coordinate hubLocation;
 
+
+    private String userName = "";
+    private List<String> markers= new ArrayList<>();
+
+    //                   ID->ImageName
+    private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
+    private final List<String> deepScannedIds = new ArrayList<>(16);
+    private final List<String> pendingIds = new ArrayList<>(16);
 
     public State() {
         agents = new ArrayList<>();
@@ -83,7 +117,8 @@ public class State {
         tempAllocation = new ConcurrentHashMap<>();
         droppedAllocation = new ConcurrentHashMap<>();
         hazardHits = new HazardHitCollection();
-
+        scoreInfo = new HashMap<>();
+        successChance = 100.00;
         allocationUndoAvailable = false;
         allocationRedoAvailable = false;
 
@@ -91,9 +126,29 @@ public class State {
     }
 
     public synchronized void reset() {
+        // Define defaults
         time = 0;
-        editMode = false;
+        timeLimit = 0;    // 0 means no time limit
+        scenarioEndTime = 0; // 0 means no time limit
+        editMode = 1;
         inProgress = false;
+        allocationMethod = "maxsum";
+        allocationStyle = "manualwithstop";
+        flockingEnabled = false;
+        successChance = 100.00;
+        scoreInfo.clear();
+        uncertaintyRadius = 0;
+        communicationConstrained = false;
+        communicationRange = 0;
+        allocationMethod = "maxsum";
+        flockingEnabled = false;
+        uncertaintyRadius = 0;
+        markers.clear();
+
+        gameCentre = null;
+        userName = "";
+        modelStyle = "off";
+        showReviewPanel = false;
 
         agents.clear();
         ghosts.clear();
@@ -104,8 +159,24 @@ public class State {
         allocation.clear();
         tempAllocation.clear();
         hazardHits.clear();
+        uiOptions.clear();
+        varianceOptions.clear();
+        noiseOptions.clear();
+
+        storedImages.clear();
+        uiOptions.clear();
 
         hazardHits.init();
+    }
+
+    /**
+     * Resets all the values for if we pass through to another scenario after this one
+     */
+    public void resetNext() {
+        passthrough = false;
+        nextFileName = "";
+        scenarioEndTime = 0; // 0 means no time limit
+        timeLimit = 0;    // 0 means no time limit
     }
 
     @Override
@@ -134,6 +205,7 @@ public class State {
             add(targets, (Target) item);
         else if(item instanceof  Task) {
             add(tasks, (Task) item);
+            Simulator.instance.getScoreController().setTotalTasks(getTasks().size());
             // For programmed agents:
             for (Agent a : agents) {
                 if (a instanceof AgentHubProgrammed abs) {
@@ -161,7 +233,9 @@ public class State {
             }
         }
         else if(item instanceof  Agent)
-            remove(agents, (Agent) item);
+            synchronized (agents) {
+                remove(agents, (Agent) item);
+            }
         else
             throw new RuntimeException("Cannot remove item from state, unrecognised class - " + item.getClass().getSimpleName());
     }
@@ -201,11 +275,45 @@ public class State {
         setTime(this.time + increment);
     }
 
-    public synchronized boolean isEditMode() {
+    public synchronized double getTimeLimit() {
+        return timeLimit;
+    }
+
+    public synchronized void setTimeLimit(double timeLimit) {
+        this.timeLimit = timeLimit;
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized void incrementTimeLimit(double increment) {
+        setTimeLimit(this.timeLimit + increment);
+        this.setScenarioEndTime(timeLimit);
+    }
+
+    public synchronized long getScenarioEndTime() {
+        return scenarioEndTime;
+    }
+
+    public synchronized void setScenarioEndTime() {
+        if (this.timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
+        }
+    }
+
+    private synchronized void setScenarioEndTime(double timeLimit) {
+        if (timeLimit == 0) {
+            this.scenarioEndTime = 0;
+        } else {
+            this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
+        }
+    }
+
+    public synchronized int getEditMode() {
         return editMode;
     }
 
-    public synchronized void setEditMode(boolean editMode) {
+    public synchronized void setEditMode(int editMode) {
         this.editMode = editMode;
     }
 
@@ -245,6 +353,23 @@ public class State {
         return this.allocationMethod;
     }
 
+    public String getAllocationStyle() {
+        return allocationStyle;
+    }
+
+    public void setAllocationStyle(String allocationStyle) {
+        this.allocationStyle = allocationStyle;
+    }
+
+    public String getModelStyle() {
+        return modelStyle;
+    }
+
+    public void setModelStyle(String modelStyle) {
+        System.out.println("setting style to " + modelStyle);
+        this.modelStyle = modelStyle;
+    }
+
     public synchronized void setFlockingEnabled(Boolean flockingEnabled) {
         this.flockingEnabled = flockingEnabled;
     }
@@ -258,7 +383,9 @@ public class State {
     }
 
     public Collection<Task> getTasks() {
-        return tasks;
+        synchronized (tasks) {
+            return tasks;
+        }
     }
 
     public Collection<Agent> getAgents() {
@@ -354,6 +481,14 @@ public class State {
 
     public void decayHazardHits() {
         hazardHits.decayAll();
+    }
+
+    public void setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
+    }
+
+    public boolean isPassthrough() {
+        return passthrough;
     }
 
     /**
@@ -515,6 +650,146 @@ public class State {
      */
     public void setCommunicationConstrained(Boolean communicationConstrained) {
         this.communicationConstrained = communicationConstrained;
+    }
+
+    public void setSuccessChance(double successChance) {
+        this.successChance = successChance;
+    }
+
+    public Hub getHub() {
+        return hub;
+    }
+
+    public void addScoreInfo(String key, double value) {
+        scoreInfo.put(key, value);
+    }
+
+    public Map<String, Double> getScoreInfo() {
+        return scoreInfo;
+    }
+
+    public Collection<Task> getCompletedTasks() {
+        return completedTasks;
+    }
+
+    public void setMissionSuccessChance(double successChance) {
+        this.missionSuccessChance = successChance;
+    }
+
+    public void setMissionBoundedSuccessChance(double successChance) {
+        this.missionBoundedSuccessChance = successChance;
+    }
+
+    public void setMissionBoundedSuccessUnderChance(double missionBoundedSuccessUnderChance) {
+        this.missionBoundedSuccessUnderChance = missionBoundedSuccessUnderChance;
+    }
+
+    public void setMissionBoundedSuccessOverChance(double missionBoundedSuccessOverChance) {
+        this.missionBoundedSuccessOverChance = missionBoundedSuccessOverChance;
+    }
+
+    public void setMissionSuccessOverChance(double overChance) {
+        this.missionSuccessOverChance = overChance;
+    }
+
+    public void setMissionSuccessUnderChance(double underChance) {
+        this.missionSuccessUnderChance = underChance;
+    }
+
+    /**
+     * Place a k,v pair for a variance (per agent persistent random offset)
+     * @param key
+     * @param val
+     */
+    public void putVarianceOption(String key, Double val) {
+        varianceOptions.put(key, val);
+    }
+
+    /**
+     * Place a k,v pair for a variance (per agent persistent random offset)
+     * @param key
+     * @param val
+     */
+    public void putNoiseOption(String key, Double val) {
+        noiseOptions.put(key, val);
+    }
+
+    public double getVarianceValue(String key) {
+        return varianceOptions.get(key);
+    }
+
+    public double getNoiseValue(String key) {
+        return noiseOptions.get(key);
+    }
+
+    /**
+     * Calculates a zero-centred random value for the given key (noise or variance)
+     * @param key
+     * @return
+     */
+    public double calculateRandomValueFor(String key) {
+        double bound;
+        if (varianceOptions.containsKey(key)) {
+            bound = varianceOptions.get(key);
+        } else if (noiseOptions.containsKey(key)) {
+            bound = noiseOptions.get(key);
+        } else {
+            return 0;
+        }
+        // bound-[0,1]*bound*2 gives a value from [-bound/2, bound/2]
+        return bound - (Simulator.instance.getRandom().nextDouble() * bound * 2);
+    }
+
+    public String getNextFileName() {
+        return nextFileName;
+    }
+
+    public void setNextFileName(String nextFileName) {
+        this.nextFileName = nextFileName;
+    }
+
+    public Map<String, String> getStoredImages() {
+        return storedImages;
+    }
+
+    public void addToStoredImages(String id, String filename, boolean isDeep) {
+        storedImages.put(id, filename);
+        if (isDeep) {
+            deepScannedIds.add(id);
+        }
+    }
+
+    public void setDeepAllowed(Boolean deepAllowed) {
+        this.deepAllowed = deepAllowed;
+    }
+
+    public boolean setUserName(String userName) {
+        this.userName = userName;
+        return true;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public List<String> getMarkers() {
+        return markers;
+    }
+
+    public List<String> getPendingIds() {
+        return pendingIds;
+    }
+
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
+    }
+
+    public void setShowReviewPanel(Boolean reviewPanel) {
+        showReviewPanel = reviewPanel;
+    }
+
+    public boolean isShowReviewPanel() {
+        return showReviewPanel;
     }
 
     private class HazardHit {

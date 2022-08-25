@@ -4,7 +4,6 @@ var targetMarkers = [];
 
 App.Views.CameraGMap = Backbone.View.extend({ 
 	initialize: function(options) {
-
 		this.mapOptions = {
                 tilt: 45,
                 heading: 90,
@@ -16,6 +15,10 @@ App.Views.CameraGMap = Backbone.View.extend({
 				mapTypeControl: false,
 				disableDefaultUI: true,
 				overviewMapControl: false,
+				streetViewControl: false,
+				rotateControl: false,
+				zoomControl: false,
+				fullscreenControl: false,
 				mapTypeId: google.maps.MapTypeId.SATELLITE
 		};
 		$.extend(this.mapOptions, options.mapOptions || {});
@@ -25,7 +28,8 @@ App.Views.CameraGMap = Backbone.View.extend({
 
 		this.render();
 		this.camera_mjpeg();
-		
+
+		// TODO this doesn't update per-step
 		this.bind("update", this.update);
 		this.bind("refresh", this.refresh);
 	},
@@ -104,7 +108,7 @@ App.Views.CameraGMap = Backbone.View.extend({
 		if (agent) {
 			if (agent.isSimulated()) {
 				this.$mapDiv.show();
-				
+
 				if (this.$imageDiv) {
 					this.$imageDiv.hide();
 				}
@@ -114,14 +118,14 @@ App.Views.CameraGMap = Backbone.View.extend({
 					this.imageDiv.src = url;
 					this.imageDiv.alt = url;
 				}
-				
+
 				this.$mapDiv.hide();
 				this.$imageDiv.show();
 			}
-			
+
 			this.map.setCenter(agent.getPosition());
 			this.map.setZoom(19);
-			
+
 			this.$mapDiv.gmap("refresh");
 		}
 		

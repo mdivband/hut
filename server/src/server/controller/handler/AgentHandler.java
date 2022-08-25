@@ -1,7 +1,8 @@
 package server.controller.handler;
 
+import server.ModelGenerator;
 import server.Simulator;
-import server.model.agents.Agent;
+import server.model.agents.*;
 import server.model.Coordinate;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;
@@ -12,6 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Rest handler for agents
+ */
 public class AgentHandler extends RestHandler {
 
     public AgentHandler(String handlerName, Simulator simulator) {
@@ -25,6 +29,10 @@ public class AgentHandler extends RestHandler {
         if(rPath == null)
             handleAdd(req, resp);
         // /agents/time-out/<id>
+        else if (rPath.startsWith("/hubspawn"))
+            handleHubSpawn(req, resp);
+        else if (rPath.startsWith("/hubdespawn"))
+            handleHubDespawn(req, resp);
         else if(rPath.startsWith("/time-out"))
             handleTimeout(req, resp, rPath.replace("/time-out/", ""));
         // /agents/route/add/<id>
@@ -36,6 +44,27 @@ public class AgentHandler extends RestHandler {
         // /agents/<id>
         else
             handleUpdate(req, resp, rPath.substring(1));
+    }
+
+    private void handleHubSpawn(Request req, Response resp) throws IOException {
+        Agent a = simulator.getAgentController().spawnAgent();
+        if (a != null) {
+            // Update model and start thread
+            simulator.updateMissionModel();
+            a.stop();
+            resp.send(201, "Created new agent " + a.getId());
+        } else {
+            resp.send(400, "Unable to place agent. The hub area may be too full");
+        }
+    }
+
+    private void handleHubDespawn(Request req, Response resp) throws IOException {
+        int res = Simulator.instance.getAgentController().despawnAgent();
+        if (res == -1) {
+            resp.send(400, "Can't remove, unspecified error");
+        } else {
+            resp.send(201, "Scheduled a removal, " + res + " agents will be removed");
+        }
     }
 
     @Override

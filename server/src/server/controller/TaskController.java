@@ -2,17 +2,19 @@ package server.controller;
 
 import server.Simulator;
 import server.model.agents.Agent;
+import server.model.agents.AgentHub;
 import server.model.Coordinate;
-import server.model.task.PatrolTask;
-import server.model.task.Task;
-import server.model.task.WaypointTask;
-import server.model.task.MonitorTask;
-import server.model.task.RegionTask;
+import server.model.target.AdjustableTarget;
+import server.model.task.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for all tasks
+ */
+/* Edited by Will */
 public class TaskController extends AbstractController {
 
     private static int uniqueTaskNumber = 1;
@@ -26,27 +28,61 @@ public class TaskController extends AbstractController {
     }
 
     public synchronized Task createTask(int taskType, double lat, double lng) {
-        String id = generateUID();
-        Task task;
-        switch (taskType) {
-            case Task.TASK_WAYPOINT:
-                task = new WaypointTask(id, new Coordinate(lat, lng));
-                break;
-            case Task.TASK_MONITOR:
-                task = new MonitorTask(id, new Coordinate(lat, lng));
-                break;
-            default:
-                throw new IllegalArgumentException("Unable to create task of type " + taskType);
+        synchronized (simulator.getState().getTasks()) {
+            String id = generateUID();
+            Task task;
+            switch (taskType) {
+                case Task.TASK_WAYPOINT:
+                    task = new WaypointTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_MONITOR:
+                    task = new MonitorTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_DEEP_SCAN:
+                    synchronized (simulator.getState().getTasks()) {
+                        task = new DeepScanTask(id, new Coordinate(lat, lng));
+                    }
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
+                    break;
+                case Task.TASK_SHALLOW_SCAN:
+                    task = new ShallowScanTask(id, new Coordinate(lat, lng));
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
+                    break;
+                case Task.TASK_VISIT:
+                    task = new VisitTask(id, new Coordinate(lat, lng));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unable to create task of type " + taskType);
+            }
+            simulator.getState().add(task);
+
+            if (task instanceof DeepScanTask) {
+                task.setPriority(100);
+                simulator.getAllocator().dynamicReassign(task);
+                String trgId = simulator.getTargetController().getTargetAt(new Coordinate(lat, lng)).getId();
+                LOGGER.info(String.format("%s; DPSCN; Creating a deep scan task of id and for target (id, targetId); %s; %s", Simulator.instance.getState().getTime(), id, trgId));
+
+            }
+            for (Agent a : simulator.getState().getAgents()) {
+                if (!(a instanceof AgentHub) && a.getTask() != null) {
+                    a.resume();
+                }
+            }
+            LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
+            return task;
         }
-        simulator.getState().add(task);
-        return task;
     }
 
     public synchronized Task createPatrolTask(List<Coordinate> path) {
         String id = generateUID();
         Task task = PatrolTask.createTask(id, path);
         simulator.getState().add(task);
-        LOGGER.info("Created new patrol task " + id);
+        StringBuilder sb = new StringBuilder();
+        for (Coordinate c : path) {
+            sb.append(c.getLatitude()).append(";").append(c.getLongitude()).append(";");
+        }
+        LOGGER.info(String.format("%s; CRPT; Created new patrol task with points (id, lat1, lng1, lat2, lng2, ...); %s; %s", Simulator.instance.getState().getTime(), id, sb));
+        //LOGGER.info(String.format("%s; CRPT; Created new patrol task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
@@ -63,7 +99,15 @@ public class TaskController extends AbstractController {
         String id = generateUID();
         Task task = RegionTask.createTask(id, nw, ne, se, sw);
         simulator.getState().add(task);
-        LOGGER.info("Created new region task " + id);
+        StringBuilder sb = new StringBuilder();
+        sb.append(nw.getLatitude()).append(";").append(nw.getLongitude()).append(";");
+        sb.append(ne.getLatitude()).append(";").append(ne.getLongitude()).append(";");
+        sb.append(se.getLatitude()).append(";").append(se.getLongitude()).append(";");
+        sb.append(sw.getLatitude()).append(";").append(sw.getLongitude()).append(";");
+        LOGGER.info(String.format("%s; CRRG; Created new region task with corners (id, nwlat, nwlng, nelat, nelng, selat, selng, swlat, swlng,); %s; %s", Simulator.instance.getState().getTime(), id, sb));
+
+
+        //LOGGER.info(String.format("%s; CRRG; Created new region task with centre (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         return task;
     }
 
@@ -81,6 +125,7 @@ public class TaskController extends AbstractController {
         if (!task.getCoordinate().equals(new Coordinate(lat, lng))) {
             task.getCoordinate().set(lat, lng);
             LOGGER.info("Moved task " + id + " to " + lat + ", " + lng);
+            LOGGER.info(String.format("%s; MVTSK; Moved task to (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
         }
         return task;
     }
@@ -100,9 +145,11 @@ public class TaskController extends AbstractController {
             agent.setRoute(new ArrayList<>());
             agent.setWorking(false);
             agent.setAllocatedTaskId("");
+            agent.stop();
         }
 
         simulator.getState().remove(task);
+        LOGGER.info(String.format("%s; DELTSK; Removed task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, task.getCoordinate().getLatitude(), task.getCoordinate().getLongitude()));
 
         if(completed) {
             simulator.getState().addCompletedTask(task);
@@ -159,8 +206,43 @@ public class TaskController extends AbstractController {
             allocation.remove(key);
     }
 
+    /**
+     * Removes tasks matching this coordinate. It may be that we need to introduce an epsilon value later
+     * @param coordinate
+     */
+    public void removeAllTasksAt(Coordinate coordinate) {
+        simulator.getState().getTasks().removeIf(tsk -> tsk.getCoordinate().equals(coordinate));
+    }
+
+    /**
+     * Returns all tasks at this coordinate
+     */
+    public List<Task> getAllTasksAt(Coordinate coordinate) {
+       List<Task> foundTasks = new ArrayList<>(2);
+
+       for (Task t : simulator.getState().getTasks()) {
+           if (t.getCoordinate().equals(coordinate)) {
+               foundTasks.add(t);
+           }
+       }
+
+       return foundTasks;
+    }
+
+    public synchronized void resetTaskNumbers() {
+        this.uniqueTaskNumber = 1;
+    }
+
     public Task findTaskByCoord(Coordinate coordinate) {
         return simulator.getState().getTaskByCoordinate(coordinate);
+    }
+
+    /**
+     * Checks if there are any tasks with no agent assigned
+     * @return
+     */
+    public boolean checkForFreeTasks() {
+        return simulator.getState().getTasks().stream().anyMatch(a -> a.getAgents().isEmpty());
     }
 
 }

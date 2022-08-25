@@ -2,28 +2,37 @@ package server;
 
 //import com.sun.javafx.geom.Edge;
 
+import cbaa.Cbaa;
+import cbba.Cbba;
 import maxsum.Constraint;
 import maxsum.Domain;
 import maxsum.MaxSum;
 import maxsum.Variable;
 import server.model.agents.Agent;
+import server.model.agents.AgentHub;
 import server.model.Coordinate;
-import server.model.Hub;
+import server.model.agents.Hub;
 import server.model.MObject;
 import server.model.agents.AgentCommunicating;
-import server.model.agents.AgentProgrammed;
+import server.model.agents.AgentVirtual;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 import server.model.task.WaypointTask;
+import server.model.task.*;
 import maxsum.EvaluationFunction;
 
 import java.util.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
+ * Object that handles the allocation.
+ *  This separates the allocation process form teh backend because it exists to produce a map of agents to taks,
+ *  and the rest is handled by the simulator
  * @author Feng Wu, Yuai Liu
  */
 /* Edited by Yuai */
+/* Edited by Will */
 
 public class Allocator {
 
@@ -54,60 +63,305 @@ public class Allocator {
     public void runAutoAllocation() {
         Map<String, String> allocation = new HashMap<>();
         List<Agent> agentsToAllocate = new ArrayList<>(simulator.getState().getAgents());
-        agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || agent instanceof Hub || agent instanceof AgentProgrammed);
+
+        //agentsToAllocate.removeIf(agent -> agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)
+        //        || (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)));
+
+        List<Agent> newAgentsToAllocate = new ArrayList<>();
+        for (Agent agent : agentsToAllocate) {
+            if (agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub)) {
+                // Remove
+            } else if (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)) {
+                // Remove, but reassign own task
+                agent.getTask().addAgent(agent);
+                agent.setWorking(true);
+            } else {
+                // Keep
+                newAgentsToAllocate.add(agent);
+            }
+        }
+
+        agentsToAllocate = newAgentsToAllocate;
+        // Last 2 conditions above filter out the case where it is a Deep scan and this agent has done it.
+        //  Note that the sequential nature of logical conjunctions protects against exceptions in this instance
 
         List<Task> tasksToAllocate = new ArrayList<>(simulator.getState().getTasks());
 
+        String allocationStyle = simulator.getState().getAllocationStyle();
+        // Remove and ignore deep scans that have been assigned
+        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) task).isBeingWorked());
+
         String allocationMethod = simulator.getState().getAllocationMethod();
 
-        if(allocationMethod.equals("maxsum")){
-            allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
-        } else if(allocationMethod.equals("random")) {
-            allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().isEditMode());
+        if (allocationStyle.equals("bundle")) {
+            allocation = computeBundle(allocationMethod, agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+        } else {
+            switch (allocationMethod) {
+                case "maxsum" -> allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+                case "maxsumwithoverspill" -> allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+                case "random" -> allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+                case "bestfirst" -> allocation = bestFirstCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+            }
         }
 
-        simulator.getState().setTempAllocation(allocation);
+        if (allocation != null) {
+            simulator.getState().setTempAllocation(allocation);
 
-        //Set temp route of each agent to task coordinate if allocated, else ensure route is empty
-        for(Agent agent : simulator.getState().getAgents()) {
-            if(allocation.containsKey(agent.getId())) {
-                Task task = simulator.getState().getTask(allocation.get(agent.getId()));
-                if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
-                    agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
-                else
-                    agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+            //Set temp route of each agent to task coordinate if allocated, else ensure route is empty
+            for (Agent agent : simulator.getState().getAgents()) {
+                if (allocation.containsKey(agent.getId())) {
+                    Task task = simulator.getState().getTask(allocation.get(agent.getId()));
+                    if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION) {
+                        boolean match = false;
+                        for (Coordinate c : ((PatrolTask) task).getPoints()) {
+                            if (agent.getTempRoute().contains(c)) {
+                                match = true;  // If we already have this route, leave it
+                                break;
+                            }
+                        }
+                        if (!match) {
+                            agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
+                        }
+                        /*
+                    } else if (task.getType() == Task.TASK_DEEP_SCAN) {
+                        DeepScanTask dst = (DeepScanTask) task;
+                        if (dst.hasAgentScanned(agent)) {
+                            agent.setTempRoute(Collections.singletonList(simulator.getState().getHubLocation()));
+                        } else {
+                            agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+                        }
 
+                         */
                 if (agent instanceof AgentCommunicating ac) {
                     if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
                         ac.setCurrentTask(Collections.singletonList(Coordinate.findCentre(((PatrolTask) task).getPoints())));
                     else
                         ac.setCurrentTask(Collections.singletonList(task.getCoordinate()));
                 }
+                    } else {
+                        agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+                    }
+                } else
+                    agent.setTempRoute(new ArrayList<>());
             }
-            else
-                agent.setTempRoute(new ArrayList<>());
+            updateAllocationHistory();
         }
-        updateAllocationHistory();
+    }
+
+    /**
+     * Overarching bundle method. Runs the given method specifically, and handles the surrounding assignment
+     * This means the algorithm-specific code only needs to produce a
+     *  (String to List<String>) HashMap of agent id -> list of task ids,
+     *  and the code handles the specifics of assignment in the backend
+     * @param allocationMethod
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @param editMode
+     * @return
+     */
+    private Map<String, String> computeBundle(String allocationMethod, List<Agent> agentsToAllocate, List<Task> tasksToAllocate, boolean editMode) {
+        HashMap<String, String> result = new HashMap<>();
+
+        //Make sure the assignments won't be modified if the agent is working
+        for (Agent agent : agentsToAllocate) {
+            if (agent.getTask() != null && agent.isWorking()) {
+                if (!tasksToAllocate.contains(agent.getTask()) && agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
+                    agent.setAllocatedTaskId(null);
+                    agent.setWorking(false);
+                    agent.setSearching(false);
+                } else {
+                    agent.getTask().addAgent(agent);
+                    result.put(agent.getId(), agent.getTask().getId());
+                    if (agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
+                        tasksToAllocate.remove(agent.getTask());
+                    }
+
+                }
+            } else {
+                agent.setAllocatedTaskId(null);
+                agent.setSearching(false);
+                agent.setWorking(false);
+            }
+        }
+
+        HashMap<String, List<String>> currentAllocation;
+        if (allocationMethod.equals("basicbundle")) {
+            currentAllocation = basicBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("heuristicbundle")) {
+            currentAllocation = heuristicBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("cbaa")) {
+            currentAllocation = cbaaBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("cbba")) {
+            currentAllocation = cbbaBundleCompute(agentsToAllocate, tasksToAllocate);
+        } else if (allocationMethod.equals("cbbacoverage")) {
+            currentAllocation = cbbaBundleComputeWithCoverage(agentsToAllocate, tasksToAllocate);
+        } else {
+            return null;
+        }
+
+        currentAllocation.forEach((k, v) -> {
+            if (!v.isEmpty()) {
+                Iterator<String> taskIt = v.listIterator();
+                result.put(k, taskIt.next());
+                while (taskIt.hasNext()) {
+                    ((AgentVirtual) simulator.getState().getAgent(k)).addTaskToQueue(simulator.getState().getTask(taskIt.next()));
+                }
+            }
+        });
+
+        return result;
+    }
+
+    /**
+     * Evenly distributes tasks to agents irrespective of distance. Not hugely useful but possibly useful for comparison
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
+    private HashMap<String, List<String>> basicBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        HashMap<String, List<String>> currentAllocation = new HashMap<>();
+
+        int numTasksPerAgent = Math.floorDiv(tasksToAllocate.size(), agentsToAllocate.size());
+        Iterator<Task> taskIt = tasksToAllocate.listIterator();
+        agentsToAllocate.forEach(a -> currentAllocation.put(a.getId(), new ArrayList<>()));
+
+        for (Agent a : agentsToAllocate) {
+            for (int i = 0; i < numTasksPerAgent; i++) {
+                if (taskIt.hasNext()) {
+                    currentAllocation.get(a.getId()).add(taskIt.next().getId());
+                }
+            }
+        }
+
+        // Add all remaining tasks one-by-one
+        Iterator<Agent> agentIterator = agentsToAllocate.listIterator();
+        while (taskIt.hasNext()) {
+            currentAllocation.get(agentIterator.next().getId()).add(taskIt.next().getId());
+        }
+        return currentAllocation;
+
+    }
+
+    /**
+     * A basic heuristic approach to bundle based allocation. Uses a bin-packing-esque algorithm
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
+    private HashMap<String, List<String>> heuristicBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        HashMap<String, List<String>> currentAllocation = new HashMap<>();
+
+        HashMap<String, Double> tasksByWeight = new HashMap<>();
+        tasksToAllocate.forEach(t -> tasksByWeight.put(t.getId(), t.getCoordinate().getDistance(simulator.getState().getHubLocation())));
+        List<Task> orderedTasks = new ArrayList<>();
+
+        // Bubble sort
+        int sz = tasksByWeight.size();
+        for (int i=0; i<sz; i++) {
+            double highestDist = -1;
+            String highestId = null;
+            for (var entry : tasksByWeight.entrySet()) {
+                if (entry.getValue() > highestDist) {
+                    highestDist = entry.getValue();
+                    highestId = entry.getKey();
+                }
+            }
+            orderedTasks.add(simulator.getState().getTask(highestId));
+            tasksByWeight.remove(highestId);
+        }
+
+        // Very simple heuristic that bins into the lowest available bin each time
+        agentsToAllocate.forEach(a -> currentAllocation.put(a.getId(), new ArrayList<>()));
+        HashMap<String, Double> agentWeights = new HashMap<>();
+        agentsToAllocate.forEach(a -> agentWeights.put(a.getId(), 0.0));
+
+        for (Task t : orderedTasks) {
+            double weight = t.getCoordinate().getDistance(simulator.getState().getHubLocation());
+            double lowestWeight = 999999999;
+            String bestBin = null;
+            for (var entry : agentWeights.entrySet()) {
+                if (entry.getValue() == 0) {
+                    bestBin = entry.getKey();
+                    break;
+                } else if (entry.getValue() < lowestWeight) {
+                    lowestWeight = entry.getValue();
+                    bestBin = entry.getKey();
+                }
+            }
+            agentWeights.put(bestBin, agentWeights.get(bestBin) + weight);
+            currentAllocation.get(bestBin).add(t.getId());
+        }
+
+        return currentAllocation;
+    }
+
+    /**
+     * CBAA algorithm call
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
+    private HashMap<String, List<String>> cbaaBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        Cbaa cbaa = new Cbaa(agentsToAllocate, tasksToAllocate);
+        return cbaa.compute();
+    }
+
+    /**
+     * CBBA algorithm call
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
+    private HashMap<String, List<String>> cbbaBundleCompute(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate, false);
+        return cbba.compute();
+    }
+
+    /**
+     * CBBA algorithm call, with additional step to ensure all agents are assigned to something
+     * @param agentsToAllocate
+     * @param tasksToAllocate
+     * @return
+     */
+    private HashMap<String, List<String>> cbbaBundleComputeWithCoverage(List<Agent> agentsToAllocate, List<Task> tasksToAllocate) {
+        Cbba cbba = new Cbba(agentsToAllocate, tasksToAllocate, true);
+        return cbba.compute();
+    }
+
+    /**
+     * We can use this to manually add an agent->task pair. You must then use confirmAllocation() to enact this
+     * @param agentId
+     * @param taskId
+     */
+    public void putInTempAllocation(String agentId, String taskId) {
+        putInTempAllocation(agentId, taskId, true);
     }
 
     /**
      * Put allocation into state's temp allocation.
      * Will remove existing allocation (in temp allocation) of agent if one exists.
      */
-    public void putInTempAllocation(String agentId, String taskId) {
+    public void putInTempAllocation(String agentId, String taskId, boolean overwrite) {
         //Remove allocation to task if monitor or waypoint task (1 to 1 allocation only!)
         Task task = simulator.getState().getTask(taskId);
-        if(task.getType() == Task.TASK_WAYPOINT || task.getType() == Task.TASK_MONITOR)
-            simulator.getState().getTempAllocation().entrySet().removeIf(entry -> entry.getValue().equals(taskId));
-        //Add new allocation
-        simulator.getState().getTempAllocation().put(agentId, taskId);
-        //Set agent route to task coordinate.
-        Agent agent = simulator.getState().getAgent(agentId);
-        if(task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
-            agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
-        else
-            agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
-        updateAllocationHistory();
+        if (task != null) {
+            if (overwrite) {
+                if (task.getType() == Task.TASK_WAYPOINT || task.getType() == Task.TASK_MONITOR) {
+                    simulator.getState().getTempAllocation().entrySet().removeIf(entry -> entry.getValue().equals(taskId));
+                }
+            }
+            //Add new allocation
+            simulator.getState().getTempAllocation().put(agentId, taskId);
+            //Set agent route to task coordinate.
+            Agent agent = simulator.getState().getAgent(agentId);
+            if (task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION)
+                agent.setTempRoute(Collections.singletonList(((PatrolTask) task).getNearestPointAbsolute(agent)));
+            else
+                agent.setTempRoute(Collections.singletonList(task.getCoordinate()));
+            updateAllocationHistory();
+        } else {
+            System.out.println("NULL!");
+        }
     }
 
     /**
@@ -145,15 +399,19 @@ public class Allocator {
         simulator.getState().setAllocation(newMainAllocation);
 
         //Clear agents and tasks
-        for(Agent agent : simulator.getState().getAgents())
-            if(!agent.isWorking()) {
+        for(Agent agent : simulator.getState().getAgents()) {
+            if (!agent.isWorking()) {
                 agent.setAllocatedTaskId(null);
-                if(simulator.getState().isFlockingEnabled()) {
+                if (simulator.getState().isFlockingEnabled()) {
                     agent.resume();
                 }
             }
+        }
+
         for(Task task : simulator.getState().getTasks())
-            task.getAgents().clear();
+            if (!((task instanceof DeepScanTask) && ((DeepScanTask) task).isBeingWorked())) {
+                task.getAgents().clear();
+            }
 
         //Allocate agents to tasks
         for(Map.Entry<String, String> entry : newMainAllocation.entrySet()) {
@@ -169,7 +427,12 @@ public class Allocator {
 
                 //Update agent route
                 agent.setRoute(agent.getTempRoute());
-                agent.resume();
+                if (!(agent instanceof AgentVirtual av && !av.isAlive())) {
+                    agent.resume();
+                } else {
+                    System.out.println("Passing " + agent.getId());
+                }
+
             }
         }
 
@@ -291,10 +554,94 @@ public class Allocator {
 
 
     protected Map<String, String> compute(List<Agent> agents, List<Task> tasks, boolean editMode) {
-        if (!agents.isEmpty() && !tasks.isEmpty()) {
-				Map<String, String> result =  runMaxSum(agents, tasks);
-                if (!editMode) oldresult = result;
+            if (!agents.isEmpty() && !tasks.isEmpty()) {
+                Map<String, String> result = runMaxSum(agents, tasks);
+                //if (!editMode) oldresult = result;
+                oldresult = result;
                 return result;
+            }
+        return null;
+    }
+
+    /**
+     * Tries to also reassign them to random if they aren't assigned. NOT functional at present
+     * @param agents
+     * @param tasks
+     * @param editMode
+     * @return
+     */
+    protected Map<String, String> computeWithRandomOverspil(List<Agent> agents, List<Task> tasks, boolean editMode) {
+        if (!agents.isEmpty() && !tasks.isEmpty()) {
+            Map<String, String> result = runMaxSum(agents, tasks);
+
+            // For now hardcode the account for hub
+            if (result.size() < agents.size() - 1) {
+                List<Agent> spareAgents = new ArrayList<>();
+                List<Task> spareTasks = new ArrayList<>();
+                for (Agent a : agents) {
+                    if (!result.containsKey(a.getId())) {
+                        spareAgents.add(a);
+                    }
+                }
+                for (Task t : tasks) {
+                    if (!result.containsValue(t.getId())) {
+                        spareTasks.add(t);
+                    }
+                }
+                Map<String, String> spareResult = randomCompute(spareAgents, spareTasks, editMode);
+                result.putAll(spareResult);
+            }
+
+            oldresult = result;
+            return result;
+        }
+        return null;
+    }
+
+    /**
+     * For each agent, assign the nearest task. Quick and surprisingly effective. Assumes global information as agents
+     *  will reassign in the field
+     * @param agents
+     * @param tasks
+     * @param editMode
+     * @return
+     */
+    protected Map<String, String> bestFirstCompute(List<Agent> agents, List<Task> tasks, boolean editMode) {
+        if (!agents.isEmpty() && !tasks.isEmpty()) {
+            HashMap<String, String> result = new HashMap<>();
+
+            for (Task task : tasks) {
+                task.clearAgents();
+            }
+
+            List<String> taskIdsToAllocate = new ArrayList<>();
+
+            for (int i=0; i< agents.size(); i++) {
+                double minDist = 999999999;
+                Task closestTask = null;
+                for (Task t : tasks) {
+                    double thisDist = simulator.getState().getHubLocation().getDistance(t.getCoordinate());
+                    if (thisDist < minDist && !taskIdsToAllocate.contains(t.getId())) {
+                        minDist = thisDist;
+                        closestTask = t;
+                    }
+                }
+                if (closestTask != null) {
+                    taskIdsToAllocate.add(closestTask.getId());
+                } else {
+                    //System.out.println("passed agent for allocation");
+                }
+            }
+
+            Iterator<String> tasksIt = taskIdsToAllocate.iterator();
+            for (Agent a : agents) {
+                if (!(a instanceof Hub) && tasksIt.hasNext()) {
+                    result.put(a.getId(), tasksIt.next());
+                }
+            }
+
+            if (!editMode) oldresult = result;
+            return result;
         }
         return null;
     }
@@ -350,8 +697,7 @@ public class Allocator {
         return null;
     }
 
-    private Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) {
-
+    private Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
         MaxSum maxsum = new MaxSum();
         HashMap<Agent, Task> resultObjs = new HashMap<>(); // TEMP solution
         HashMap<String, String> result = new HashMap<>();
@@ -436,7 +782,6 @@ public class Allocator {
         constraints[tasks.size()] = new Constraint(TASK_NONE, func);
 
         maxsum.addConstraints(constraints);
-
         for (int i = 0; i < variables.length; ++i) {
             Agent agent = agents.get(i);
 
@@ -704,6 +1049,190 @@ public class Allocator {
             if (x.contains(m)) return true;
         }
         return false;
+    }
+
+    /**
+     * Checks whether there is an allocation for each agent (exept hub)
+     * @return
+     */
+    public boolean isSaturated() {
+        // Add 1 to account for hub
+        return (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
+    }
+
+    public void clearAllAgents() {
+        for (Agent a : simulator.getState().getAgents()) {
+            if (a.getTask() != null && !(a.getTask() instanceof DeepScanTask)) {
+                a.getTask().clearAgents();
+                a.setAllocatedTaskId(null);
+                a.stop();
+            }
+        }
+    }
+
+    private Agent getClosestAgentTo(Task t) {
+        double closest = 999999;
+        Agent closestAgent = null;
+        for (Agent a : simulator.getState().getAgents()) {
+            double thisDist = a.getCoordinate().getDistance(t.getCoordinate());
+            if (thisDist < closest && !(a instanceof AgentHub)) {
+                closest = thisDist;
+                closestAgent = a;
+            }
+        }
+        return closestAgent;
+    }
+
+    /**
+     * Dynamically makes the nearest agent do this task
+     * @param t
+     */
+    public void dynamicReassign(Task t) {
+        LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
+        if (isSaturated()) {
+            Agent a = getClosestAgentTo(t);
+            a.getTask().clearAgents();
+            a.setAllocatedTaskId(null);
+            //a.stop();
+            runAutoAllocation();
+            putInTempAllocation(a.getId(), t.getId());
+        } else {
+            runAutoAllocation();
+        }
+        confirmAllocation(simulator.getState().getTempAllocation());
+    }
+
+    /**
+     * Basically just runs the allocator again
+     */
+    public void dynamicReassign() {
+        LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
+        runAutoAllocation();
+        confirmAllocation(simulator.getState().getTempAllocation());
+    }
+
+    /**
+     * Clears agent values
+     * Unused currently
+     */
+    public void clearAgents() {
+        for (Agent a : simulator.getState().getAgents()) {
+            if (!(a instanceof Hub)) {
+                a.setAllocatedTaskId(null);
+                a.stop();
+                a.setWorking(false);
+                a.setRoute(new ArrayList<>());
+                if (a instanceof AgentVirtual av) {
+                    av.stopGoingHome();
+                }
+            }
+        }
+    }
+
+    /**
+     * Assigns the nearest task that is not being done by any other agent
+     * @param agent
+     * @return
+     */
+    public boolean dynamicAssignNearest(Agent agent) {
+        double nearestDist = 99999999;
+        Task nearestTask = null;
+        for (Task t : simulator.getState().getTasks()) {
+            if (t.getAgents().isEmpty()) {
+                double thisDist = t.getCoordinate().getDistance(agent.getCoordinate());
+                if (thisDist < nearestDist) {
+                    nearestTask = t;
+                    nearestDist = thisDist;
+                }
+            }
+        }
+        if (nearestTask != null) {
+            putInTempAllocation(agent.getId(), nearestTask.getId());
+            confirmAllocation(simulator.getState().getTempAllocation());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Assigns a random task that is not being done by any other agent
+     * @param agent
+     * @return
+     */
+    public boolean dynamicAssignRandom(Agent agent) {
+        List<Task> possibles = new ArrayList<>();
+        // Add all empty tasks to the possibles array
+        simulator.getState().getTasks().forEach(t -> {if (t.getAgents().isEmpty()) {possibles.add(t);}});
+        if (!possibles.isEmpty()) {
+            int index = simulator.getRandom().nextInt(possibles.size());
+            putInTempAllocation(agent.getId(), possibles.get(index).getId());
+            confirmAllocation(simulator.getState().getTempAllocation());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Used for dynamic (ad hoc) assignment processes from the hub outwards. E.g in a package delivery configuration
+     * Depending on the options for the scenario, there are a few methods for this, called by this one
+     * @param agent
+     */
+    public void dynamicAssign(Agent agent) {
+        List<AgentVirtual> homingAgents = new ArrayList<>();
+        simulator.getState().getAgents().forEach(a -> {
+            if (a instanceof AgentVirtual av && ((av.isGoingHome() || av.isStopped()) || agent.equals(av)) && !(a instanceof Hub)) {
+                homingAgents.add(av);
+            }
+        });
+
+        if (simulator.getState().getAllocationMethod().equals("bestfirst")) {
+            dynamicAssignNearest(agent);
+        } else if (simulator.getState().getAllocationMethod().equals("maxsum")) {
+            List<Agent> readyAgents = new ArrayList<>();
+            for (Agent a : simulator.getState().getAgents()) {
+                if (a instanceof AgentVirtual av && !(a instanceof Hub)) {
+                    if ( !av.isTimedOut() && (
+                       (!av.isAlive() && (!av.isGoingHome() || av.isHome()))
+                    || (av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500)
+                    || (av.isStopped() && av.getCoordinate().getDistance(simulator.getState().getHubLocation()) < 500)) ) {
+                        readyAgents.add(a);
+                    }
+                }
+            }
+
+            List<Task> availableTasks = new ArrayList<>(simulator.getState().getTasks());
+            availableTasks.removeIf(t -> !t.getAgents().isEmpty());
+
+            Map<String, String> alloc = compute(readyAgents, availableTasks, false);
+            alloc.forEach(this::putInTempAllocation);
+            confirmAllocation(simulator.getState().getTempAllocation());
+
+            readyAgents.forEach(a -> {
+                if (!alloc.containsKey(a.getId()) && a.getTask() == null) {
+                    dynamicAssignNearest(a);
+                    homingAgents.add((AgentVirtual) a);
+                }
+            });
+        } else {
+            dynamicAssignRandom(agent);
+        }
+
+        homingAgents.forEach(a -> {
+            try {
+                a.prependToRoute(simulator.getState().getHubLocation());
+                a.setGoingHome(true);
+            } catch (Exception e) {
+                System.out.println("Caught exception. This should be due to agent failure during reassignment?");
+            }
+        });
+    }
+
+    /**
+     * Resets log to a new filename
+     * @param fileHandler
+     */
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
     //Inner class to provide generic pair of Agent-Task

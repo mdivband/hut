@@ -31,6 +31,23 @@ function menuInit() {
         })
     });
 
+
+    $("#buttonAbortOperation").on('click', function () {
+        // Close the resume/abort window
+        inProgressDiv[0].style = 'animation: popout 0.5s forwards;';
+
+        // Load the scenario window
+        mainButtonGroup[0].style = 'animation: leftToMiddle 0.5s forwards;';
+        loadScenarioDiv[0].style = 'animation: middleToRight 0.5s forwards;';
+        loadScenarioDiv[0].style.visibility = 'visible';
+        setSelected(null);
+
+        $.post('/reset', function () {
+            state.reset();
+
+        });
+    });
+
     // ------ Load Screen ------
     var gameIds = [];
     var fileNames = [];
@@ -128,10 +145,15 @@ function menuInit() {
     $.get("/mode/in-progress", {}, function(data) {
         data = String(data);
         var inProgress = (data === 'true');
-        if(inProgress)
+        if (inProgress) {
             inProgressDiv.show();
-        else
+        } else {
             mainButtonGroup.show();
+            // Ensure any scenario is loaded with a clean slate
+            $.post('/reset', function () {
+                        state.reset();
+                    });
+        }
     }).fail(function () {
         showError("Unable to connect to server.");
     })

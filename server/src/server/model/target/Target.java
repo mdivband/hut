@@ -6,11 +6,25 @@ import server.model.task.Task;
 
 import java.io.Serializable;
 
+/**
+ * Abstract class for Targets that the user must find
+ */
+/* Edited by Will */
 public abstract class Target extends MObject implements Serializable {
 
-    private final int type;
+    private int type;
     private boolean visible;
     public static final int HUMAN = 0;
+    public static final int ADJUSTABLE = 1;
+
+    //private int status = 0;
+
+    //public static final int ADJ_UNKNOWN = 0;
+    public static final int ADJ_DEEP_SCAN = 2;
+    public static final int ADJ_SHALLOW_SCAN = 3;
+    public static final int ADJ_DISMISSED = 4;
+    public static final int ADJ_FOUND = 5;
+
 
     public Target(String id, Coordinate coordinate, int type) {
         super(id, coordinate);
@@ -18,9 +32,16 @@ public abstract class Target extends MObject implements Serializable {
         this.visible = true;
     }
 
+    public void setType(int type) {
+        //this.type = type;
+        this.type = 0;
+    }
+
     public int getType() {
         return type;
     }
+
+
 
     public boolean isVisible() {
         return visible;

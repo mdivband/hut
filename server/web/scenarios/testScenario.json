@@ -1,10 +1,17 @@
 {
   "gameId": "Test Scenario",
   "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
+  "flockingEnabled" : true,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
   },
+  "allocationMethod": "maxsum",
+  "allocationStyle": "manual",
   "agents": [
     {
       "lat": 50.92880002299894,
@@ -13,12 +20,49 @@
     {
       "lat": 50.929378522204615,
       "lng": -1.4078189690011413,
-      "battery": 0.5
+      "battery": 1.0
     },
     {
-      "lat": 50.93008636656946,
+      "lat": 50.9318636656946,
       "lng": -1.4065928983124234,
       "battery": 0.75
+    },
+    {
+      "lat": 50.92780002299894,
+      "lng": -1.4094788872327502,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.930378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 0.75
+    },
+
+
+    {
+      "lat": 50.92775213234095,
+      "lng": -1.4071363295995343,
+      "battery": 1
+    },
+    {
+      "lat": 50.92875295435936,
+      "lng": -1.4060849036656964,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.93007833416138,
+      "lng": -1.4094108428441632,
+      "battery": 1
+    },
+    {
+      "lat": 50.92948327035036,
+      "lng": -1.4108914222203839,
+      "battery": 1
+    },
+    {
+      "lat": 50.92826607066169,
+      "lng": -1.4111489142858136,
+      "battery": 1
     }
   ],
   "hazards": [

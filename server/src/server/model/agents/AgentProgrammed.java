@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 /**
  * Programmed agent that enacts behaviours as programmed by the user
+ * @author William Hunt
  */
 public class AgentProgrammed extends Agent {
     private transient String networkID = "";
@@ -127,9 +128,15 @@ public class AgentProgrammed extends Agent {
             }
         }
 
-        if (isFinalDestinationReached() && !isStopped()) {
+        try {
+            if (isFinalDestinationReached() && !isStopped()) {
+                stop();
+                programmerHandler.completeTask();
+            }
+        } catch (Exception e) {
+            programmerHandler.cancel();
+            route.clear();
             stop();
-            programmerHandler.completeTask();
         }
     }
 
@@ -373,10 +380,6 @@ public class AgentProgrammed extends Agent {
         }
         adjustHeading(targetHeading);
         return true;
-    }
-
-    private String getType() {
-        return type;
     }
 
     public String getBelievedModel() {

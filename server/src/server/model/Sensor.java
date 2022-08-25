@@ -5,8 +5,13 @@ import server.model.agents.Agent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
+/**
+ * This essentially just airgaps the sensing of agents etc near this agent. It stops us needing to directly access what
+ *  we may not know
+ */
 public class Sensor {
     private static final Logger LOGGER = Logger.getLogger(Sensor.class.getName());
     private Simulator simulator;
@@ -17,6 +22,8 @@ public class Sensor {
 
     /**
      * Check the distance between a specific agent and all other agents
+     * @param agent
+     * @param sensingRadius
      * @return neighbours - List of all agents within sensingRadius of the
      * specified agent
      */

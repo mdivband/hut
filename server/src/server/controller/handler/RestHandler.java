@@ -8,8 +8,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
+/**
+ * Abstract class for any REST API handler
+ */
 public abstract class RestHandler {
 
     private final String handlerName;
@@ -73,6 +77,13 @@ public abstract class RestHandler {
         return remainingPath;
     }
 
+    String parseRemainingPath(String path, String handlerName) {
+        String remainingPath = path.replace(handlerName, "");
+        if(remainingPath.equals(""))
+            return null;
+        return remainingPath;
+    }
+
     /**
      * Check that the request parameters contain the expected keys.
      * @param params - Parameter map to check.
@@ -117,6 +128,10 @@ public abstract class RestHandler {
 
     public String getHandlerName() {
         return handlerName;
+    }
+
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 
 }

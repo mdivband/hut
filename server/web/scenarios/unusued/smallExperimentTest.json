@@ -1,0 +1,56 @@
+{
+  "gameId": "Small Experiment Test",
+  "gameDescription": "Test for the experiment",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
+  "uncertaintyRadius": 20.0,
+  "timeLimitSeconds": 300,
+  "nextScenarioFile": "smallExperimentTest2.json",
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.4094788872327502
+    },
+    {
+      "lat": 50.929378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 0.5
+    },
+    {
+      "lat": 50.93008636656946,
+      "lng": -1.4065928983124234,
+      "battery": 0.75
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 1
+    }
+  ],
+  "targets": [
+        {
+      "lat": 50.92925326728431,
+      "lng": -1.4120595414536852,
+      "type": 1,
+      "real": true
+    },
+    {
+      "lat": 50.931248063317625,
+      "lng": -1.4096455533402819,
+      "type": 1,
+      "real": false
+    }
+  ]
+}

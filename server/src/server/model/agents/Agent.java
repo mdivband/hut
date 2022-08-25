@@ -7,22 +7,21 @@ import server.model.hazard.Hazard;
 import server.model.task.Task;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
  * @author Feng Wu, Yuai Liu
  */
+/* Edited by Will */
 public abstract class Agent extends MObject implements Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
 
     private static final long serialVersionUID = 5561040348988016571L;
     static final float unitTurningAngle = 0.1F; //Radians
-    static final float unitTimeBatteryConsumption = 0.0001F;
+    //static final float unitTimeBatteryConsumption = 0.00025F;
+    static final float unitTimeBatteryConsumption = 0.000025F;
     private static final double EPS = 1e-5;
 
     //Used in client
@@ -46,6 +45,8 @@ public abstract class Agent extends MObject implements Serializable {
     private transient long lastHeartbeat;
     private transient boolean startSearching;
     private transient boolean stopped;
+    protected List<Task> taskQueue =  new ArrayList<>();
+    protected List<Coordinate> coordQueue = new ArrayList<>();
 
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
@@ -93,9 +94,9 @@ public abstract class Agent extends MObject implements Serializable {
                     //TODO this is very inefficient so have removed it for now. Only need to recalculate point if task moves.
                     //route.set(route.size() - 1, ((PatrolTask) task).getNearestPointAbsolute(this));
                 }
-            }
-            else if(route.size() > 0)
+            } else if(route.size() > 0) {
                 route.set(route.size() - 1, task.getCoordinate());
+            }
 
             //Move agents
             if (!route.isEmpty() && !isCurrentDestinationReached()) {
@@ -106,8 +107,7 @@ public abstract class Agent extends MObject implements Serializable {
                 if (isCurrentDestinationReached() && this.route.size() > 1)
                     this.route.remove(0);
             }
-        }
-        else if (flockingEnabled){
+        } else if (flockingEnabled){
             performFlocking();
         }
 
@@ -244,6 +244,10 @@ public abstract class Agent extends MObject implements Serializable {
         return route;
     }
 
+    /**
+     * Appends this coord to the route
+     * @param coord
+     */
     public void addToRoute(Coordinate coord) {
         List<Coordinate> rt;
         if (this.route.isEmpty()) {
@@ -259,6 +263,21 @@ public abstract class Agent extends MObject implements Serializable {
         synchronized (this.route) {
             this.route.clear();
             this.route.addAll(route);
+        }
+    }
+
+    /**
+     * Adds this coordinate to the start of the route
+     * @param location
+     */
+    public void prependToRoute(Coordinate location) {
+        synchronized (this.route) {
+            List<Coordinate> currentRoute = new ArrayList<>(route);
+            this.route.clear();
+            if (!currentRoute.get(0).equals(location)) {
+                this.route.add(location);
+            }
+            this.route.addAll(currentRoute);
         }
     }
 
@@ -294,7 +313,9 @@ public abstract class Agent extends MObject implements Serializable {
     }
 
     public boolean isFinalDestinationReached() {
-        return isReached(this.getFinalDestination());
+        synchronized (this.route) {
+            return isReached(this.getFinalDestination());
+        }
     }
 
     protected boolean isReached(Coordinate goal) {
@@ -307,7 +328,7 @@ public abstract class Agent extends MObject implements Serializable {
 
     private void onTimeOut() {
         Simulator.instance.getAllocator().moveToDroppedAllocation(this.getId());
-        Simulator.instance.changeView(true);
+        //Simulator.instance.changeView(true);
     }
 
     public boolean isTimedOut() {
@@ -324,6 +345,10 @@ public abstract class Agent extends MObject implements Serializable {
 
     public void setBattery(double battery) {
         this.battery = battery;
+    }
+
+    public double getBattery() {
+        return battery;
     }
 
     // This method returns an approximation of the length of a planned path
@@ -408,11 +433,27 @@ public abstract class Agent extends MObject implements Serializable {
         this.type = type;
     }
 
+    public String getType() {
+        return type;
+    }
+
     public boolean isVisible() {
         return visible;
     }
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    @Override
+    public String toString() {
+        return "Agent{" +
+                "id=" + getId() +
+                "heading=" + heading +
+                ", route=" + route +
+                ", allocatedTaskId='" + allocatedTaskId + '\'' +
+                ", working=" + working +
+                ", stopped=" + stopped +
+                '}';
     }
 }

@@ -35,30 +35,66 @@ App.Views.Map = Backbone.View.extend({
         MapTaskController.bind(this);
         MapHazardController.bind(this);
         MapTargetController.bind(this);
+        MapImageController.bind(this);
 
+        // The MapTypeId is the default setting (ROADMAP and SATELLITE are the standard two)
+        // The _Control variables enable and disable buttons for the user to change this
         this.mapOptions = {
             zoom: 18,
             center: new google.maps.LatLng(50.939025, -1.461583),
-            mapTypeId: google.maps.MapTypeId.HYBRID,
-            overviewMapControl: false,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+
+            zoomControl: true,
+            zoomControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_BOTTOM,
+            },
+
+            overviewMapControl: true,
+            overviewMapControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP,
+            },
+
             streetViewControl: false,
-            mapTypeControl: false,
-            scaleControl: false,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP,
+            },
+
+            scaleControl: true,
+
+            rotateControl: true,
+            rotateControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP,
+            },
             scrollwheel: true,
             disableDoubleClickZoom: false,
             disableDefaultUI: true,
+
+
+            fullscreenControl: true
+
+
         };
         $.extend(this.wOptions, options.mapOptions || {});
 
         this.icons = {
             UAV: $.loadIcon("icons/used/uav.png", "icons/plane.shadow.png", 30, 30),
             UAVManual: $.loadIcon("icons/used/uav_manual.png", "icons/plane.shadow.png", 30, 30),
+            UAVWithPack: $.loadIcon("icons/used/uav_with_pack.png", "icons/plane.shadow.png", 30, 30),
             UAVSelected: $.loadIcon("icons/used/uav_selected.png", "icons/plane.shadow.png", 30, 30),
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
             MarkerMonitor: $.loadIcon("icons/used/marker_monitor.png", "icons/msmarker.shadow.png", 10, 34),
             TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
-            FLAG: $.loadIcon("icons/flag_over.png", "icons/man.shadow.png", 15, 15)
+
+            TargetUnknown: $.loadIcon("icons/question.png", "icons/man.shadow.png", 30, 30),
+            TargetDeepScan: $.loadIcon("icons/rectangle_red.png", "icons/man.shadow.png", 30, 30),
+            TargetShallowScan: $.loadIcon("icons/rectangle_green.png", "icons/man.shadow.png", 30, 30),
+            TargetDismissed: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
+            TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
+
+
+            FLAG: $.loadIcon("icons/flag_up.png", "icons/man.shadow.png", 15, 15)
         };
 
         this.first = true;
@@ -69,6 +105,7 @@ App.Views.Map = Backbone.View.extend({
         MapTaskController.bindEvents();
         MapHazardController.bindEvents();
         MapTargetController.bindEvents();
+        MapImageController.bindEvents();
 
         setTimeout(function () {
             self.setupROS();
@@ -103,6 +140,46 @@ App.Views.Map = Backbone.View.extend({
         this.setupDrawing();
         this.setMode(this.ModeEnum.PAN);
         this.hideForGametype();
+    },
+    clearAll() {
+        var self = this;
+        try {
+            self.clearUncertainties();
+            self.clearPredictions();
+            MapTargetController.classifiedIds.clear();
+            MapImageController.reset();
+            var markers = self.$el.gmap("get", "markers");
+            for (var key in markers) {
+                var marker = markers[key];
+                if (marker) {
+                    console.log("deleting: " + marker);
+                    marker.setMap(null);
+                    delete marker;
+                }
+            }
+            var circles = self.$el.gmap("get", "overlays > Circle");
+            for (var key in circles) {
+                var circle = circles[key];
+                if (circle) {
+                    console.log("deleting: " + circle);
+                    circle.setMap(null);
+                    delete circle;
+                }
+            }
+            var lines = self.$el.gmap("get", "overlays > Polyline", []);
+            for (var key in lines) {
+                var line = lines[key];
+                if (line) {
+                    console.log("deleting: " + line);
+                    line.setMap(null);
+                    delete line;
+                }
+            }
+
+            console.log("all done ");
+        } catch (e) {
+            console.log("err : " + e);
+        }
     },
     hideForGametype() {
         var type = this.state.getGameType();
@@ -289,6 +366,75 @@ App.Views.Map = Backbone.View.extend({
         });
     },
     /**
+     * Draws persistent markers on the map for reference
+     */
+    drawMarkers: function () {
+        try {
+            var markers = this.state.getMarkers();
+            var self = this;
+            for (var i = 0; i < markers.length; i++) {
+                var thisMarker = markers[i];
+                var splitString = thisMarker.split(",")
+                if (splitString[0] === "circle") {
+                    var latX = splitString[1];
+                    var latY = splitString[2];
+                    var rad = splitString[3];
+                    var thisId = "circle" + latX + "," + latY + ", " + rad;
+                    var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[thisId];
+
+                    if (!currentCircle) {
+                        self.$el.gmap("addShape", "Circle", {
+                            id: thisId,
+                            strokeColor: "#FF0000",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 2,
+                            label: "Search here!",
+                            center: new google.maps.LatLng(latX, latY),
+                            radius: parseFloat(rad),
+                            visible: true
+                        });
+                    }
+                }
+
+            }
+        } catch (e) {
+            alert(e);
+        }
+
+        // Clumsy, just add manually if using shapes for now. infutue should be done in the same way as above
+        if (this.state.getMarkers().length > 0) {
+            var marker = self.$el.gmap("get", "markers", [])["testMk1"];
+            if (!marker) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    clickable: false,
+                    labelContent: "search here",
+                    labelClass: "labels",
+                    labelStyle: {opacity: 1.0},
+                    label: "There are casualties in this area!",
+                    id: "testMk1",
+                    position: new google.maps.LatLng(50.93007510846366, -1.412749970031315),
+                    zIndex: 3,
+                    visible: true
+                });
+            }
+            var marker = self.$el.gmap("get", "markers", [])["testMk2"];
+            if (!marker) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    clickable: false,
+                    label: "There are casualties in this area!",
+                    labelAnchor: new google.maps.Point(50, -18),
+                    id: "testMk2",
+                    position: new google.maps.LatLng(50.93394037299629, -1.409213465112904),
+                    zIndex: 3
+                });
+            }
+        }
+    },
+    /**
      * Draws the predicted route of this ghost as an arrow on the map. Uses a black transparent line
      * @param predDepth The maximum number of points of the route to draw
      */
@@ -345,32 +491,27 @@ App.Views.Map = Backbone.View.extend({
      *      The "radius" value can be imported based on real values live if required, as this is called with each time step
      *      Colour or opacity could also be modulated
      */
-    drawUncertainties: function (sigma) {
+    drawUncertainties: function (radius) {
         var self = this;
         this.state.agents.each(function (agent) {
             var agentId = agent.getId();
+            var sigma = radius; // Uncertainty radius in metres
             var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[agentId+"_unc"];
 
-            if (agent.isVisible()) {
-                if (currentCircle) {
-                    currentCircle.setOptions({center: agent.getPosition()});
-                    currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
-                } else {
-                    self.$el.gmap("addShape", "Circle", {
-                        id: agentId + "_unc",
-                        strokeColor: "#FF0000",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 0,
-                        fillColor: "#00ff2a",
-                        fillOpacity: 0.4,
-                        center: agent.getPosition(),
-                        radius: sigma,
-                    });
-                }
+            if(currentCircle) {
+                currentCircle.setOptions({center: agent.getPosition()});
+                currentCircle.setOptions({visible: true});  // In case it was hidden by the clearUncertainties() method
             } else {
-                if (currentCircle) {
-                    currentCircle.setVisible(false);
-                }
+                self.$el.gmap("addShape", "Circle", {
+                    id: agentId + "_unc",
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 0,
+                    fillColor: "#0033ff",
+                    fillOpacity: 0.4,
+                    center: agent.getPosition(),
+                    radius: sigma,
+                });
             }
         })
     },
@@ -454,7 +595,7 @@ App.Views.Map = Backbone.View.extend({
 
             //Draw or hide 'real' allocation.
             if (agentId in mainAllocation) {
-                if (!self.state.isEdit())
+                if (self.state.getEditMode() === 1)
                     MapTaskController.updateTaskRendering(mainAllocation[agentId], self.MarkerColourEnum.GREEN);
                 if (!agent.isWorking())
                     self.drawAllocation(mainLineId, "green", agentId, mainAllocation[agentId]);
@@ -465,7 +606,7 @@ App.Views.Map = Backbone.View.extend({
                 self.hidePolyline(mainLineId);
 
             //Draw or hide 'temp' allocation.
-            if (self.state.isEdit() && agentId in tempAllocation) {
+            if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
                 MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
                 if((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
                     self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
@@ -474,7 +615,7 @@ App.Views.Map = Backbone.View.extend({
                 self.hidePolyline(tempLineId);
 
             //Draw or hide 'dropped' allocation.
-            if (self.state.isEdit() && agentId in droppedAllocation)
+            if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
                 self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
             else
                 self.hidePolyline(droppedLineId);
@@ -636,7 +777,7 @@ App.Views.Map = Backbone.View.extend({
         var tempAllocation = this.state.getTempAllocation();
         var self = this;
 
-        if (this.state.isEdit()) {
+        if (this.state.getEditMode() === 2) {
             var originalDist = 0;
             var originalTime = 0;
             var newDist = 0;
@@ -702,6 +843,16 @@ App.Views.Map = Backbone.View.extend({
             this.views.camera.trigger("update");
             this.views.control.trigger("update:agent", agent);
         }
+    },
+    updateScorePanel: function () {
+        var scoreInfo = this.state.getScoreInfo();
+        var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime())));
+        $("#score_timeLeft").html(timeRem);
+        $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
+        $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
+        $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
+        $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
+
     },
     getIcon: function (num) {
         switch (num) {

@@ -9,6 +9,7 @@ import java.util.List;
 
 /**
  * This is the representation of where the Hub believes agents to be. It will not be interactive
+ * @author William Hunt
  */
 public class AgentGhost extends Agent{
     private boolean goingHome = false;
