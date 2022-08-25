@@ -54,7 +54,7 @@ App.Views.Map = Backbone.View.extend({
                 position: google.maps.ControlPosition.RIGHT_TOP,
             },
 
-            streetViewControl: true,
+            streetViewControl: false,
             mapTypeControl: true,
             mapTypeControlOptions: {
                 position: google.maps.ControlPosition.RIGHT_TOP,

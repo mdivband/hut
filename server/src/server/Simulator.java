@@ -17,20 +17,23 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
+ * This is the core code for the mainloop and loading of the simulator
  * @author Feng Wu
  */
 /* Edited by Yuai */
+/* Edited by Will */
+
 public class Simulator {
 
     private String webRef ="web";
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
-    private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
+    private final Logger LOGGER = Logger.getLogger(Simulator.class.getName());
 
 
-    private State state;
-    private Sensor sensor;
+    private final State state;
+    private final Sensor sensor;
 
     private final QueueManager queueManager;
     private final AgentController agentController;
@@ -48,8 +51,8 @@ public class Simulator {
     public static Simulator instance;
 
     private static final double gameSpeed = 5;
-    private Random random;
-    private String nextFileName = "";
+    private final Random random;
+    private final String nextFileName = "";
 
     private Thread mainLoopThread;
 
@@ -97,16 +100,6 @@ public class Simulator {
     }
 
     public void start(Integer port) {
-        /*
-        try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
-        } catch (final IOException e) {
-            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
-            Logger.getAnonymousLogger().severe(e.getMessage());
-        }
-
-         */
-
         //Setup GSON
         GsonUtils.registerTypeAdapter(Task.class, Task.taskSerializer);
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
@@ -130,7 +123,7 @@ public class Simulator {
             //LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
-            //LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
+            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -145,8 +138,6 @@ public class Simulator {
         this.mainLoopThread = new Thread(this::mainLoop);
         mainLoopThread.start();
         this.state.setInProgress(true);
-        //allocator.runAutoAllocation();
-        //allocator.confirmAllocation(state.getTempAllocation());
         LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
     }
 
@@ -291,16 +282,17 @@ public class Simulator {
                     }
                 }
 
-                for (Task task : completedTasks) {
-                    task.getAgents().forEach(a -> a.setType("standard"));
-                    task.complete();
+                synchronized (Simulator.instance.getState().getCompletedTasks()) {
+                    for (Task task : completedTasks) {
+                        task.getAgents().forEach(a -> a.setType("standard"));
+                        task.complete();
+                    }
+
+                    if (!completedTasks.isEmpty()) {
+                        completedTasks.forEach(t -> modeller.passRecords(t.getId()));
+    
+                    }
                 }
-
-                if (!completedTasks.isEmpty()) {
-                    completedTasks.forEach(t -> modeller.passRecords(t.getId()));
-
-                }
-
                 if (!modeller.isStarted()) {
                     modeller.start();
                     updateMissionModel();
@@ -326,6 +318,9 @@ public class Simulator {
         } while (sleep(sleepTime));
     }
 
+    /**
+     * Runs the model for the current setup
+     */
     public void updateMissionModel() {
         if (!state.getModelStyle().equals("off")) {
             // Update model and start thread
@@ -407,18 +402,6 @@ public class Simulator {
         modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
-        /*
-        LogManager.getLogManager().reset();
-        try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
-        } catch (final IOException e) {
-            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
-            Logger.getAnonymousLogger().severe(e.getMessage());
-        }
-        LOGGER = null;
-        LOGGER = Logger.getLogger(Simulator.class.getName());
-
-         */
         imageController.reset();
     }
 

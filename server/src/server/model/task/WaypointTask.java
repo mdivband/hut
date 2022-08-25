@@ -2,6 +2,9 @@ package server.model.task;
 
 import server.model.Coordinate;
 
+/**
+ * Standard task that requires an agent to go to this waypoint
+ */
 public class WaypointTask extends Task {
 
     public WaypointTask(String id, Coordinate coordinate) {

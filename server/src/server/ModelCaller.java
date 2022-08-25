@@ -5,11 +5,15 @@ import server.model.agents.AgentVirtual;
 import java.io.*;
 import java.util.logging.Logger;
 
+/**
+ * Calls the PRISM model script and handles the results
+ * @author William Hunt
+ */
 public class ModelCaller {
     private Thread currentThread = null;
     private Thread underThread = null;
     private Thread overThread = null;
-    private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
+    private final Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
     private String webRef;
 
     private Process[] procs = new Process[3];
@@ -244,20 +248,6 @@ public class ModelCaller {
      */
     private double readResult(String fileName) {
         return -1;
-        /*
-        try {
-            BufferedReader reader = new BufferedReader(
-                    new FileReader(webRef+"/ModelFiles/"+fileName)
-            );
-            double d = Double.parseDouble(reader.readLine());
-            reader.close();
-            return d;
-        } catch (Exception e) {
-            System.out.println("ERROR READING RESULT. RETURNING 0");
-            return 0;
-        }
-
-         */
     }
 
     /**

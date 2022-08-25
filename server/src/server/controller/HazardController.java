@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.FileHandler;
 
+/**
+ * Controller for hazards
+ */
+/* Edited by Will */
 public class HazardController extends AbstractController {
 
     private static Map<String, Integer> uniqueHazardNumbers = new HashMap<>();

@@ -6,10 +6,14 @@ import server.model.Coordinate;
 
 import java.util.ArrayList;
 
+/**
+ * Task to quickly scan a task and return a low-resolution scan
+ * @author William Hunt
+ */
 public class ShallowScanTask extends Task {
-    private Coordinate targetToScan;
+    private final Coordinate targetToScan;
 
-    private ArrayList<Agent> workingAgents = new ArrayList<>();
+    private final ArrayList<Agent> workingAgents = new ArrayList<>();
 
     public ShallowScanTask(String id, Coordinate coordinate) {
         super(id, Task.TASK_SHALLOW_SCAN, coordinate);

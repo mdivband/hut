@@ -10,6 +10,7 @@ import java.util.*;
 /**
  * Constraint Based Bundle Allocation
  * https://ieeexplore.ieee.org/abstract/document/5072249?casa_token=wpoSEGtFX8oAAAAA:zwM0ViLXME4UevtMcXoEEwc4uff9QCkP7B31t0O1sZR4jacHXzETHen06s5K8bau4U61cZx3B5a0lMo
+ * @author William Hunt
  */
 public class Cbba {
     private final List<AgentRep> agents;

@@ -5,6 +5,10 @@ import com.google.gson.JsonObject;
 import server.QueueManager.MessagePublisher;
 import server.model.Coordinate;
 
+/**
+ * Simulation (digital twin) of a real agent.
+ *  I am unsure whether this works in this version -WH
+ */
 public class AgentReal extends Agent {
 
     private transient MessagePublisher messagePublisher;

@@ -10,6 +10,10 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+/**
+ * We use this to run the simulator. This is essential for using classloaders for parallel runs in the same JVM
+ * @author William Hunt
+ */
 public class SimRunner implements Runnable {
     private final int port;
     private Simulator simulator;

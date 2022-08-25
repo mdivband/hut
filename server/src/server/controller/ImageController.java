@@ -12,6 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
 
+/**
+ * Controller responsible for taking images (premade pictures) and passes them to the user
+ * @author William Hunt
+ */
 public class ImageController extends AbstractController {
 
     private final int SHALLOW_SCAN_TIME = 18;  // In-game seconds, so use 6*real-life seconds
@@ -34,6 +38,10 @@ public class ImageController extends AbstractController {
         scheduledImages.clear();
     }
 
+    /**
+     * Gets the image file reference for this ID
+     * @param id
+     */
     public void takeImageById(String id) {
         boolean match =  false;
         for (var entry : scheduledImages.entrySet()) {
@@ -43,13 +51,14 @@ public class ImageController extends AbstractController {
             }
         }
         if (!match) {
-            //simulator.getState().getPendingIds().add(id);
             takeImage(simulator.getState().getTarget(id).getCoordinate(), false);
         }
     }
 
     /**
      * This finds the target, checks if it's a TP or FP, "takes an image", and stores it in the hashmap for inspection
+     * @param coordinate
+     * @param isDeep
      */
     public void takeImage(Coordinate coordinate, boolean isDeep) {
         Target t = simulator.getTargetController().getTargetAt(coordinate);

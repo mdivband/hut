@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST handler for targets
+ */
 public class TargetHandler extends RestHandler {
 
     public TargetHandler(String handlerName, Simulator simulator) {

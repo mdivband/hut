@@ -26,9 +26,13 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
+ * Object that handles the allocation.
+ *  This separates the allocation process form teh backend because it exists to produce a map of agents to taks,
+ *  and the rest is handled by the simulator
  * @author Feng Wu, Yuai Liu
  */
 /* Edited by Yuai */
+/* Edited by Will */
 
 public class Allocator {
 
@@ -324,6 +328,11 @@ public class Allocator {
         return cbba.compute();
     }
 
+    /**
+     * We can use this to manually add an agent->task pair. You must then use confirmAllocation() to enact this
+     * @param agentId
+     * @param taskId
+     */
     public void putInTempAllocation(String agentId, String taskId) {
         putInTempAllocation(agentId, taskId, true);
     }
@@ -1042,6 +1051,10 @@ public class Allocator {
         return false;
     }
 
+    /**
+     * Checks whether there is an allocation for each agent (exept hub)
+     * @return
+     */
     public boolean isSaturated() {
         // Add 1 to account for hub
         return (simulator.getState().getTempAllocation().size() + 1 == simulator.getState().getAgents().size());
@@ -1070,6 +1083,10 @@ public class Allocator {
         return closestAgent;
     }
 
+    /**
+     * Dynamically makes the nearest agent do this task
+     * @param t
+     */
     public void dynamicReassign(Task t) {
         LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         if (isSaturated()) {
@@ -1085,6 +1102,9 @@ public class Allocator {
         confirmAllocation(simulator.getState().getTempAllocation());
     }
 
+    /**
+     * Basically just runs the allocator again
+     */
     public void dynamicReassign() {
         LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         runAutoAllocation();

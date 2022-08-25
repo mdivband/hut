@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 /**
  * @author Feng Wu, Yuai Liu
  */
+/* Edited by Will */
 public abstract class Agent extends MObject implements Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
@@ -243,6 +244,10 @@ public abstract class Agent extends MObject implements Serializable {
         return route;
     }
 
+    /**
+     * Appends this coord to the route
+     * @param coord
+     */
     public void addToRoute(Coordinate coord) {
         List<Coordinate> rt;
         if (this.route.isEmpty()) {
@@ -261,6 +266,10 @@ public abstract class Agent extends MObject implements Serializable {
         }
     }
 
+    /**
+     * Adds this coordinate to the start of the route
+     * @param location
+     */
     public void prependToRoute(Coordinate location) {
         synchronized (this.route) {
             List<Coordinate> currentRoute = new ArrayList<>(route);

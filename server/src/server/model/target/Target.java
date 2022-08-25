@@ -6,6 +6,10 @@ import server.model.task.Task;
 
 import java.io.Serializable;
 
+/**
+ * Abstract class for Targets that the user must find
+ */
+/* Edited by Will */
 public abstract class Target extends MObject implements Serializable {
 
     private int type;

@@ -14,6 +14,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Handles classification of images in the review scene
+ * @author William Hunt
+ */
 public class ReviewHandler extends RestHandler {
 
     public ReviewHandler(String handlerName, Simulator simulator) {

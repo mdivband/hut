@@ -11,6 +11,7 @@ import java.io.*;
 import java.util.Map;
 
 /**
+ * This is basically a manual copy of the GsonUtils library
  * @author Feng Wu
  *
  */

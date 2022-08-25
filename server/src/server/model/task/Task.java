@@ -16,8 +16,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
+ * Abstract class for all tasks
  * @author Feng Wu, Yuai Liu
  */
+/* Edited by Will */
 public abstract class Task extends MObject implements Serializable {
 
     private static final long serialVersionUID = 5561040348988016571L;
@@ -63,41 +65,14 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
-
-        for (Agent a : agents) {
-            if (a instanceof AgentVirtual av) {
-                /*
-                int loopCounter = 0;
-                Task t = av.getNextTaskFromQueue();
-                //if (t != null && Simulator.instance.getState().getTasks().contains(t)) {  // Means we found one that exists
-                System.out.println("CHECKING");
-                System.out.println("tsks = " + Simulator.instance.getState().getTasks());
-                System.out.println("our task: " + t + ", status=" + t.getStatus() + " agents=" + t.getAgents());
-
-                while (t == null || !Simulator.instance.getState().getTasks().contains(t) || t.getStatus() == STATUS_DONE) {
-                    System.out.println(t + " didn't work out, resecting... ");
-                    t = av.getNextTaskFromQueue();
-                    loopCounter++;
-                    if (loopCounter >= 10) {
-                        a.stop();
-                        return;
-                    }
-                }
-                 */
-
-                //av.setAllocatedTaskId(t.getId());
-                Task t = av.getNextTaskFromQueue();
-                //System.out.println("trying to add " + t);
-                if (t != null) {
-                    Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
-                    Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
-                } else {
-                    //System.out.println("got null task");
-                    a.stop();
-                }
-                //av.setRoute(av.getTempRoute());
-                //System.out.println("comp -> " + av);
-
+        Agent a = agents.get(0);
+        if (a instanceof AgentVirtual av) {
+            Task t = av.getNextTaskFromQueue();
+            if (t != null) {
+                Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
+                Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
+            } else {
+                a.stop();
             }
         }
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
@@ -129,7 +104,6 @@ public abstract class Task extends MObject implements Serializable {
             // Completed, but not yet reported to HUB
             return false;
         } else if (status == STATUS_DONE) {
-            //System.out.println(getId() + " is done");
             // Completed and should be reported
             return true;
         }
@@ -142,8 +116,6 @@ public abstract class Task extends MObject implements Serializable {
                 if (this instanceof VisitTask vt) {
                     vt.triggerReturnHome();
                 }
-            } else {
-                //setStatus(Task.STATUS_DONE);
             }
         }
 

@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
+/**
+ * Abstract class for any REST API handler
+ */
 public abstract class RestHandler {
 
     private final String handlerName;

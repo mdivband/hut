@@ -2,6 +2,10 @@ package server.controller;
 
 import server.Simulator;
 
+/**
+ * This isn't really used at the moment. I have left it in so it can act as a template for a score system later -WH
+ * @author William Hunt
+ */
 public class ScoreController extends AbstractController {
     private int completedTasks;
     private int totalTasks;

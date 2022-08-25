@@ -3,6 +3,10 @@ package server.model.hazard;
 import server.model.Coordinate;
 import server.model.MObject;
 
+/**
+ * Abstract class for all hazards
+ */
+/* Edited by Will */
 public abstract class Hazard extends MObject {
 
     private final int type;

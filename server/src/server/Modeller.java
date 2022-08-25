@@ -5,19 +5,28 @@ import server.model.task.Task;
 
 import java.util.*;
 
+/**
+ * Uses precomputed tables to predict success chance
+ * @author William Hunt
+ */
 public class Modeller {
-    private Simulator simulator;
-    private ArrayList<ModellerRecord> pendingRecords = new ArrayList<>();
-    private ArrayList<ModellerRecord> loggedRecords = new ArrayList<>();
+    private final Simulator simulator;
+    private final ArrayList<ModellerRecord> pendingRecords = new ArrayList<>();
+    private final ArrayList<ModellerRecord> loggedRecords = new ArrayList<>();
 
-    private ArrayList<ModellerAgentRecord> pendingAgentRecords = new ArrayList<>();
-    private ArrayList<ModellerAgentRecord> loggedAgentRecords = new ArrayList<>();
+    private final ArrayList<ModellerAgentRecord> pendingAgentRecords = new ArrayList<>();
+    private final ArrayList<ModellerAgentRecord> loggedAgentRecords = new ArrayList<>();
     private boolean started = false;
 
     public Modeller(Simulator simulator) {
         this.simulator = simulator;
     }
 
+    /**
+     * Calculates the total success chance of the allocation
+     * @param agent
+     * @return
+     */
     public double calculateAll(Agent agent) {
         //OptionalDouble average = simulator.getState().getAgents().stream().filter(a -> a.getAllocatedTaskId() != null).mapToDouble(this::calculate).average();
         if (agent.getAllocatedTaskId() != null && !agent.isStopped()) {
@@ -35,6 +44,11 @@ public class Modeller {
         return 100 * result;
     }
 
+    /**
+     * Calculates the success chance for this agent using precomputed table
+     * @param agent
+     * @return
+     */
     public double calculate(Agent agent) {
         //double distanceFromHub = agent.getCoordinate().getDistance(simulator.getState().getHubLocation());
         //double distanceFromHub = agent.getTask().getCoordinate().getDistance(simulator.getState().getHubLocation());
@@ -102,6 +116,11 @@ public class Modeller {
         }
     }
 
+    /**
+     * Nots that a record failed
+     * @param agent
+     * @param allocatedTaskId
+     */
     public void failRecord(String agent, String allocatedTaskId) {
         ArrayList<ModellerRecord> recordsToFail = new ArrayList<>();
         for (ModellerRecord m : pendingRecords) {
@@ -133,6 +152,7 @@ public class Modeller {
         //printRecords();
     }
 
+    // Notes that all records for this task passed
     public void passRecords(String task) {
         ArrayList<ModellerRecord> recordsToPass = new ArrayList<>();
         for (ModellerRecord m : pendingRecords) {
@@ -198,6 +218,9 @@ public class Modeller {
         return started;
     }
 
+    /**
+     * Uses predictions and actual results to validate the accuracy of the model
+     */
     public void outputResults() {
         System.out.println("=============================");
         System.out.println();
@@ -274,58 +297,6 @@ public class Modeller {
         System.out.println("    " + fnCount + " False Negatives");
         System.out.println("    " + precision + " Precision");
         System.out.println("    " + recall + " Recall");
-
-        /*
-        double totalSuccessPct = 0;
-        double totalFailurePct = 0;
-        int numSuccesses = 0;
-        int numFailures = 0;
-        for (ModellerRecord r : loggedRecords) {
-            if (r.success) {
-                totalSuccessPct += r.totalProbability;
-                numSuccesses++;
-                // Passed
-            } else {
-                totalFailurePct += r.totalProbability;
-                numFailures++;
-                // Failed
-            }
-        }
-
-
-
-        double averageSuccessPrediction = totalSuccessPct / numSuccesses;
-        double averageFailurePrediction = totalFailurePct / numFailures;
-
-        System.out.println("BY TOTAL: ");
-        System.out.println("In " + numSuccesses + " successful allocations, the model predicted, on average, a " + averageSuccessPrediction * 100 + "% success change");
-        System.out.println("In " + numFailures + " failed allocations, the model predicted, on average, a " + averageFailurePrediction * 100 + "% success change");
-
-        printAgentRecords();
-        System.out.println();
-        totalSuccessPct = 0;
-        totalFailurePct = 0;
-        numSuccesses = 0;
-        numFailures = 0;
-        for (ModellerAgentRecord r : loggedAgentRecords) {
-            if (r.success) {
-                totalSuccessPct += r.probability;
-                numSuccesses++;
-                // Passed
-            } else {
-                totalFailurePct += r.probability;
-                numFailures++;
-                // Failed
-            }
-        }
-
-        averageSuccessPrediction = totalSuccessPct / numSuccesses;
-        averageFailurePrediction = totalFailurePct / numFailures;
-
-        System.out.println("BY AGENT: ");
-        System.out.println("In " + numSuccesses + " successful allocations, the model predicted, on average, a " + averageSuccessPrediction * 100 + "% success change");
-        System.out.println("In " + numFailures + " failed allocations, the model predicted, on average, a " + averageFailurePrediction * 100 + "% success change");
-*/
     }
 
     public void stop() {

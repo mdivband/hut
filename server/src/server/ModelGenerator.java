@@ -14,6 +14,7 @@ import java.util.Arrays;
 
 /**
  * Generates the model files for PRISM to run on
+ * @author William Hunt
  */
 public class ModelGenerator {
 

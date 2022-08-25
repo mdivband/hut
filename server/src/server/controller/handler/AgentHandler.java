@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Rest handler for agents
+ */
 public class AgentHandler extends RestHandler {
 
     public AgentHandler(String handlerName, Simulator simulator) {
@@ -56,7 +59,6 @@ public class AgentHandler extends RestHandler {
     }
 
     private void handleHubDespawn(Request req, Response resp) throws IOException {
-        System.out.println("handling " + req);
         int res = Simulator.instance.getAgentController().despawnAgent();
         if (res == -1) {
             resp.send(400, "Can't remove, unspecified error");

@@ -6,8 +6,10 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
+ * The representation of a Coordinate (lat, lng)
  * @author Feng Wu
  */
+/* Edited by Will */
 public class Coordinate implements Serializable {
 
     private static final long serialVersionUID = 5561040348988016571L;
@@ -47,6 +49,7 @@ public class Coordinate implements Serializable {
     }
 
     /**
+     * Get angle from this coordinate to the given coordinate in radians
      * @return radian
      */
     public double getAngle(Coordinate coordinate) {
@@ -100,6 +103,11 @@ public class Coordinate implements Serializable {
         return new Coordinate(lat, lng);
     }
 
+    /**
+     * Finds geometric centre of a given list of coordinates
+     * @param coordinates
+     * @return
+     */
     public static Coordinate findCentre(List<Coordinate> coordinates) {
         double x = 0, y = 0, z = 0;
         for(Coordinate coordinate : coordinates) {

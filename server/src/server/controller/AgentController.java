@@ -8,6 +8,10 @@ import server.model.task.Task;
 
 import java.util.*;
 
+/**
+ * Controller responsible for the agents, adding and removing them
+ */
+/* Edited by Will */
 public class AgentController extends AbstractController {
 
     public static int nextAgentAltitude = 5;
@@ -301,14 +305,10 @@ public class AgentController extends AbstractController {
      */
     public int despawnAgent() {
         Hub hub = Simulator.instance.getState().getHub();
-        System.out.println("hub = " + hub);
         if (hub instanceof AgentHubProgrammed ahp) {
-            System.out.println("a");
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
-            System.out.println("b");
             if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4) {
-                System.out.println("c");
                 simulator.getAgentController().decrementAgentNumbers();
                 return simulator.getAgentController().incrementRemoval();
                 //return ah.scheduleRemoval(1);
@@ -317,11 +317,18 @@ public class AgentController extends AbstractController {
         return -1;
     }
 
+    /**
+     * Increments the number of scheduled removals
+     * @return
+     */
     private int incrementRemoval() {
         scheduledRemovals++;
         return scheduledRemovals;
     }
 
+    /**
+     * Decrements the number of scheduled removals
+     */
     public void decrementRemoval() {
         scheduledRemovals--;
     }
@@ -330,18 +337,32 @@ public class AgentController extends AbstractController {
         return scheduledRemovals;
     }
 
+    /**
+     * Gets the closest agents from the entire state
+     * @return
+     */
     public Agent removeClosestAgentToHub() {
         synchronized (Simulator.instance.getState().getAgents()) {
             return removeClosestAgentToHub(Simulator.instance.getState().getAgents());
         }
     }
 
+    /**
+     * Removes the closest agent from a given list
+     * @param agents
+     * @return
+     */
     public Agent removeClosestAgentToHub(Collection<Agent> agents) {
         Agent closestAgent = getClosestAgentToHub(agents);
         Simulator.instance.getState().getAgents().remove(closestAgent);
         return closestAgent;
     }
 
+    /**
+     * Gets the closest agent from a given list
+     * @param agents
+     * @return
+     */
     public Agent getClosestAgentToHub(Collection<Agent> agents) {
         double minDistance = 99999.0;
         Agent closestAgent = null;

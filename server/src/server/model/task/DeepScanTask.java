@@ -7,13 +7,17 @@ import server.model.Coordinate;
 
 import java.util.ArrayList;
 
+/**
+ * Task to perform a deep (high resolution) scan of a target
+ * @author William Hunt
+ */
 public class DeepScanTask extends Task {
-    private Coordinate targetToScan;
+    private final Coordinate targetToScan;
 
-    private boolean imageTaken = false;
+    private final boolean imageTaken = false;
 
-    private ArrayList<Agent> workingAgents = new ArrayList<>();
-    private ArrayList<Agent> scannedAgents = new ArrayList<>();  // agents who have scanned this task (typically singleton)
+    private final ArrayList<Agent> workingAgents = new ArrayList<>();
+    private final ArrayList<Agent> scannedAgents = new ArrayList<>();  // agents who have scanned this task (typically singleton)
 
     public DeepScanTask(String id, Coordinate coordinate) {
         super(id, Task.TASK_DEEP_SCAN, coordinate);
@@ -65,7 +69,6 @@ public class DeepScanTask extends Task {
                 if (agent.isFinalDestinationReached()) {
                     agent.setWorking(true);
                 } else if (agent.isCurrentDestinationReached()) {
-                    System.out.println("SCANNED");
                     scannedAgents.add(agent);
                 }
             if(perform())

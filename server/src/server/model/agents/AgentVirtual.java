@@ -10,6 +10,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+/**
+ * Standard virtual agent for use in the simulator
+ */
+/* Edited by Will */
 public class AgentVirtual extends Agent {
     protected transient Logger LOGGER = Logger.getLogger(AgentVirtual.class.getName());
     protected transient Sensor sensor;

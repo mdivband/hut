@@ -11,6 +11,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Handler for instantly loading a scenario and skipping the load menu etc
+ * @author William Hunt
+ */
 public class PresetHandler extends RestHandler {
 
     public PresetHandler(String handlerName, Simulator simulator) {

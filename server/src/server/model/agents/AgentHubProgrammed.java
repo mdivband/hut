@@ -11,6 +11,7 @@ import java.util.Random;
 
 /**
  * Programmed version of the hub
+ * @author William Hunt
  */
 public class AgentHubProgrammed extends AgentProgrammed implements Hub {
 
@@ -56,20 +57,25 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
         if (!agents.isEmpty()) {
             if (scheduledRemovals > 0) {
                 Agent agentToRemove = agents.get(0);
-                System.out.println("removing " + agentToRemove.getId());
+                //System.out.println("removing " + agentToRemove.getId());
                 Simulator.instance.getState().remove(agentToRemove);
                 scheduledRemovals--;
             }
         }
     }
 
+    /**
+     * Checks whether this agent is connected to the hub. Intended as a backed method
+     * @param agent
+     * @return
+     */
     public boolean checkForConnection(Agent agent) {
         return programmerHandler.checkForConnection(agent);
     }
 
     public int scheduleRemoval(int numRemovals) {
         scheduledRemovals += numRemovals;
-        System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
+        //System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
         return scheduledRemovals;
     }
 }

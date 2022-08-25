@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 /**
  * Non-programmed Hub agent
+ * @author William Hunt
  */
 public class AgentHub extends Agent implements Hub {
     private transient Logger LOGGER = Logger.getLogger(AgentHub.class.getName());
@@ -83,6 +84,10 @@ public class AgentHub extends Agent implements Hub {
         return scheduledRemovals;
     }
 
+    /**
+     * Checks whether all agents are near to the hub (100m)
+     * @return
+     */
     public boolean allAgentsNear() {
         boolean allHome = true;
         for (Agent a : Simulator.instance.getState().getAgents()) {

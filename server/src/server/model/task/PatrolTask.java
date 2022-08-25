@@ -8,6 +8,9 @@ import server.model.Coordinate;
 
 import java.util.*;
 
+/**
+ * Defines a set of points that the agent cyclicly traces
+ */
 public class PatrolTask extends Task {
 
     private final List<Coordinate> points;
@@ -167,6 +170,8 @@ public class PatrolTask extends Task {
      * Get the nearest absolute point that is closest to the agent - i.e. any point on the patrol route not just
      * the vertices.
      * Uses the final point in the agent's route (or temp route if in edit mode) or position as a fallback.
+     * @param agent
+     * @return
      */
     public Coordinate getNearestPointAbsolute(Agent agent) {
         Coordinate nearest = null;

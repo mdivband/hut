@@ -12,8 +12,10 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
+ * Controller for the connection. This is important as it holds the httpserver and deals with the rest handlers etc
  * @author Feng Wu
  */
+/* Edited by Will */
 public class ConnectionController extends AbstractController {
 
     private HttpServer httpserver;

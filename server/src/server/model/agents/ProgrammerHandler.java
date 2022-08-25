@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 /***
  * Handles the drone controller, like an API. Mostly helper functions to pass throughout the intricacies of the code
  * structure and convert things to more easily understandable formats
+ * @author William Hunt
  */
 public class ProgrammerHandler implements Serializable {
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());
@@ -1361,6 +1362,10 @@ public class ProgrammerHandler implements Serializable {
         this.communicationRange = (int) Math.round(communicationRange);
     }
 
+    /**
+     * Checks whehter (as far as we know) any other agent has the same task as us
+     * @return
+     */
     public boolean checkForDuplicateAssignment() {
         try {
             if (currentTask != null && !currentTask.isEmpty()) {

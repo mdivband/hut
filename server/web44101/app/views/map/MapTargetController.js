@@ -123,8 +123,7 @@ var MapTargetController = {
         if (MapTargetController.classifiedIds.includes(targetId)) {
             var marker = this.$el.gmap("get", "markers")[targetId];
             if (marker) {
-                //console.log("problem, rmeove here")
-                alert("PROIBLEM> REMOVE HERE")
+                alert("PROBLEM. REMOVE HERE")
             }
         }
 

@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for all tasks
+ */
+/* Edited by Will */
 public class TaskController extends AbstractController {
 
     private static int uniqueTaskNumber = 1;
@@ -210,6 +214,9 @@ public class TaskController extends AbstractController {
         simulator.getState().getTasks().removeIf(tsk -> tsk.getCoordinate().equals(coordinate));
     }
 
+    /**
+     * Returns all tasks at this coordinate
+     */
     public List<Task> getAllTasksAt(Coordinate coordinate) {
        List<Task> foundTasks = new ArrayList<>(2);
 
@@ -230,6 +237,10 @@ public class TaskController extends AbstractController {
         return simulator.getState().getTaskByCoordinate(coordinate);
     }
 
+    /**
+     * Checks if there are any tasks with no agent assigned
+     * @return
+     */
     public boolean checkForFreeTasks() {
         return simulator.getState().getTasks().stream().anyMatch(a -> a.getAgents().isEmpty());
     }

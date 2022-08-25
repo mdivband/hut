@@ -8,6 +8,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Consensus-based auction algorithm (Mentioned in this survey:
+ *  <a href="https://link.springer.com/chapter/10.1007/978-3-319-18299-5_2">...</a>)
+ * @author William Hunt
+ */
 public class Cbaa {
     private List<AgentRep> agents;
     private List<Task> tasks;
@@ -22,6 +27,10 @@ public class Cbaa {
         }
     }
 
+    /**
+     * This is essentially the algorithm itself
+     * @return
+     */
     public HashMap<String, List<String>> compute() {
         HashMap<String, List<String>> newAlloc = new HashMap<>();
         boolean converged = false;

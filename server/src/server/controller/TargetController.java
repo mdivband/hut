@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.FileHandler;
 
+/**
+ * Controller for targets that the user must find
+ */
+/* Edited by Will */
 public class TargetController extends AbstractController {
 
     private static Map<String, Integer> uniqueTargetNumbers = new HashMap<>();
@@ -89,7 +93,12 @@ public class TargetController extends AbstractController {
         return simulator.getState().getTargetByCoordinate(coordinate);
     }
 
-
+    /**
+     * Set the task at this location to this type
+     * @param taskType
+     * @param lat
+     * @param lng
+     */
     public void adjustForTask(int taskType, double lat, double lng) {
         for (Target t : Simulator.instance.getState().getTargets()) {
             try {
@@ -103,6 +112,11 @@ public class TargetController extends AbstractController {
         }
     }
 
+    /**
+     * Returns the target at this coordinate (within 5m)
+     * @param c
+     * @return
+     */
     public Target getTargetAt(Coordinate c) {
         for (Target t : Simulator.instance.getState().getTargets()) {
             if(t.getCoordinate().getDistance(c) < 5) {  // TODO work out appropriate epsilon value

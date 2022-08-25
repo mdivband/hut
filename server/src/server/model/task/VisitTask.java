@@ -10,6 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Task that requires an agent to go there, and then return home. Like a "pickup" task
+ * @author William Hunt
+ */
 public class VisitTask extends Task {
 
     public VisitTask(String id, Coordinate coordinate) {
@@ -27,6 +31,9 @@ public class VisitTask extends Task {
         triggerReturnHome();
     }
 
+    /**
+     * Triggers that the agent has completed the first part of the task and must now return home to the HUB
+     */
     public void triggerReturnHome() {
         for (Agent a : getArrivedAgents()) {
             if (a instanceof AgentVirtual av && getAgents().contains(a)) {

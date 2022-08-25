@@ -13,6 +13,7 @@ import java.util.logging.Logger;
  *  allowing a mixture of agent types.
  * A neater solution would inherit more information, as this way does incur some duplication of code (bad practise),
  *  but for now this is easier
+ * @author William Hunt
  */
 public class CommunicationHandler {
     private final transient Logger LOGGER = Logger.getLogger(AgentProgrammed.class.getName());

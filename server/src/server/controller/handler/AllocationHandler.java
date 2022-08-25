@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
 
+/**
+ * Rest handler for the allocation
+ */
 public class AllocationHandler extends RestHandler {
 
     public AllocationHandler(String handlerName, Simulator simulator) {

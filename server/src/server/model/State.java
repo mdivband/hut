@@ -20,6 +20,11 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+/**
+ * This is actually where all of the important information is. This is what is passed to the frontend for representation
+ *  and is probably sufficient to save and load scenarios
+ */
+/* Edited by Will */
 public class State {
 
     public static final int GAME_TYPE_SANDBOX = 0;
@@ -164,6 +169,9 @@ public class State {
         hazardHits.init();
     }
 
+    /**
+     * Resets all the values for if we pass through to another scenario after this one
+     */
     public void resetNext() {
         passthrough = false;
         nextFileName = "";
