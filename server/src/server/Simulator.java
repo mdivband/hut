@@ -445,8 +445,8 @@ public class Simulator {
     }
 
     private void pushConfig(int port) {
-        webRef = webRef+port;
-        connectionController.init(port, webRef);
+        webRef = webRef;//+port;
+        connectionController.init(port);//), webRef);
     }
 
     private boolean loadScenarioFromFile(String scenarioFile) {
