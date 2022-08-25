@@ -1,6 +1,6 @@
 # Hut Server User Guide
 ### University of Southampton
-##### Last Updated: 03/11/21, William Hunt
+##### Last Updated: 25/08/22, William Hunt
 ------
 This is intended as a shorter, simpler documentation for users to run and use this system
 
@@ -20,5 +20,5 @@ This is intended as a shorter, simpler documentation for users to run and use th
 #### Alternative: Run the .jar from command line
 
 1. Take the hut_server.jar file, and the web/ folder into a directory together (or as they are in the repo)
-2. Run the .jar with the following command: ```java -jar hut_server.jar [PORT]```
+2. Run the .jar with the following command: ```java -jar hut.jar [PORT]```
 3. Connect from a different PC with IP:Port in your browser

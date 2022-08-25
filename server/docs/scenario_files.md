@@ -1,6 +1,6 @@
 # DJI Hut Server - Scenario Files
 ### University of Southampton
-##### Last Updated: 06/01/2022, Will Hunt
+##### Last Updated: 25/08/2022, Will Hunt
 ------
 
 Scenarios can be loaded from a JSON file. The application looks for scenario files in the [scenarios folder][1]. The following document outlines the format of those files. Fields are the base keys in the JSON file (list in the [Fields](#fields) section); some of them are composed of objects which are outlined in the [Objects](#objects) section. [Optional Fields](#optional-fields) are base keys that have default values so can be left blank. 
@@ -21,7 +21,6 @@ Scenarios can be loaded from a JSON file. The application looks for scenario fil
 
 |       Field        |                                                                                                                                  Description                                                                                                                                  |          Possible Values           |   Default Values    |
 |:------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------:|:-------------------:|
-|  allocationMethod  |                                                                                                             Sets the method used for allocating tasks to agents.                                                                                                              |           maxsum, random           |       maxsum        |
 |  flockingEnabled   |                                Turns flocking of agents on or off. If on, any agents not assigned to a task will follow their neighbours based on average speed and heading of neighbours. If off, any agents without tasks remain stationary.                                |            true, false             |        false        |
 |     programmed     |                                                                                       A boolean value for whether the agents are all programmed (currently a mixture is not supported).                                                                                       |            true, false             |        false        |
 | communicationRange |                                                                                                         The number of metres radius for communication between drones                                                                                                          |      (Double precision float)      |         250         |
@@ -49,6 +48,17 @@ Scenarios can be loaded from a JSON file. The application looks for scenario fil
 {
   "gameId": "Test Scenario",
   "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
+  "flockingEnabled" : true,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "allocationMethod": "maxsum",
+  "allocationStyle": "manual",
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
