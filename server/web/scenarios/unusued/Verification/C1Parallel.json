@@ -1,14 +1,15 @@
 {
-  "gameId": "C1JustOn",
+  "gameId": "C1Parallel",
   "gameDescription": "Non programmed drones, to demonstrate the default configuration",
   "extendedUIOptions": {
     "predictions": true,
     "uncertainties": true
   },
   "flockingEnabled": false,
+  "loggingById": true,
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
-  "modelStyle": "on",
+  "modelStyle": "parallel",
   "varianceParameters": {
     "speedPerAgent": 0.5,
     "batteryPerAgent": 0.0002
@@ -47,6 +48,18 @@
     {
       "lat": 50.92830026788851,
       "lng": -1.4084331948655504
+    },
+    {
+      "lat": 50.92830026788851,
+      "lng": -1.409243221988048
+    },
+    {
+      "lat": 50.92830026788851,
+      "lng": -1.4084331948655504
+    },
+    {
+      "lat": 50.92902649589759,
+      "lng": -1.4078767126136915
     }
   ],
   "tasks": [

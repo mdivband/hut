@@ -1,7 +1,8 @@
 {
-  "gameId": "QERI",
+  "gameId": "WSGA",
   "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common",
-  "comment": "This is the Non-Complex - High scenario",
+  "comment": "This is the Non-Complex - Low scenario",
+  "loggingById": true,
   "extendedUIOptions": {
     "predictions": true,
     "uncertainties": true
@@ -12,7 +13,7 @@
   },
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 300,
-  "deepAllowed": true,
+  "deepAllowed": false,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285

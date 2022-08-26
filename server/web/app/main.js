@@ -132,12 +132,12 @@ var simulator = {
             });
             $("#prediction_canvas").accordion({
                 collapsible: true,
-                heightStyle: "content",
-                active: false
+                heightStyle: "content"
             });
             $("#mission_prediction_canvas").accordion({
                 collapsible: true,
-                heightStyle: "content"
+                heightStyle: "content",
+                active: false
             });
             $("#bounded_prediction_canvas").accordion({
                 collapsible: true,
@@ -265,7 +265,7 @@ var simulator = {
                         self.initialisedState = true;
                         MapController.swapMode(self.state.getEditMode(), false);
 
-                        if (self.state.getUserName() === "") {
+                        if (self.state.getUserName() === "" && self.state.isLoggingById()) {
                             // TODO get their name, also log it in backend
                             var name = null;
                             while (name == null || name === "") {

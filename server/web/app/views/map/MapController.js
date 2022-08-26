@@ -405,11 +405,18 @@ var MapController = {
             $("#prediction_canvas").hide();
             $("#mission_prediction_canvas").hide();
             $("#bounded_prediction_canvas").hide();
+            $("#accordion_smallview").accordion({
+                collapsible: true
+            });
             $("#addRemAgentButton").hide()
         } else {
             $("#prediction_canvas").show();
             $("#mission_prediction_canvas").show();
             $("#bounded_prediction_canvas").show();
+            $("#accordion_smallview").accordion({
+                collapsible: true,
+                active: false
+            });
             $("#addRemAgentButton").show()
         }
 

@@ -1,18 +1,16 @@
 {
-  "gameId": "TRRV",
-  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common",
-  "comment": "This is the Complex - High scenario",
-  "extendedUIOptions": {
-    "predictions": true,
-    "uncertainties": true
-  },
+  "gameId": "LKXR",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You do NOT have access to high-resolution scans in this mode, so you will only see the basic scans that are added to the view window automatically",
+  "comment": "This is the Complex - Low scenario",
+  "loggingById": true,
   "hub": {
     "lat": 50.928955248687274,
     "lng": -1.40882186832185
   },
   "uncertaintyRadius": 20.0,
-  "timeLimitSeconds": 300,
-  "deepAllowed": true,
+  "timeLimitSeconds": 480,
+  "deepAllowed": false,
+  "reviewPanel": true,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285

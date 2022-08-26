@@ -515,6 +515,17 @@ public class Simulator {
                 }
             }
 
+            if(GsonUtils.hasKey(obj,"loggingById")){
+                Object loggingById = GsonUtils.getValue(obj, "loggingById");
+                if(loggingById.getClass() == Boolean.class) {
+                    this.state.setLoggingById((Boolean) loggingById);
+                } else {
+                    LOGGER.warning("Expected boolean value for loggingById in scenario file. Received: '" +
+                            loggingById + "'. Set to false.");
+                    // state.flockingEnabled initialised with default value of false
+                }
+            }
+
             this.state.resetNext();
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");

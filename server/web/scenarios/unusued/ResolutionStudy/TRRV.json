@@ -2,6 +2,7 @@
   "gameId": "TRRV",
   "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You DO have access to high-resolution scans, so when you view low-resolution scans you can request a better scan which requires an agent to follow-up",
   "comment": "This is the Complex - High scenario",
+  "loggingById": true,
   "hub": {
     "lat": 50.928955248687274,
     "lng": -1.40882186832185

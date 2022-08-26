@@ -6,6 +6,7 @@
     "uncertainties": true
   },
   "flockingEnabled": false,
+  "loggingById": true,
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
   "modelStyle": "series",

@@ -90,6 +90,7 @@ public class State {
     private double missionBoundedSuccessChance;
     private double missionBoundedSuccessUnderChance;
     private double missionBoundedSuccessOverChance;
+    private boolean loggingById;
 
     private Map<String, Double> scoreInfo;
 
@@ -366,7 +367,6 @@ public class State {
     }
 
     public void setModelStyle(String modelStyle) {
-        System.out.println("setting style to " + modelStyle);
         this.modelStyle = modelStyle;
     }
 
@@ -790,6 +790,14 @@ public class State {
 
     public boolean isShowReviewPanel() {
         return showReviewPanel;
+    }
+
+    public boolean isLoggingById() {
+        return loggingById;
+    }
+
+    public void setLoggingById(boolean loggingById) {
+        this.loggingById = loggingById;
     }
 
     private class HazardHit {
