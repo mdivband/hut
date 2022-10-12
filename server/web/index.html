@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="author" content="Joe Early">
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <meta name="viewport"
+              content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width"/>
+
+        <title>MultiUAV - Home</title>
+
+        <script type="text/javascript" src="lib/lab/LAB-2.0.3.min.js"></script>
+        <script type="text/javascript" src="loadMenu.js"></script>
+
+        <link rel="stylesheet" href="homePageStyles.css"/>
+    </head>
+    <body>
+        <div id="mainButtonGroup">
+            <button class="mainButton topButton" disabled style="height: 33%;">Create Scenario</button>
+            <input id="buttonLoadScenario" class="mainButton middleButton" type="button" value="Load Scenario" style="height: 33%;">
+            <input id="buttonSandboxMode" class="mainButton bottomButton" type="button" value="Sandbox Mode" style="height: 33%;">
+        </div>
+
+        <div id="loadScenarioDiv">
+            <input id="scenarioSearch" type="text" value="Search">
+            <div id="scenarioListDiv">
+                <ul id="scenarioList"></ul>
+            </div>
+            <div id="loadScenarioButtonDiv">
+                <input id="buttonStartScenario" class="mainButton topButton" type="button" value="Load" style="height: 50%;" disabled>
+                <input id="buttonCancelLoadScenario" class="mainButton bottomButton" type="button" value="Cancel" style="height: 50%;">
+            </div>
+        </div>
+
+        <div id="inProgressDiv">
+            <p style="text-align: center;">An operation is already in progress.</p>
+            <input id="buttonResumeOperation" class="mainButton topButton" type="button" value="Resume Operation" style="height: 33%;">
+            <input id="buttonAbortOperation"  class="mainButton bottomButton" type="button" value="Abort Operation" style="height: 33%;">
+        </div>
+
+        <p id="loadScenarioErrorText"></p>
+    </body>
+</html>

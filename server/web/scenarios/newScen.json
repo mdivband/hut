@@ -1,0 +1,101 @@
+
+{
+  "gameId": "NEW SCENARIO",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You DO have access to high-resolution scans, so when you view low-resolution scans you can request a better scan which requires an agent to follow-up",
+  "comment": "This is the Complex - High scenario",
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
+  "uncertaintyRadius": 20.0,
+  "timeLimitSeconds": 480,
+  "deepAllowed": true,
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.409
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.408
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.407
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.406
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.405
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 1
+    }
+  ],
+  "targets": [
+    {
+      "lat": 50.929082575328884,
+      "lng": -1.4122195030671403,
+      "type": 1,
+      "description": "This drone reports cloudy weather in the area. A drone has reported 85% certainty of a target in this area. It appears to be a human target",
+      "data": [
+        "images/Complex/Complex - High Res/ComplexHighT6.png",
+        "images/Complex/Complex - Low Res/ComplexLowNT4.png",
+        "images/Complex/Complex - Low Res/ComplexLowT6.png",
+        "images/Complex/Complex - Low Res/ComplexLowNT1.png"
+      ],
+      "real": true
+    },
+    {
+      "lat": 50.932706968098096,
+      "lng": -1.4157600189667985,
+      "type": 1,
+      "description": "This drone reports clear weather in the area. A drone has reported 98% certainty of at least 1 target in this area. It appears that there is a human target",
+      "data": [
+        "images/Complex/Complex - High Res/ComplexHighT1.png",
+        "images/Complex/Complex - High Res/ComplexHighT2.png",
+        "images/Complex/Complex - Low Res/ComplexLowT1.png"
+      ],
+      "real": true
+    },
+    {
+      "lat": 50.93443792170355,
+      "lng": -1.4063186432343766,
+      "type": 1,
+      "description": "This drone reports clear weather in the area. A drone has reported less than 15% certainty of a target in this area. It appears that no humans are in this area",
+      "data": [
+        "images/Complex/Complex - Low Res/ComplexLowNT4.png",
+        "images/Complex/Complex - High Res/ComplexHighNT1.png",
+        "images/Complex/Complex - Low Res/ComplexLowT4.png",
+        "images/Complex/Complex - Low Res/ComplexLowNT5.png",
+        "images/Complex/Complex - High Res/ComplexHighT4.png",
+        "images/Complex/Complex - High Res/ComplexHighNT5.png"
+
+      ],
+      "real": false
+    },
+    {
+      "lat": 50.93528985177357,
+      "lng": -1.4016837860566422,
+      "type": 1,
+      "description": "This drone reports cloudy weather in the area. A drone has reported 70% certainty of a target in this area. It appears to be a human target",
+      "data": ["images/Complex/Complex - High Res/ComplexHighT2.png"],
+      "real": true
+    }
+  ]
+}

@@ -427,9 +427,6 @@ public class State {
         while (!(targetData.get(id).size() == 1 || targetData.get(id).size() == 4 || targetData.get(id).size() == 6)) {
             targetData.get(id).add("");
         }
-        System.out.println(id + " -> ");
-        data.forEach(d -> System.out.println("    " + d));
-        System.out.println();
 
         /*
         targetData.get(id).add("First drone says 78% chance");
