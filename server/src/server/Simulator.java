@@ -458,6 +458,9 @@ public class Simulator {
                         ((AdjustableTarget) target).addData(dataString);
                     }
 
+                    String desc = GsonUtils.getValue(targetJson, "description");
+                    ((AdjustableTarget) target).setDescription(desc);
+
 
 
                     //Hide all targets initially - they must be found!!

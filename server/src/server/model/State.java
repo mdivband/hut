@@ -73,6 +73,7 @@ public class State {
 
     //                   ID->ImageName
     private final Map<String, List<String>> targetData = new ConcurrentHashMap<>(16);
+    private final Map<String, String> targetDescriptions = new ConcurrentHashMap<>(16);;
     private final List<String> pendingIds = new ArrayList<>(16);
 
     private String userName = "";
@@ -118,6 +119,7 @@ public class State {
         hazardHits.clear();
 
         targetData.clear();
+        targetDescriptions.clear();
         uiOptions.clear();
 
         hazardHits.init();
@@ -405,9 +407,16 @@ public class State {
         return targetData;
     }
 
-    public void addToTargetData(String id, List<String> data) {
+    public Map<String, String> getTargetDescriptions() {
+        return targetDescriptions;
+    }
+
+    public void addToTargetData(String id, List<String> data, String desc) {
         if (!targetData.containsKey(id)) {
             targetData.put(id, new ArrayList<>());
+        }
+        if (!targetDescriptions.containsKey(id)) {
+            targetDescriptions.put(id, desc);
         }
         // TODO Select the number of data elements to show based on number of agents etc
         targetData.get(id).addAll(data);
@@ -418,6 +427,9 @@ public class State {
         while (!(targetData.get(id).size() == 1 || targetData.get(id).size() == 4 || targetData.get(id).size() == 6)) {
             targetData.get(id).add("");
         }
+        System.out.println(id + " -> ");
+        data.forEach(d -> System.out.println("    " + d));
+        System.out.println();
 
         /*
         targetData.get(id).add("First drone says 78% chance");

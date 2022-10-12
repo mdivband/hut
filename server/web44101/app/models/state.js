@@ -28,6 +28,7 @@ App.Models.State  = Backbone.Model.extend({
         uiOptions: {},
         uncertaintyRadius: 0,
         targetData : {},
+        targetDescriptions: "",
         pendingIds: {},
         passthrough: false,
         nextFileName: "",
@@ -150,6 +151,9 @@ App.Models.State  = Backbone.Model.extend({
     },
     getTargetData: function () {
         return this.get("targetData")
+    },
+    getTargetDescriptions: function () {
+        return this.get("targetDescriptions")
     },
     isPassthrough: function () {
         return this.get("passthrough");

@@ -6,6 +6,7 @@ import server.model.target.AdjustableTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 
+import javax.swing.text.Style;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,10 +54,11 @@ public class ImageController extends AbstractController {
         if (t instanceof AdjustableTarget at) {  // This also asserts that t is not null
             synchronized (simulator.getState().getTargetData()) {
                 List<String> dataToAdd = at.getData();
+                String description = at.getDescription();
                 double timeToAdd = simulator.getState().getTime() + SHALLOW_SCAN_TIME;
 
                 // TODO this is where we will decide how much info to share
-                scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), dataToAdd));
+                scheduledImages.put(timeToAdd, new ScheduledImage(at.getId(), dataToAdd, description));
 
                 LOGGER.info(String.format("%s; TKIMG; Taking image for target of deep/shallow type with actual classification (id, filename, isReal); %s; %s; %s", Simulator.instance.getState().getTime(), at.getId(), dataToAdd, at.isReal()));
 
@@ -68,8 +70,8 @@ public class ImageController extends AbstractController {
      * Adds the given image to the required maps by target id, filename, and tagged as deep or not
      * @param id
      */
-    private void addImage(String id, List<String> data) {
-        simulator.getState().addToTargetData(id, data);
+    private void addImage(String id, List<String> data, String desc) {
+        simulator.getState().addToTargetData(id, data, desc);
     }
 
     /**
@@ -77,7 +79,7 @@ public class ImageController extends AbstractController {
      * @param scheduledImage
      */
     private void addImage(ScheduledImage scheduledImage) {
-        addImage(scheduledImage.getId(), scheduledImage.data);
+        addImage(scheduledImage.getId(), scheduledImage.data, scheduledImage.description);
     }
 
     /**
@@ -147,10 +149,12 @@ public class ImageController extends AbstractController {
     private class ScheduledImage {
         private String id;
         private List<String> data;
+        private String description;
 
-        public ScheduledImage(String id, List<String> data) {
+        public ScheduledImage(String id, List<String> data, String description) {
             this.id = id;
             this.data = data;
+            this.description = description;
         }
 
         @Override
@@ -176,6 +180,7 @@ public class ImageController extends AbstractController {
         public void setData(List<String> data) {
             this.data = data;
         }
+
     }
 
 

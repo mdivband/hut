@@ -10,6 +10,10 @@
   "uncertaintyRadius": 20.0,
   "timeLimitSeconds": 480,
   "deepAllowed": true,
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
@@ -48,11 +52,12 @@
       "lat": 50.929082575328884,
       "lng": -1.4122195030671403,
       "type": 1,
+      "description": "This drone reports cloudy weather in the area. A drone has reported 85% certainty of a target in this area. It appears to be a human target",
       "data": [
         "images/Complex/Complex - High Res/ComplexHighT6.png",
-        "A drone has reported\n85% certainty",
-        "This drone can't see anything relevant",
-        "images/Complex/Complex - Low Res/ComplexLowNT4.png"
+        "images/Complex/Complex - Low Res/ComplexLowNT4.png",
+        "images/Complex/Complex - Low Res/ComplexLowT6.png",
+        "images/Complex/Complex - Low Res/ComplexLowNT1.png"
       ],
       "real": true
     },
@@ -60,12 +65,11 @@
       "lat": 50.932706968098096,
       "lng": -1.4157600189667985,
       "type": 1,
+      "description": "This drone reports clear weather in the area. A drone has reported 98% certainty of at least 1 target in this area. It appears that there is a human target",
       "data": [
         "images/Complex/Complex - High Res/ComplexHighT1.png",
         "images/Complex/Complex - High Res/ComplexHighT2.png",
-        "This drone reports cloudy weather",
-        "images/Complex/Complex - Low Res/ComplexLowT1.png",
-        "This drone has nothing to report"
+        "images/Complex/Complex - Low Res/ComplexLowT1.png"
       ],
       "real": true
     },
@@ -73,11 +77,15 @@
       "lat": 50.93443792170355,
       "lng": -1.4063186432343766,
       "type": 1,
+      "description": "This drone reports clear weather in the area. A drone has reported less than 15% certainty of a target in this area. It appears that no humans are in this area",
       "data": [
-        "A drone has reported\n30% certainty",
-        "This drone can't see anything relevant",
         "images/Complex/Complex - Low Res/ComplexLowNT4.png",
-        "images/Complex/Complex - High Res/ComplexHighNT6.png"
+        "images/Complex/Complex - High Res/ComplexHighNT1.png",
+        "images/Complex/Complex - Low Res/ComplexLowT4.png",
+        "images/Complex/Complex - Low Res/ComplexLowNT5.png",
+        "images/Complex/Complex - High Res/ComplexHighT4.png",
+        "images/Complex/Complex - High Res/ComplexHighNT5.png"
+
       ],
       "real": false
     },
@@ -85,6 +93,7 @@
       "lat": 50.93528985177357,
       "lng": -1.4016837860566422,
       "type": 1,
+      "description": "This drone reports cloudy weather in the area. A drone has reported 70% certainty of a target in this area. It appears to be a human target",
       "data": ["images/Complex/Complex - High Res/ComplexHighT2.png"],
       "real": true
     }

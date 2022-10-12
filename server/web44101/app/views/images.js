@@ -148,11 +148,13 @@ App.Views.Images = Backbone.View.extend({
         }
         //console.log(" ")
 
+        /*
         if (list === "") {
             this.pendingPanel.innerHTML = "NONE";
         } else {
             this.pendingPanel.innerHTML = list;
         }
+         */
 
         /*
         console.log("=apb=");

@@ -7,6 +7,7 @@ App.Views.Review = Backbone.View.extend({
         this.views = options.views;
         this.canvas = options.canvas;
         this.ctx = options.ctx;
+        this.pendingPanel = document.getElementById("pending_scans");
 
         this.currentTargetId = "";
 
@@ -192,8 +193,8 @@ App.Views.Review = Backbone.View.extend({
                         let img = new Image();
                         img.onload = function () {
                             self.ctx.lineWidth = 3;
-                            self.ctx.drawImage(img, (img.width / 3) * x, (img.height / 3) * y, img.width / 3, img.height / 3);
-                            self.ctx.strokeRect((img.width / 3) * x, (img.height / 3) * y, img.width / 3, img.height / 3);
+                            self.ctx.drawImage(img, (self.canvas.width / 3) * x, (self.canvas.height / 3) * y, self.canvas.width / 3, self.canvas.height / 3);
+                            self.ctx.strokeRect((self.canvas.width / 3) * x, (self.canvas.height / 3) * y, self.canvas.width / 3, self.canvas.height / 3);
                             console.log("i = " + i + "placing at " + x + ", " + y)
                         };
                         console.log("img.src = " + data[i] + " img = " + img)
@@ -219,45 +220,8 @@ App.Views.Review = Backbone.View.extend({
             alert(e);
         }
 
-        /*
-        try {
-            var img = new Image();
-            img.onload = function() {
-
-                self.originalWidth = $("#image_review_canvas").width();
-                self.originalHeight = $("#image_review_canvas").height();
-
-                while ($("#image_review_canvas").width() < $("#image_review").width() || $("#image_review_canvas").height() < $("#image_review").height()) {
-                    self.scale += 0.25;
-                    $("#image_review_canvas").width(self.originalWidth * self.scale);
-                    $("#image_review_canvas").height(self.originalHeight * self.scale);
-
-                }
-
-                self.canvas.width = img.width;
-                self.canvas.height = img.height;
-                $("#image_review_canvas").css({top: 0, left: 0, position:'relative'});
-                self.ctx.lineWidth = 3;
-                self.ctx.drawImage(img, 0, 0, img.width / 2, img.height / 2);
-                self.ctx.strokeRect(0, 0, img.width / 2, img.height / 2);
-            };
-            img.src = iRef;  // Use the argument, so it works regardless of update flag
-
-            var img2 = new Image();
-            img2.onload = function() {
-
-                self.ctx.lineWidth = 3;
-                self.ctx.drawImage(img2, img2.width / 2, img2.height / 2, img2.width / 2, img2.height / 2);
-                self.ctx.strokeRect(img2.width / 2, img2.height / 2, img2.width / 2, img2.height / 2);
-            };
-            img2.src = iRef2;  // Use the argument, so it works regardless of update flag
-
-        } catch (e) {
-            alert("update error: " + e)
-        }
-
-         */
-
+        var descriptions = this.state.getTargetDescriptions();
+        this.pendingPanel.innerHTML = descriptions[id];
     },
     clearImage : function () {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
