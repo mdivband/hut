@@ -82,11 +82,12 @@ public class MissionProgrammer {
                     boolean needsToExpand = false;
                     boolean needsToShrink = false;
                     boolean needsToWrite = false;
+                    stepCounter++; // This stepcounter is per total swarm step, not per agent step
                     for (AgentProgrammed a : agents) {
                         if ((a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getLevel() > 0) {
-                            stepCounter++;
+                            //stepCounter++; // This stepcounter is per agent step, not per total swarm step
                             waitCounter++;
-                            if (stepCounter % 10_000 == 0) {
+                            if (stepCounter % 10 == 1) {
                                 needsToWrite = true;
                             }
                             //if (stepCounter == 200_000 || stepCounter == 2_000_000  || stepCounter == 5_000_000) {
@@ -94,7 +95,7 @@ public class MissionProgrammer {
                             // 200,000 * 5 agents = 1,000,000 -> 1,200,000
                             // 200,000 * 21 agents = 4,200,000 -> 5,400,000
                             // 200,000 * 85 agents = 17,000,000 -> 22,400,000
-                            if (stepCounter == 150_000 || stepCounter == 3_500_000 || stepCounter == 10_000_000) {
+                            if (stepCounter == 1_000 || stepCounter == 2_000 || stepCounter == 3_000) {
                                 needsToExpand = true;
                                 waitCounter = 0;
                             }
@@ -102,7 +103,8 @@ public class MissionProgrammer {
                     }
                     //stepCounter ++;
                     //if (stepCounter % ((NUM_STEPS_PER_EPOCH * (hierarchy.layers.size() - 1) / 10)) == 0) {
-                    if (stepCounter > 25_000_000) {
+                    //if (stepCounter > 25_000_000) {
+                    if (stepCounter > 5_000) {
                         System.exit(1);
                     } else if (needsToExpand) {
                         addAgentIfRequired();
@@ -161,7 +163,7 @@ public class MissionProgrammer {
                          */
 
                         DecimalFormat f = new DecimalFormat("##.00");
-                        File csvOutputFile = new File("IncTopLaterR3.csv");
+                        File csvOutputFile = new File("FullPerSwarmStep.csv");
                         try {
                             FileWriter fw = new FileWriter(csvOutputFile, true);
                             fw.write(r
@@ -289,7 +291,7 @@ public class MissionProgrammer {
     }
 
     private void removeAgentsIfRequired() {
-        if (stepCounter < 16_000_000) {
+        if (stepCounter < 10_000_000) {
             // Drop layer
             hierarchy.layers.get(0).forEach(a -> {
                 Simulator.instance.getState().getAgents().remove(a);
@@ -414,7 +416,7 @@ public class MissionProgrammer {
     }
 
     private void groupSetup() {
-/*
+
         while (Simulator.instance.getState().getAgents().size() < 341 + 1) {
             if (agents.size() < 341) {
                 AgentProgrammed ap = (AgentProgrammed) Simulator.instance.getAgentController().addProgrammedAgent(
@@ -425,9 +427,6 @@ public class MissionProgrammer {
                 agents.add(ap);
             }
         }
-
- */
-
 
 
         initialiseLearningAllocators();
@@ -464,7 +463,7 @@ public class MissionProgrammer {
         }
     }
 
-    private float calculateTotalRewardFrom(AgentProgrammed root, int lvl, List<AgentProgrammed> subs) {
+    public float calculateTotalRewardFrom(AgentProgrammed root, int lvl, List<AgentProgrammed> subs) {
         List<AgentProgrammed> agentsToConsider = new ArrayList<>();
 
         List<AgentProgrammed> toAdd = new ArrayList<>(subs);

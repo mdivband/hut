@@ -25,8 +25,8 @@ public class NetTester {
 
     private float calculateActualRewardFromArray(float[][] state) {
         List<int[]> agents = new ArrayList<>();
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
                 if (state[i][j] == 1) {
                     agents.add(new int[]{i, j});
                 }
@@ -34,10 +34,10 @@ public class NetTester {
         }
 
         int numPointsCovered = 0;
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
                 for (int[] cell : agents) {
-                    if (cell[0] - 4 <= i && cell[0] + 4 >= i && cell[1] - 4 <= j && cell[1] + 4 >= j) {
+                    if (cell[0] == i && cell[1] == j) {
                         numPointsCovered++;
                         break;
                     }
@@ -60,6 +60,7 @@ public class NetTester {
         List<Double> deltas = new ArrayList<>();
         Random random = new Random();
         for (int run=0; run<numTests; run++) {
+            /*
             float[] state = new float[256];
             for (int i = 0; i < 256; i++) {
                 state[i] = 0;
@@ -80,13 +81,37 @@ public class NetTester {
             for (int i = 0; i < 256; i++) {
                 inSt[i] = state[i];
             }
+             */
+            float[] state = new float[4];
+            for (int i = 0; i < 4; i++) {
+                state[i] = 0;
+            }
+            state[(random.nextInt(2) * 2) + random.nextInt(2)] = 1;
+            state[(random.nextInt(2) * 2) + random.nextInt(2)] = 1;
+            state[(random.nextInt(2) * 2) + random.nextInt(2)] = 1;
+            state[(random.nextInt(2) * 2) + random.nextInt(2)] = 1;
+
+            float[][] thisState = new float[2][2];
+            for (int j = 0; j < 2; j++) {
+                float[] row = new float[4];
+                System.arraycopy(state, j * 2, row, 0, 2);
+                thisState[j] = row;
+            }
+
+            double[] inSt = new double[4];
+            for (int i = 0; i < 4; i++) {
+                inSt[i] = state[i];
+            }
             float res = compute(inSt);
-            float actual = (((calculateActualRewardFromArray(thisState) / 256f)));
+            float actual = (((calculateActualRewardFromArray(thisState) / 4f)));
+
             double delta = actual - res;
             deltas.add(delta);
+            // TODO print each of these. The results we get from the sample are near perfect but the test disagrees here?
+            //System.out.println("---Run " + runNumber + "." + run + ": " + res + " (" + actual + ") " + " d = " + delta);
         }
-        System.out.println("Run " + runNumber + " -> Average delta: " + (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble() * 256f));
-        return (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble() * 256f);
+        //System.out.println("Run " + runNumber + " -> Average delta: " + (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble()));
+        return (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble());
         //System.out.println("Run " + runNumber + " -> Average delta: " + (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble() * 255f));
     }
 
