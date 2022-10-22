@@ -2,21 +2,19 @@ import os
 import numpy as np
 import sys
 
+salt = str(sys.argv[4])
 webRef = str(sys.argv[1])
-salt = str(sys.argv[2])
 # For now I'm calling this a salt. It's a random identifier
 
 # Set dir
-DroneStatusDir = './'+webRef+'/ModelFiles/remove1drone.txt'
-TaskConfigurationDir = './'+webRef+'/ModelFiles/remove1tasks.txt'
 PrismDir = './libs/prism-4.7-linux64/bin/prism'
 PrismModelDir = './'+webRef+'/PrismModel'
-PrismOutputDir1 = './'+webRef+'/ModelFiles/remove1results'+str(salt)+'.txt'
 PrismOutputDir2 = './'+webRef+'/ModelFiles/remove1results_boundedT'+str(salt)+'.txt'
 
 # Process parameters
-DroneStatus = np.loadtxt(DroneStatusDir)
-PendingTasks = np.loadtxt(TaskConfigurationDir)
+# Note the hardcoded length 8 line
+DroneStatus = np.fromstring(str(sys.argv[2]), sep=' ').reshape(-1, 8)
+PendingTasks = np.fromstring(str(sys.argv[3]), sep=' ').reshape(-1, 1)
 NumofDrones = DroneStatus.shape[0]
 NumofPendingTasks = PendingTasks.shape[0]
 NumofRegions = 7
@@ -118,23 +116,10 @@ NewModel.close()
 
 os.rename(PrismModelDir + '/remove1_model.txt', PrismModelDir + '/remove1_model.pm')
 
-# Create the command
-cmd1 = PrismDir + ' ' + PrismModelDir + '/remove1_model.pm' + ' ' + PrismModelDir + '/property.pctl' \
-       + ' ' + '-prop' + ' ' + 'unbounded' + ' ' + '-sim' + ' ' + '-exportresults' + ' ' + PrismOutputDir1 + ' ' + '-const' + ' '
-
 cmd2 = PrismDir + ' ' + PrismModelDir + '/remove1_model.pm' + ' ' + PrismModelDir + '/property.pctl' \
        + ' ' + '-prop' + ' ' + 'bounded' + ' ' + '-sim' + ' ' + '-exportresults' + ' ' + PrismOutputDir2 + ' ' + '-const' + ' '
 
 for i in range(0, NumofDrones):
-    cmd1 += 'initPlace' + str(i) + '=' + str(int(DroneStatus[i][0])) + ',' \
-            + 'initTaskLoc' + str(i) + '=' + str(DroneStatus[i][1]) + ',' \
-            + 'initBattery' + str(i) + '=' + str(DroneStatus[i][2]) + ',' \
-            + 'initDelivered' + str(i) + '=' + str(DroneStatus[i][3]) + ',' \
-            + 'initCharge' + str(i) + '=' + str(DroneStatus[i][4]) + ',' \
-            + 'initReturn' + str(i) + '=' + str(DroneStatus[i][5]) + ',' \
-            + 'initAlive' + str(i) + '=' + str(DroneStatus[i][6]) + ',' \
-            + 'initTurning' + str(i) + '=' + str(DroneStatus[i][7]) + ','
-
     cmd2 += 'initPlace' + str(i) + '=' + str(int(DroneStatus[i][0])) + ',' \
             + 'initTaskLoc' + str(i) + '=' + str(DroneStatus[i][1]) + ',' \
             + 'initBattery' + str(i) + '=' + str(DroneStatus[i][2]) + ',' \
@@ -145,33 +130,19 @@ for i in range(0, NumofDrones):
             + 'initTurning' + str(i) + '=' + str(DroneStatus[i][7]) + ','
 
 for j in range(0, NumofRegions):
-    cmd1 += 'initTaskP' + str(j + 1) + '=' + str(TaskConfiguration[j])
     cmd2 += 'initTaskP' + str(j + 1) + '=' + str(TaskConfiguration[j])
-    if j < NumofRegions - 1:
-        cmd1 += ','
     cmd2 += ','
 
 cmd2 += 'T=300:300:18000'
-
-os.system(cmd1)
-
-# Remove first line ('Result') in results.txt
-old_file = open(PrismOutputDir1, 'r')
-lines = old_file.readlines()
-old_file.close()
-
-new_file = open(PrismOutputDir1, 'w')
-for line in lines:
-    if line.strip('\n') != 'Result':
-        new_file.write(line)
-new_file.close()
-
 os.system(cmd2)
 
 # Remove first line in results_bounded.txt
-old_file = open(PrismOutputDir2, 'r')
-lines = old_file.readlines()
-old_file.close()
+try:
+    old_file = open(PrismOutputDir2, 'r')
+    lines = old_file.readlines()
+    old_file.close()
+except:
+    pass
 
 new_file = open(PrismOutputDir2, 'w')
 for line in lines[1:]:
@@ -181,4 +152,4 @@ new_file.close()
 # Remove the model file
 os.remove(PrismModelDir + '/remove1_model.pm')
 
-# print('remove1drone model done \n')
+# print('remove1 model done \n')

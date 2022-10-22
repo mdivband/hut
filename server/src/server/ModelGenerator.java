@@ -23,10 +23,11 @@ public class ModelGenerator {
      * @param webRef
      * @return
      */
-    public static boolean run(State state, String webRef) {
+    public static String[] run(State state, String webRef) {
         String droneRep = generateDroneRep(state);
         String taskRep = generateTaskRep(state);
-        return generate(droneRep, taskRep, webRef+"/ModelFiles/currentDrones.txt", webRef+"/ModelFiles/currentTasks.txt");
+        return new String[] {droneRep, taskRep};
+        //return generate(droneRep, taskRep, webRef+"/ModelFiles/currentDrones.txt", webRef+"/ModelFiles/currentTasks.txt");
     }
 
     /**
