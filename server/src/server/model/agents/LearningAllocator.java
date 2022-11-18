@@ -51,6 +51,56 @@ public abstract class LearningAllocator {
         System.out.println("NOT IMPLEMENTED");
     }
 
+    public void randStep() {
+
+        System.out.println(subordinates);
+        for (AgentProgrammed hero : subordinates) {
+            int[] heroCell = new int[]{((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getxCell(),
+                    ((TensorRLearner) hero.getProgrammerHandler().getAgentProgrammer().getLearningAllocator()).getyCell()};
+
+            int best = Simulator.instance.getRandom().nextInt(5);
+            System.out.println(hero.getId() + " -> " + best);
+            if (best == 0) {
+                // No move
+                if (heroCell[0] > 5 || heroCell[0] < 0 || heroCell[1] > 5 || heroCell[1] < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1]));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0]);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
+            } else if (best == 1) {
+                if (heroCell[0] > 5 || heroCell[0] < 0 || heroCell[1] + 1 > 5 || heroCell[1] + 1 < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1] + 1));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0]);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1] + 1);
+            } else if (best == 2) {
+                if (heroCell[0] > 5 || heroCell[0] < 0 || heroCell[1] - 1 > 5 || heroCell[1] - 1 < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0], heroCell[1] - 1));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0]);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1] - 1);
+            } else if (best == 3) {
+                if (heroCell[0] + 1 > 5 || heroCell[0] + 1 < 0 || heroCell[1] > 5 || heroCell[1] < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0] + 1, heroCell[1]));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0] + 1);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
+            } else if (best == 4) {
+                if (heroCell[0] - 1 > 5 || heroCell[0] - 1 < 0 || heroCell[1] > 5 || heroCell[1] < 0) {
+                    return;
+                }
+                hero.programmerHandler.manualSetTask(calculateEquivalentCoordinate(heroCell[0] - 1, heroCell[1]));
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setxCell(heroCell[0] - 1);
+                ((TensorRLearner) hero.programmerHandler.getAgentProgrammer().getLearningAllocator()).setyCell(heroCell[1]);
+            }
+            hero.programmerHandler.step();
+        }
+    }
+
     public void updateBounds(Coordinate position) {
         double topBound = position.getLatitude() + ((Math.pow(2, level-1) * Y_SPAN) / 2);
         double botBound = position.getLatitude() - ((Math.pow(2, level-1) * Y_SPAN) / 2);
@@ -118,7 +168,7 @@ public abstract class LearningAllocator {
             for (int j = 0; j < ySteps; j++) {
                 for (AgentProgrammed a : subordinates) {
                     int[] cell = calculateEquivalentGridCell(a.getCoordinate());
-                    if (cell[0] - 4 <= i && cell[0] + 4 >= i && cell[1] - 4 <= j && cell[1] + 4 >= j) {
+                    if (cell[0] - 1 <= i && cell[0] + 1 >= i && cell[1] - 1 <= j && cell[1] + 1 >= j) {
                         numPointsCovered++;
                         break;
                     }

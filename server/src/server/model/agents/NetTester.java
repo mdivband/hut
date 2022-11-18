@@ -18,9 +18,8 @@ public class NetTester {
     }
 
     public NetTester() {
-        System.out.println("Building...");
         this.convolutionNetwork = new ConvolutionalNetwork.Builder()
-                .withInputLayer(16, 16, 1)
+                .withInputLayer(24, 24, 1)
                 .withConvolutionLayer(1, 1,1)
                 .withFullConnectedLayer(1)
                 .build();
@@ -40,19 +39,25 @@ public class NetTester {
     }
 
     private float calculateActualRewardFromArray(float[][] state) {
-        List<int[]> agents = new ArrayList<>();
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
-                if (state[i][j] == 1) {
-                    agents.add(new int[]{i, j});
+        List<int[]> covered = new ArrayList<>();
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 24; j++) {
+                for (int a = -1; a <= 1; a++) {
+                    for (int b = -1; b <= 1; b++) {
+                        try {
+                            if (state[i+a][j+b] == 1 && !covered.contains(new int[]{i, j})) {
+                                covered.add(new int[]{i, j});
+                            }
+                        } catch (Exception ignored) {}
+                    }
                 }
             }
         }
 
         int numPointsCovered = 0;
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
-                for (int[] cell : agents) {
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 24; j++) {
+                for (int[] cell : covered) {
                     if (cell[0] == i && cell[1] == j) {
                         numPointsCovered++;
                         break;
@@ -65,7 +70,7 @@ public class NetTester {
     }
 
     private void train(double[] inSt, double actual) {
-        org.neuroph.core.data.DataSet ds = new org.neuroph.core.data.DataSet(256, 1);
+        org.neuroph.core.data.DataSet ds = new org.neuroph.core.data.DataSet(576, 1);
         DataSetRow item = new DataSetRow(inSt, new double[] {actual});
         ds.add(item);
         convolutionNetwork.learn(ds);
@@ -80,63 +85,70 @@ public class NetTester {
         Random random = new Random();
         for (int run=0; run<numTests; run++) {
             /*
-            float[] state = new float[256];
-            for (int i = 0; i < 256; i++) {
+            float[] state = new float[576];
+            for (int i = 0; i < 576; i++) {
                 state[i] = 0;
             }
-            state[(random.nextInt(16) * 16) + random.nextInt(16)] = 1;
-            state[(random.nextInt(16) * 16) + random.nextInt(16)] = 1;
-            state[(random.nextInt(16) * 16) + random.nextInt(16)] = 1;
-            state[(random.nextInt(16) * 16) + random.nextInt(16)] = 1;
+            state[(random.nextInt(24) * 24) + random.nextInt(24)] = 1;
+            state[(random.nextInt(24) * 24) + random.nextInt(24)] = 1;
+            state[(random.nextInt(24) * 24) + random.nextInt(24)] = 1;
+            state[(random.nextInt(24) * 24) + random.nextInt(24)] = 1;
 
-            float[][] thisState = new float[16][16];
-            for (int j = 0; j < 16; j++) {
-                float[] row = new float[16];
-                System.arraycopy(state, j * 16, row, 0, 16);
+            float[][] thisState = new float[24][24];
+            for (int j = 0; j < 24; j++) {
+                float[] row = new float[24];
+                System.arraycopy(state, j * 24, row, 0, 24);
                 thisState[j] = row;
             }
 
-            double[] inSt = new double[256];
-            for (int i = 0; i < 256; i++) {
+            double[] inSt = new double[576];
+            for (int i = 0; i < 576; i++) {
                 inSt[i] = state[i];
             }
              */
-            float[] state = new float[256];
-            for (int i = 0; i < 256; i++) {
+            float[] state = new float[576];
+            for (int i = 0; i < 576; i++) {
                 state[i] = 0;
             }
 
+            int x = random.nextInt(24);
+            int y = random.nextInt(24);
+            state[(x * 24) + y] = 1;
+
+            /*
             for (int i = 0; i < 64; i++) {
                 // For now, we pick a square and do the other three above, beside, and (positive) diagonally from them
-                int x = random.nextInt(16);
-                int y = random.nextInt(16);
+                int x = random.nextInt(24);
+                int y = random.nextInt(24);
                 try {
-                    state[(x * 16) + y] = 1;
+                    state[(x * 24) + y] = 1;
                 } catch (Exception ignored) {}
                 try {
-                    state[((x+1) * 16) + y] = 1;
+                    state[((x+1) * 24) + y] = 1;
                 } catch (Exception ignored) {}
                 try {
-                    state[(x * 16) + y + 1] = 1;
+                    state[(x * 24) + y + 1] = 1;
                 } catch (Exception ignored) {}
                 try {
-                    state[((x+1) * 16) + y + 1] = 1;
+                    state[((x+1) * 24) + y + 1] = 1;
                 } catch (Exception ignored) {}
             }
 
-            float[][] thisState = new float[16][16];
-            for (int j = 0; j < 16; j++) {
-                float[] row = new float[256];
-                System.arraycopy(state, j * 16, row, 0, 16);
+             */
+
+            float[][] thisState = new float[24][24];
+            for (int j = 0; j < 24; j++) {
+                float[] row = new float[576];
+                System.arraycopy(state, j * 24, row, 0, 24);
                 thisState[j] = row;
             }
 
-            double[] inSt = new double[256];
-            for (int i = 0; i < 256; i++) {
+            double[] inSt = new double[576];
+            for (int i = 0; i < 576; i++) {
                 inSt[i] = state[i];
             }
             float res = compute(inSt);
-            float actual = (((calculateActualRewardFromArray(thisState) / 256f)));
+            float actual = (((calculateActualRewardFromArray(thisState) / 576f)));
 
             double delta = actual - res;
             deltas.add(delta);
@@ -145,7 +157,7 @@ public class NetTester {
         }
         double av = (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble());
         if (debug) {
-            System.out.println("Run " + runNumber + " -> Average delta: " + av + " (scaled for 255 => " + (av * 255f) + ")");
+            System.out.println("Run " + runNumber + " -> Average delta: " + av + " (scaled for 576 => " + (av * 576f) + ")");
         }
         return av;
         //System.out.println("Run " + runNumber + " -> Average delta: " + (deltas.stream().mapToDouble(Double::doubleValue).average().getAsDouble() * 255f));
@@ -155,42 +167,49 @@ public class NetTester {
         Random random = new Random();
         int run=1;
         while (true) {
-            float[] state = new float[256];
-            for (int i = 0; i < 256; i++) {
+            float[] state = new float[576];
+            for (int i = 0; i < 576; i++) {
                 state[i] = 0;
             }
+
+            int x = random.nextInt(24);
+            int y = random.nextInt(24);
+            state[(x * 24) + y] = 1;
+
+            /*
             for (int i = 0; i < 64; i++) {
                 // For now, we pick a square and do the other three above, beside, and (positive) diagonally from them
-                int x = random.nextInt(16);
-                int y = random.nextInt(16);
+                int x = random.nextInt(24);
+                int y = random.nextInt(24);
                 try {
-                    state[(x * 16) + y] = 1;
+                    state[(x * 24) + y] = 1;
                 } catch (Exception ignored) {}
                 try {
-                    state[((x+1) * 16) + y] = 1;
+                    state[((x+1) * 24) + y] = 1;
                 } catch (Exception ignored) {}
                 try {
-                    state[(x * 16) + y + 1] = 1;
+                    state[(x * 24) + y + 1] = 1;
                 } catch (Exception ignored) {}
                 try {
-                    state[((x+1) * 16) + y + 1] = 1;
+                try {
+                    state[((x+1) * 24) + y + 1] = 1;
                 } catch (Exception ignored) {}
             }
+             */
 
-
-            float[][] thisState = new float[16][16];
-            for (int j = 0; j < 16; j++) {
-                float[] row = new float[256];
-                System.arraycopy(state, j * 16, row, 0, 16);
+            float[][] thisState = new float[24][24];
+            for (int j = 0; j < 24; j++) {
+                float[] row = new float[576];
+                System.arraycopy(state, j * 24, row, 0, 24);
                 thisState[j] = row;
             }
 
-            double[] inSt = new double[256];
-            for (int i = 0; i < 256; i++) {
+            double[] inSt = new double[576];
+            for (int i = 0; i < 576; i++) {
                 inSt[i] = state[i];
             }
             float res = compute(inSt);
-            float actual = (((calculateActualRewardFromArray(thisState) / 256f)));
+            float actual = (((calculateActualRewardFromArray(thisState) / 576f)));
 
             train(inSt, actual);
 
