@@ -47,7 +47,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 9999999;
+    private static final double gameSpeed = 1;
     private int stepCount;
     private Random random;
     private String nextFileName = "";

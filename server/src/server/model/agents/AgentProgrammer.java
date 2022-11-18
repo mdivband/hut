@@ -35,9 +35,9 @@ public class AgentProgrammer {
         }
     }
 
-    public void setupAllocator() {
+    public void setupAllocator(int xSteps, int ySteps) {
         learningAllocator = new TensorRLearner(a.agent);
-        learningAllocator.setup();
+        learningAllocator.setup(xSteps, ySteps);
     }
 
     /***
@@ -56,21 +56,18 @@ public class AgentProgrammer {
     }
 
     public void learningStep(float jointReward) {
-        if (!getSubordinates().isEmpty()) {
-            learningAllocator.step(jointReward);
-        }
+        learningAllocator.step(jointReward);
     }
 
     public void learningStep(float jointReward, int epsilon) {
-        if (!getSubordinates().isEmpty()) {
-            ((TensorRLearner) learningAllocator).step(jointReward, epsilon);
-        }
+        ((TensorRLearner) learningAllocator).step(jointReward, epsilon);
     }
 
     public void learningStep() {
         learningAllocator.step();
     }
 
+    /*
     public boolean gridMove(int i) {
         switch (i) {
             case 0 -> {
@@ -106,11 +103,13 @@ public class AgentProgrammer {
         return true;
     }
 
+     */
+
     public void manualSetTask(Coordinate myTask) {
         a.resume();
-        learningAllocator.updateBounds(myTask);
+        //learningAllocator.updateBounds(myTask);
         this.myTask = myTask;
-        ((TensorRLearner) learningAllocator).moveSubordinates();
+        //((TensorRLearner) learningAllocator).moveSubordinates();
     }
 
     public LearningAllocator getLearningAllocator() {
@@ -128,13 +127,5 @@ public class AgentProgrammer {
 
     public void setAllocator(LearningAllocator learningAllocator) {
         this.learningAllocator = learningAllocator;
-    }
-
-    public List<AgentProgrammed> getSubordinates() {
-        return learningAllocator.getSubordinates();
-    }
-
-    public void setSubordinates(List<AgentProgrammed> subs) {
-        learningAllocator.setSubordinates(subs);
     }
 }

@@ -78,10 +78,6 @@ public class ProgrammerHandler implements Serializable {
         agentProgrammer.step();  // Where we actually call the user's code
     }
 
-    public boolean gridMove(int i) {
-        return agentProgrammer.gridMove(i);
-    }
-
     /**
      * Checks for targets around this location using the TARGET_SENSE_RANGE constant
      * NOTE: Uses server-side code to check for target's actual positions, so don't access or edit this

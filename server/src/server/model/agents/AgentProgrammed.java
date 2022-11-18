@@ -43,13 +43,9 @@ public class AgentProgrammed extends Agent {
         if (!(this instanceof Hub)) {
             super.softReset();
             // TODO I think the reassignment of the supervisor and subs is redundant
-            List<AgentProgrammed> subs = programmerHandler.getAgentProgrammer().getLearningAllocator().getSubordinates();
-            AgentProgrammed supervisor = programmerHandler.getAgentProgrammer().getLearningAllocator().getSupervisor();
             LearningAllocator la = programmerHandler.getAgentProgrammer().getLearningAllocator();
             programmerHandler = new ProgrammerHandler(this);
             programmerHandler.getAgentProgrammer().setAllocator(la);
-            programmerHandler.getAgentProgrammer().getLearningAllocator().setSupervisor(supervisor);
-            programmerHandler.getAgentProgrammer().getLearningAllocator().setSubordinates(subs);
             programmerHandler.getAgentProgrammer().setup();
         }
     }
