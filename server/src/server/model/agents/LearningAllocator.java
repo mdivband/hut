@@ -1,14 +1,16 @@
 package server.model.agents;
 
 import server.Simulator;
-import server.model.Coordinate;
+import tool.CircularQueue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class LearningAllocator {
     protected AgentProgrammed agent;
+
+    private int HISTORY_SIZE = 5;
 
     protected int xSteps;
     protected int ySteps;
@@ -18,9 +20,13 @@ public abstract class LearningAllocator {
     protected int counter;
     private int level; // level 0 is a bottom level; raising as we move up
     private int bestRwd = 0;
+    private CircularQueue<float[][]> history;
+
+    protected HashMap<String, CommFrame> frameMap = new HashMap<>();
 
     public LearningAllocator(AgentProgrammed agent) {
         this.agent = agent;
+        history = new CircularQueue<>(HISTORY_SIZE);
     }
 
 
@@ -108,5 +114,60 @@ public abstract class LearningAllocator {
             xCell--;
             agent.setHeading(270);
         }
+
+        if (xCell < 0 || yCell < 0 || xCell >= xSteps || yCell >= ySteps) {
+            System.out.println("HERE!!!");
+            System.out.println("move = " + move);
+            System.out.println("(After move:)");
+            System.out.println("x = " + xCell);
+            System.out.println("y = " + yCell);
+            System.out.println();
+        }
     }
+
+    public void receiveFrame(CommFrame frame) {
+        //System.out.println(agent.getId() + " Receiving " + frame);
+        // If this is the first one, we can have our own map, that's fine
+        if (frameMap.isEmpty()) {
+            frameMap.put(frame.agentID, frame);
+        } else if (frame.agentID.equals(agent.getId())) {
+            frameMap.get(agent.getId()).ttl--;
+        } else {
+            if (frameMap.containsKey(frame.agentID)) {
+                frameMap.replace(frame.agentID, frame);
+            } else {
+                frameMap.put(frame.agentID, frame);
+            }
+        }
+        //System.out.println("======");
+        //frameMap.forEach((k,v) -> System.out.println(k + " -> " + v));
+        //System.out.println();
+    }
+
+    public ArrayList<CommFrame> getFrameMapAsList() {
+        return new ArrayList<>(frameMap.values());
+    }
+
+    public void printFrames() {
+        frameMap.forEach((k,v) -> System.out.println(v));
+    }
+
+    public void clearFrames() {
+        frameMap = new HashMap<>();
+    }
+
+    public boolean checkFramesResolved() {
+        AtomicBoolean complete = new AtomicBoolean(true);
+        frameMap.forEach((k,v) -> {
+            if (!k.equals(agent.getId()) && v.ttl > 1) {
+                complete.set(false);
+            }
+        });
+        return complete.get();
+    }
+
+    public void addGlobalMap(float[][] constructedMap) {
+        history.enqueue(constructedMap);
+    }
+
 }

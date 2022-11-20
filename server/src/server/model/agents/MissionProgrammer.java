@@ -38,6 +38,7 @@ public class MissionProgrammer {
     private ArrayList<Long> times = new ArrayList<>();
     private boolean ready = false;
     private float decayRate = 0.01f;
+    private int commRange = 9;
 
     public MissionProgrammer(AgentHubProgrammed ahp) {
         botLeft = new Coordinate(50.9289 - (Y_SPAN / 2), -1.409 - (X_SPAN / 2));
@@ -131,29 +132,113 @@ public class MissionProgrammer {
     }
 
     private void groupStep() {
-        // 1. For each agent, compute the local map and create a packet to send
-        for (AgentProgrammed ap : agents) {
-            // Get local map
-            float[][] localMap = extractLocalMapFor(ap.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell,
-                    ap.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell, 1);
+        int TTL = 5; // TODO scale this
+        int range = 4; // TODO scale this
 
-            writeImage(Integer.parseInt(ap.getId().split("-")[1]), localMap);
-            // lvl0: transmit this (not larger) with TTL
-            // Let's use this for now to form part of the process
+        // 1. For each agent, compute the local map and create a packet to send (just store our own packet and the next
+        //    step takes care of everything
+        for (AgentProgrammed origin : agents) {
+            origin.programmerHandler.getAgentProgrammer().getLearningAllocator().clearFrames();
+            // a. Get local map for this agent
+            float[][] localMap = extractLocalMapFor(origin.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell,
+                    origin.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell, range);
+            writeImage("Local-"+origin.getId(), localMap);
+
+            CommFrame frame = new CommFrame(origin.getId(), TTL,
+                    origin.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell,
+                    origin.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell,
+                    localMap);
+            origin.programmerHandler.getAgentProgrammer().getLearningAllocator().receiveFrame(frame);
         }
-        // 2. For each agent, transmit. Do this until done. (Mb make this iterative or something). Could also do this on
-        //      the agent-side
+
+        /*
+        System.out.println("Initial Assignment");
         for (AgentProgrammed ap : agents) {
-
+            System.out.println(ap.getId());
+            ap.programmerHandler.getAgentProgrammer().getLearningAllocator().printFrames();
         }
-        //      a. Pass these on iteratively
+        System.out.println();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+         */
+
+        // 2. Every agent now passes on frames until end
+        int i = 0;
+        boolean done = false;
+        while (!done) {
+            i++;
+            //System.out.println("ROUND " + i);
+            for (AgentProgrammed origin : agents) {
+                for (AgentProgrammed target : agents) {
+                    if (!(origin == target)) {
+                        boolean inRange = (Math.abs(target.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell
+                                - origin.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell) < commRange)
+                                && (Math.abs(target.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell
+                                - origin.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell) < commRange);
+                        if (inRange) {
+                            // TODO important to ensure that this doesn't pass duplicate frames and fail TTL consistency
+                            ArrayList<CommFrame> framesToPass = origin.programmerHandler.getAgentProgrammer().getLearningAllocator().getFrameMapAsList();
+                            //System.out.println(origin.getId() + " -> " + target.getId() + ": " + framesToPass);
+                            if (!framesToPass.isEmpty()) {
+                                for (CommFrame f : framesToPass) {
+                                    CommFrame newF = f.duplicateAndDecrement();
+                                    if (newF != null) {
+                                        //System.out.println("Adding a new frame. From " + f + " to " + newF);
+                                        target.programmerHandler.getAgentProgrammer().getLearningAllocator().receiveFrame(newF);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (agents.parallelStream().allMatch(a -> a.programmerHandler.getAgentProgrammer().getLearningAllocator().checkFramesResolved())) {
+                done = true;
+            }
+
+            if (i > 15) {
+                // Occasionally we get stuck in a loop. Not sure quite why, but the eye-test shows that the required
+                //  info is still transferred. Not worth spending lots of time on this bug for now, so let's just skip
+                //  over it -WH
+                done = true;
+            }
+
+            /*
+             for (AgentProgrammed ap : agents) {
+                    System.out.println(ap.getId());
+                    ap.programmerHandler.getAgentProgrammer().getLearningAllocator().printFrames();
+                }
+                System.out.println();
+                System.out.println();
+             */
+        }
+
+        /*
+        System.out.println("===============+DONE+================");
+        for (AgentProgrammed ap : agents) {
+            System.out.println(ap.getId());
+            ap.programmerHandler.getAgentProgrammer().getLearningAllocator().printFrames();
+        }
+        System.out.println();
+        System.out.println();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+         */
 
 
-        //      b. Construct total belief map
+        // 3. Use received maps to build a total map
+        constructMaps();
 
+        // 4. Each agent should now have a belief history. Let's now use this history as "ground truth"
+        // TODO we may need to do something about empty space (agents leaving range or needing to fill empty space)
 
         //      c. Train our model from this "truth"
-
 
         //      d. Use b+history to predict b'
 
@@ -170,6 +255,39 @@ public class MissionProgrammer {
     private void groupLearningStep() {
         // TODO
 
+    }
+
+    /**
+     * For each agent, use frames to construct the estimated global map, and then save them to learningAllocators
+     */
+    private void constructMaps() {
+        for (AgentProgrammed ap : agents) {
+
+            float[][] constructedMap = new float[ySteps][xSteps];
+            for (float[] row: constructedMap) {
+                Arrays.fill(row, 0f); // Filling with 0s is needed for agents at edge to be handled
+            }
+
+            for (CommFrame frame : ap.programmerHandler.getAgentProgrammer().getLearningAllocator().getFrameMapAsList()) {
+                int reach = frame.report.length;
+                int range = (reach - 1) / 2; // In theory there should never be a rounding error here?
+
+                //System.out.println(ap.getId() + " -> x=" + frame.xCell + ", y=" + frame.yCell + ", reach=" + reach + ", range=" + range);
+
+                for (int i = -range; i < range; i++) {
+                    if ((frame.xCell + i) < xSteps && (frame.xCell + i) > -1) {
+                        for (int j = -range; j < range; j++) {
+                            if ((ySteps - (frame.yCell + j)) < ySteps && (ySteps - (frame.yCell + j)) > -1) {
+                                constructedMap[ySteps - (frame.yCell + j)][frame.xCell + i] = frame.report[reach - 1 - (range + j)][range + i];
+                                //System.out.println("adding " + frame.report[reach - 1 - (range + j)][range + i] + " to " + (reach - 1 - (range + j)) + ", " + (range + i));
+                            }
+                        }
+                    }
+                }
+            }
+            ap.programmerHandler.getAgentProgrammer().getLearningAllocator().addGlobalMap(constructedMap);
+            writeImage("Global-"+ap.getId(), constructedMap);
+        }
     }
 
     private float[][] extractLocalMapFor(int xCell, int yCell, int range) {
@@ -232,7 +350,7 @@ public class MissionProgrammer {
                 System.out.println(coverageMap[ySteps - 1 - a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell][a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell] = 1f);
             });
         }
-        writeImage(0, coverageMap);
+        writeImage("Truth", coverageMap);
     }
 
     public static BufferedImage resize(BufferedImage img, int newW, int newH) {
@@ -243,7 +361,7 @@ public class MissionProgrammer {
         return resizedImage;
     }
 
-    private void writeImage(int d, float[][] matrix) {
+    private void writeImage(String prefix, float[][] matrix) {
         try {
             BufferedImage image = new BufferedImage(matrix[0].length, matrix.length, BufferedImage.TYPE_INT_RGB);
             for(int i=0; i<matrix.length; i++) {
@@ -258,7 +376,7 @@ public class MissionProgrammer {
                 }
             }
             BufferedImage scaled = resize(image, 256, 256);
-            File output = new File("decision"+d+".jpg");
+            File output = new File(prefix+"-decision.jpg");
             ImageIO.write(scaled, "jpg", output);
         } catch(Exception ignored) {
             System.out.println(ignored);
