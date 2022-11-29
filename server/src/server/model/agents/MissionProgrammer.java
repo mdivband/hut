@@ -27,7 +27,8 @@ public class MissionProgrammer {
     private Coordinate topRight;
     private int xSteps = 27;
     private int ySteps = 27;
-    private float[][] coverageMap;
+    private double[][] globalCoverageMap;
+    private HashMap<AgentProgrammed, double[][]> localCoverageMaps;
     private double X_SPAN = 0.05;//0.09;
     private double Y_SPAN = 0.025;//0.054;
     private double xSquareSpan;
@@ -37,7 +38,7 @@ public class MissionProgrammer {
     private List<List<Float>> subScores = new ArrayList<>();
     private ArrayList<Long> times = new ArrayList<>();
     private boolean ready = false;
-    private float decayRate = 0.01f;
+    private float decayRate = 0.02f;
     private int commRange = 9;
 
     public MissionProgrammer(AgentHubProgrammed ahp) {
@@ -48,10 +49,18 @@ public class MissionProgrammer {
         agents = new ArrayList<>();
         Simulator.instance.getState().getAgents().forEach(a -> {if(a instanceof AgentProgrammed ap && (!(a instanceof Hub))) {agents.add(ap);}});
         drawBounds();
-        coverageMap = new float[27][27];
-        for (float[] row: coverageMap) {
+        globalCoverageMap = new double[27][27];
+        for (double[] row: globalCoverageMap) {
             Arrays.fill(row, 0f);
         }
+        localCoverageMaps = new HashMap<>();
+        agents.forEach(a -> {
+            double[][] cov = new double[27][27];
+            for (double[] row: cov) {
+                Arrays.fill(row, 0f);
+            }
+            localCoverageMaps.put(a, cov);
+        });
 
     }
 
@@ -62,7 +71,7 @@ public class MissionProgrammer {
             if (stepCounter < NUM_STEPS_PER_EPOCH) {
                 groupStep();
                 if (agents.stream().allMatch(Agent::isStopped)) {
-                    groupLearningStep();
+                    //groupLearningStep();
                     stepCounter++; // This stepcounter is per total swarm step, not per agent step
                     boolean needsToWrite = false;
                     if (stepCounter % 10 == 1) {
@@ -133,14 +142,19 @@ public class MissionProgrammer {
 
     private void groupStep() {
         int TTL = 5; // TODO scale this
-        int range = 4; // TODO scale this
+        int range = 99; // TODO scale this
 
         // 1. For each agent, compute the local map and create a packet to send (just store our own packet and the next
         //    step takes care of everything
         for (AgentProgrammed origin : agents) {
             origin.programmerHandler.getAgentProgrammer().getLearningAllocator().clearFrames();
             // a. Get local map for this agent
-            float[][] localMap = extractLocalMapFor(origin.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell,
+            // TODO We are currently using localMap; later we may use the "currentMap" variable in agent (NOT the
+            //  predicted map, use the last constructed observation instead)
+            //double[][] localMap = extractLocalMapFor(origin, origin.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell,
+            //        origin.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell, range);
+            //writeImage("Local-"+origin.getId(), localMap);
+            double[][] localMap = extractGroundTruthLocalMapFor(origin, origin.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell,
                     origin.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell, range);
             writeImage("Local-"+origin.getId(), localMap);
 
@@ -233,14 +247,15 @@ public class MissionProgrammer {
 
 
         // 3. Use received maps to build a total map
-        constructMaps();
+        constructMaps();  // This also updates each agent's history of maps
 
-        // 4. Each agent should now have a belief history. Let's now use this history as "ground truth"
+        // 4. Each agent should now have a belief history. Let's train the model from the previous belief history
         // TODO we may need to do something about empty space (agents leaving range or needing to fill empty space)
+        groupLearningStep();
 
-        //      c. Train our model from this "truth"
+        // 5. Let's now use this history as "ground truth"
+        predictMaps();
 
-        //      d. Use b+history to predict b'
 
 
         // 2. Make a random move (for now)
@@ -253,8 +268,8 @@ public class MissionProgrammer {
     }
 
     private void groupLearningStep() {
-        // TODO
-
+        //agents.parallelStream().forEach(a -> a.programmerHandler.getAgentProgrammer().getLearningAllocator().train());
+        agents.forEach(a -> a.programmerHandler.getAgentProgrammer().getLearningAllocator().train());
     }
 
     /**
@@ -263,8 +278,8 @@ public class MissionProgrammer {
     private void constructMaps() {
         for (AgentProgrammed ap : agents) {
 
-            float[][] constructedMap = new float[ySteps][xSteps];
-            for (float[] row: constructedMap) {
+            double[][] constructedMap = new double[ySteps][xSteps];
+            for (double[] row: constructedMap) {
                 Arrays.fill(row, 0f); // Filling with 0s is needed for agents at edge to be handled
             }
 
@@ -290,10 +305,17 @@ public class MissionProgrammer {
         }
     }
 
-    private float[][] extractLocalMapFor(int xCell, int yCell, int range) {
+    private void predictMaps() {
+        agents.forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().predict());
+        agents.forEach(a -> writeImage("Predicted-"+a.getId(), a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getPrediction()));
+        //agents.parallelStream().forEach(a -> a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().predict());
+        //agents.parallelStream().forEach(a -> writeImage("Predicted-"+a.getId(), a.getProgrammerHandler().getAgentProgrammer().getLearningAllocator().getPrediction()));
+    }
+
+    private double[][] extractLocalMapFor(AgentProgrammed agent, int xCell, int yCell, int range) {
         int reach = ((2*range) + 1);
-        float[][] localMap = new float[reach][reach];
-        for (float[] row: localMap) {
+        double[][] localMap = new double[reach][reach];
+        for (double[] row: localMap) {
             Arrays.fill(row, 0f); // Filling with 0s is needed for agents at edge to be handled
         }
 
@@ -301,7 +323,26 @@ public class MissionProgrammer {
             if ((xCell + i) < xSteps && (xCell + i) > -1) {
                 for (int j = -range; j < range; j++) {
                     if ((yCell + j) < ySteps && (yCell + j) > -1) {
-                        localMap[reach - 1 - (range + j)][range + i] = coverageMap[ySteps - 1 - (yCell + j)][xCell + i];
+                        localMap[reach - 1 - (range + j)][range + i] = localCoverageMaps.get(agent)[ySteps - 1 - (yCell + j)][xCell + i];
+                    }
+                }
+            }
+        }
+        return localMap;
+    }
+
+    private double[][] extractGroundTruthLocalMapFor(AgentProgrammed agent, int xCell, int yCell, int range) {
+        int reach = ((2*range) + 1);
+        double[][] localMap = new double[reach][reach];
+        for (double[] row: localMap) {
+            Arrays.fill(row, 0f); // Filling with 0s is needed for agents at edge to be handled
+        }
+
+        for (int i = -range; i < range; i++) {
+            if ((xCell + i) < xSteps && (xCell + i) > -1) {
+                for (int j = -range; j < range; j++) {
+                    if ((yCell + j) < ySteps && (yCell + j) > -1) {
+                        localMap[reach - 1 - (range + j)][range + i] = globalCoverageMap[ySteps - 1 - (yCell + j)][xCell + i];
                     }
                 }
             }
@@ -313,8 +354,13 @@ public class MissionProgrammer {
         // Decay map. Doesn't matter what order we do this. There may be a matrix or functional way of doing this better
         for (int i = 0; i < xSteps; i++) {
             for (int j = 0; j < ySteps; j++) {
-                if (coverageMap[i][j] > decayRate) {
-                    coverageMap[i][j] -= decayRate;
+                if (globalCoverageMap[i][j] > decayRate) {
+                    globalCoverageMap[i][j] -= decayRate;
+                }
+                for (Map.Entry<AgentProgrammed, double[][]> entry : localCoverageMaps.entrySet()) {
+                    if (entry.getValue()[i][j] > decayRate) {
+                        entry.getValue()[i][j] -= decayRate;
+                    }
                 }
             }
         }
@@ -340,17 +386,17 @@ public class MissionProgrammer {
          */
 
         // FOR just the cell we occupy
-        try {
-            agents.forEach(a -> coverageMap[ySteps - 1 - a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell][a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell] = 1f);
-        } catch (Exception e) {
-            System.out.println("Error 224:");
-            agents.forEach(a -> {
-                System.out.println(ySteps - 1 - a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell);
-                System.out.println(a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell);
-                System.out.println(coverageMap[ySteps - 1 - a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell][a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell] = 1f);
-            });
+        for (AgentProgrammed a : agents) {
+            try {
+                globalCoverageMap[ySteps - 1 - a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell][a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell] = 1f;
+                localCoverageMaps.get(a)[ySteps - 1 - a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell][a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell] = 1f;
+            } catch (Exception e) {
+                System.out.println(a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell + ", " + a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell);
+                System.out.println(globalCoverageMap[ySteps - 1 - a.programmerHandler.getAgentProgrammer().getLearningAllocator().yCell][a.programmerHandler.getAgentProgrammer().getLearningAllocator().xCell]);
+            }
         }
-        writeImage("Truth", coverageMap);
+
+        writeImage("Truth", globalCoverageMap);
     }
 
     public static BufferedImage resize(BufferedImage img, int newW, int newH) {
@@ -361,12 +407,12 @@ public class MissionProgrammer {
         return resizedImage;
     }
 
-    private void writeImage(String prefix, float[][] matrix) {
+    private void writeImage(String prefix, double[][] matrix) {
         try {
             BufferedImage image = new BufferedImage(matrix[0].length, matrix.length, BufferedImage.TYPE_INT_RGB);
             for(int i=0; i<matrix.length; i++) {
                 for(int j=0; j<matrix.length; j++) {
-                    float a = matrix[i][j];
+                    double a = matrix[i][j];
                     int intensity = (int) Math.floor((0.5 + a/2) * 255);
                     intensity = Math.min(intensity, 255);
                     intensity = Math.max(0, intensity);
@@ -379,7 +425,7 @@ public class MissionProgrammer {
             File output = new File(prefix+"-decision.jpg");
             ImageIO.write(scaled, "jpg", output);
         } catch(Exception ignored) {
-            System.out.println(ignored);
+            //System.out.println(ignored);
         }
 
     }

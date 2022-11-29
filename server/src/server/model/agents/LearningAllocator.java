@@ -1,16 +1,20 @@
 package server.model.agents;
 
+import org.neuroph.core.data.DataSetRow;
+import org.neuroph.nnet.ConvolutionalNetwork;
+import org.neuroph.nnet.learning.ConvolutionalBackpropagation;
 import server.Simulator;
-import tool.CircularQueue;
+import tool.history;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class LearningAllocator {
+public class LearningAllocator {
     protected AgentProgrammed agent;
 
-    private int HISTORY_SIZE = 5;
+    private int HISTORY_SIZE = 3;
 
     protected int xSteps;
     protected int ySteps;
@@ -18,15 +22,19 @@ public abstract class LearningAllocator {
     protected int yCell;
 
     protected int counter;
+    private float LEARNING_RATE = 0.01f;
     private int level; // level 0 is a bottom level; raising as we move up
     private int bestRwd = 0;
-    private CircularQueue<float[][]> history;
+    private ConvolutionalNetwork valueNet;
+    private tool.history history;
 
     protected HashMap<String, CommFrame> frameMap = new HashMap<>();
+    private double[][] currentBelief = null; // This is what we believe the actual value is
+    private double[][] predictedNextBelief = null;
+    private double[][] backVal; // This is the last popped element. We need to include this when training
 
     public LearningAllocator(AgentProgrammed agent) {
         this.agent = agent;
-        history = new CircularQueue<>(HISTORY_SIZE);
     }
 
 
@@ -37,17 +45,18 @@ public abstract class LearningAllocator {
     public void setup(int xSteps, int ySteps) {
         this.xSteps = xSteps;
         this.ySteps = ySteps;
+        history = new history(HISTORY_SIZE, xSteps, ySteps);
+        valueNet = createNetwork();
     }
 
     public void reset() {
 
     }
 
-    public abstract void complete();
-
-    public abstract void step();
-
     public void step(float jointReward) {
+        System.out.println("NOT IMPLEMENTED");
+    }
+    public void step(float jointReward, float epsilon) {
         System.out.println("NOT IMPLEMENTED");
     }
 
@@ -80,15 +89,20 @@ public abstract class LearningAllocator {
     }
 
     public void decideRandomMove() {
+        int tempOldX = xCell;
+        int tempOldY = yCell;
+
         // St, N, S, E, W
         boolean[] possibles = new boolean[]{true, true, true, true, true}; // Preset as true for all (covers stop too)
-        if (yCell == ySteps - 1) { // Can't move upwards
+        if (yCell >= ySteps - 1) { // Can't move upwards
             possibles[1] = false;
-        } else if (yCell == 0) { // Can't move downwards
+        } else if (yCell <= 0) { // Can't move downwards
             possibles[2] = false;
-        } else if (xCell == xSteps - 1) { // Can't move right
+        }
+        // Highly important that these ifs are separated
+        if (xCell >= xSteps - 1) { // Can't move right
             possibles[3] = false;
-        } else if (xCell == 0) { // Can't move left
+        } else if (xCell <= 0) { // Can't move left
             possibles[4] = false;
         }
 
@@ -116,7 +130,12 @@ public abstract class LearningAllocator {
         }
 
         if (xCell < 0 || yCell < 0 || xCell >= xSteps || yCell >= ySteps) {
+
+
             System.out.println("HERE!!!");
+            System.out.println("before x = " + tempOldX);
+            System.out.println("before y = " + tempOldY);
+            System.out.println("poss: " + Arrays.toString(possibles));
             System.out.println("move = " + move);
             System.out.println("(After move:)");
             System.out.println("x = " + xCell);
@@ -166,8 +185,105 @@ public abstract class LearningAllocator {
         return complete.get();
     }
 
-    public void addGlobalMap(float[][] constructedMap) {
-        history.enqueue(constructedMap);
+    public void addGlobalMap(double[][] constructedMap) {
+        if (currentBelief != null) {
+            backVal = history.enqueue(currentBelief);
+        }
+        currentBelief = constructedMap;
     }
 
+    public void train() {
+        if (history.isFull()) {
+            // Use [backVal + history (minus head)] as input, and [currentBelief] as target
+            double[][][] historyThen = history.getOrderedElementsAsTensor();
+            historyThen[history.getFront()] = currentBelief;
+            double[] input = flatten(historyThen);
+            double[] actual = flatten(currentBelief);
+
+            org.neuroph.core.data.DataSet ds = new org.neuroph.core.data.DataSet(HISTORY_SIZE * xSteps * ySteps, xSteps * ySteps);
+            DataSetRow item = new DataSetRow(input, actual);
+            ds.add(item);
+            valueNet.learn(ds);
+        } // ELSE wait until full
+    }
+
+    /**
+     * Helper function to flatten 2d array
+     * @param array2d
+     * @return
+     */
+    public static double[] flatten(double[][] array2d) {
+        int rows = array2d.length;
+        int cols = array2d[0].length;
+
+        double[] flattenedInput = new double[rows*cols];
+        for (int j=0; j<rows; j++) {
+            for (int i=0; i<cols; i++) {
+                flattenedInput[j*cols + i] = array2d[j][i];
+            }
+        }
+
+        return flattenedInput;
+    }
+
+    /**
+     * Helper function to flatten 3d array
+     * @param array3d
+     * @return
+     */
+    public static double[] flatten(double[][][] array3d) {
+        int depth = array3d.length;
+        int rows = array3d[0].length;
+        int cols = array3d[0][0].length;
+
+        double[] flattenedInput = new double[depth*rows*cols];
+        for (int d=0; d<depth; d++) {
+            for (int j=0; j<rows; j++) {
+                for (int i=0; i<cols; i++) {
+                    flattenedInput[d*(rows*cols) + j*cols + i] = array3d[d][j][i];
+                }
+            }
+        }
+
+        return flattenedInput;
+    }
+
+    private double[][] unwrap(double[] flatArray) {
+        double[][] unwrappedOutput = new double[ySteps][xSteps];
+
+        for (int j=0; j<ySteps; j++) {
+            if (xSteps >= 0) System.arraycopy(flatArray, j * xSteps, unwrappedOutput[j], 0, xSteps);
+        }
+        return unwrappedOutput;
+    }
+
+    public void predict() {
+        // Use the entire history to predict next belief
+        if (history.isFull()) {
+            double[][][] input = history.getOrderedElementsAsTensor();
+            double[] flattenedInput = flatten(input);
+
+            valueNet.setInput(flattenedInput);
+            valueNet.calculate();
+            double[] output = valueNet.getOutput();
+
+            predictedNextBelief = unwrap(output);
+        } // ELSE wait until it's full
+    }
+
+    private ConvolutionalNetwork createNetwork() {
+        ConvolutionalNetwork convolutionNetwork = new ConvolutionalNetwork.Builder()
+                .withInputLayer(27, 27, 3)
+                .withFullConnectedLayer(27*27)
+                .build();
+
+        convolutionNetwork.getLearningRule().setMaxIterations(1);
+        convolutionNetwork.getLearningRule().setLearningRate(LEARNING_RATE);
+
+        return convolutionNetwork;
+    }
+
+    public double[][] getPrediction() {
+        return predictedNextBelief;
+    }
 }

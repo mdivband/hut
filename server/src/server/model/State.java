@@ -391,7 +391,6 @@ public class State {
     }
 
     public void setModelStyle(String modelStyle) {
-        System.out.println("setting style to " + modelStyle);
         this.modelStyle = modelStyle;
     }
 

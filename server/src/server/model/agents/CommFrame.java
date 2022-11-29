@@ -7,11 +7,11 @@ public class CommFrame {
     protected int ttl;
     protected int xCell;
     protected int yCell;
-    protected float[][] report;
+    protected double[][] report;
     protected boolean sent = false;
 
 
-    public CommFrame(String agentID, int ttl, int xCell, int yCell, float[][] report) {
+    public CommFrame(String agentID, int ttl, int xCell, int yCell, double[][] report) {
         this.agentID = agentID;
         this.ttl = ttl;
         this.xCell = xCell;

@@ -1,17 +1,21 @@
 package tool;
 import java.util.Arrays;
 
-public class CircularQueue<E> {
+public class history {
+    private int dimX;
+    private int dimY;
     private int currentSize; //Current Circular Queue Size
-    private E[] circularQueueElements;
+    private double[][][] circularQueueElements;
     private int maxSize; //Circular Queue maximum size
 
     private int rear;//rear position of Circular queue(new element enqueued at rear).
     private int front; //front position of Circular queue(element will be dequeued from front).
 
-    public CircularQueue(int maxSize) {
+    public history(int maxSize, int dimX, int dimY) {
         this.maxSize = maxSize;
-        circularQueueElements = (E[]) new Object[this.maxSize];
+        this.dimX = dimX;
+        this.dimY = dimY;
+        circularQueueElements = new double[maxSize][dimX][dimY];
         currentSize = 0;
         front = -1;
         rear = -1;
@@ -19,11 +23,13 @@ public class CircularQueue<E> {
 
     /**
      * Enqueue elements to rear.
+     *
+     * @return
      */
-    public void enqueue(E item) throws QueueFullException {
+    public double[][] enqueue(double[][] item) throws QueueFullException {
         if (isFull()) {
             //throw new QueueFullException("Circular Queue is full. Element cannot be added");
-            dequeue();
+            return dequeue();
         }
         //else {
         rear = (rear + 1) % circularQueueElements.length;
@@ -34,13 +40,14 @@ public class CircularQueue<E> {
             front = rear;
         }
         //}
+        return null;
     }
 
     /**
      * Dequeue element from Front.
      */
-    public E dequeue() throws QueueEmptyException {
-        E deQueuedElement;
+    public double[][] dequeue() throws QueueEmptyException {
+        double[][] deQueuedElement;
         if (isEmpty()) {
             throw new QueueEmptyException("Circular Queue is empty. Element cannot be retrieved");
         }
@@ -51,6 +58,32 @@ public class CircularQueue<E> {
             currentSize--;
         }
         return deQueuedElement;
+    }
+
+    public double[][][] getOrderedElementsAsTensor() {
+        double[][][] elementsInOrder = new double[maxSize][dimY][dimX];
+        //System.out.println("dimx = " + dimX + ", dimy = " + dimY);
+        //System.out.println("front = " + front);
+        //System.out.println("===============");
+        for (int d=0; d<maxSize; d++) {
+            for (int i=0; i<dimX; i++) {
+                for (int j=0; j<dimY; j++) {
+                    //System.out.println("Adding element at " + ((front+d) % maxSize) + ", i=" + i + ", j=" + j);
+                    //System.out.println("odered = " + (maxSize - 1 - d) + " original " +(maxSize + (front-d)));
+                    //System.out.println();
+                    elementsInOrder[maxSize - 1 - d][j][i] = circularQueueElements[(maxSize + (front-d)) % maxSize][j][i];
+                }
+            }
+            //elementsInOrder[maxSize - 1 - d] = circularQueueElements[(front+d) % maxSize];
+
+        }
+        //System.out.println("done: " + Arrays.toString(elementsInOrder));
+
+        return elementsInOrder;
+    }
+
+    public int getFront() {
+        return front;
     }
 
     /**

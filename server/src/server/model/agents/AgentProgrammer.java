@@ -36,7 +36,7 @@ public class AgentProgrammer {
     }
 
     public void setupAllocator(int xSteps, int ySteps) {
-        learningAllocator = new TensorRLearner(a.agent);
+        learningAllocator = new LearningAllocator(a.agent);
         learningAllocator.setup(xSteps, ySteps);
     }
 
@@ -60,11 +60,11 @@ public class AgentProgrammer {
     }
 
     public void learningStep(float jointReward, int epsilon) {
-        ((TensorRLearner) learningAllocator).step(jointReward, epsilon);
+        learningAllocator.step(jointReward, epsilon);
     }
 
     public void learningStep() {
-        learningAllocator.step();
+        learningAllocator.step(-1);
     }
 
     /*
