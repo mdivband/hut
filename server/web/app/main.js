@@ -100,12 +100,12 @@ var simulator = {
         });
         $("#prediction_canvas").accordion({
             collapsible: true,
-            heightStyle: "content",
-            active: false
+            heightStyle: "content"
         });
         $("#mission_prediction_canvas").accordion({
             collapsible: true,
-            heightStyle: "content"
+            heightStyle: "content",
+            active: false
         });
         $("#bounded_prediction_canvas").accordion({
             collapsible: true,
