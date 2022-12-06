@@ -10,10 +10,10 @@ import java.util.*;
 
 public class PatrolTask extends Task {
 
-    private final List<Coordinate> points;
+    protected final List<Coordinate> points;
     //Map of the last point that each agent visited
-    private final Map<String, Integer> lastPointMap;
-    private final List<Agent> workingAgents;
+    protected final Map<String, Integer> lastPointMap;
+    protected final List<Agent> workingAgents;
     private double totalPathDistance;
 
     public PatrolTask(String id, int type, List<Coordinate> points, Coordinate centrePoint) {
@@ -130,7 +130,7 @@ public class PatrolTask extends Task {
         return absDistance/totalPathDistance;
     }
 
-    private void updateAgentRoute(Agent agent) {
+    protected void updateAgentRoute(Agent agent) {
         List<Coordinate> route = new ArrayList<>();
         if(lastPointMap.get(agent.getId()) < points.size() - 1)
             route.addAll(points.subList(lastPointMap.get(agent.getId()) + 1, points.size()));
@@ -146,7 +146,7 @@ public class PatrolTask extends Task {
      * Based on the agent's current position, get the last point it would have passed through on the patrol route.
      * Gets the edge that the agent is on (or closest to) and returns the start point of that edge.
      */
-    private Coordinate getPreviousPoint(Agent agent) {
+    protected Coordinate getPreviousPoint(Agent agent) {
         Coordinate nearest = null;
         double nearestDist = 0;
         double lat0 = this.getCoordinate().getLatitude();

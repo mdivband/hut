@@ -2,16 +2,18 @@ package server.model.task;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
+import server.Simulator;
+import server.model.Agent;
 import server.model.Coordinate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RegionTask extends PatrolTask {
-
     private static final double baseStep = 40;
     private Coordinate nw, ne, se, sw;
+
+    private HashSet<Integer> coveredPoints = new HashSet<>();
 
     public RegionTask(String id, List<Coordinate> route, Coordinate centrePoint, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {
         super(id, Task.TASK_REGION, route, centrePoint);
@@ -26,8 +28,81 @@ public class RegionTask extends PatrolTask {
         return new RegionTask(id, route, getCentre(Arrays.asList(nw, ne, se, sw)), nw, ne, se, sw);
     }
 
+    // TODO here we need to make new agents factor in the covered points (HashSet provided) so they continue where the last one left off
+    public void addAgent(Agent agent) {
+        super.addAgent(agent);
+        List<Coordinate> toRemove = coveredPoints.stream().map(points::get).toList();
+        points.removeAll(toRemove);
+        coveredPoints.clear();
+        lastPointMap.clear();
+        workingAgents.clear();
+    }
+
     private static Coordinate getCentre(List<Coordinate> corners) {
         return Coordinate.findCentre(corners);
+    }
+
+    boolean perform() {
+        boolean testSet = false;
+        synchronized (getAgents()) {
+            // TODO Occasionally misses a small area (I think due to readjusting after agent adding)
+            if (getAgents().stream().anyMatch(a -> (a.isWorking() && !workingAgents.contains(a)))) {
+                testSet = true;
+                lastPointMap.put(getAgents().get(0).getId(), points.indexOf(getPreviousPoint(getAgents().get(0))));
+                workingAgents.add(getAgents().get(0));
+                if (getAgents().size() > 1) {
+                    for (int a = 1; a < getAgents().size(); a++) {
+                        int relPos = (lastPointMap.get(getAgents().get(0).getId()) + (a * (points.size() / getAgents().size()))) % points.size();
+                        workingAgents.add(getAgents().get(a));
+                        lastPointMap.put(getAgents().get(a).getId(), relPos);
+                        getAgents().get(a).setWorking(true);
+                        getAgents().get(a).resume();
+                    }
+                }
+            }
+
+            for (Agent agent : getAgents()) {
+                if (agent.isWorking() && !workingAgents.contains(agent)) {
+                    lastPointMap.put(agent.getId(), points.indexOf(getPreviousPoint(agent)));
+                    workingAgents.add(agent);
+                }
+                if (agent.isWorking()) {
+                    updateAgentRoute(agent);
+                    if (agent.isCurrentDestinationReached()) {
+                        if (!testSet) {
+                            coveredPoints.add(lastPointMap.get(agent.getId()));
+                        }
+                        lastPointMap.put(agent.getId(), lastPointMap.get(agent.getId()) < points.size() - 1 ? lastPointMap.get(agent.getId()) + 1 : 0);
+                        synchronized (getAgents()) {
+                            while (agent.getRoute().size() > points.size() - coveredPoints.size()) {
+                                agent.getRoute().remove(agent.getRoute().size() - 1);
+                            }
+                        }
+                    }
+                } else
+                    workingAgents.remove(agent);
+            }
+            Agent agentToRemove = null;
+            for (Agent w : workingAgents) {
+                if (!(w.getAllocatedTaskId().equals(getId()))) {
+                    agentToRemove = w;
+                    break;
+                }
+            }
+            if (agentToRemove != null) {
+                synchronized (workingAgents) {
+                    workingAgents.remove(agentToRemove);
+                }
+            }
+
+            // UNCOMMENT THIS IF YOU WANT COMPLETABLE REGION TASKS
+            // TODO make this an argument of RegionTasks contained in scenario file
+            if (coveredPoints.size() == points.size()) {
+                // By definition, this means we're done
+                return true;
+            }
+            return false;
+        }
     }
 
     @Override
