@@ -56,68 +56,69 @@ var MapTargetController = {
         MapTargetController.updateTargetMarkerVisibility(target);
     },
     openScanWindow : function (target, marker) {
-        try {
-            self = this;
-            this.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
-                var property = document.createElement("div");
-
-
-                // NOTE: This is a clumsy way of doing this but I used two templates due to problems with selectively
-                //  hiding buttons. In future this should be reworked properly -WH
-                if (self.state.getDeepAllowed()) {
-                    property.innerHTML = _.template($("#target_scan_edit_dp").html(), {});
-                    google.maps.event.addListener(iw, 'domready', function () {
-                        //Update task if values changed
-
-                        $(property).on("click", "#scan_shallow_dp", function () {
-                            //alert("Scanning shallow");
-                            var newId = "(" + target.getId() + ")";
-                            marker.setOptions({labelContent: newId});
-                            MapTaskController.addShallowScanTask(target.getPosition());
-                            MapTargetController.updateTargetMarkerIcon(target);
-                            icon = self.icons.TargetShallowScan;
-                            marker.setIcon(icon.Image)
-                            self.$el.gmap("closeInfoWindow");
-
-                        });
-                        $(property).on("click", "#scan_deep_dp", function () {
-                            var newId = "[" + target.getId() + "]";
-                            marker.setOptions({labelContent: newId});
-                            MapTaskController.addDeepScanTask(target.getPosition());
-                            MapTargetController.updateTargetMarkerIcon(target);
-                            icon = self.icons.TargetDeepScan;
-                            marker.setIcon(icon.Image)
-                            self.$el.gmap("closeInfoWindow");
-                        });
-                    });
-
-                } else {
-                    property.innerHTML = _.template($("#target_scan_edit").html(), {});
-                        google.maps.event.addListener(iw, 'domready', function () {
-                            //Update task if values changed
-
-                            $(property).on("click", "#scan_shallow", function () {
-                                //alert("Scanning shallow");
-                                var newId = "(" + target.getId() + ")";
-                                marker.setOptions({labelContent: newId});
-                                MapTaskController.addShallowScanTask(target.getPosition());
-                                MapTargetController.updateTargetMarkerIcon(target);
-                                icon = self.icons.TargetShallowScan;
-                                marker.setIcon(icon.Image)
-                                self.$el.gmap("closeInfoWindow");
-                            });
+        self = this;
+        this.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
+            var property = document.createElement("div");
+            property.innerHTML = _.template($("#target_scan_edit").html(), {});
+            google.maps.event.addListener(iw, 'domready', function () {
+                //Update task if values changed
+                // TODO should really just make a new function for these as only change is boolean status passed
+                $(property).on("click", "#decide_casualty", function () {
+                    var thisId = "(" + target.getId() + ")";
+                    //var self = this;
+                    // TODO get the current image setting (might be easier in backend)
+                    //var img = MapController.getCurrentImage();
+                    //var tgtId = this.views.review.currentImageName;
+                    if (!MapTargetController.classifiedIds.includes(thisId)) {
+                        MapTargetController.classifiedIds.push(thisId);
+                        $.post("/review/classify", {
+                            ref: img,
+                            status: true,
                         });
                     }
-                iw.setContent(property);
-                iw.setPosition(target.getPosition());
+                    var marker = self.$el.gmap("get", "markers")[thisId];
+                    if (marker) {
+                        var position = marker.getPosition();
+                        MapTargetController.clearReviewedTarget(marker);
+                        MapTargetController.placeEmptyTargetMarker(position, thisId, true);
 
-                self.views.clickedTarget = target;
+                    }
+                    self.$el.gmap("closeInfoWindow");
 
                 });
 
-        } catch (e) {
-            alert(e)
-        }
+                $(property).on("click", "#decide_no_casualty", function () {
+                    var thisId = "(" + target.getId() + ")";
+                    // ADDED
+                    //var self = this;
+                    // TODO get the current image setting (might be easier in backend)
+                    //var img = MapController.getCurrentImage();
+                    //var tgtId = this.views.review.currentImageName;
+                    if (!MapTargetController.classifiedIds.includes(thisId)) {
+                        MapTargetController.classifiedIds.push(thisId);
+                        $.post("/review/classify", {
+                            ref: img,
+                            status: false,
+                        });
+                    }
+                    var marker = self.$el.gmap("get", "markers")[thisId];
+                    if (marker) {
+                        var position = marker.getPosition();
+                        MapTargetController.clearReviewedTarget(marker);
+                        MapTargetController.placeEmptyTargetMarker(position, thisId, false);
+
+                    }
+                    self.$el.gmap("closeInfoWindow");
+
+                });
+            });
+
+            iw.setContent(property);
+            iw.setPosition(target.getPosition());
+
+            self.views.clickedTarget = target;
+
+            });
     },
     checkIcon : function (targetId) {
         if (MapTargetController.classifiedIds.includes(targetId)) {

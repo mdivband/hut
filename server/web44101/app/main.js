@@ -24,14 +24,7 @@ var simulator = {
             views: this.views
         });
 
-        this.views.review = new App.Views.Review({
-            el: $("#image_review"),
-            state: this.state,
-            views: this.views,
-            ctx: $("#image_review_canvas").get(0).getContext("2d"),
-            canvas: $("#image_review_canvas").get(0),
-            forEditMode: true
-        });
+        // TODO Make a minireview object
 
         this.views.camera = new App.Views.Camera({
             el: $("#camera"),

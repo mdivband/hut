@@ -456,7 +456,7 @@ public class Simulator {
                     }
 
                     //Hide all targets initially - they must be found!!
-                    targetController.setTargetVisibility(target.getId(), false);
+                    targetController.setTargetVisibility(target.getId(), true);
                 }
             }
 
