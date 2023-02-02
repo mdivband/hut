@@ -51,7 +51,7 @@ public class ReviewHandler extends RestHandler {
 
         String ref = params.get("ref");
         boolean status = Boolean.parseBoolean(params.get("status"));
-
+        System.out.println("Classifying: "+ ref + " -> " + status);
         this.simulator.getImageController().classify(ref, status);
 
     }

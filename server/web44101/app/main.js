@@ -120,6 +120,7 @@ var simulator = {
             }
         });
 
+        /*
         // This defines the zoom and pan function including restriction of view
         var self = this
         $("#image_review_canvas").bind('mousewheel', function(e) {
@@ -179,6 +180,8 @@ var simulator = {
 
             $(this).css({top: newT, left: newL, position:'relative'});
         });
+
+         */
 
         this.views.control = new App.Views.Control({
             el: $("#control"),
