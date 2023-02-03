@@ -17,6 +17,9 @@ App.Models.Target = App.Models.MObject.extend({
     isVisible: function() {
         return this.get("visible");
     },
+    getHighResFileName: function () {
+        return this.get("highResFileName");
+    }
     //getStatus: function() {
     //    return this.get("status");
     //}
@@ -32,8 +35,8 @@ App.Collections.Targets = Backbone.Collection.extend({
     //ADJ_UNKNOWN: 0,
     ADJ_DEEP_SCAN: 2,
     ADJ_SHALLOW_SCAN: 3,
-    ADJ_DISMISSED: 4,
-    ADJ_FOUND: 5
+    ADJ_CASUALTY: 4,
+    ADJ_NO_CASUALTY: 5
 
 });
 

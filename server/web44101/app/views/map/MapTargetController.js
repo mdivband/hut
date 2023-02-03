@@ -17,6 +17,7 @@ var MapTargetController = {
         this.onTargetAdd = _.bind(this.onTargetAdd, context);
         this.updateTargetMarkerIcon = _.bind(this.updateTargetMarkerIcon, context);
         this.updateTargetMarkerVisibility = _.bind(this.updateTargetMarkerVisibility, context);
+        this.onTargetTypeChange = _.bind(this.onTargetTypeChange, context);
         this.checkForReveal = _.bind(this.checkForReveal, context);
         this.popupTargetFound = _.bind(this.popupTargetFound, context);
         this.getTargetAt = _.bind(this.getTargetAt, context);
@@ -33,6 +34,10 @@ var MapTargetController = {
 
         this.state.targets.on("change:visible", function (target) {
             MapTargetController.updateTargetMarkerVisibility(target);
+        });
+
+        this.state.targets.on("change:type", function (target) {
+            MapTargetController.onTargetTypeChange(target);
         });
     },
     onTargetAdd: function (target) {
@@ -63,7 +68,10 @@ var MapTargetController = {
     },
     openScanWindow : function (target, marker) {
         self = this;
-        var thisImg = "images/Complex/Complex - High Res/ComplexHighT4.png"
+
+        //var thisImg = "Complex/Complex - High Res/ComplexHighT4.png"
+        var thisImg = target.getHighResFileName();
+
         // TODO There is documentation here https://developers.google.com/maps/documentation/javascript/infowindows#maps_infowindow_simple-typescript
         //  that indicates we can create multiple windows (iw) so they can coexist. Probably an array of them, or making
         //  new ones that are hidden but id referenced to the target
@@ -80,6 +88,7 @@ var MapTargetController = {
                     if (!MapTargetController.classifiedIds.includes(thisId)) {
                         MapTargetController.classifiedIds.push(thisId);
                         $.post("/review/classify", {
+                            id: target.getId(),
                             ref: thisImg,
                             status: true,
                         });
@@ -102,6 +111,7 @@ var MapTargetController = {
                     if (!MapTargetController.classifiedIds.includes(thisId)) {
                         MapTargetController.classifiedIds.push(thisId);
                         $.post("/review/classify", {
+                            id: target.getId(),
                             ref: thisImg,
                             status: false,
                         });
@@ -116,7 +126,7 @@ var MapTargetController = {
                     self.$el.gmap("closeInfoWindow");
 
                 });
-                MapTargetController.displayImage(target.getId(), thisImg, property)
+                MapTargetController.displayImage(target.getId(), "adjustedImages/"+thisImg, property)
             });
 
             iw.setContent(property);
@@ -200,10 +210,10 @@ var MapTargetController = {
                 case this.state.targets.ADJ_SHALLOW_SCAN:
                     icon = this.icons.TargetShallowScan;
                     break;
-                case this.state.targets.ADJ_DISMISSED:
+                case this.state.targets.ADJ_CASUALTY:
                     icon = this.icons.TargetDismissed;
                     break;
-                case this.state.targets.ADJ_FOUND:
+                case this.state.targets.ADJ_NO_CASUALTY:
                     icon = this.icons.TargetFound;
                     break;
                 default:
@@ -222,6 +232,20 @@ var MapTargetController = {
         if (!marker.getVisible() && target.isVisible())
             MapTargetController.popupTargetFound(target);
         marker.setVisible(target.isVisible());
+    },
+    onTargetTypeChange: function (target) {
+        var self = this;
+        var marker = this.$el.gmap("get", "markers")[target.getId()];
+        if (marker) {
+            //alert("replacing " + target.getId() + " type = " + target.getType())
+            if (target.getType() === self.state.targets.ADJ_CASUALTY) {
+                MapTargetController.clearReviewedTarget(marker);
+                MapTargetController.placeEmptyTargetMarker(target.getPosition(), target.getId(), true);
+            } else if (target.getType() === self.state.targets.ADJ_NO_CASUALTY) {
+                MapTargetController.clearReviewedTarget(marker);
+                MapTargetController.placeEmptyTargetMarker(target.getPosition(), target.getId(), false);
+            }
+        }
     },
     checkForReveal: function (agent) {
         this.state.targets.each(function (target) {

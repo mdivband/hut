@@ -1,5 +1,6 @@
 package server.model.target;
 
+import server.Simulator;
 import server.model.Coordinate;
 
 public class AdjustableTarget extends Target {
@@ -21,6 +22,7 @@ public class AdjustableTarget extends Target {
     public void setFilenames(String lowRes, String highRes) {
         lowResFileName = lowRes;
         highResFileName = highRes;
+        Simulator.instance.getState().addToStoredImages(getId(), highRes, true);
     }
 
     public String getLowResFileName() {
@@ -30,4 +32,5 @@ public class AdjustableTarget extends Target {
     public String getHighResFileName() {
         return highResFileName;
     }
+
 }

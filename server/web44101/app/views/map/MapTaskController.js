@@ -173,6 +173,7 @@ var MapTaskController = {
         }
     },
     onTaskChange: function (task) {
+        console.log("Removed " + task.getId())
         var marker = this.$el.gmap("get", "markers")[task.getId()];
         if (marker)
             marker.setPosition(task.getPosition());

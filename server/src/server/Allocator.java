@@ -775,6 +775,31 @@ public class Allocator {
         return closestAgent;
     }
 
+    /**
+     * Assigns the nearest task that is not being done by any other agent
+     * @param agent
+     * @return
+     */
+    public boolean dynamicAssignNearest(Agent agent) {
+        double nearestDist = 99999999;
+        Task nearestTask = null;
+        for (Task t : simulator.getState().getTasks()) {
+            if (t.getAgents().isEmpty()) {
+                double thisDist = t.getCoordinate().getDistance(agent.getCoordinate());
+                if (thisDist < nearestDist) {
+                    nearestTask = t;
+                    nearestDist = thisDist;
+                }
+            }
+        }
+        if (nearestTask != null) {
+            putInTempAllocation(agent.getId(), nearestTask.getId());
+            confirmAllocation(simulator.getState().getTempAllocation());
+            return true;
+        }
+        return false;
+    }
+
     public void dynamicReassign(Task t) {
         LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         if (isSaturated()) {

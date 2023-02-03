@@ -80,7 +80,6 @@ public class TargetController extends AbstractController {
         this.uniqueTargetNumbers = new HashMap<>();
     }
 
-
     public void adjustForTask(int taskType, double lat, double lng) {
         for (Target t : Simulator.instance.getState().getTargets()) {
             try {

@@ -114,6 +114,17 @@ public class TaskController extends AbstractController {
         return false;
     }
 
+
+    public void createScoutTask(Double lat, Double lng, AdjustableTarget target) {
+        Task task = new ScoutTask(generateUID(), new Coordinate(lat, lng), target);
+        simulator.getState().add(task);
+        for (Agent a : simulator.getState().getAgents()) {
+            if (!(a instanceof AgentHub) && a.getTask() != null) {
+                a.resume();
+            }
+        }
+    }
+
     public synchronized Task updateTaskPosition(String id, double lat, double lng) {
         Task task = simulator.getState().getTask(id);
         if (!task.getCoordinate().equals(new Coordinate(lat, lng))) {

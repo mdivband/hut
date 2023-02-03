@@ -1,12 +1,10 @@
 package server;
 
 import server.controller.*;
-import server.model.Agent;
-import server.model.Coordinate;
-import server.model.Sensor;
-import server.model.State;
+import server.model.*;
 import server.model.target.AdjustableTarget;
 import server.model.target.Target;
+import server.model.task.ScoutTask;
 import server.model.task.Task;
 import tool.GsonUtils;
 
@@ -47,7 +45,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double gameSpeed = 6;
+    private static final double gameSpeed = 1;
 
     private Thread mainLoopThread;
 
@@ -172,6 +170,30 @@ public class Simulator {
                 this.reset();
             }
 
+            if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+                System.out.println("DONE BY COMPLETION: " + state.getTime());
+                System.out.println("agents = " + state.getAgents());
+                this.reset();
+            }
+
+            synchronized (state.getAgents()) {
+                for (Agent agent : state.getAgents()) {
+                    if (agent instanceof AgentVirtual av) {
+                        if (agent.isTimedOut()) {
+                            //System.out.println("timed out, passing");
+                        } else if (av.getTask() != null) {
+                            av.step(state.isFlockingEnabled());
+                        } else {
+                            if (true) { //if (getTaskController().checkForFreeTasks()) {
+                                getAllocator().dynamicAssignNearest(av);
+                            } else {
+                                av.heartbeat();
+                            }
+                        }
+                    }
+                }
+            }
+
             //Step agents
             checkAgentsForTimeout();
             for (Agent agent : state.getAgents())
@@ -179,12 +201,17 @@ public class Simulator {
 
             //Step tasks - requires completed tasks array to avoid concurrent modification.
             List<Task> completedTasks = new ArrayList<Task>();
-            for (Task task : state.getTasks())
-                if(task.step())
+            for (Task task : state.getTasks()) {
+                if (task.step()) {
+                    // If it's already tagged by a programmed agent, or if it gets completed by the step command
                     completedTasks.add(task);
+                    //System.out.println("Adding " + task.getId());
+                }
+            }
+
             for(Task task : completedTasks) {
                 task.complete();
-                Simulator.instance.getAllocator().dynamicReassign();
+                //Simulator.instance.getAllocator().dynamicReassign();
                 //printDiag();
             }
 
@@ -193,6 +220,14 @@ public class Simulator {
             // this.state.decayHazardHits();
 
             // Check and trigger images that are scheduled
+            for (Task t : state.getTasks()) {
+                if (t instanceof ScoutTask st && !st.getAgents().isEmpty()) {
+                    // This should scale from within 50 to 500m as a 1-10 resolution level
+                    int effectiveDistance = (int) Math.floor(st.getCoordinate().getDistance(st.getAgents().get(0).getCoordinate()) / 50);
+                    imageController.updateImage(st, st.getAssociatedTarget(), effectiveDistance);
+                }
+            }
+
             imageController.checkForImages();
 
             long endTime = System.currentTimeMillis();
@@ -454,6 +489,7 @@ public class Simulator {
                     } else {
                         target = targetController.addTarget(lat, lng, type);
                     }
+                    taskController.createScoutTask(lat, lng, (AdjustableTarget) target);
 
                     //Hide all targets initially - they must be found!!
                     targetController.setTargetVisibility(target.getId(), true);

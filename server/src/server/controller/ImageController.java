@@ -4,6 +4,7 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
 import server.model.target.Target;
+import server.model.task.ScoutTask;
 import server.model.task.Task;
 
 import java.util.ArrayList;
@@ -46,6 +47,11 @@ public class ImageController extends AbstractController {
             //simulator.getState().getPendingIds().add(id);
             takeImage(simulator.getState().getTarget(id).getCoordinate(), false);
         }
+    }
+
+    public void updateImage(ScoutTask st, AdjustableTarget t, double effectiveDist) {
+        // TODO update the adjustedImages based on effdist
+        
     }
 
     /**
@@ -132,21 +138,21 @@ public class ImageController extends AbstractController {
 
     }
 
+    public void agentClassify(Task task, AdjustableTarget target) {
+        decisions.put(task.getId(), target.isReal());  // TODO for backend logging this may need changing
+        // Foreach loop automatically handles the null case (no tasks found) by not entering
+        LOGGER.info(String.format("%s; AGCLA; Agent default classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), task.getId(), "N/A", target.isReal(), target.isReal()));
+
+    }
+
     /**
      * Called when an image is classified. Handles the addition of the record of this image and removes its target
      * @param ref File reference
      * @param status Whether it was classified P or N
      */
-    public void classify(String ref, boolean status) {
-        try {
-            Map<String, String> map = simulator.getState().getStoredImages();
-            String id = map
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> ref.equals(entry.getValue()))
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .get();
+    public void classify(String id, String ref, boolean status) {
+        //try {
+
 
             // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
             decisions.put(id, status);
@@ -156,7 +162,6 @@ public class ImageController extends AbstractController {
 
             deepScannedTargets.remove(id);
             shallowScannedTargets.remove(id);
-            map.remove(id);
 
             // Foreach loop automatically handles the null case (no tasks found) by not entering
             for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
@@ -166,7 +171,7 @@ public class ImageController extends AbstractController {
 
             LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
 
-        } catch (Exception ignored) {}
+        //} catch (Exception ignored) {}
 
     }
 
