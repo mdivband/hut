@@ -223,7 +223,7 @@ public class Simulator {
             for (Task t : state.getTasks()) {
                 if (t instanceof ScoutTask st && !st.getAgents().isEmpty()) {
                     // This should scale from within 50 to 500m as a 1-10 resolution level
-                    int effectiveDistance = (int) Math.floor(st.getCoordinate().getDistance(st.getAgents().get(0).getCoordinate()) / 50);
+                    int effectiveDistance = Math.min((int) Math.floor(st.getCoordinate().getDistance(st.getAgents().get(0).getCoordinate()) / 50), 9);
                     imageController.updateImage(st, st.getAssociatedTarget(), effectiveDistance);
                 }
             }

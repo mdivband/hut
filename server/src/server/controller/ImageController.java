@@ -1,5 +1,4 @@
 package server.controller;
-
 import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
@@ -7,10 +6,17 @@ import server.model.target.Target;
 import server.model.task.ScoutTask;
 import server.model.task.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import javax.sql.rowset.spi.SyncResolver;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.*;
 import java.util.logging.FileHandler;
 
 public class ImageController extends AbstractController {
@@ -49,9 +55,26 @@ public class ImageController extends AbstractController {
         }
     }
 
-    public void updateImage(ScoutTask st, AdjustableTarget t, double effectiveDist) {
+    static void showDir(int indent, File file) {
+        for (int i = 0; i < indent; i++)
+            System.out.print('-');
+        System.out.println(file.getName());
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            for (int i = 0; i < files.length; i++)
+                showDir(indent + 4, files[i]);
+        }
+    }
+
+
+    public void updateImage(ScoutTask st, AdjustableTarget t, int effectiveDist) {
         // TODO update the adjustedImages based on effdist
-        
+        if (!t.getHighResFileName().contains("level" + effectiveDist)) {
+            String firstPart = t.getHighResFileName().split("\\.")[0];
+            String newFileName = firstPart.split("_")[0] + "_level" + effectiveDist + ".png";
+            //System.out.println("set name to " + newFileName);
+            t.setFilenames("", newFileName);
+        }
     }
 
     /**

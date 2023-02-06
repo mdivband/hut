@@ -53,6 +53,7 @@ var simulator = {
             forEditMode: true
         });
 
+        /*
         this.views.images = new App.Views.Images({
             el: $("#scans_list"),
             state: this.state,
@@ -61,6 +62,8 @@ var simulator = {
             //canvas: $("#scans_button_panel").get(0),
             forEditMode: true
         });
+
+         */
 
         /*
         try {

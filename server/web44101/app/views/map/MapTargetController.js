@@ -68,17 +68,24 @@ var MapTargetController = {
     },
     openScanWindow : function (target, marker) {
         self = this;
-
-        //var thisImg = "Complex/Complex - High Res/ComplexHighT4.png"
         var thisImg = target.getHighResFileName();
+        console.log("thisImg = " + thisImg);
+        //google.maps.event.removeListener(this);
 
         // TODO There is documentation here https://developers.google.com/maps/documentation/javascript/infowindows#maps_infowindow_simple-typescript
         //  that indicates we can create multiple windows (iw) so they can coexist. Probably an array of them, or making
         //  new ones that are hidden but id referenced to the target
         this.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
-            var property = document.createElement("rev_div");
-            property.innerHTML = _.template($("#target_scan_edit").html(), {});
-            google.maps.event.addListener(iw, 'domready', function () {
+            var property =  document.getElementById("rev_div");
+            if (!property) {
+                var property = document.createElement("rev_div");
+                property.innerHTML = _.template($("#target_scan_edit").html(), {});
+            } else {
+                //google.maps.event.clearInstanceListeners(iw);
+            }
+
+            self.popupListener = google.maps.event.addListener(iw, 'domready', function () {
+                google.maps.event.clearListeners(this,'domready');
                 //Update task if values changed
                 // TODO should really just make a new function for these as only change is boolean status passed
                 $(property).on("click", "#decide_casualty", function () {
@@ -126,6 +133,7 @@ var MapTargetController = {
                     self.$el.gmap("closeInfoWindow");
 
                 });
+                MapTargetController.clearImage(property)
                 MapTargetController.displayImage(target.getId(), "adjustedImages/"+thisImg, property)
             });
 
@@ -135,6 +143,11 @@ var MapTargetController = {
             self.views.clickedTarget = target;
 
         });
+    },
+    clearImage: function (property) {
+        this.canvas = $("#image_review_canvas").get(0)
+        this.ctx = $("#image_review_canvas").get(0).getContext("2d")
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     },
     displayImage: function (id, iRef, property) {
         console.log("updating image id=" + id + ", iref=" + iRef)
@@ -220,7 +233,7 @@ var MapTargetController = {
                     console.log("No icon found for target type " + target.getType());
             }
         } catch (e) {
-           alert("eee + " + e)
+           alert("error at mtc + " + e)
         }
         if (icon) {
             marker.setIcon(icon.Image);

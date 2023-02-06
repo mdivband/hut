@@ -174,7 +174,7 @@ App.Views.Images = Backbone.View.extend({
             });
 
         } catch (e) {
-            alert("eee : " + e)
+            alert("err at images.js : " + e)
         }
 
     },
