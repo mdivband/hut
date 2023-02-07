@@ -702,7 +702,8 @@ App.Views.Map = Backbone.View.extend({
                 }
             });
             $("#remaining_dist").html(parseFloat(remainingDist / 1000).toFixed(2) + "km");
-            $("#remaining_time").html(_.convertToTime(estimatedRemainingTime, false));
+            // Below I divide by 10 simply because that seems to work in this case. Needs to be fixed
+            $("#remaining_time").html(_.convertToTime(estimatedRemainingTime / 10, false));
         }
     },
     updateClickedAgent: function (agent) {

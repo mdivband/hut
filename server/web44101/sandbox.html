@@ -54,7 +54,7 @@
                 <!-- END Y -->
                 <!-- camera and detail -->
                 <div id="monitor_accordions">
-                    <div id="accordion_smallview">
+                    <div id="accordion_smallview" style="display: none">
                         <h3>Monitor view</h3>
                         <div class="canvas_small">
                             <div id="canvas_small_info">
@@ -381,12 +381,12 @@
 
             <!-- Popup window when targets are selected-->
             <script type="text/template" id="target_scan_edit">
-                <div id="tmp1">
-                    <div> There may be a casualty here, an agent will check, but you can decide early </div>
+                <div>
+                    <div> <p style="font-size:18px; margin: 0px 0px 0px 0px"> There may be a casualty here, an agent will check, but you can decide early </p> </div>
                 </div>
-                <div id="tmp2" style="margin: 0px 1px 0px 5px;">
-                    <button id="decide_casualty">Casualty</button>
-                    <button id="decide_no_casualty">No Casualty</button>
+                <div id="cas_btns" style="margin: 0px 1px 5px 5px;">
+                    <button class="side-by-side-buttons" id="decide_casualty">Casualty</button>
+                    <button class="side-by-side-buttons" id="decide_no_casualty">No Casualty</button>
                 </div>
                 <div id="image_review">
                     <canvas id="image_review_canvas" style="display:inline-block;"></canvas>

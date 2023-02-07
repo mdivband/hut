@@ -102,8 +102,8 @@ App.Views.Graph = Backbone.View.extend({
         var options = {
             scaleOverride: true,
             scaleStartValue: 0,
-            scaleSteps: 8,
-            scaleStepWidth: this.stepWidth
+            scaleSteps: 10,
+            scaleStepWidth: 50//this.stepWidth
         };
 
         new Chart(this.ctx).HorizontalBar(chartData, options, this.ctx);

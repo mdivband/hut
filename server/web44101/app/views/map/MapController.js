@@ -243,13 +243,14 @@ var MapController = {
         // TODO this is a temp feature and should be hardcoded
         var tempTime = this.state.getTime();
         var tempLimit = this.state.getTimeLimit();
-        var time = $.fromTime(tempTime / 6);
+        var time = $.fromTime(tempTime / 1);
         var limit = $.fromTime(tempLimit / 6);
         /*
         var time = $.fromTime(this.state.getTime());
         var limit = $.fromTime(this.state.getTimeLimit());
         //$("#game_time").html("Time: " + time);
          */
+        $("#game_time").css('font-size', 24);
         $("#game_time").html("Time: " + time + "/" + limit);
         this.updateAllocationRendering();
         if (MapController.predictionLength > 0) {
