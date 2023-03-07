@@ -781,10 +781,10 @@ public class Allocator {
      * @return
      */
     public boolean dynamicAssignNearest(Agent agent) {
-        double nearestDist = 99999999;
+        double nearestDist = 999999999;
         Task nearestTask = null;
         for (Task t : simulator.getState().getTasks()) {
-            if (t.getAgents().isEmpty()) {
+            if (t.getAgents().isEmpty() || simulator.getState().getTasks().size() < simulator.getState().getAgents().size()) {
                 double thisDist = t.getCoordinate().getDistance(agent.getCoordinate());
                 if (thisDist < nearestDist) {
                     nearestTask = t;
@@ -792,12 +792,19 @@ public class Allocator {
                 }
             }
         }
-        if (nearestTask != null) {
-            putInTempAllocation(agent.getId(), nearestTask.getId());
-            confirmAllocation(simulator.getState().getTempAllocation());
-            return true;
+        if (nearestTask == null) {
+            // For now I'm assuming that we want to saturate, to make sure things get done -WH
+            System.out.println("defaulting");
+            Optional<Task> optionalTask = simulator.getState().getTasks().stream().skip((int) (simulator.getState().getTasks().size() * Math.random())).findFirst();
+            if (optionalTask.isPresent()) {
+                nearestTask = optionalTask.get();
+            } else
+                return false;
         }
-        return false;
+        System.out.println(agent.getId() + " nearest: " + nearestTask.getId());
+        putInTempAllocation(agent.getId(), nearestTask.getId());
+        confirmAllocation(simulator.getState().getTempAllocation());
+        return true;
     }
 
     public void dynamicReassign(Task t) {

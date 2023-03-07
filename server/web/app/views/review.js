@@ -51,7 +51,6 @@ App.Views.Review = Backbone.View.extend({
         try {
             var img = new Image();
             img.onload = function() {
-
                 self.originalWidth = $("#image_review_canvas").width();
                 self.originalHeight = $("#image_review_canvas").height();
 

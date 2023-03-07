@@ -72,7 +72,6 @@ public class ImageController extends AbstractController {
         if (!t.getHighResFileName().contains("level" + effectiveDist)) {
             String firstPart = t.getHighResFileName().split("\\.")[0];
             String newFileName = firstPart.split("_")[0] + "_level" + effectiveDist + ".png";
-            //System.out.println("set name to " + newFileName);
             t.setFilenames("", newFileName);
         }
     }

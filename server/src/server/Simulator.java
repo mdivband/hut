@@ -32,7 +32,7 @@ public class Simulator {
 
     private State state;
     private Sensor sensor;
-
+    private final Random random;
     private final QueueManager queueManager;
     private final AgentController agentController;
     private final TaskController taskController;
@@ -60,6 +60,7 @@ public class Simulator {
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
+        random = new Random();
 
         imageController = new ImageController(this);
 
@@ -185,7 +186,13 @@ public class Simulator {
                             av.step(state.isFlockingEnabled());
                         } else {
                             if (true) { //if (getTaskController().checkForFreeTasks()) {
-                                getAllocator().dynamicAssignNearest(av);
+                                //getAllocator().dynamicAssignNearest(av);
+                                getAllocator().runAutoAllocation();
+                                getAllocator().confirmAllocation(getState().getTempAllocation());
+                                state.getAgents().stream().filter(a -> a.getTask() == null).forEach(a -> {
+                                    System.out.println("reassigning " + a.getId());
+                                    getAllocator().dynamicAssignNearest(agent);
+                                });
                             } else {
                                 av.heartbeat();
                             }
@@ -586,4 +593,7 @@ public class Simulator {
         return imageController;
     }
 
+    public Random getRandom() {
+        return random;
+    }
 }
