@@ -190,8 +190,7 @@ public class Simulator {
                                 getAllocator().runAutoAllocation();
                                 getAllocator().confirmAllocation(getState().getTempAllocation());
                                 state.getAgents().stream().filter(a -> a.getTask() == null).forEach(a -> {
-                                    System.out.println("reassigning " + a.getId());
-                                    getAllocator().dynamicAssignNearest(agent);
+                                    getAllocator().dynamicAssignNearest(a);
                                 });
                             } else {
                                 av.heartbeat();

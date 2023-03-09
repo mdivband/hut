@@ -793,15 +793,15 @@ public class Allocator {
             }
         }
         if (nearestTask == null) {
-            // For now I'm assuming that we want to saturate, to make sure things get done -WH
-            System.out.println("defaulting");
+            // For now I'm assuming that we want to saturate, to make sure things get done. I don't think this
+            //  typically gets called, as the second check of the above loop's nested if statement deals with it. I am
+            //  leaving it here for insurance
             Optional<Task> optionalTask = simulator.getState().getTasks().stream().skip((int) (simulator.getState().getTasks().size() * Math.random())).findFirst();
             if (optionalTask.isPresent()) {
                 nearestTask = optionalTask.get();
             } else
                 return false;
         }
-        System.out.println(agent.getId() + " nearest: " + nearestTask.getId());
         putInTempAllocation(agent.getId(), nearestTask.getId());
         confirmAllocation(simulator.getState().getTempAllocation());
         return true;
