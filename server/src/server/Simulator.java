@@ -11,6 +11,7 @@ import tool.GsonUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -164,9 +165,12 @@ public class Simulator {
         String fnd = foundScore+"/12";
         double tgtmin = foundScore / getState().getTime();
         double acc = (double) foundScore / classified;
-        double pts = tgtmin * acc;
+        double pts = 100 * tgtmin * acc;
 
-        LOGGER.info(String.format("%s; DEMOSCORE; Recording (name, found/available, tgt/min, accuracy, pts); %s; %s; %s; %s; %s ", getState().getTime(), getState().getUserName(), fnd, tgtmin, acc, pts));
+        DecimalFormat df = new DecimalFormat("#.##");
+
+        LOGGER.info(String.format("%s; DEMOSCORE; Recording (name, found/available, tgt/min, accuracy, pts); %s; %s; %s; %s; %s ",
+                getState().getTime(), getState().getUserName(), fnd, df.format(tgtmin), df.format(acc), df.format(pts)));
        // SCORE; name; time; target (5/12); TARGETS/MIN; Accuracy (corr %age); pts=Target/min * accuracy
     }
 
