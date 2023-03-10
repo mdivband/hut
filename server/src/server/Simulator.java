@@ -167,10 +167,10 @@ public class Simulator {
         double acc = (double) foundScore / classified;
         double pts = 100 * tgtmin * acc;
 
-        DecimalFormat df = new DecimalFormat("#.##");
-
+        DecimalFormat df1 = new DecimalFormat("#.##");
+        DecimalFormat df2 = new DecimalFormat("#");
         LOGGER.info(String.format("%s; DEMOSCORE; Recording (name, found/available, tgt/min, accuracy, pts); %s; %s; %s; %s; %s ",
-                getState().getTime(), getState().getUserName(), fnd, df.format(tgtmin), df.format(acc), df.format(pts)));
+                getState().getTime(), getState().getUserName(), fnd, df1.format(tgtmin), df1.format(acc), df2.format(pts)));
        // SCORE; name; time; target (5/12); TARGETS/MIN; Accuracy (corr %age); pts=Target/min * accuracy
     }
 
