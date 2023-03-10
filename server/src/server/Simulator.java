@@ -46,6 +46,8 @@ public class Simulator {
     public static Simulator instance;
 
     private static final double gameSpeed = 1;
+    private int foundScore = 0;
+    private int classified = 0;
 
     private Thread mainLoopThread;
 
@@ -158,6 +160,16 @@ public class Simulator {
         return scenarios;
     }
 
+    private void logDemoInfo(){
+        String fnd = foundScore+"/12";
+        double tgtmin = foundScore / getState().getTime();
+        double acc = (double) foundScore / classified;
+        double pts = tgtmin * acc;
+
+        LOGGER.info(String.format("%s; DEMOSCORE; Recording (name, found/available, tgt/min, accuracy, pts); %s; %s; %s; %s; %s ", getState().getTime(), getState().getUserName(), fnd, tgtmin, acc, pts));
+       // SCORE; name; time; target (5/12); TARGETS/MIN; Accuracy (corr %age); pts=Target/min * accuracy
+    }
+
     private void mainLoop() {
         final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
         int sleepTime;
@@ -168,12 +180,14 @@ public class Simulator {
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }
+                logDemoInfo();
                 this.reset();
             }
 
             if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
-                System.out.println("DONE BY COMPLETION: " + state.getTime());
-                System.out.println("agents = " + state.getAgents());
+                //System.out.println("DONE BY COMPLETION: " + state.getTime());
+                //System.out.println("agents = " + state.getAgents());
+                logDemoInfo();
                 this.reset();
             }
 
@@ -311,6 +325,8 @@ public class Simulator {
         targetController.resetTargetNumbers();
         taskController.resetTaskNumbers();
         imageController.reset();
+        foundScore = 0;
+        classified = 0;
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
         /*
@@ -594,5 +610,14 @@ public class Simulator {
 
     public Random getRandom() {
         return random;
+    }
+
+    public void markCorrectFound() {
+        foundScore++;
+        classified++;
+    }
+
+    public void markIncorrectFound() {
+        classified++;
     }
 }

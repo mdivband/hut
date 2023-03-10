@@ -161,10 +161,17 @@ public class ImageController extends AbstractController {
     }
 
     public void agentClassify(Task task, AdjustableTarget target) {
-        decisions.put(task.getId(), target.isReal());  // TODO for backend logging this may need changing
-        // Foreach loop automatically handles the null case (no tasks found) by not entering
-        LOGGER.info(String.format("%s; AGCLA; Agent default classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), task.getId(), "N/A", target.isReal(), target.isReal()));
-
+        if (simulator.getState().getTargets().contains(target)) {
+            decisions.put(task.getId(), target.isReal());  // TODO for backend logging this may need changing
+            // Foreach loop automatically handles the null case (no tasks found) by not entering
+            LOGGER.info(String.format("%s; AGCLA; Agent default classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), task.getId(), "N/A", target.isReal(), target.isReal()));
+            if (target.isReal() == target.isReal()) {
+                // Correct
+                simulator.markCorrectFound();
+            } else {
+                simulator.markIncorrectFound();
+            }
+        }
     }
 
     /**
@@ -176,24 +183,29 @@ public class ImageController extends AbstractController {
         //try {
 
 
-            // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
-            decisions.put(id, status);
+        // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
+        decisions.put(id, status);
 
-            boolean isDeep = deepScannedTargets.contains(id);
-            boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
+        boolean isDeep = deepScannedTargets.contains(id);
+        boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
 
-            deepScannedTargets.remove(id);
-            shallowScannedTargets.remove(id);
+        deepScannedTargets.remove(id);
+        shallowScannedTargets.remove(id);
 
-            // Foreach loop automatically handles the null case (no tasks found) by not entering
-            for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
-                t.complete();
-            }
-            simulator.getTargetController().deleteTarget(id);
+        // Foreach loop automatically handles the null case (no tasks found) by not entering
+        //t.complete();
+        ArrayList<Task> toComplete = new ArrayList<>(simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate()));
+        simulator.getTargetController().deleteTarget(id);
 
-            LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
+        LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
+        if (status == isReal) {
+            // Correct
+            simulator.markCorrectFound();
+        } else {
+            simulator.markIncorrectFound();
+        }
 
-        //} catch (Exception ignored) {}
+        toComplete.forEach(Task::complete);
 
     }
 
