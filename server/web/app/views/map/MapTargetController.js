@@ -157,9 +157,13 @@ var MapTargetController = {
 
     },
     clearImage: function (property) {
-        this.canvas = $("#image_review_canvas").get(0)
-        this.ctx = $("#image_review_canvas").get(0).getContext("2d")
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        try {
+            this.canvas = $("#image_review_canvas").get(0)
+            this.ctx = $("#image_review_canvas").get(0).getContext("2d")
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        } catch (e) {
+            
+        }
     },
     displayImage: function (id, iRef, property) {
         console.log("updating image id=" + id + ", iref=" + iRef)

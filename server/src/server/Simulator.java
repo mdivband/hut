@@ -161,16 +161,22 @@ public class Simulator {
         return scenarios;
     }
 
-    private void logDemoInfo(){
+    private void logDemoInfo(boolean timedOut){
         String fnd = foundScore+"/12";
-        double tgtmin = foundScore / getState().getTime();
+        double tgtmin = foundScore / (getState().getTime() / 60);
         double acc = (double) foundScore / classified;
         double pts = 100 * tgtmin * acc;
 
         DecimalFormat df1 = new DecimalFormat("#.##");
         DecimalFormat df2 = new DecimalFormat("#");
-        LOGGER.info(String.format("%s; DEMOSCORE; Recording (name, found/available, tgt/min, accuracy, pts); %s; %s; %s; %s; %s ",
-                getState().getTime(), getState().getUserName(), fnd, df1.format(tgtmin), df1.format(acc), df2.format(pts)));
+        double time;
+        if (timedOut) {
+            time = 90.0;
+        } else {
+            time = Math.min(getState().getTime(), 90.0);
+        }
+        LOGGER.info(String.format("%s; DEMOSCORE; Recording (name, corr/class, tgt/min, accuracy, pts); %s; %s; %s; %s; %s ",
+                time, getState().getUserName(), fnd, df1.format(tgtmin), df1.format(acc), df2.format(pts)));
        // SCORE; name; time; target (5/12); TARGETS/MIN; Accuracy (corr %age); pts=Target/min * accuracy
     }
 
@@ -184,14 +190,14 @@ public class Simulator {
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }
-                logDemoInfo();
+                logDemoInfo(true);
                 this.reset();
             }
 
             if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
                 //System.out.println("DONE BY COMPLETION: " + state.getTime());
                 //System.out.println("agents = " + state.getAgents());
-                logDemoInfo();
+                logDemoInfo(false);
                 this.reset();
             }
 
