@@ -166,54 +166,57 @@ var MapTargetController = {
         }
     },
     displayImage: function (id, iRef, property) {
-        console.log("updating image id=" + id + ", iref=" + iRef)
-        var self = this;
+        try {
+            console.log("updating image id=" + id + ", iref=" + iRef)
+            var self = this;
 
-        this.currentImageName = id
-        this.currentImageRef = iRef
+            this.currentImageName = id
+            this.currentImageRef = iRef
 
-        //property.innerHTML += '<canvas id="new_canv"></canvas>'; // the += means we add this to the inner HTML of body
-        //document.getElementById('image_review').innerHTML = '<canvas id="new_canv"></canvas>';
-        //document.getElementById('rev_div').innerHTML = '<canvas id="new_canv"></canvas>';
-        var totalWidth = 640;
-        var totalHeight = 360;
-        self.canvas = $("#image_review_canvas").get(0)
-        self.ctx = $("#image_review_canvas").get(0).getContext("2d")
+            //property.innerHTML += '<canvas id="new_canv"></canvas>'; // the += means we add this to the inner HTML of body
+            //document.getElementById('image_review').innerHTML = '<canvas id="new_canv"></canvas>';
+            //document.getElementById('rev_div').innerHTML = '<canvas id="new_canv"></canvas>';
+            var totalWidth = 640;
+            var totalHeight = 360;
+            self.canvas = $("#image_review_canvas").get(0)
+            self.ctx = $("#image_review_canvas").get(0).getContext("2d")
 
-        //================================
+            //================================
 
-        // We need to determine what type of data this is
-        self.scale = 1;
-        self.originalWidth = $("#image_review_canvas").width();
-        self.originalHeight = $("#image_review_canvas").height();
-        console.log("w (rev vs canv): " + $("#image_review").width() + " vs " + $("#image_review_canvas").width())
-        console.log("h (rev vs canv): " + $("#image_review_canvas").height() + " vs " + $("#image_review_canvas").height())
+            // We need to determine what type of data this is
+            self.scale = 1;
+            self.originalWidth = $("#image_review_canvas").width();
+            self.originalHeight = $("#image_review_canvas").height();
+            console.log("w (rev vs canv): " + $("#image_review").width() + " vs " + $("#image_review_canvas").width())
+            console.log("h (rev vs canv): " + $("#image_review_canvas").height() + " vs " + $("#image_review_canvas").height())
 
-        /*
-        while ($("#image_review_canvas").width() > $("#image_review").width() || $("#image_review_canvas").height() > $("#image_review").height()) {
-            self.scale -= 0.2;
-            console.log("rescaling: w = " + $("#image_review_canvas").width() + "; h = " + $("#image_review_canvas").height() + "; (scale = " + self.scale + ")")
-            $("#image_review_canvas").width(self.originalWidth * self.scale);
-            $("#image_review_canvas").height(self.originalHeight * self.scale);
+            /*
+            while ($("#image_review_canvas").width() > $("#image_review").width() || $("#image_review_canvas").height() > $("#image_review").height()) {
+                self.scale -= 0.2;
+                console.log("rescaling: w = " + $("#image_review_canvas").width() + "; h = " + $("#image_review_canvas").height() + "; (scale = " + self.scale + ")")
+                $("#image_review_canvas").width(self.originalWidth * self.scale);
+                $("#image_review_canvas").height(self.originalHeight * self.scale);
+            }
+
+             */
+
+            // TODO maybe just imrev
+            self.canvas.width = totalWidth;
+            self.canvas.height = totalHeight;
+            $("#image_review_canvas").css({top: 0, left: 0, position: 'relative'});
+
+            var img = new Image();
+            img.onload = function () {
+                self.ctx.lineWidth = 3;
+                self.ctx.drawImage(img, 0, 0, self.canvas.width, self.canvas.height);
+                self.ctx.strokeRect(0, 0, self.canvas.width, self.canvas.height);
+            };
+            img.src = "adjustedImages/" + iRef;  // Use the argument, so it works regardless of update flag
+
+            //============================
+        } catch (e) {
+
         }
-        
-         */
-
-        // TODO maybe just imrev
-        self.canvas.width = totalWidth;
-        self.canvas.height = totalHeight;
-        $("#image_review_canvas").css({top: 0, left: 0, position: 'relative'});
-
-        var img = new Image();
-        img.onload = function () {
-            self.ctx.lineWidth = 3;
-            self.ctx.drawImage(img, 0, 0, self.canvas.width, self.canvas.height);
-            self.ctx.strokeRect(0, 0, self.canvas.width, self.canvas.height);
-        };
-        img.src = "adjustedImages/"+iRef;  // Use the argument, so it works regardless of update flag
-
-        //============================
-
 
     },
     checkIcon : function (targetId) {

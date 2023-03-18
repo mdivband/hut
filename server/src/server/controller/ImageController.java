@@ -164,11 +164,11 @@ public class ImageController extends AbstractController {
         if (simulator.getState().getTargets().contains(target)) {
             decisions.put(task.getId(), target.isReal());  // TODO for backend logging this may need changing
             // Foreach loop automatically handles the null case (no tasks found) by not entering
-            LOGGER.info(String.format("%s; AGCLA; Agent default classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), task.getId(), "N/A", target.isReal(), target.isReal()));
-            if (target.isReal() == target.isReal()) {
-                // Correct
+            if (simulator.getRandom().nextDouble() < 0.85) {
+                LOGGER.info(String.format("%s; AGCLA; Agent default classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), task.getId(), "N/A", target.isReal(), target.isReal()));
                 simulator.markCorrectFound();
             } else {
+                LOGGER.info(String.format("%s; AGCLA; Agent default classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), task.getId(), "N/A", !target.isReal(), target.isReal()));
                 simulator.markIncorrectFound();
             }
         }
