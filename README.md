@@ -32,7 +32,7 @@ There are several steps required to setup a working version of the application a
 
 Since there is an element of networking between the mobile app and the server, there is some configuration required to connect succesfully. If the server is configured correctly (see the server setup guide found [here][25]), then there should be a REST API and a RabbitMQ server that the mobile application can connect to. To configure the mobile application to connect to your server, replace *server-ip* with the IP address of your server in the following line of the [ServerHandler][12] class:
 ```java
-private static final String serverAddress = "http:/server-ip:8000/";
+private static final String serverAddress = "http://server-ip:8000/";
 ```
 In addition to configuring the server IP address, it may also be necessary to configure a VPN on the Android device if the server is running on the University network. A guide to setting up an Android VPN for the University network can be found [here][13].
 
