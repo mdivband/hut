@@ -64,7 +64,10 @@ replacing `DJI SDK Key` and `Google Maps SDK Key` with the respective keys.
 
 The mobile application follows a [model-view-controller][14] (MVC) architecture pattern. The view is comprised of the XML files that take care of the on-screen rendering and layout. The controller is made of three different sections: the activity controllers, the application instance and the model handlers. The activity controllers are reponsible for managing the views; there is one activity class per XML (view) file. [DJIHutApplication][15] is the application instance - the main controller file. It has references to each of the model handlers: the parts of the controller that are responsible for dealing with the model. The [DroneHandler][16] is the primary manager of the DJI SDK (the DJI SDK is seen as part of the model); it takes care of establishing connections with the drone controller and the drone, and broadcasts any changes of the drone connection to relevant listeners. The [MissionHandler][17] processes incoming missions from the server and updates the commands for the drone if necessary. Finally, the [ServerHandler][18] is responsible for establishing a connection to the server, sending incoming messages to the correct handler for processing (e.g. mission messages to the [MissionHandler][17]), and sending information from the mobile application to the server (e.g. relaying the drone's position). An overview of the app architure is shown below:
 
-![App Architecture Overview][app_architecture]
+<p align="center">
+    <img width="400" src="https://github.com/mdivband/hut/blob/master/controller/docs/app_architecture.png?raw=true" alt="Material Bread logo" >
+</p>
+
 
 The app has two main views (or activities as they are called in Android app devleopment) - the connection activity and the overview activity. The connection activity is responsible for setting up the connection with the drone controller and the drone, as well as initiating the connection with the server. The overview activity displays the drone's position on a map as well as the feed from the drone's camera. The diagram below summaries the flow between the activities:
 
@@ -78,41 +81,41 @@ private static final String LOG_TAG = DJIHutApplication.MASTER_TAG + "_ServerHan
 ```
 Since the Android device has to be connected to the drone controller via USB when using the application, calls to print to the standard output and other logging calls will not be shown in the console of the development environment. There are methods to send the log files wirelessly, however the easiest solution is to install a logging app onto the Android device itself to monitor the logs in realtime. The recommended app is [CatLog][20], and although it asks for root access on the Android device it is possible to use it without doing so by using [this guide][21]. Once installed, filter by the master tag (DJIHut) in CatLog to see the log for the DJI Hut Controller application.
 
-[1]: https://bitbucket.org/dhaminda/hutserver/
-[2]: ../
-[3]: ../app
-[4]: ../dJISDKLIB
-[5]: ../docs
+[1]: https://github.com/mdivband/hut/tree/master/server
+[2]: ../hut/controller
+[3]: ../hut/controller/app/
+[4]: ../hut/controller/dJISDKLIB/
+[5]: ../hut/controller/docs/
 [6]: https://developer.dji.com/mobile-sdk/
 [7]: http://www.rabbitmq.com/
 [8]: https://developer.dji.com/mobile-sdk/downloads/
 [9]: https://forum.dji.com/thread-42536-1-1.html
 [10]: https://www.jetbrains.com/idea/
 [11]: https://developer.android.com/studio/
-[12]: ../app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
+[12]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
 [13]: https://www.southampton.ac.uk/ageing/postgraduate/welcome/vpn.page
 [14]: https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
-[15]: ../app/src/main/java/com/dji/hut_controller/DJIHutApplication.java
-[16]: ../app/src/main/java/com/dji/hut_controller/handler/DroneHandler.java
-[17]: ../app/src/main/java/com/dji/hut_controller/handler/MissionHandler.java
-[18]: ../app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
+[15]: ../hut/controller/app/src/main/java/com/dji/hut_controller/DJIHutApplication.java
+[16]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/DroneHandler.java
+[17]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/MissionHandler.java
+[18]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
 [19]: https://developer.android.com/reference/android/util/Log
 [20]: https://play.google.com/store/apps/details?id=com.nolanlawson.logcat&hl=en_GB
 [21]: https://www.utest.com/articles/capture-android-logs-with-an-app-no-root-or-usb-cable-required
 [22]: https://developers.google.com/maps/documentation/android-sdk/signup
 [23]: https://developer.dji.com/mobile-sdk/documentation/quick-start/index.html#generate-an-app-key
-[24]: ../app/src/main/AndroidManifest.xml
-[25]: https://bitbucket.org/dhaminda/hutserver/src/master/docs/documentation.md
+[24]: ../hut/controller/app/src/main/AndroidManifest.xml
+[25]: https://github.com/mdivband/hut/blob/master/README.md#setup-guide-1
 
-[project_architecture]: https://bitbucket.org/jearly97/hut_dji_controller/raw/master/docs/project_architecture.png "Project Architecture Overview"
-[app_architecture]: https://bitbucket.org/jearly97/hut_dji_controller/raw/master/docs/app_architecture.png "App Architecture Overview"
-[app_flow]: https://bitbucket.org/jearly97/hut_dji_controller/raw/master/docs/app_flow.png "App Flow"
+[project_architecture]: https://github.com/mdivband/hut/blob/master/controller/docs/project_architecture.png?raw=true "Project Architecture Overview"
+[app_architecture]: https://github.com/mdivband/hut/blob/master/controller/docs/app_architecture.png?raw=true "App Architecture Overview"
+[app_flow]: https://github.com/mdivband/hut/blob/master/controller/docs/app_flow.png?raw=true "App Flow"
 
 
 ## DJI Hut Server - Documentation
 ##### Last Updated: 13/09/2018, Joe Early
 ------
-The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][1]). 
+The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][35]). 
 
 ### Table of Contents
 
@@ -125,15 +128,15 @@ The DJI Hut Server is a client-server application that is used for coordinating 
 
 ### Repository Structure
 
-The repository has two main directories: [src][2] is for the server code and [web][3] is for the client (browser) code. 
+The repository has two main directories: [src][36] is for the server code and [web][37] is for the client (browser) code. 
 
-Within the src directory, there are three packages: [maxsum][4], [server][5] and [tool][6]. The maxsum package contains the code to execute the maxsum algorithm that is used to assign agents to tasks. The server package contains the server code, which is further split into controller and model packages. Finally, the tool package contains a utility class for JSON serialisation using [GSON][7], as well as [Java Lightweight HTTP Server][8] class that actually handles the web server's HTTP connections (meaning Apache or equivalent is not required). For a more in-dept overview of the code, see the file tree documentation [here][34].
+Within the src directory, there are three packages: [maxsum][38], [server][39] and [tool][40]. The maxsum package contains the code to execute the maxsum algorithm that is used to assign agents to tasks. The server package contains the server code, which is further split into controller and model packages. Finally, the tool package contains a utility class for JSON serialisation using [GSON][41], as well as [Java Lightweight HTTP Server][42] class that actually handles the web server's HTTP connections (meaning Apache or equivalent is not required). For a more in-dept overview of the code, see the file tree documentation [here][67].
 
 ### Project Architecture
 
-The overall project architecture is spread across two repostiories: this one and the [mobile app repository][1]. The mobile application is responsible for communicating with the drone controller and drone itself, however all the planning and coordinate of the drones is done by the server.
+The overall project architecture is spread across two repostiories: this one and the [mobile app repository][35]. The mobile application is responsible for communicating with the drone controller and drone itself, however all the planning and coordinate of the drones is done by the server.
 
-The mobile application communicates with the server to relay information about the drone (such as position), and also to receive commands regarding the drone's current mission. The mobile application initially registers itself with the server using the server's REST API. After establishing a connection, the server configures a channel on its [RabbitMQ][9] server (running [here][33])for this particular drone and informs the application of this newly opened channel. All communication between the application and the server then proceeds via RabbitMQ rather than the REST API.
+The mobile application communicates with the server to relay information about the drone (such as position), and also to receive commands regarding the drone's current mission. The mobile application initially registers itself with the server using the server's REST API. After establishing a connection, the server configures a channel on its [RabbitMQ][43] server (running [here][66])for this particular drone and informs the application of this newly opened channel. All communication between the application and the server then proceeds via RabbitMQ rather than the REST API.
 
 The client application that runs in the browser communicates with the server via the server's REST API. The broswer application allows a user to specifiy custom allocations of drones to missions, as well as see the position of all the drones at once. An overview of the project architecture is shown below:
 
@@ -145,12 +148,13 @@ There are several steps required to setup a working version of the mobile applic
 
 1. Clone this repository to your machine.  
 2. Setup a project in Intellij (recommended) or Eclipse from the repository code.  
-3. Run the [Simulator][14] class, and open http://localhost:8000/ in a browswer to connect to the client application.  
+3. Go to Settings > Project Structure, in Project add a SDK and in Module > Add New Module and select the server folder in the hut project as a java module.
+3. Run the [Simulator][48] class, and open http://localhost:8000/ in a browser to connect to the client application.  
 4. (Optional) Configuration for connecting drones via the mobile app:  
-    * Configure a [VPN via Global Protect][11] if running the server locally on the University network.  
+    * Configure a [VPN via Global Protect][45] if running the server locally on the University network.  
     * Find the IP of the server (check the Global Protect settings if using the VPN).  
     * Check that port 8000 is open on the server machine.  
-    * Follow the mobile app setup guide, found [here][1].  
+    * Follow the mobile app setup guide, found [here][35].  
 
 ### Setup Troubleshooting
 
@@ -160,11 +164,11 @@ There are several steps required to setup a working version of the mobile applic
 
 ### Server Architecture
 
-The server application has a model component and a controller componment, as represented by the package structure. Parts of the model are exposed through the server's REST API, with connections to the client broswer application and mobile application handled by the [ConnectionController][15] and the [QueueManager][16] respectively. The ConnectionController uses different handlers for processing REST requests: [AgentHandler][29], [TaskHandler][30], [TargetHandler][31] and [RootHandler][32]. The first three handlers correspond with equivalent controller classes ([AgentController][17], [TargetController][18], [TaskController][19]), while the RootHandler is responsible for all other endpoints that don't fall under the first three categories. The REST endpoints exposed by the server are summarised [here][28].
+The server application has a model component and a controller componment, as represented by the package structure. Parts of the model are exposed through the server's REST API, with connections to the client broswer application and mobile application handled by the [ConnectionController][49] and the [QueueManager][50] respectively. The ConnectionController uses different handlers for processing REST requests: [AgentHandler][62], [TaskHandler][63], [TargetHandler][64] and [RootHandler][65]. The first three handlers correspond with equivalent controller classes ([AgentController][51], [TargetController][52], [TaskController][53]), while the RootHandler is responsible for all other endpoints that don't fall under the first three categories. The REST endpoints exposed by the server are summarised [here][61].
 
-The model component of the server is fully encapsulated in the [State][21] class - this is the central class that references the other models classes such as [Agent][22], [Schedule][23], [Target][24] and [Task][25]. The single state instance is created by the [Simulator][14] class (the entry point for the server application), and updated & maintained by the various controller classes, with each controller class reponsbile for a different component of the state.
+The model component of the server is fully encapsulated in the [State][54] class - this is the central class that references the other models classes such as [Agent][55], [Target][57] and [Task][58]. The single state instance is created by the [Simulator][48] class (the entry point for the server application), and updated & maintained by the various controller classes, with each controller class reponsbile for a different component of the state.
 
-In addition to the model and controller components, the server is also reponsbile for the allocation of agents to tasks and creating a schedule for performing the tasks given by the user (via the browser application). The allocation is handled by the [Allocator][26] class, which uses the algorithm contained in the [maxsum package][27] to actually compute the allocation. The architecture is designed so that the allocation algorithm is not deeply integrated into the code - it can easily be substitued for an alternative planning algorithm if required.
+In addition to the model and controller components, the server is also reponsbile for the allocation of agents to tasks and creating a schedule for performing the tasks given by the user (via the browser application). The allocation is handled by the [Allocator][59] class, which uses the algorithm contained in the [maxsum package][60] to actually compute the allocation. The architecture is designed so that the allocation algorithm is not deeply integrated into the code - it can easily be substitued for an alternative planning algorithm if required.
 
 An overview of the server architecture is given below:
 
@@ -178,42 +182,40 @@ The browser app operates in two modes: monitor and edit. In monitor mode, the us
 
 An overview of the allocation process is given below:
 
-![Server Architecture][allocation_process]
+![Allocation Process][allocation_process]
 
-[1]: https://bitbucket.org/jearly97/hut_dji_controller
-[2]: ../src
-[3]: ../web
-[4]: ../src/maxsum
-[5]: ../src/server
-[6]: ../src/tool
-[7]: https://en.wikipedia.org/wiki/Gson
-[8]: https://www.freeutils.net/source/jlhttp/
-[9]: http://www.rabbitmq.com/
-[10]: http://www.rabbitmq.com/install-windows.html
-[11]: https://www.southampton.ac.uk/ageing/postgraduate/welcome/vpn.page
-[12]: ../src/server/QueueManager.java
-[13]: https://bitbucket.org/jearly97/hut_dji_controller/src/master/docs/documentation.md#markdown-header-setup-guide
-[14]: ../src/server/Simulator.java
-[15]: ../src/server/controller/ConnectionController.java
-[16]: ../src/server/QueueManager.java
-[17]: ../src/server/controller/AgentController.java
-[18]: ../src/server/controller/TargetController.java
-[19]: ../src/server/controller/TaskController.java
-[21]: ../src/server/model/State.java
-[22]: ../src/server/model/Agent.java
-[23]: ../src/server/model/Schedule.java
-[24]: ../src/server/model/Target.java
-[25]: ../src/server/model/Task.java
-[26]: ../src/server/Allocator.java
-[27]: ../src/maxsum
-[28]: ./endpoints.md
-[29]: ../src/server/controller/handler/AgentHandler.java
-[30]: ../src/server/controller/handler/TaskHandler.java
-[31]: ../src/server/controller/handler/TargetHandler.java
-[32]: ../src/server/controller/handler/RootHandler.java
-[33]: https://www.cloudamqp.com/
-[34]: ./file_tree.md
+[35]: ../hut/controller/app/
+[36]: ../hut/server/src/
+[37]: ../hut/server/web/
+[38]: ../hut/server/src/maxsum
+[39]: ../hut/server/src/server
+[40]: ../hut/server/src/tool
+[41]: https://en.wikipedia.org/wiki/Gson
+[42]: https://www.freeutils.net/source/jlhttp/
+[43]: http://www.rabbitmq.com/
+[44]: http://www.rabbitmq.com/install-windows.html
+[45]: https://www.southampton.ac.uk/ageing/postgraduate/welcome/vpn.page
+[46]: ../hut/server/src/server/QueueManager.java
+[48]: ../hut/server/src/server/Simulator.java
+[49]: ../hut/server/src/server/controller/ConnectionController.java
+[50]: ../hut/server/src/server/QueueManager.java
+[51]: ../hut/server/src/server/controller/AgentController.java
+[52]: ../hut/server/src/server/controller/TargetController.java
+[53]: ../hut/server/src/server/controller/TaskController.java
+[54]: ../hut/server/src/server/model/State.java
+[55]: ../hut/server/src/server/model/Agent.java
+[57]: ../hut/server/src/server/model/target/Target.java
+[58]: ../hut/server/src/server/model/task/Task.java
+[59]: ../hut/server/src/server/Allocator.java
+[60]: ../hut/server/src/maxsum
+[61]: ../hut/server/docs/endpoints.md
+[62]: ../hut/server/src/server/controller/handler/AgentHandler.java
+[63]: ../hut/server/src/server/controller/handler/TaskHandler.java
+[64]: ../hut/server/src/server/controller/handler/TargetHandler.java
+[65]: ../hut/server/src/server/controller/handler/RootHandler.java
+[66]: https://www.cloudamqp.com/
+[67]: ../hut/server/docs/file_tree.md
 
-[project_architecture]: https://bitbucket.org/jearly97/hut_dji_controller/raw/master/docs/project_architecture.png "Project Architecture Overview"
-[server_architecture]: https://bitbucket.org/dhaminda/hutserver/raw/master/docs/img/server_architecture.png "Server Architecture"
-[allocation_process]: https://bitbucket.org/dhaminda/hutserver/raw/master/docs/img/allocation_flow.png "Allocation Process"
+[project_architecture]: https://github.com/mdivband/hut/blob/master/controller/docs/project_architecture.png?raw=true "Project Architecture Overview"
+[server_architecture]: https://github.com/mdivband/hut/blob/master/server/docs/img/server_architecture.png?raw=true "Server Architecture"
+[allocation_process]: https://github.com/mdivband/hut/blob/5d4d57ffc541bedcd78db6688a4fca21a44edecb/server/docs/img/allocation_flow.png?raw=true "Allocation Process"
