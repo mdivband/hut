@@ -32,7 +32,7 @@ There are several steps required to setup a working version of the application a
 
 Since there is an element of networking between the mobile app and the server, there is some configuration required to connect succesfully. If the server is configured correctly (see the server setup guide found [here][25]), then there should be a REST API and a RabbitMQ server that the mobile application can connect to. To configure the mobile application to connect to your server, replace *server-ip* with the IP address of your server in the following line of the [ServerHandler][12] class:
 ```java
-private static final String serverAddress = "http://server-ip:8000/";
+private static final String serverAddress = "http:/server-ip:8000/";
 ```
 In addition to configuring the server IP address, it may also be necessary to configure a VPN on the Android device if the server is running on the University network. A guide to setting up an Android VPN for the University network can be found [here][13].
 
@@ -82,29 +82,29 @@ private static final String LOG_TAG = DJIHutApplication.MASTER_TAG + "_ServerHan
 Since the Android device has to be connected to the drone controller via USB when using the application, calls to print to the standard output and other logging calls will not be shown in the console of the development environment. There are methods to send the log files wirelessly, however the easiest solution is to install a logging app onto the Android device itself to monitor the logs in realtime. The recommended app is [CatLog][20], and although it asks for root access on the Android device it is possible to use it without doing so by using [this guide][21]. Once installed, filter by the master tag (DJIHut) in CatLog to see the log for the DJI Hut Controller application.
 
 [1]: https://github.com/mdivband/hut/tree/master/server
-[2]: ../hut/controller
-[3]: ../hut/controller/app/
-[4]: ../hut/controller/dJISDKLIB/
-[5]: ../hut/controller/docs/
+[2]: /controller
+[3]: /controller/app/
+[4]: /controller/dJISDKLIB/
+[5]: /controller/docs/
 [6]: https://developer.dji.com/mobile-sdk/
 [7]: http://www.rabbitmq.com/
 [8]: https://developer.dji.com/mobile-sdk/downloads/
 [9]: https://forum.dji.com/thread-42536-1-1.html
 [10]: https://www.jetbrains.com/idea/
 [11]: https://developer.android.com/studio/
-[12]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
+[12]: /controller/app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
 [13]: https://www.southampton.ac.uk/ageing/postgraduate/welcome/vpn.page
 [14]: https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
-[15]: ../hut/controller/app/src/main/java/com/dji/hut_controller/DJIHutApplication.java
-[16]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/DroneHandler.java
-[17]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/MissionHandler.java
-[18]: ../hut/controller/app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
+[15]: /controller/app/src/main/java/com/dji/hut_controller/DJIHutApplication.java
+[16]: /controller/app/src/main/java/com/dji/hut_controller/handler/DroneHandler.java
+[17]: /controller/app/src/main/java/com/dji/hut_controller/handler/MissionHandler.java
+[18]: /controller/app/src/main/java/com/dji/hut_controller/handler/ServerHandler.java
 [19]: https://developer.android.com/reference/android/util/Log
 [20]: https://play.google.com/store/apps/details?id=com.nolanlawson.logcat&hl=en_GB
 [21]: https://www.utest.com/articles/capture-android-logs-with-an-app-no-root-or-usb-cable-required
 [22]: https://developers.google.com/maps/documentation/android-sdk/signup
 [23]: https://developer.dji.com/mobile-sdk/documentation/quick-start/index.html#generate-an-app-key
-[24]: ../hut/controller/app/src/main/AndroidManifest.xml
+[24]: /controller/app/src/main/AndroidManifest.xml
 [25]: https://github.com/mdivband/hut/blob/master/README.md#setup-guide-1
 
 [project_architecture]: https://github.com/mdivband/hut/blob/master/controller/docs/project_architecture.png?raw=true "Project Architecture Overview"
@@ -184,37 +184,37 @@ An overview of the allocation process is given below:
 
 ![Allocation Process][allocation_process]
 
-[35]: ../hut/controller/app/
-[36]: ../hut/server/src/
-[37]: ../hut/server/web/
-[38]: ../hut/server/src/maxsum
-[39]: ../hut/server/src/server
-[40]: ../hut/server/src/tool
+[35]: /controller/app/
+[36]: /server/src/
+[37]: /server/web/
+[38]: /server/src/maxsum
+[39]: /server/src/server
+[40]: /server/src/tool
 [41]: https://en.wikipedia.org/wiki/Gson
 [42]: https://www.freeutils.net/source/jlhttp/
 [43]: http://www.rabbitmq.com/
 [44]: http://www.rabbitmq.com/install-windows.html
 [45]: https://www.southampton.ac.uk/ageing/postgraduate/welcome/vpn.page
-[46]: ../hut/server/src/server/QueueManager.java
-[48]: ../hut/server/src/server/Simulator.java
-[49]: ../hut/server/src/server/controller/ConnectionController.java
-[50]: ../hut/server/src/server/QueueManager.java
-[51]: ../hut/server/src/server/controller/AgentController.java
-[52]: ../hut/server/src/server/controller/TargetController.java
-[53]: ../hut/server/src/server/controller/TaskController.java
-[54]: ../hut/server/src/server/model/State.java
-[55]: ../hut/server/src/server/model/Agent.java
-[57]: ../hut/server/src/server/model/target/Target.java
-[58]: ../hut/server/src/server/model/task/Task.java
-[59]: ../hut/server/src/server/Allocator.java
-[60]: ../hut/server/src/maxsum
-[61]: ../hut/server/docs/endpoints.md
-[62]: ../hut/server/src/server/controller/handler/AgentHandler.java
-[63]: ../hut/server/src/server/controller/handler/TaskHandler.java
-[64]: ../hut/server/src/server/controller/handler/TargetHandler.java
-[65]: ../hut/server/src/server/controller/handler/RootHandler.java
+[46]: /server/src/server/QueueManager.java
+[48]: /server/src/server/Simulator.java
+[49]: /server/src/server/controller/ConnectionController.java
+[50]: /server/src/server/QueueManager.java
+[51]: /server/src/server/controller/AgentController.java
+[52]: /server/src/server/controller/TargetController.java
+[53]: /server/src/server/controller/TaskController.java
+[54]: /server/src/server/model/State.java
+[55]: /server/src/server/model/Agent.java
+[57]: /server/src/server/model/target/Target.java
+[58]: /server/src/server/model/task/Task.java
+[59]: /server/src/server/Allocator.java
+[60]: /server/src/maxsum
+[61]: /server/docs/endpoints.md
+[62]: /server/src/server/controller/handler/AgentHandler.java
+[63]: /server/src/server/controller/handler/TaskHandler.java
+[64]: /server/src/server/controller/handler/TargetHandler.java
+[65]: /server/src/server/controller/handler/RootHandler.java
 [66]: https://www.cloudamqp.com/
-[67]: ../hut/server/docs/file_tree.md
+[67]: /server/docs/file_tree.md
 
 [project_architecture]: https://github.com/mdivband/hut/blob/master/controller/docs/project_architecture.png?raw=true "Project Architecture Overview"
 [server_architecture]: https://github.com/mdivband/hut/blob/master/server/docs/img/server_architecture.png?raw=true "Server Architecture"
