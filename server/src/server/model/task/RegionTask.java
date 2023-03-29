@@ -10,7 +10,7 @@ import java.util.List;
 
 public class RegionTask extends PatrolTask {
 
-    private static final double baseStep = 40;
+    private static final double baseStep = 40;//doubt: what is base step?
     private Coordinate nw, ne, se, sw;
 
     public RegionTask(String id, List<Coordinate> route, Coordinate centrePoint, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {
@@ -23,7 +23,7 @@ public class RegionTask extends PatrolTask {
 
     public static RegionTask createTask(String id, Coordinate nw, Coordinate ne, Coordinate se, Coordinate sw) {
         List<Coordinate> route = createRoute(nw, ne, se, sw);
-        return new RegionTask(id, route, getCentre(Arrays.asList(nw, ne, se, sw)), nw, ne, se, sw);
+        return new RegionTask(id, route, getCentre(Arrays.asList(nw, ne, se, sw)), nw, ne, se, sw);//doubt: why was ns, ne, se, sw added again?
     }
 
     private static Coordinate getCentre(List<Coordinate> corners) {
@@ -42,7 +42,7 @@ public class RegionTask extends PatrolTask {
 
         List<Coordinate> points = new ArrayList<>();
         int r = (int) Math.floor((width - baseStep)/(2*baseStep));
-        if(width <= baseStep || height <= baseStep || r == 0) {
+        if(width <= baseStep || height <= baseStep || r == 0) {//doubt: won't it be stuck in a loop?
             points.add(nw);
             points.add(ne);
             points.add(se);

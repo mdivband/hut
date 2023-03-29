@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * @author Feng Wu
  */
 /* Edited by Yuai */
-public class Simulator {
+public class    Simulator {
 
     private final static String SERVER_CONFIG_FILE = "web/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "web/scenarios/";

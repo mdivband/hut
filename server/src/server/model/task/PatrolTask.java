@@ -29,7 +29,7 @@ public class PatrolTask extends Task {
     }
 
     private static Coordinate getCentre(List<Coordinate> points) {
-        return Coordinate.findCentre(points.subList(0, points.size() - 1));
+        return Coordinate.findCentre(points.subList(0, points.size() - 1));//Doubt: Why list size - 1?
     }
 
     @Override
@@ -118,7 +118,7 @@ public class PatrolTask extends Task {
         return absDistance/totalPathDistance;
     }
 
-    private void updateAgentRoute(Agent agent) {
+    private void updateAgentRoute(Agent agent) {//doubt: How does this function works?
         List<Coordinate> route = new ArrayList<>();
         if(lastPointMap.get(agent.getId()) < points.size() - 1)
             route.addAll(points.subList(lastPointMap.get(agent.getId()) + 1, points.size()));
@@ -242,7 +242,7 @@ public class PatrolTask extends Task {
         double dyp2 = y - y2;
         double dxyp2 = Math.sqrt(dxp2*dxp2 + dyp2*dyp2);
         if(dxyp2 > dxy)
-            return -(dxyp2/dxy - 1);
+            return -(dxyp2/dxy - 1);//doubt: why -1 here?
 
         return dxyp1/dxy;
     }

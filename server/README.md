@@ -5,5 +5,5 @@ The DJI Hut Server is a client-server application that is used for coordinating 
 
 The documentation for this repository can be found [here][2].
 
-[1]: https://bitbucket.org/jearly97/hut_dji_controller
+[1]: https://github.com/mdivband/hut/tree/master/controller
 [2]: docs/documentation.md

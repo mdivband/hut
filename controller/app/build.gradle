@@ -30,20 +30,20 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support.constraint:constraint-layout:1.1.2'
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.2.1'
-    compile 'com.google.android.gms:play-services:8.4.0'
-    compile 'com.android.support:design:23.2.1'
-    compile 'com.android.support:multidex:1.0.1'
-    compile project(':dJISDKLIB')
-    compile files('lib/commons-cli-1.1.jar')
-    compile files('lib/commons-io-1.2.jar')
-    compile files('lib/hamcrest-core.jar')
-    compile files('lib/junit.jar')
-    compile files('lib/rabbitmq-client-tests.jar')
-    compile files('lib/rabbitmq-client.jar')
-    compile files('lib/gson-2.2.2.jar')
-    compile 'com.jakewharton.timber:timber:4.5.1'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support.constraint:constraint-layout:2.0.4'
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.google.android.gms:play-services:12.0.1'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation project(':dJISDKLIB')
+    implementation files('lib/commons-cli-1.1.jar')
+    implementation files('lib/commons-io-1.2.jar')
+    implementation files('lib/hamcrest-core.jar')
+    implementation files('lib/junit.jar')
+    implementation files('lib/rabbitmq-client-tests.jar')
+    implementation files('lib/rabbitmq-client.jar')
+    implementation files('lib/gson-2.2.2.jar')
+    implementation 'com.jakewharton.timber:timber:4.5.1'
 }
