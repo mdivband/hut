@@ -1,0 +1,12 @@
+name: Hut CI Tests
+
+on: [push]
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        working-directory: server
+        run: gradle clean test
