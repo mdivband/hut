@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="server.model.CoordinateTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-04-03T05:08:24" hostname="ftech-MS-7A38" time="0.013">
+  <properties/>
+  <testcase name="Should set and display Coordinate" classname="server.model.CoordinateTest" time="0.013"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

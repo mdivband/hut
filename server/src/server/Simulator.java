@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * @author Feng Wu
  */
 /* Edited by Yuai */
-public class    Simulator {
+public class Simulator {
 
     private final static String SERVER_CONFIG_FILE = "web/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "web/scenarios/";
@@ -90,8 +90,13 @@ public class    Simulator {
         this.startSimulation();
     }
 
+    public int add(int a, int b)
+    {
+        return a+b;
+    }
+
     public boolean loadScenarioMode(String scenarioFileName) {
-        this.state.setGameType(State.GAME_TYPE_SCENARIO);
+        this.state.setGameType(0);
         if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
             LOGGER.info("Scenario loaded.");
             return true;
@@ -289,6 +294,7 @@ public class    Simulator {
 
             return true;
         } catch (IOException e) {
+            System.out.println("ERROR IDHAR");
             e.printStackTrace();
         }
         return false;
