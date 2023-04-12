@@ -243,7 +243,6 @@ public class PatrolTask extends Task {
         double dxyp2 = Math.sqrt(dxp2*dxp2 + dyp2*dyp2);
         if(dxyp2 > dxy)
             return -(dxyp2/dxy - 1);
-
         return dxyp1/dxy;
     }
 

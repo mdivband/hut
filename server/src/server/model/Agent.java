@@ -80,6 +80,7 @@ public abstract class Agent extends MObject implements Serializable {
             if(task.getType() == Task.TASK_PATROL || task.getType() == Task.TASK_REGION) {
                 if (!isWorking() && route.size() > 0) {
                     //TODO this is very inefficient so have removed it for now. Only need to recalculate point if task moves.
+                    //TODO add check to current route to check whether t update route or not
                     //route.set(route.size() - 1, ((PatrolTask) task).getNearestPointAbsolute(this));
                 }
             }

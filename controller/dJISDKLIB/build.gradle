@@ -18,8 +18,8 @@ android {
 }
 
 dependencies {
-    compile files('libs/bouncycastle.jar')
-    compile files('libs/dji-sdk.jar')
-    compile files('libs/dji_eventbus.jar')
-    compile files('libs/dji_gson.jar')
+    api files('libs/bouncycastle.jar')
+    api files('libs/dji-sdk.jar')
+    api files('libs/dji_eventbus.jar')
+    api files('libs/dji_gson.jar')
 }

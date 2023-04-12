@@ -43,7 +43,6 @@ public class RegionTask extends PatrolTask {
         List<Coordinate> points = new ArrayList<>();
         int r = (int) Math.floor((width - baseStep)/(2*baseStep));
         if(width <= baseStep || height <= baseStep || r == 0) {
-            points.add(nw);
             points.add(ne);
             points.add(se);
             points.add(sw);
