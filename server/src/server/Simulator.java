@@ -29,7 +29,6 @@ public class Simulator {
     private final static String SERVER_CONFIG_FILE = "web/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "web/scenarios/";
     private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
-
     private State state;
     private Sensor sensor;
 
@@ -90,14 +89,8 @@ public class Simulator {
         this.startSimulation();
     }
 
-    public int add(int a, int b)
-    {
-        return a+b;
-    }
-
     public boolean loadScenarioMode(String scenarioFileName) {
-        this.state.setGameType(0);
-        if(loadScenarioFromFile("web/scenarios/" + scenarioFileName)) {
+        if(loadScenarioFromFile("/web/scenarios/" + scenarioFileName)) {
             LOGGER.info("Scenario loaded.");
             return true;
         } else {
@@ -216,14 +209,15 @@ public class Simulator {
 
     private boolean loadScenarioFromFile(String scenarioFile) {
         try {
-            String json = GsonUtils.readFile(scenarioFile);
+            String json = GsonUtils.readFile(System.getProperty("user.dir")+scenarioFile);
             Object obj = GsonUtils.fromJson(json);
-
             this.state.setGameId(GsonUtils.getValue(obj, "gameId"));
+            
             this.state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
+            
             Object centre = GsonUtils.getValue(obj, "gameCentre");
             this.state.setGameCentre(new Coordinate(GsonUtils.getValue(centre, "lat"), GsonUtils.getValue(centre, "lng")));
-
+            
             if(GsonUtils.hasKey(obj,"allocationMethod")) {
                 String allocationMethod = GsonUtils.getValue(obj, "allocationMethod")
                         .toString()
@@ -241,7 +235,7 @@ public class Simulator {
                     //state.allocationMethod initialised with default value of 'maxsum'
                 }
             }
-
+            
             if(GsonUtils.hasKey(obj,"flockingEnabled")){
                 Object flockingEnabled = GsonUtils.getValue(obj, "flockingEnabled");
                 if(flockingEnabled.getClass() == Boolean.class) {
@@ -252,7 +246,7 @@ public class Simulator {
                     // state.flockingEnabled initialised with default value of false
                 }
             }
-
+            
             List<Object> agentsJson = GsonUtils.getValue(obj, "agents");
             if (agentsJson != null) {
                 for (Object agentJSon : agentsJson) {
@@ -264,7 +258,7 @@ public class Simulator {
                         agent.setBattery(battery);
                 }
             }
-
+            
             List<Object> hazards = GsonUtils.getValue(obj, "hazards");
             if (hazards != null) {
                 for (Object hazard : hazards) {
@@ -279,7 +273,7 @@ public class Simulator {
                     }
                 }
             }
-
+            
             List<Object> targetsJson = GsonUtils.getValue(obj, "targets");
             if (targetsJson != null) {
                 for (Object targetJson : targetsJson) {
@@ -294,7 +288,6 @@ public class Simulator {
 
             return true;
         } catch (IOException e) {
-            System.out.println("ERROR IDHAR");
             e.printStackTrace();
         }
         return false;
