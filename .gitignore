@@ -142,3 +142,7 @@ $RECYCLE.BIN/
 
 *.log
 *.log.lck
+
+
+# Build directories
+server/build
