@@ -1,0 +1,7 @@
+version: "3.3"
+services:
+  gradle:
+    build: .
+    user: ${MY_UID}:${MY_GID}
+    ports:
+      - 8000:8000

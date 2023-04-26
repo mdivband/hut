@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'eclipse'
+    id 'java'
 }
 archivesBaseName = 'someJar'
 version = '1.0-SNAPSHOT'
@@ -8,6 +9,7 @@ sourceSets.main.java.srcDirs = ['src']
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
@@ -22,26 +24,45 @@ dependencies {
     implementation 'uk.com.robust-it:cloning:1.9.12'
     implementation 'org.objenesis:objenesis:3.2'
     testImplementation 'junit:junit:4.13.2'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'org.slf4j:slf4j-simple:1.7.25'
+    implementation "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
 }
 
-test {
-    useJUnitPlatform()
-    testLogging.showStandardStreams = true
-    reports {
-        junitXml.enabled = false
-        html.enabled = true
-    } 
+// test {
+//     useJUnitPlatform()
+//     testLogging.showStandardStreams = true
+//     reports {
+//         junitXml.enabled = false
+//         html.enabled = true
+//     } 
+// }
+
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': "server.Simulator"
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { 
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } 
+    }
 }
 
 //Task to generate .jar file of the project
 task genJar(type: Jar) {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 	manifest {
         attributes 'Implementation-Title': 'Gradle Jar File Example',
-        	'Implementation-Version': version,
         	'Main-Class': 'server.Simulator'
     }
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+   baseName = 'all-in-one-jar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn ('dependencies')
+    from { 
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } 
+    }
     with jar
 }
 
@@ -53,7 +74,7 @@ task copyFromLibs (dependsOn: genJar, type: Copy) {
 }
 
 //Task to execute the .jar file and get the server running
-task runServer (dependsOn: copyFromLibs, type: JavaExec) {
+task runserver (dependsOn: copyFromLibs, type: JavaExec) {
     classpath = files('server-all-1.0-SNAPSHOT.jar')
     classpath += sourceSets.main.runtimeClasspath
     main = "server.Simulator"

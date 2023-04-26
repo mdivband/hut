@@ -156,6 +156,16 @@ There are several steps required to setup a working version of the mobile applic
     * Check that port 8000 is open on the server machine.  
     * Follow the mobile app setup guide, found [here][35].  
 
+To run the project using Docker  the following steps are required:
+
+1. Clone this repository to your machine
+2. Execute the following commands
+
+```shell
+cd hut/server
+docker-compose up
+```
+
 ### Setup Troubleshooting
 
 | Error      | Solution |
