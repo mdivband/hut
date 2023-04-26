@@ -4,4 +4,4 @@ services:
     build: .
     user: ${MY_UID}:${MY_GID}
     ports:
-      - 8002:8000
+      - 8000:8000

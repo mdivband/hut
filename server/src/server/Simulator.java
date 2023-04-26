@@ -12,7 +12,6 @@ import server.model.State;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

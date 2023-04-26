@@ -57,7 +57,7 @@ task genJar(type: Jar) {
         attributes 'Implementation-Title': 'Gradle Jar File Example',
         	'Main-Class': 'server.Simulator'
     }
-    baseName = 'all-in-one-jar'
+   baseName = 'all-in-one-jar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn ('dependencies')
     from { 
