@@ -144,8 +144,8 @@ $RECYCLE.BIN/
 *.log.lck
 
 # server files
-server/build
-server/.gradle
-server/.idea
-server/.metadata
-server/.vscode 
+build/
+.gradle/
+.idea/
+.metadata/
+.vscode/
