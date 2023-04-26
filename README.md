@@ -156,6 +156,16 @@ There are several steps required to setup a working version of the mobile applic
     * Check that port 8000 is open on the server machine.  
     * Follow the mobile app setup guide, found [here][35].  
 
+To run the project using Docker  the following steps are required:
+
+1. Clone this repository to your machine
+2. Execute the following commands
+
+```shell
+cd hut/server
+docker-compose up
+```
+
 ### Setup Troubleshooting
 
 | Error      | Solution |
@@ -218,8 +228,4 @@ An overview of the allocation process is given below:
 
 [project_architecture]: https://github.com/mdivband/hut/blob/master/controller/docs/project_architecture.png?raw=true "Project Architecture Overview"
 [server_architecture]: https://github.com/mdivband/hut/blob/master/server/docs/img/server_architecture.png?raw=true "Server Architecture"
-<<<<<<< HEAD
 [allocation_process]: https://github.com/mdivband/hut/blob/5d4d57ffc541bedcd78db6688a4fca21a44edecb/server/docs/img/allocation_flow.png?raw=true "Allocation Process"
-=======
-[allocation_process]: https://github.com/mdivband/hut/blob/5d4d57ffc541bedcd78db6688a4fca21a44edecb/server/docs/img/allocation_flow.png?raw=true "Allocation Process"
->>>>>>> bd871c90461bbb3adcbbb76a263dc6a6b12d1f2f
