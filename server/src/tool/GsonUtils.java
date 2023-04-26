@@ -7,6 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSerializer;
 
+import server.Simulator;
+import server.model.State;
+
 import java.io.*;
 import java.util.Map;
 
@@ -28,10 +31,12 @@ public class GsonUtils {
     }
 
 	public static <T> String toJson(T obj) {
+		gson = new Gson();
 		return gson.toJson(obj);
 	}
 
 	public static Object fromJson(String json) {
+		gson = new Gson();
 		return gson.fromJson(json, Object.class);
 	}
 	
