@@ -773,7 +773,7 @@ App.Views.Map = Backbone.View.extend({
     },
     updateScorePanel: function () {
         var scoreInfo = this.state.getScoreInfo();
-        var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime())));
+        var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime() / 5)));
         $("#score_timeLeft").html(timeRem);
         $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
         $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));

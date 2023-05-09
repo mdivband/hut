@@ -33,6 +33,7 @@ var simulator = {
             views: this.views
         });
 
+
         this.views.editgraph = new App.Views.Graph({
             el: $("#accordion_agent_schedule_m"),
             state: this.state,
@@ -41,6 +42,8 @@ var simulator = {
             canvas: $("#schedule").get(0),
             forEditMode: false
         });
+
+
 
         this.views.graph = new App.Views.Graph({
             el: $("#accordion_agent_schedule_e"),
@@ -51,6 +54,7 @@ var simulator = {
             forEditMode: true
         });
 
+
         this.views.prediction = new App.Views.Prediction({
             el: $("#prediction_canvas"),
             state: this.state,
@@ -59,6 +63,7 @@ var simulator = {
             canvas: $("#prediction").get(0)
         });
 
+        /*
         this.views.missionPrediction = new App.Views.Prediction({
             el: $("#mission_prediction_canvas"),
             state: this.state,
@@ -66,6 +71,8 @@ var simulator = {
             type: "mission",
             canvas: $("#mission_prediction").get(0)
         });
+
+         */
 
         this.views.boundedPrediction = new App.Views.Prediction({
             el: $("#bounded_prediction_canvas"),
@@ -84,6 +91,7 @@ var simulator = {
             collapsible: true,
             active: false
         });
+
         $("#accordion_score").accordion({
             collapsible: true
         });

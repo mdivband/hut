@@ -43,20 +43,23 @@
     <div id="control">
         <!--Added by Y -->
         <!-- view mode change buttons -->
+        <!--
         <form>
             <div id="view_mode" class="fixed">
                 <input type="radio" id="monitor" name="radio" value="monitor"><label
                     for="monitor">Monitor</label>
-                <input type="radio" id="editmode" name="radio" value="editmode"><label for="editmode">Task
+                <input type="radio" id="editmode" name="radio" value="editmode"<label for="editmode">Task
                 Edit</label>
             </div>
         </form>
+        -->
         <!-- END Y -->
         <!-- camera and detail -->
         <div id="monitor_accordions">
+
             <div id="accordion_smallview">
-                <h3>Monitor view</h3>
-                <div class="canvas_small">
+                <!--<h3>Monitor view</h3>-->
+                <div class="canvas_small" style="display: none">
                     <div id="canvas_small_info">
                         <div id="canvas_small_info_agentid"></div>
                         <div id="canvas_small_info_tasks_box">
@@ -98,7 +101,7 @@
 
                 </div>
             </div>
-
+        <!--
             <div id="mission_prediction_canvas">
                 <h3>Mission Success Chance</h3>
                 <div>
@@ -108,120 +111,120 @@
 
                 </div>
             </div>
+        -->
+                    <div id="bounded_prediction_canvas">
+                        <h3>Bounded Success Chance</h3>
+                        <div>
+                            <div class="indicator_circle" id="bounded_prediction_circle">
+                                <div class="indicator_text" id="bounded_prediction_text"></div>
+                            </div>
 
-            <div id="bounded_prediction_canvas">
-                <h3>Bounded Success Chance</h3>
-                <div>
-                    <div class="indicator_circle" id="bounded_prediction_circle">
-                        <div class="indicator_text" id="bounded_prediction_text"></div>
+                        </div>
+                    </div>
+
+                    <div id="accordion_score">
+                        <h3>Score</h3>
+                        <table border="1">
+                            <tr>
+                                <td class="soho_title">Time Remaining</td>
+                                <td><span id="score_timeLeft">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Progress</td>
+                                <td><span id="score_progress">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Upkeep (pts/second)</td>
+                                <td><span id="score_upkeep">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Points Earned so Far</td>
+                                <td><span id="score_earned">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Score</td>
+                                <td><span id="score_score">0</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div id="accordion_agent_schedule_m" style="display: none">
+                        <h3>Agent Schedule</h3>
+                        <div>
+                            <canvas id="schedule"></canvas>
+                        </div>
+                    </div>
+
+        <!--
+                    <div id="accordion_sotp_m">
+                        <h3>Summary of the Operation</h3>
+                        <table border="1">
+                            <tr>
+                                <td class="soho_title">Remaining Distance</td>
+                                <td><span id="remaining_dist">0.00km</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Estimated Remaining Time</td>
+                                <td><span id="remaining_time">00:00</span></td>
+                            </tr>
+                        </table>
+                    </div>
+        -->
+                    <div style="text-align: center;" class="edit_accordion">
+                        <button class="edit_mode_buttons" id="add_agent">Add Agent</button>
+                        <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
                     </div>
 
                 </div>
-            </div>
 
-            <div id="accordion_score" style="display: none">
-                <h3>Score</h3>
-                <table border="1">
-                    <tr>
-                        <td class="soho_title">Time Remaining</td>
-                        <td><span id="score_timeLeft">0</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Progress</td>
-                        <td><span id="score_progress">0</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Upkeep (pts/second)</td>
-                        <td><span id="score_upkeep">0</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Points Earned so Far</td>
-                        <td><span id="score_earned">0</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Score</td>
-                        <td><span id="score_score">0</span></td>
-                    </tr>
-                </table>
-            </div>
+                <div id="edit_contexts" style="display:none;">
 
-            <div id="accordion_agent_schedule_m">
-                <h3>Agent Schedule</h3>
-                <div>
-                    <canvas id="schedule"></canvas>
+                    <div id="accordion_agent_schedule_e" class="edit_accordion">
+                        <h3>Agent Schedule</h3>
+                        <div>
+                            <canvas id="edit_schedule"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="accordion_sotp_e" class="edit_accordion">
+                        <h3>Summary of the Operation</h3>
+                        <table border="1">
+                            <tr>
+                                <th></th>
+                                <th>Original
+                                </td>
+                                <th>New
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Total Distance</td>
+                                <td><span id="total_dist_orig">0.00km</span></td>
+                                <td><span id="total_dist_new">0.00km</span></td>
+                            </tr>
+                            <tr>
+                                <td class="soho_title">Estimated Time</td>
+                                <td><span id="flight_time_orig">00:00</span></td>
+                                <td><span id="flight_time_new">00:00</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div style="text-align: center;" class="edit_accordion">
+                        <div style="text-align: left; width: 95%">
+                            <input title="Undo allocation change" type="image" src="icons/undo.png" class="edit_mode_icon_buttons" id="allocation_undo"/>
+                            <input title="Redo allocation change" type="image" src="icons/redo.png" class="edit_mode_icon_buttons" id="allocation_redo"/>
+                            <input title="Reset allocation" type="image" src="icons/reset.png" class="edit_mode_icon_buttons" id="allocation_reset"/>
+                        </div>
+                        <button class="edit_mode_buttons" id="run_auto_allocation">Run Auto Allocation</button>
+                        <button class="edit_mode_buttons" id="confirm_allocation">Confirm Allocation</button>
+                        <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
+                    </div>
+
                 </div>
-            </div>
 
 
-            <div id="accordion_sotp_m">
-                <h3>Summary of the Operation</h3>
-                <table border="1">
-                    <tr>
-                        <td class="soho_title">Remaining Distance</td>
-                        <td><span id="remaining_dist">0.00km</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Estimated Remaining Time</td>
-                        <td><span id="remaining_time">00:00</span></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div style="text-align: center;" class="edit_accordion">
-                <button class="edit_mode_buttons" id="add_agent">Add Agent</button>
-                <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
-            </div>
-
-        </div> <!-- end of monitor accordions-->
-
-        <div id="edit_contexts">
-
-            <div id="accordion_agent_schedule_e" class="edit_accordion">
-                <h3>Agent Schedule</h3>
-                <div>
-                    <canvas id="edit_schedule"></canvas>
-                </div>
-            </div>
-
-            <div id="accordion_sotp_e" class="edit_accordion">
-                <h3>Summary of the Operation</h3>
-                <table border="1">
-                    <tr>
-                        <th></th>
-                        <th>Original
-                        </td>
-                        <th>New
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Total Distance</td>
-                        <td><span id="total_dist_orig">0.00km</span></td>
-                        <td><span id="total_dist_new">0.00km</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Estimated Time</td>
-                        <td><span id="flight_time_orig">00:00</span></td>
-                        <td><span id="flight_time_new">00:00</span></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div style="text-align: center;" class="edit_accordion">
-                <div style="text-align: left; width: 95%">
-                    <input title="Undo allocation change" type="image" src="icons/undo.png" class="edit_mode_icon_buttons" id="allocation_undo"/>
-                    <input title="Redo allocation change" type="image" src="icons/redo.png" class="edit_mode_icon_buttons" id="allocation_redo"/>
-                    <input title="Reset allocation" type="image" src="icons/reset.png" class="edit_mode_icon_buttons" id="allocation_reset"/>
-                </div>
-                <button class="edit_mode_buttons" id="run_auto_allocation">Run Auto Allocation</button>
-                <button class="edit_mode_buttons" id="confirm_allocation">Confirm Allocation</button>
-                <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
-            </div>
-
-        </div>
-
-
-        <div id="controller" style="display: none;">
-            <!--                <div id="controller">-->
+                <div id="controller" style="display: none;">
+                    <!--                <div id="controller">-->
             <div>
                 <button id="switch_view">Camera</button>
                 <button id="change_mode">Teleoperate</button>

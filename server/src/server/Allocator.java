@@ -1018,11 +1018,11 @@ public class Allocator {
      * @param agent
      * @return
      */
-    public boolean dynamicAssignNearest(Agent agent) {
+    public boolean dynamicAssignNearest(Agent agent, boolean overlap) {
         double nearestDist = 99999999;
         Task nearestTask = null;
         for (Task t : simulator.getState().getTasks()) {
-            if (t.getAgents().isEmpty()) {
+            if (overlap || t.getAgents().isEmpty()) {
                 double thisDist = t.getCoordinate().getDistance(agent.getCoordinate());
                 if (thisDist < nearestDist) {
                     nearestTask = t;
@@ -1057,11 +1057,27 @@ public class Allocator {
     }
 
     /**
+     * Assigns a random task that is not being done by any other agent
+     * @param agent
+     * @return
+     */
+    public boolean dynamicAssignRandomWithOverlap(Agent agent) {
+        int index = simulator.getRandom().nextInt(simulator.getState().getTasks().size());
+        putInTempAllocation(agent.getId(), ((ArrayList<Task>) simulator.getState().getTasks()).get(index).getId());
+        confirmAllocation(simulator.getState().getTempAllocation());
+        return true;
+    }
+
+    public void dynamicAssign(Agent agent) {
+        dynamicAssign(agent, false);
+    }
+
+    /**
      * Used for dynamic (ad hoc) assignment processes from the hub outwards. E.g in a package delivery configuration
      * Depending on the options for the scenario, there are a few methods for this, called by this one
      * @param agent
      */
-    public void dynamicAssign(Agent agent) {
+    public void dynamicAssign(Agent agent, boolean overlap) {
         List<AgentVirtual> homingAgents = new ArrayList<>();
         simulator.getState().getAgents().forEach(a -> {
             if (a instanceof AgentVirtual av && ((av.isGoingHome() || av.isStopped()) || agent.equals(av)) && !(a instanceof Hub)) {
@@ -1070,7 +1086,7 @@ public class Allocator {
         });
 
         if (simulator.getState().getAllocationMethod().equals("bestfirst")) {
-            dynamicAssignNearest(agent);
+            dynamicAssignNearest(agent, overlap);
         } else if (simulator.getState().getAllocationMethod().equals("maxsum")) {
             List<Agent> readyAgents = new ArrayList<>();
             for (Agent a : simulator.getState().getAgents()) {
@@ -1093,7 +1109,7 @@ public class Allocator {
 
             readyAgents.forEach(a -> {
                 if (!alloc.containsKey(a.getId()) && a.getTask() == null) {
-                    dynamicAssignNearest(a);
+                    dynamicAssignNearest(a, false);
                     homingAgents.add((AgentVirtual) a);
                 }
             });

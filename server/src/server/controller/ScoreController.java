@@ -1,6 +1,8 @@
 package server.controller;
 
 import server.Simulator;
+import server.model.agents.AgentVirtual;
+import server.model.agents.Hub;
 
 public class ScoreController extends AbstractController {
     private int completedTasks;
@@ -31,7 +33,10 @@ public class ScoreController extends AbstractController {
     }
 
     public void handleUpkeep() {
-        double upkeep = simulator.getState().getAgents().size() * UPKEEP_PER_SIM_SECOND;
+        //System.out.println("UPKEEP - " + simulator.getState().getTime());
+        int n = (int) simulator.getState().getAgents().stream().filter(a -> !a.getType().equals("ghost")).count();
+        double upkeep = (0.1 * n * n) + 1.3;
+        //double upkeep = simulator.getState().getAgents().size() * UPKEEP_PER_SIM_SECOND;
         simulator.getState().addScoreInfo("upkeep", upkeep * -1);
 
         // TODO also add the time limit?

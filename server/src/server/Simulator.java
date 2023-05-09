@@ -231,8 +231,7 @@ public class Simulator {
                                         getAgentController().decrementRemoval();
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
-                                        getAllocator().dynamicAssign(av);
-                                        Simulator.instance.getScoreController().incrementCompletedTask();
+                                        getAllocator().dynamicAssign(av, false);
                                         // In-runtime allocation model
                                         double successChance = modeller.calculateAll(agent);
                                         state.setSuccessChance(successChance);
@@ -240,7 +239,10 @@ public class Simulator {
                                         // If no tasks available, charge up in case we need to replace it
                                         av.charge();
                                     } else {
-                                        av.heartbeat();
+                                        // Full battery AND no available task. Let's back up an existing task
+                                        System.out.println("RANDOM ASSIGN");
+                                        getAllocator().dynamicAssign(agent, true);
+                                        //av.heartbeat();
                                     }
                                 }
                             }
@@ -291,6 +293,7 @@ public class Simulator {
                 for (Task task : completedTasks) {
                     task.getAgents().forEach(a -> a.setType("standard"));
                     task.complete();
+                    Simulator.instance.getScoreController().incrementCompletedTask();
                 }
 
                 if (!completedTasks.isEmpty()) {
@@ -304,9 +307,12 @@ public class Simulator {
                 }
 
             }
-
-            scoreController.handleUpkeep();
-
+            // TODO maybe make this generic, just checks that this is a whole second timestep
+            double timeCheck = state.getTime() % gameSpeed;
+            //System.out.println(state.getTime() + " - " + timeCheck + " " + ((-0.05 < timeCheck) && (timeCheck < 0.05)));
+            if ((gameSpeed - 0.05 < timeCheck) || (timeCheck < 0.05)) {
+                scoreController.handleUpkeep();
+            }
             // Step hazard hits
             this.state.decayHazardHits();
 
