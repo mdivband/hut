@@ -3,6 +3,7 @@ package server;
 import server.model.agents.AgentVirtual;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class ModelCaller {
@@ -121,7 +122,8 @@ public class ModelCaller {
             runScript("current.py", 1, currentConfigTuple);
 
             int exitCode = procs[1].waitFor();
-            double boundedResult = readTimeBoundedResult("currentResults_boundedT"+currentSalt+".txt");
+            //double boundedResult = readTimeBoundedResult("currentResults_boundedT"+currentSalt+".txt");
+            double boundedResult = readTimeBoundedResultAsTime("currentResults_boundedT"+currentSalt+".txt", 0.95);
             System.out.println("cur " + boundedResult);
 
             Simulator.instance.getState().setMissionBoundedSuccessChance(boundedResult * 100);
@@ -157,7 +159,8 @@ public class ModelCaller {
             runScript("add1drone.py", 2, currentConfigTuple);
 
             int exitCode = procs[2].waitFor();
-            double boundedResult = readTimeBoundedResult("add1results_boundedT"+currentSalt+".txt");
+            //double boundedResult = readTimeBoundedResult("add1results_boundedT"+currentSalt+".txt");
+            double boundedResult = readTimeBoundedResultAsTime("add1results_boundedT"+currentSalt+".txt", 0.95);
             System.out.println("ov " + boundedResult);
 
             Simulator.instance.getState().setMissionBoundedSuccessOverChance(boundedResult * 100);
@@ -192,7 +195,8 @@ public class ModelCaller {
             runScript("remove1drone.py", 0, currentConfigTuple);
 
             int exitCode = procs[0].waitFor();
-            double boundedResult = readTimeBoundedResult("remove1results_boundedT"+currentSalt+".txt");
+            //double boundedResult = readTimeBoundedResult("remove1results_boundedT"+currentSalt+".txt");
+            double boundedResult = readTimeBoundedResultAsTime("remove1results_boundedT"+currentSalt+".txt", 0.95);
             System.out.println("un " + boundedResult);
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
@@ -311,6 +315,38 @@ public class ModelCaller {
             }
             reader.close();
             return d;
+        } catch (FileNotFoundException e) {
+            System.out.println("File " + fileName + " not found");
+            return 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("ERROR READING RESULT. RETURNING 0");
+            return 0;
+        }
+    }
+
+    /**
+     * Read result from file. In future this may take an argument in future
+     * @return
+     */
+    private double readTimeBoundedResultAsTime(String fileName, double confidence) {
+        try {
+            BufferedReader reader = new BufferedReader(
+                    new FileReader(webRef + "/ModelFiles/" + fileName)
+            );
+
+            //e.g 18000	0.998
+            String s;
+            int endTime = 0;
+            while ((s = reader.readLine()) != null) {
+                String[] split = s.split("\t");
+                if (Double.parseDouble(split[1]) >= confidence) {
+                    endTime = Integer.parseInt(s.split("\t")[0]);
+                    break;
+                }
+            }
+            reader.close();
+            return endTime;
         } catch (FileNotFoundException e) {
             System.out.println("File " + fileName + " not found");
             return 0;

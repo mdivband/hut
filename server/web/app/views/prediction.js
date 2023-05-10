@@ -47,6 +47,7 @@ App.Views.Prediction = Backbone.View.extend({
         var chance;
         var pred;
         var background;
+        var self = this;
         if (this.type === "allocation") {
             chance = this.state.getSuccessChance();
             pred = document.getElementById("prediction_text");
@@ -65,15 +66,29 @@ App.Views.Prediction = Backbone.View.extend({
                 background.style.background = this.getMissionColor(chance.toFixed(0));
             }
         } else if (this.type === "bounded") {
-            chance = this.state.getMissionBoundedSuccessChance();
             pred = document.getElementById("bounded_prediction_text");
             background = document.getElementById("bounded_prediction_circle");
-            if (chance === -1) {
+            if (this.state.getMissionBoundedSuccessChance() === -1) {
                 pred.innerHTML = "?%";
                 background.style.background = "rgb(255,255,255)";
-            } else {
-                pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
-                background.style.background = this.getMissionColor(chance.toFixed(0));
+            }  else {
+                console.log("unaltered: " + this.state.getMissionBoundedSuccessChance())
+                chance = parseFloat(this.state.getMissionBoundedSuccessChance().toFixed(0)) / 1000;
+                console.log("reduced to sim seconds " + chance)
+                chance = chance / 5
+                console.log("reduced to real seconds " + chance)
+                try {
+                    console.log("pred " + chance)
+                    var predTime = _.convertToTime(chance)
+                    console.log("predTime " + predTime)
+                } catch (e) {
+                    alert(e)
+                }
+
+                pred.innerHTML = predTime;//parseFloat(chance.toFixed(1)).toString() + "%";
+                var scaledTime = 1 - (chance / 360)
+                console.log(predTime + " -> " + scaledTime)
+                background.style.background = this.getMissionColor(0.8+scaledTime);
             }
         }
     },
