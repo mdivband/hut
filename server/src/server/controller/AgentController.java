@@ -7,6 +7,7 @@ import server.model.task.PatrolTask;
 import server.model.task.Task;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class AgentController extends AbstractController {
 
@@ -305,7 +306,8 @@ public class AgentController extends AbstractController {
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
             //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
-            if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 4) {
+            if (Simulator.instance.getState().getAgents().size() - scheduledRemovals > 4) {
+                System.out.println("Scheduling another removal, as " + Simulator.instance.getState().getAgents().size() + " - " + scheduledRemovals + " > 4");
                 simulator.getAgentController().decrementAgentNumbers();
                 return simulator.getAgentController().incrementRemoval();
                 //return ah.scheduleRemoval(1);
@@ -437,6 +439,7 @@ public class AgentController extends AbstractController {
                 av.clearTempRoute();
                 av.setAllocatedTaskId(null);
                 av.setSearching(false);
+                LOGGER.info(String.format("%s; AGFL; Agent Failed", simulator.getState().getTime()));
                 return true;
             }
         }

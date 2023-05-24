@@ -147,6 +147,5 @@ server/classes/
 
 server/src/META-INF/
 
-server/web44101/ModelFiles/*.txt
+server/web/ModelFiles/*.txt
 
-server/web/ModelFiles/

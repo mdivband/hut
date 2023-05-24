@@ -1,22 +1,20 @@
 package server;
 
-import server.model.agents.AgentVirtual;
-
 import java.io.*;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class ModelCaller {
     private Thread currentThread = null;
     private Thread underThread = null;
     private Thread overThread = null;
-    String[] currentConfigTuple = null;
+    String[][] currentConfig = null;
     private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
     private String style = "justOn";
     private String webRef;
 
     private Process[] procs = new Process[3];
     private int currentSalt;
+    private double startTime;
 
     public void reset() {
         style = "justOn";
@@ -32,8 +30,9 @@ public class ModelCaller {
      * Starts the first run, which in turn runs 1 over and 1 under.
      * Also side effects the chances in State.
      */
-    public void startThread(String webRef, String[] configTuple) {
+    public void startThread(String webRef, String[][] config) {
         currentSalt = Simulator.instance.getRandom().nextInt(10000);
+        startTime = Simulator.instance.getState().getTime();
         this.webRef = webRef;
         // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
         if (currentThread != null) {
@@ -54,15 +53,7 @@ public class ModelCaller {
             overThread = null;
         }
 
-        Simulator.instance.getState().setMissionSuccessChance(-1);
-        Simulator.instance.getState().setMissionSuccessOverChance(-1);
-        Simulator.instance.getState().setMissionSuccessUnderChance(-1);
-
-        Simulator.instance.getState().setMissionBoundedSuccessChance(-1);
-        Simulator.instance.getState().setMissionBoundedSuccessOverChance(-1);
-        Simulator.instance.getState().setMissionBoundedSuccessUnderChance(-1);
-
-        currentConfigTuple = configTuple;
+        currentConfig = config;
         currentThread = new Thread(this::runOn);
         // TODO not properly interrupted
         currentThread.start();
@@ -73,6 +64,14 @@ public class ModelCaller {
             overThread = new Thread(this::runOver);
             overThread.start();
         }
+
+        Simulator.instance.getState().setMissionSuccessChance(-1);
+        Simulator.instance.getState().setMissionSuccessOverChance(-1);
+        Simulator.instance.getState().setMissionSuccessUnderChance(-1);
+
+        Simulator.instance.getState().setEstimatedCompletionTime(-1);
+        Simulator.instance.getState().setEstimatedCompletionOverTime(-1);
+        Simulator.instance.getState().setEstimatedCompletionUnderTime(-1);
 
     }
 
@@ -119,14 +118,13 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDSTO; Model starting on the current number of agents (#); %s", Simulator.instance.getState().getTime(), Simulator.instance.getState().getAgents().size()));
 
             double startTime = System.nanoTime();
-            runScript("current.py", 1, currentConfigTuple);
+            runScript("current.py", 1, currentConfig[1]);
 
             int exitCode = procs[1].waitFor();
             //double boundedResult = readTimeBoundedResult("currentResults_boundedT"+currentSalt+".txt");
             double boundedResult = readTimeBoundedResultAsTime("currentResults_boundedT"+currentSalt+".txt", 0.95);
-            System.out.println("cur " + boundedResult);
 
-            Simulator.instance.getState().setMissionBoundedSuccessChance(boundedResult * 100);
+            Simulator.instance.getState().setEstimatedCompletionTime(boundedResult * 100);
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             LOGGER.info(String.format("%s; MDDNO; Model done on the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), boundedResult, elapsed));
@@ -156,14 +154,13 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDSTV; Model starting at 1 over the current number of agents;", Simulator.instance.getState().getTime()));
 
             double startTime = System.nanoTime();
-            runScript("add1drone.py", 2, currentConfigTuple);
+            runScript("add1drone.py", 2, currentConfig[2]);
 
             int exitCode = procs[2].waitFor();
             //double boundedResult = readTimeBoundedResult("add1results_boundedT"+currentSalt+".txt");
             double boundedResult = readTimeBoundedResultAsTime("add1results_boundedT"+currentSalt+".txt", 0.95);
-            System.out.println("ov " + boundedResult);
 
-            Simulator.instance.getState().setMissionBoundedSuccessOverChance(boundedResult * 100);
+            Simulator.instance.getState().setEstimatedCompletionOverTime(boundedResult * 100);
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             LOGGER.info(String.format("%s; MDDNV; Model done at 1 over the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), boundedResult, elapsed));
@@ -192,15 +189,14 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDSTU; Model starting at 1 under the current number of agents;", Simulator.instance.getState().getTime()));
 
             double startTime = System.nanoTime();
-            runScript("remove1drone.py", 0, currentConfigTuple);
+            runScript("remove1drone.py", 0, currentConfig[0]);
 
             int exitCode = procs[0].waitFor();
             //double boundedResult = readTimeBoundedResult("remove1results_boundedT"+currentSalt+".txt");
             double boundedResult = readTimeBoundedResultAsTime("remove1results_boundedT"+currentSalt+".txt", 0.95);
-            System.out.println("un " + boundedResult);
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
-            Simulator.instance.getState().setMissionBoundedSuccessUnderChance(boundedResult * 100);
+            Simulator.instance.getState().setEstimatedCompletionUnderTime(boundedResult * 100);
             LOGGER.info(String.format("%s; MDDNU; Model done at 1 under the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), boundedResult, elapsed));
         } catch (IOException e) {
             System.out.println("RUN UNDER - An IO error occurred.");
@@ -337,16 +333,19 @@ public class ModelCaller {
 
             //e.g 18000	0.998
             String s;
-            int endTime = 0;
+            int timeToComplete = 0;
             while ((s = reader.readLine()) != null) {
                 String[] split = s.split("\t");
                 if (Double.parseDouble(split[1]) >= confidence) {
-                    endTime = Integer.parseInt(s.split("\t")[0]);
+                    timeToComplete = Integer.parseInt(s.split("\t")[0]);
                     break;
                 }
             }
             reader.close();
-            return endTime;
+            if (timeToComplete == 0) {
+                timeToComplete = 30000;
+            }
+            return (int) (startTime + (timeToComplete / 10));
         } catch (FileNotFoundException e) {
             System.out.println("File " + fileName + " not found");
             return 0;

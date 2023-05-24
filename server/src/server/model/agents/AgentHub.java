@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 public class AgentHub extends Agent implements Hub {
     private transient Logger LOGGER = Logger.getLogger(AgentHub.class.getName());
     private transient Sensor sensor;
-    private int scheduledRemovals = 0;
 
     public AgentHub(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -71,16 +70,6 @@ public class AgentHub extends Agent implements Hub {
     @Override
     void performFlocking() {
         // pass
-    }
-
-    public int scheduleRemoval(int numRemovals) {
-        scheduledRemovals += numRemovals;
-        System.out.println("Scheduled to remove the next " + scheduledRemovals + " agents");
-        return scheduledRemovals;
-    }
-
-    public int getScheduledRemovals() {
-        return scheduledRemovals;
     }
 
     public boolean allAgentsNear() {

@@ -32,31 +32,25 @@ public class ModelGenerator {
 
     /**
      * Run generator to create files for the current number of agents plus 1
-     * @param state
-     * @param webRef
      * @return
      */
-    public static boolean runOver(State state, String webRef) {
-        String droneRep = generateDroneRep(state) + "0.0 0.0 1.0 0 0 0 1 1 \n";
-        String taskRep = generateTaskRep(state);
-        return generate(droneRep, taskRep, webRef+"/ModelFiles/add1drone.txt", webRef+"/ModelFiles/add1tasks.txt");
+    public static String[] runOver(String[] generatedCurrent) {
+        String droneRep = generatedCurrent[0] + "0.0 0.0 1.0 0 0 0 1 1 \n";
+        String taskRep = generatedCurrent[1];
+        return new String[]{droneRep, taskRep};
+        //return generate(droneRep, taskRep, webRef+"/ModelFiles/add1drone.txt", webRef+"/ModelFiles/add1tasks.txt");
     }
 
     /**
      * Run generator to create files for the current number of agents minus 1
-     * @param state
-     * @param webRef
      * @return
      */
-    public static boolean runUnder(State state, String webRef) {
-        String[] rep = generateDroneRep(state).split("\n");
-        StringBuilder sb = new StringBuilder();
-        for (int i=0; i<rep.length-1; i++) {
-            sb.append(rep[i]).append("\n");
-        }
-        String taskRep = generateTaskRep(state);
-        return generate(sb.toString(), taskRep, webRef+"/ModelFiles/remove1drone.txt", webRef+"/ModelFiles/remove1tasks.txt");
-
+    public static String[] runUnder(String[] generatedCurrent) {
+        String[] splitCurrent = generatedCurrent[0].split("\n");
+        String[] droneSplit = Arrays.copyOf(splitCurrent, splitCurrent.length-1);
+        String droneRep = String.join("\n", droneSplit);
+        String taskRep = generatedCurrent[1];
+        return new String[]{droneRep, taskRep};
     }
 
     /**
@@ -72,12 +66,12 @@ public class ModelGenerator {
             FileWriter myWriter = new FileWriter(dronesFileName);
             myWriter.write(droneRep);
             myWriter.close();
-            System.out.println("Wrote to "+dronesFileName);
+            //System.out.println("Wrote to "+dronesFileName);
 
             myWriter = new FileWriter(tasksFileName);
             myWriter.write(taskRep);
             myWriter.close();
-            System.out.println("Wrote to "+tasksFileName);
+            //System.out.println("Wrote to "+tasksFileName);
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();

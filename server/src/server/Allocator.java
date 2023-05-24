@@ -1122,7 +1122,7 @@ public class Allocator {
                 a.prependToRoute(simulator.getState().getHubLocation());
                 a.setGoingHome(true);
             } catch (Exception e) {
-                System.out.println("Caught exception. This should be due to agent failure during reassignment?");
+                //System.out.println("Caught exception. This should be due to agent failure during reassignment?");
             }
         });
     }

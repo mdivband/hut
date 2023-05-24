@@ -30,13 +30,13 @@ App.Views.Prediction = Backbone.View.extend({
 
              */
         } else if (this.type === "bounded") {
-            this.state.on("change:missionBoundedSuccessChance", function () {
+            this.state.on("change:estimatedCompletionTime", function () {
                 self.update();
             });
-            this.state.on("change:missionBoundedSuccessOverChance", function () {
+            this.state.on("change:estimatedCompletionOverTime", function () {
                 self.updateOverBound();
             });
-            this.state.on("change:missionBoundedSuccessUnderChance", function () {
+            this.state.on("change:estimatedCompletionUnderTime", function () {
                 self.updateUnderBound();
             });
             // TODO over and under here
@@ -68,49 +68,72 @@ App.Views.Prediction = Backbone.View.extend({
         } else if (this.type === "bounded") {
             pred = document.getElementById("bounded_prediction_text");
             background = document.getElementById("bounded_prediction_circle");
-            if (this.state.getMissionBoundedSuccessChance() === -1) {
+            if (this.state.getEstimatedCompletionTime() === -1) {
                 pred.innerHTML = "?%";
                 background.style.background = "rgb(255,255,255)";
             }  else {
-                console.log("unaltered: " + this.state.getMissionBoundedSuccessChance())
-                chance = parseFloat(this.state.getMissionBoundedSuccessChance().toFixed(0)) / 1000;
-                console.log("reduced to sim seconds " + chance)
-                chance = chance / 5
-                console.log("reduced to real seconds " + chance)
-                try {
-                    console.log("pred " + chance)
-                    var predTime = _.convertToTime(chance)
-                    console.log("predTime " + predTime)
-                } catch (e) {
-                    alert(e)
+                console.log(this.state.getEstimatedCompletionTime())
+                var eta;
+                if (this.state.getEstimatedCompletionTime() >= 300000) {
+                    eta = "10:00+"
+                } else {
+                    eta = self.convertToCompletionTime(this.state.getEstimatedCompletionTime())
                 }
+                pred.innerHTML = eta;//parseFloat(chance.toFixed(1)).toString() + "%";
+                var scaledTime = ((this.state.getEstimatedCompletionTime() / 500) / 360)
+                console.log(eta + " -> " + scaledTime)
 
-                pred.innerHTML = predTime;//parseFloat(chance.toFixed(1)).toString() + "%";
-                var scaledTime = 1 - (chance / 360)
-                console.log(predTime + " -> " + scaledTime)
-                background.style.background = this.getMissionColor(0.8+scaledTime);
+                background.style.background = this.getMissionColor(100*scaledTime);
             }
+            // IMPORTANT: Because these are deltas wrt the current prediction, they must be recomputed when the base
+            //  prediction comes through
+            self.updateUnderBound()
+            self.updateOverBound()
         }
     },
     updateOverBound : function () {
         var addButton = document.getElementById("add_agent");
-        //var chance = this.state.getMissionSuccessOverChance();
-        var chance = this.state.getMissionBoundedSuccessOverChance();
-        if (chance === -1) {
-            addButton.innerText = "Add Agent (?%)"
+        var timeDelta = (parseFloat(this.state.getEstimatedCompletionOverTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
+        timeDelta = timeDelta / 5
+        if (this.state.getEstimatedCompletionOverTime() === -1) {
+            addButton.innerText = "Add Agent (?)"
+        } else if (timeDelta === 0) {
+            addButton.innerText = "Add Agent (~0s)"
         } else {
-            addButton.innerText = "Add Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+            if (timeDelta < 1) {
+                addButton.innerText = "Add Agent (" + timeDelta + "s)";
+            } else {
+                addButton.innerText = "Add Agent (+" + timeDelta + "s)";
+            }
+
         }
     },
     updateUnderBound : function () {
         var removeButton = document.getElementById("remove_agent");
-        //var chance = this.state.getMissionSuccessUnderChance()
-        var chance = this.state.getMissionBoundedSuccessUnderChance()
-        if (chance === -1) {
-            removeButton.innerText = "Remove Agent (?%)"
+        var timeDelta = (parseFloat(this.state.getEstimatedCompletionUnderTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
+        timeDelta = timeDelta / 5
+        if (this.state.getEstimatedCompletionUnderTime() === -1) {
+            removeButton.innerText = "Remove Agent (?)"
+        } else if (timeDelta === 0) {
+            removeButton.innerText = "Add Agent (~0s)"
         } else {
-            removeButton.innerText = "Remove Agent (" + parseFloat(chance.toFixed(1)).toString() + "%)";
+            if (timeDelta < 1) {
+                removeButton.innerText = "Remove Agent (" + timeDelta + "s)";
+            } else {
+                removeButton.innerText = "Remove Agent (+" + timeDelta + "s)";
+            }
         }
+    },
+    convertToCompletionTime: function (time) {
+        console.log("unaltered: " + time)
+        time = time / 100;
+        console.log("reduced to sim seconds " + time)
+        time = time / 5
+        console.log("reduced to real seconds " + time)
+        var predTime = _.convertToTime(time)
+        console.log("predTime " + predTime)
+
+        return predTime
     },
     getAllocColor: function (p) {
         var red = p < 50 ? 255 : Math.round(256 - (p - 50) * 5.12);
@@ -119,8 +142,8 @@ App.Views.Prediction = Backbone.View.extend({
     },
     getMissionColor: function (p) {
         // p < boundary ? 256 : round( 256 - (p - boundary) * (256/boundary) )
-        var red = p < 80 ? 255 : Math.round(256 - (p - 80) * 3.2);
-        var green = p > 80 ? 255 : Math.round((p) * 3.2);
+        var red = p > 80 ? 255 : Math.round((p) * 3.2);
+        var green = p < 80 ? 255 : Math.round(256 - (p - 80) * 5.12);
         return "rgb(" + red + "," + green + ",0)";
     }
 

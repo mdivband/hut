@@ -16,7 +16,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -75,9 +74,9 @@ public class State {
     private double missionSuccessChance;
     private double missionSuccessOverChance;
     private double missionSuccessUnderChance;
-    private double missionBoundedSuccessChance;
-    private double missionBoundedSuccessUnderChance;
-    private double missionBoundedSuccessOverChance;
+    private double estimatedCompletionTime;
+    private double estimatedCompletionUnderTime;
+    private double estimatedCompletionOverTime;
 
     private Map<String, Double> scoreInfo;
 
@@ -641,19 +640,7 @@ public class State {
     public void setMissionSuccessChance(double successChance) {
         this.missionSuccessChance = successChance;
     }
-
-    public void setMissionBoundedSuccessChance(double successChance) {
-        this.missionBoundedSuccessChance = successChance;
-    }
-
-    public void setMissionBoundedSuccessUnderChance(double missionBoundedSuccessUnderChance) {
-        this.missionBoundedSuccessUnderChance = missionBoundedSuccessUnderChance;
-    }
-
-    public void setMissionBoundedSuccessOverChance(double missionBoundedSuccessOverChance) {
-        this.missionBoundedSuccessOverChance = missionBoundedSuccessOverChance;
-    }
-
+    
     public void setMissionSuccessOverChance(double overChance) {
         this.missionSuccessOverChance = overChance;
     }
@@ -661,6 +648,20 @@ public class State {
     public void setMissionSuccessUnderChance(double underChance) {
         this.missionSuccessUnderChance = underChance;
     }
+    
+    public void setEstimatedCompletionTime(double estimatedCompletionTime) {
+        this.estimatedCompletionTime = estimatedCompletionTime;
+    }
+
+    public void setEstimatedCompletionUnderTime(double estimatedCompletionUnderTime) {
+        this.estimatedCompletionUnderTime = estimatedCompletionUnderTime;
+    }
+
+    public void setEstimatedCompletionOverTime(double estimatedCompletionOverTime) {
+        this.estimatedCompletionOverTime = estimatedCompletionOverTime;
+    }
+
+    
 
     /**
      * Resets log to a new filename

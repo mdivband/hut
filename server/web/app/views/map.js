@@ -45,6 +45,15 @@ App.Views.Map = Backbone.View.extend({
             mapTypeControl: false,
             scaleControl: false,
             scrollwheel: true,
+            styles: [
+                {
+                    featureType: "all",
+                    elementType: "labels",
+                    stylers: [
+                        { visibility: "off" }
+                    ]
+                }
+            ],
             disableDoubleClickZoom: false,
             disableDefaultUI: true,
         };

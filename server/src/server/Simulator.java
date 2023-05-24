@@ -213,6 +213,7 @@ public class Simulator {
                             if (agent instanceof AgentVirtual av) {
                                 if (agentController.modelFailure(av)) {
                                     modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                    updateMissionModel();
                                 }
 
                                 if (agent.isTimedOut()) {
@@ -228,6 +229,7 @@ public class Simulator {
                                 } else {
                                     if (getAgentController().getScheduledRemovals() > 0) {
                                         agentsToRemove.add(agent);
+                                        System.out.println("Scheduled to remove " + agent.getId());
                                         getAgentController().decrementRemoval();
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
@@ -303,7 +305,10 @@ public class Simulator {
 
                 if (!modeller.isStarted()) {
                     modeller.start();
-                    updateMissionModel();
+                    getState().setEstimatedCompletionTime(270000);
+                    getState().setEstimatedCompletionUnderTime(240000);
+                    getState().setEstimatedCompletionOverTime(300000);
+                    //updateMissionModel();
                 }
 
             }
@@ -324,19 +329,27 @@ public class Simulator {
         } while (sleep(sleepTime));
     }
 
+    public void updateMissionModel(int numRemovals) {
+        // Update model and start thread
+        String[] generatedCurrent = ModelGenerator.run(state, webRef);
+        String[] lines = generatedCurrent[0].split("\n");
+        while (numRemovals > 0 && lines.length - numRemovals > 4) { // TODO make max removals (4) not hard coded
+            lines = Arrays.copyOf(lines, lines.length-1);
+            numRemovals--;
+        }
+        String[] generatedOver = ModelGenerator.runOver(generatedCurrent);
+        String[] generatedUnder = ModelGenerator.runUnder(generatedCurrent);
+        String[][] config = new String[][]{generatedUnder, generatedCurrent, generatedOver};
+        modelCaller.startThread(webRef, config);
+    }
+
     public void updateMissionModel() {
         // Update model and start thread
         String[] generatedCurrent = ModelGenerator.run(state, webRef);
-        boolean generatedOver = ModelGenerator.runOver(state, webRef);
-        boolean generatedUnder = ModelGenerator.runUnder(state, webRef);
-        //if (generatedOver && generatedUnder) {
-        //if (generatedCurrent) {
-        if (true) {
-            System.out.println("Model generated successfully");
-            modelCaller.startThread(webRef, generatedCurrent);
-        } else {
-            System.out.println("Generation failure");
-        }
+        String[] generatedOver = ModelGenerator.runOver(generatedCurrent);
+        String[] generatedUnder = ModelGenerator.runUnder(generatedCurrent);
+        String[][] config = new String[][]{generatedUnder, generatedCurrent, generatedOver};
+        modelCaller.startThread(webRef, config);
     }
 
     private void updateNextValues() {
