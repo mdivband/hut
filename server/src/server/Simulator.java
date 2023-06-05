@@ -331,24 +331,30 @@ public class Simulator {
 
     public void updateMissionModel(int numRemovals) {
         // Update model and start thread
-        String[] generatedCurrent = ModelGenerator.run(state, webRef);
-        String[] lines = generatedCurrent[0].split("\n");
-        while (numRemovals > 0 && lines.length - numRemovals > 4) { // TODO make max removals (4) not hard coded
-            lines = Arrays.copyOf(lines, lines.length-1);
+        ArrayList<double[][]> generatedCurrent = ModelGenerator.run(state, webRef);
+        while (numRemovals > 0 && generatedCurrent.get(0).length - numRemovals > 4) { // TODO make max removals (4) not hard coded
+            generatedCurrent.set(0, Arrays.copyOf(generatedCurrent.get(0), generatedCurrent.get(0).length-1));
             numRemovals--;
         }
-        String[] generatedOver = ModelGenerator.runOver(generatedCurrent);
-        String[] generatedUnder = ModelGenerator.runUnder(generatedCurrent);
-        String[][] config = new String[][]{generatedUnder, generatedCurrent, generatedOver};
+        ArrayList<double[][]> generatedOver = ModelGenerator.runOver(generatedCurrent);
+        ArrayList<double[][]> generatedUnder = ModelGenerator.runUnder(generatedCurrent);
+        ArrayList<ArrayList<double[][]>> config = new ArrayList<>(3);
+        config.add(generatedUnder);
+        config.add(generatedCurrent);
+        config.add(generatedOver);
+
         modelCaller.startThread(webRef, config);
     }
 
     public void updateMissionModel() {
         // Update model and start thread
-        String[] generatedCurrent = ModelGenerator.run(state, webRef);
-        String[] generatedOver = ModelGenerator.runOver(generatedCurrent);
-        String[] generatedUnder = ModelGenerator.runUnder(generatedCurrent);
-        String[][] config = new String[][]{generatedUnder, generatedCurrent, generatedOver};
+        ArrayList<double[][]> generatedCurrent = ModelGenerator.run(state, webRef);
+        ArrayList<double[][]> generatedOver = ModelGenerator.runOver(generatedCurrent);
+        ArrayList<double[][]> generatedUnder = ModelGenerator.runUnder(generatedCurrent);
+        ArrayList<ArrayList<double[][]>> config = new ArrayList<>(3);
+        config.add(generatedUnder);
+        config.add(generatedCurrent);
+        config.add(generatedOver);
         modelCaller.startThread(webRef, config);
     }
 

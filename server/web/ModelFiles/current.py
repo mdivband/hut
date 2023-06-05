@@ -101,7 +101,7 @@ for i in range(1, NumofDrones):
                        + ']' + '\n' \
                        + 'endmodule' + '\n' + '\n'
 
-ModelTemplate = open(PrismModelDir + '/model_template.txt', 'r')
+ModelTemplate = open(PrismModelDir + '/template_curr.txt', 'r')
 lines = ModelTemplate.readlines()
 ModelTemplate.close()
 

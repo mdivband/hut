@@ -1,18 +1,20 @@
 package server;
 
+import verification.Model;
+
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class ModelCaller {
     private Thread currentThread = null;
     private Thread underThread = null;
     private Thread overThread = null;
-    String[][] currentConfig = null;
+    ArrayList<ArrayList<double[][]>> currentConfig = null;
     private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
     private String style = "justOn";
     private String webRef;
-
-    private Process[] procs = new Process[3];
     private int currentSalt;
     private double startTime;
 
@@ -30,25 +32,22 @@ public class ModelCaller {
      * Starts the first run, which in turn runs 1 over and 1 under.
      * Also side effects the chances in State.
      */
-    public void startThread(String webRef, String[][] config) {
+    public void startThread(String webRef, ArrayList<ArrayList<double[][]>> config) {
         currentSalt = Simulator.instance.getRandom().nextInt(10000);
         startTime = Simulator.instance.getState().getTime();
         this.webRef = webRef;
         // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
         if (currentThread != null) {
             //System.out.println("INTERRUPTING");
-            procs[1].destroy();
             //System.out.println("dest");
             currentThread.interrupt();
             currentThread = null;
         }
         if (underThread != null) {
-            procs[0].destroy();
             underThread.interrupt();
             underThread = null;
         }
         if (overThread != null) {
-            procs[2].destroy();
             overThread.interrupt();
             overThread = null;
         }
@@ -77,37 +76,14 @@ public class ModelCaller {
 
     /**
      * Run the script for the model. Used for every run
+     *
+     * @return
      * @throws IOException
      * @throws InterruptedException
      */
-    private void runScript(String fileName, int procIndex, String[] currentConfigTuple) throws IOException, InterruptedException {
-        System.out.println("RUNNNING: " +  webRef+"/ModelFiles/"+fileName);
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", webRef+"/ModelFiles/"+fileName, webRef, currentConfigTuple[0], currentConfigTuple[1], String.valueOf(currentSalt));
-        processBuilder.redirectErrorStream(true);
-        procs[procIndex] = processBuilder.start();
-        //try {
-
-        /*
-            String s;
-            BufferedReader stdOut = new BufferedReader(new
-                    InputStreamReader(procs[procIndex].getInputStream()));
-            while ((s = stdOut.readLine()) != null) {
-                System.out.println(s);
-            }
-
-         */
-            //int exitCode = procs[procIndex].waitFor();
-            //System.out.println("RUN - Finished with exit code " + exitCode);
-        //} catch (InterruptedException e) {
-            //process.destroy();
-            //System.out.println("destroyed");
-            //throw e;
-        //}
-
-        int exit = procs[procIndex].waitFor();
-        System.out.println("EXIT = " + exit);
-
-
+    private ArrayList<String> runScript(String modelName, int procIndex, ArrayList<double[][]> currentConfigTuple) throws IOException, InterruptedException {
+        Model model = new Model(webRef, currentConfigTuple.get(0), currentConfigTuple.get(1), modelName);
+        return model.call();
     }
 
     /**
@@ -118,11 +94,9 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDSTO; Model starting on the current number of agents (#); %s", Simulator.instance.getState().getTime(), Simulator.instance.getState().getAgents().size()));
 
             double startTime = System.nanoTime();
-            runScript("current.py", 1, currentConfig[1]);
+            ArrayList<String> output = runScript("curr", 1, currentConfig.get(1));
 
-            int exitCode = procs[1].waitFor();
-            //double boundedResult = readTimeBoundedResult("currentResults_boundedT"+currentSalt+".txt");
-            double boundedResult = readTimeBoundedResultAsTime("currentResults_boundedT"+currentSalt+".txt", 0.95);
+            double boundedResult = readTimeBoundedResultAsTime(output, 0.95);
 
             Simulator.instance.getState().setEstimatedCompletionTime(boundedResult * 100);
 
@@ -133,15 +107,11 @@ public class ModelCaller {
         } catch (InterruptedException e) {
             System.out.println("RUN - Process interrupted.");
         }
-        //currentThread.interrupt();
-        currentThread = null;
 
-        /*
         if (style.equals("series")) {
             overThread = new Thread(this::runOver);
             overThread.start();
         }
-         */
     }
 
     /**
@@ -154,11 +124,9 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDSTV; Model starting at 1 over the current number of agents;", Simulator.instance.getState().getTime()));
 
             double startTime = System.nanoTime();
-            runScript("add1drone.py", 2, currentConfig[2]);
+            ArrayList<String> output = runScript("add1", 2, currentConfig.get(2));
 
-            int exitCode = procs[2].waitFor();
-            //double boundedResult = readTimeBoundedResult("add1results_boundedT"+currentSalt+".txt");
-            double boundedResult = readTimeBoundedResultAsTime("add1results_boundedT"+currentSalt+".txt", 0.95);
+            double boundedResult = readTimeBoundedResultAsTime(output, 0.95);
 
             Simulator.instance.getState().setEstimatedCompletionOverTime(boundedResult * 100);
 
@@ -189,11 +157,9 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDSTU; Model starting at 1 under the current number of agents;", Simulator.instance.getState().getTime()));
 
             double startTime = System.nanoTime();
-            runScript("remove1drone.py", 0, currentConfig[0]);
+            ArrayList<String> output = runScript("rem1", 0, currentConfig.get(0));
 
-            int exitCode = procs[0].waitFor();
-            //double boundedResult = readTimeBoundedResult("remove1results_boundedT"+currentSalt+".txt");
-            double boundedResult = readTimeBoundedResultAsTime("remove1results_boundedT"+currentSalt+".txt", 0.95);
+            double boundedResult = readTimeBoundedResultAsTime(output, 0.95);
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             Simulator.instance.getState().setEstimatedCompletionUnderTime(boundedResult * 100);
@@ -325,35 +291,21 @@ public class ModelCaller {
      * Read result from file. In future this may take an argument in future
      * @return
      */
-    private double readTimeBoundedResultAsTime(String fileName, double confidence) {
-        try {
-            BufferedReader reader = new BufferedReader(
-                    new FileReader(webRef + "/ModelFiles/" + fileName)
-            );
-
-            //e.g 18000	0.998
-            String s;
-            int timeToComplete = 0;
-            while ((s = reader.readLine()) != null) {
-                String[] split = s.split("\t");
-                if (Double.parseDouble(split[1]) >= confidence) {
-                    timeToComplete = Integer.parseInt(s.split("\t")[0]);
-                    break;
-                }
+    private double readTimeBoundedResultAsTime(ArrayList<String> lines, double confidence) {
+        //e.g 18000	0.998
+        String s;
+        int timeToComplete = 0;
+        for (String line : lines) {
+            String[] split = line.split("\t");
+            if (Double.parseDouble(split[1]) >= confidence) {
+                timeToComplete = Integer.parseInt(split[0]);
+                break;
             }
-            reader.close();
-            if (timeToComplete == 0) {
-                timeToComplete = 30000;
-            }
-            return (int) (startTime + (timeToComplete / 10));
-        } catch (FileNotFoundException e) {
-            System.out.println("File " + fileName + " not found");
-            return 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("ERROR READING RESULT. RETURNING 0");
-            return 0;
         }
+        if (timeToComplete == 0) {
+            timeToComplete = 30000;
+        }
+        return (int) (startTime + (timeToComplete / 10));
     }
 
     public void setStyle(String modelStyle) {
