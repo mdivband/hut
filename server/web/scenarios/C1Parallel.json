@@ -1,9 +1,9 @@
 {
   "gameId": "C1Parallel",
-  "gameDescription": "Non programmed drones, to demonstrate the default configuration",
+  "gameDescription": "Scenario 1 (Parallel Model execution)",
   "extendedUIOptions": {
-    "predictions": true,
-    "uncertainties": true
+    "predictions": false,
+    "uncertainties": false
   },
   "flockingEnabled": false,
   "allocationMethod" : "bestfirst",

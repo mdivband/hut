@@ -1,0 +1,60 @@
+{
+  "gameId": "Tutorial",
+  "gameDescription": "Tutorial Scenario - When you feel you understand the platform, you can close this window",
+  "extendedUIOptions": {
+    "predictions": false,
+    "uncertainties": false
+  },
+  "flockingEnabled": false,
+  "allocationMethod" : "bestfirst",
+  "allocationStyle": "dynamic",
+  "modelStyle": "parallel",
+  "varianceParameters": {
+    "speedPerAgent": 0.5,
+    "batteryPerAgent": 0.0002
+  },
+  "noiseParameters": {
+    "speedPerSecond": 0.25,
+    "batteryPerStep": 0.0001
+  },
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
+  "timeLimitSeconds": 360,
+  "uncertaintyRadius": 200.0,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.929425463893395,
+      "lng": -1.4088101213508741
+    },
+    {
+      "lat": 50.92893858723503,
+      "lng": -1.4097971742683546
+    },
+    {
+      "lat": 50.92902649589759,
+      "lng": -1.4078767126136915
+    },
+    {
+      "lat": 50.92830026788851,
+      "lng": -1.409243221988048
+    }
+  ],
+  "tasks": [
+    {
+      "lat": 50.930406436854064,
+      "lng": -1.4087765176194567,
+      "type": 4
+    },
+    {
+      "lat": 50.931672991713675,
+      "lng": -1.4100888476949058,
+      "type": 4
+    }
+  ]
+}

@@ -29,7 +29,7 @@ public class Model {
 
         int[] taskConfiguration = new int[7];
         int[] boundaries = new int[]{899, 799, 699, 599, 499, 399, 299};
-        int[] taskBoundaries = new int[]{899, 799, 699, 599, 499, 399};
+        int[] taskBoundaries = new int[]{799, 699, 599, 499, 399, 299};
         double[] newTaskRep = new double[taskRep.length];
         for (int i=0; i<droneRep.length; i++) {
             int dist = (int) droneRep[i][0];
@@ -77,7 +77,7 @@ public class Model {
                     break;
                 }
             }
-            newTaskRep[j] = effectiveDist;
+            newTaskRep[j] = Math.min(effectiveDist + 1, 6);
         }
 
         int[][] droneRepAsInt = new int[droneRep.length][droneRep[0].length];

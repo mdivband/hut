@@ -11,16 +11,16 @@ const double battery_charge = 0.0025;
 
 // Background failure rate
 // (further from base station => higher failure rate?)
-const double place1_fail_r = 0.00004;
-const double place2_fail_r = 0.00004;
-const double place3_fail_r = 0.00004;
-const double place4_fail_r = 0.00004;
-const double place5_fail_r = 0.00004;
-const double place6_fail_r = 0.00004;
-const double place7_fail_r = 0.00004;
+const double place1_fail_r = 0.00000001;
+const double place2_fail_r = 0.00000001;
+const double place3_fail_r = 0.00000001;
+const double place4_fail_r = 0.00000001;
+const double place5_fail_r = 0.00000001;
+const double place6_fail_r = 0.00000001;
+const double place7_fail_r = 0.00000001;
 
 // Movement rates (made up for now)
-const double mv_0_1_r = 0.01;
+const double mv_0_1_r = 0.003;
 const double mv_1_2_r = 0.01;
 const double mv_2_3_r = 0.01;
 const double mv_3_4_r = 0.01;
@@ -29,7 +29,7 @@ const double mv_5_6_r = 0.01;
 const double mv_6_7_r = 0.01;
 
 // Movement rates
-const double mv_1_0_r = 0.01;
+const double mv_1_0_r = 0.003;
 const double mv_2_1_r = 0.01;
 const double mv_3_2_r = 0.01;
 const double mv_4_3_r = 0.01;

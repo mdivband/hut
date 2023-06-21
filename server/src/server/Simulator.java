@@ -211,10 +211,13 @@ public class Simulator {
                     synchronized (state.getAgents()) {
                         for (Agent agent : state.getAgents()) {
                             if (agent instanceof AgentVirtual av) {
+                                /*
                                 if (agentController.modelFailure(av)) {
                                     modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                     updateMissionModel();
                                 }
+
+                                 */
 
                                 if (agent.isTimedOut()) {
                                     //System.out.println("timed out, passing");
