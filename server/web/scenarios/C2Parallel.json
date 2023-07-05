@@ -6,17 +6,10 @@
     "uncertainties": false
   },
   "flockingEnabled": false,
-  "allocationMethod" : "bestfirst",
+  "allocationMethod" : "maxsum",
   "allocationStyle": "dynamic",
   "modelStyle": "parallel",
-  "varianceParameters": {
-    "speedPerAgent": 0.5,
-    "batteryPerAgent": 0.0002
-  },
-  "noiseParameters": {
-    "speedPerSecond": 0.25,
-    "batteryPerStep": 0.0001
-  },
+
   "hub": {
     "lat": 50.924960005573894,
     "lng": -1.4097036668874585

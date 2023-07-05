@@ -1104,15 +1104,17 @@ public class Allocator {
             availableTasks.removeIf(t -> !t.getAgents().isEmpty());
 
             Map<String, String> alloc = compute(readyAgents, availableTasks, false);
-            alloc.forEach(this::putInTempAllocation);
-            confirmAllocation(simulator.getState().getTempAllocation());
+            if (alloc != null) {
+                alloc.forEach(this::putInTempAllocation);
+                confirmAllocation(simulator.getState().getTempAllocation());
 
-            readyAgents.forEach(a -> {
-                if (!alloc.containsKey(a.getId()) && a.getTask() == null) {
-                    dynamicAssignNearest(a, false);
-                    homingAgents.add((AgentVirtual) a);
-                }
-            });
+                readyAgents.forEach(a -> {
+                    if (!alloc.containsKey(a.getId()) && a.getTask() == null) {
+                        dynamicAssignNearest(a, false);
+                        homingAgents.add((AgentVirtual) a);
+                    }
+                });
+            }
         } else {
             dynamicAssignRandom(agent);
         }

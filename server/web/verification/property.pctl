@@ -1,0 +1,6 @@
+const int T;
+
+"unbounded": P=? [ F (allocTasksP1+allocTasksP2+allocTasksP3+allocTasksP4+allocTasksP5+allocTasksP6+allocTasksP7=0) ]
+
+"bounded": P=? [ F<=T (allocTasksP1+allocTasksP2+allocTasksP3+allocTasksP4+allocTasksP5+allocTasksP6+allocTasksP7<=0)]
+

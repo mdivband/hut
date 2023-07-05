@@ -75,13 +75,13 @@ module agent0
 
   // Generic background failure
   // On its way out
-  [] (alive0 = 1) & (place0 = 1) -> place1_fail_r : (alive0' = 0);
-  [] (alive0 = 1) & (place0 = 2) -> place2_fail_r : (alive0' = 0);
-  [] (alive0 = 1) & (place0 = 3) -> place3_fail_r : (alive0' = 0);
-  [] (alive0 = 1) & (place0 = 4) -> place4_fail_r : (alive0' = 0);
-  [] (alive0 = 1) & (place0 = 5) -> place5_fail_r : (alive0' = 0);
-  [] (alive0 = 1) & (place0 = 6) -> place6_fail_r : (alive0' = 0);
-  [] (alive0 = 1) & (place0 = 7) -> place7_fail_r : (alive0' = 0);
+  //[] (alive0 = 1) & (place0 = 1) -> place1_fail_r : (alive0' = 0);
+  //[] (alive0 = 1) & (place0 = 2) -> place2_fail_r : (alive0' = 0);
+  //[] (alive0 = 1) & (place0 = 3) -> place3_fail_r : (alive0' = 0);
+  //[] (alive0 = 1) & (place0 = 4) -> place4_fail_r : (alive0' = 0);
+  //[] (alive0 = 1) & (place0 = 5) -> place5_fail_r : (alive0' = 0);
+  //[] (alive0 = 1) & (place0 = 6) -> place6_fail_r : (alive0' = 0);
+  //[] (alive0 = 1) & (place0 = 7) -> place7_fail_r : (alive0' = 0);
 
   // Task allocation
   [] (place0 = 0) & (alive0 = 1) & (charge0 = 0) & (taskLoc0 = 0) & (!ready0) -> (alloc' = true) & (ready0' = true);

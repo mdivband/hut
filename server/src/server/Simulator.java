@@ -216,11 +216,9 @@ public class Simulator {
                                     modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                     updateMissionModel();
                                 }
-
                                  */
 
                                 if (agent.isTimedOut()) {
-                                    //System.out.println("timed out, passing");
                                 } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
                                     av.charge();
                                 } else if (agent.getBattery() < 0.15 && av.isAlive()) {
@@ -236,7 +234,11 @@ public class Simulator {
                                         getAgentController().decrementRemoval();
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
-                                        getAllocator().dynamicAssign(av, false);
+                                        if (av.getBattery() > 0.15) {
+                                            getAllocator().dynamicAssign(av, false);
+                                        } else {
+                                            av.goHome();
+                                        }
                                         // In-runtime allocation model
                                         double successChance = modeller.calculateAll(agent);
                                         state.setSuccessChance(successChance);

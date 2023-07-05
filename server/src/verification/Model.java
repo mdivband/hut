@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Model {
     private String prismDir = "./libs/prism-4.7-linux64/bin/prism";
-    private String prismModelDir = "./src/verification";
+    private String prismModelDir;
     private String prismOutputDir;
     private String modelName;
     private String webRef;
@@ -18,6 +18,8 @@ public class Model {
         this.webRef = webRef;
         this.droneRep = droneRep;
         this.taskRep = taskRep;
+
+        prismModelDir = webRef+"/verification";
 
         this.prismOutputDir = prismModelDir + "/" + modelName + ".txt";
         this.modelName = modelName;
@@ -94,7 +96,7 @@ public class Model {
 
         for (int r = 0; r < 7; r++) {
             int finalR = r;
-            taskConfiguration[r] = (int) Arrays.stream(taskRepAsInt).filter(c -> c == finalR + 1).count();
+            taskConfiguration[r] = (int) Arrays.stream(taskRepAsInt).filter(c -> c == finalR).count();
         }
 
         StringBuilder parameterBuilder = new StringBuilder();
@@ -237,7 +239,8 @@ public class Model {
             System.out.println("destroyed");
             throw e;
         }
-        */
+         */
+
 
         int exitCode = process.waitFor();
         System.out.println("RUN - Finished with exit code " + exitCode);

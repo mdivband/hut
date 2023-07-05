@@ -96,7 +96,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("curr", 1, currentConfig.get(1));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, 0.95);
+            double boundedResult = readTimeBoundedResultAsTime(output, 1);
 
             Simulator.instance.getState().setEstimatedCompletionTime(boundedResult * 100);
 
@@ -126,7 +126,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("add1", 2, currentConfig.get(2));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, 0.95);
+            double boundedResult = readTimeBoundedResultAsTime(output, 1);
 
             Simulator.instance.getState().setEstimatedCompletionOverTime(boundedResult * 100);
 
@@ -159,7 +159,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("rem1", 0, currentConfig.get(0));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, 0.95);
+            double boundedResult = readTimeBoundedResultAsTime(output, 1);
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             Simulator.instance.getState().setEstimatedCompletionUnderTime(boundedResult * 100);

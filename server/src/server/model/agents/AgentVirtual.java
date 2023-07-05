@@ -31,6 +31,10 @@ public class AgentVirtual extends Agent {
     @Override
     public void step(Boolean flockingEnabled) {
         if (goingHome) {
+            if (route.isEmpty()) {
+                setRoute(Collections.singletonList(Simulator.instance.getState().getHubLocation()));
+            }
+            resume();
             moveTowardsDestination();
             for (Agent a : sensor.senseNeighbours(this, 10.0)) {
                 if (a instanceof Hub) {
@@ -50,8 +54,9 @@ public class AgentVirtual extends Agent {
         }
 
         //Simulate things that would be done by a real drone
-        if (!isTimedOut())
+        if (!isTimedOut()) {
             heartbeat();
+        }
     }
 
     @Override
