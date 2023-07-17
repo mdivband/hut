@@ -6,7 +6,7 @@
     "uncertainties": false
   },
   "flockingEnabled": false,
-  "allocationMethod" : "maxsum",
+  "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
   "modelStyle": "parallel",
 

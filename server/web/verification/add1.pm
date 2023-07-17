@@ -50,7 +50,52 @@ const int initReturn0;
 const int initAlive0;
 const int initTurning0;
 
-// ADD TEXT FOR PARAMETERS
+const int initPlace1;
+const int initTaskLoc1;
+const int initBattery1;
+const int initDelivered1;
+const int initCharge1;
+const int initReturn1;
+const int initAlive1;
+const int initTurning1;
+
+const int initPlace2;
+const int initTaskLoc2;
+const int initBattery2;
+const int initDelivered2;
+const int initCharge2;
+const int initReturn2;
+const int initAlive2;
+const int initTurning2;
+
+const int initPlace3;
+const int initTaskLoc3;
+const int initBattery3;
+const int initDelivered3;
+const int initCharge3;
+const int initReturn3;
+const int initAlive3;
+const int initTurning3;
+
+const int initPlace4;
+const int initTaskLoc4;
+const int initBattery4;
+const int initDelivered4;
+const int initCharge4;
+const int initReturn4;
+const int initAlive4;
+const int initTurning4;
+
+const int initPlace5;
+const int initTaskLoc5;
+const int initBattery5;
+const int initDelivered5;
+const int initCharge5;
+const int initReturn5;
+const int initAlive5;
+const int initTurning5;
+
+
 
 // Agents
 module agent0
@@ -197,7 +242,122 @@ module agent0
   [] (place0 = 7) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 3) -> 4*mv_7_6_r : (place0' = 6) & (moveC0' = 0);
 endmodule
 
-// ADD TEXT FOR AGENTS
+module agent1=agent0[
+drainC0=drainC1,
+moveC0=moveC1,
+place0=place1,
+taskLoc0=taskLoc1,
+battery0=battery1,
+ready0=ready1,
+return0=return1,
+delivered0=delivered1,
+charge0=charge1,
+alive0=alive1,
+turning0=turning1,
+initPlace0=initPlace1,
+initTaskLoc0=initTaskLoc1,
+initBattery0=initBattery1,
+initDelivered0=initDelivered1,
+initCharge0=initCharge1,
+initReturn0=initReturn1,
+initAlive0=initAlive1,
+initTurning0=initTurning1
+]
+endmodule
+
+module agent2=agent0[
+drainC0=drainC2,
+moveC0=moveC2,
+place0=place2,
+taskLoc0=taskLoc2,
+battery0=battery2,
+ready0=ready2,
+return0=return2,
+delivered0=delivered2,
+charge0=charge2,
+alive0=alive2,
+turning0=turning2,
+initPlace0=initPlace2,
+initTaskLoc0=initTaskLoc2,
+initBattery0=initBattery2,
+initDelivered0=initDelivered2,
+initCharge0=initCharge2,
+initReturn0=initReturn2,
+initAlive0=initAlive2,
+initTurning0=initTurning2
+]
+endmodule
+
+module agent3=agent0[
+drainC0=drainC3,
+moveC0=moveC3,
+place0=place3,
+taskLoc0=taskLoc3,
+battery0=battery3,
+ready0=ready3,
+return0=return3,
+delivered0=delivered3,
+charge0=charge3,
+alive0=alive3,
+turning0=turning3,
+initPlace0=initPlace3,
+initTaskLoc0=initTaskLoc3,
+initBattery0=initBattery3,
+initDelivered0=initDelivered3,
+initCharge0=initCharge3,
+initReturn0=initReturn3,
+initAlive0=initAlive3,
+initTurning0=initTurning3
+]
+endmodule
+
+module agent4=agent0[
+drainC0=drainC4,
+moveC0=moveC4,
+place0=place4,
+taskLoc0=taskLoc4,
+battery0=battery4,
+ready0=ready4,
+return0=return4,
+delivered0=delivered4,
+charge0=charge4,
+alive0=alive4,
+turning0=turning4,
+initPlace0=initPlace4,
+initTaskLoc0=initTaskLoc4,
+initBattery0=initBattery4,
+initDelivered0=initDelivered4,
+initCharge0=initCharge4,
+initReturn0=initReturn4,
+initAlive0=initAlive4,
+initTurning0=initTurning4
+]
+endmodule
+
+module agent5=agent0[
+drainC0=drainC5,
+moveC0=moveC5,
+place0=place5,
+taskLoc0=taskLoc5,
+battery0=battery5,
+ready0=ready5,
+return0=return5,
+delivered0=delivered5,
+charge0=charge5,
+alive0=alive5,
+turning0=turning5,
+initPlace0=initPlace5,
+initTaskLoc0=initTaskLoc5,
+initBattery0=initBattery5,
+initDelivered0=initDelivered5,
+initCharge0=initCharge5,
+initReturn0=initReturn5,
+initAlive0=initAlive5,
+initTurning0=initTurning5
+]
+endmodule
+
+
 
 const int maxTasksPerRegion = 40;
 

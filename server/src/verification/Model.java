@@ -6,13 +6,16 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Model {
-    private String prismDir = "./libs/prism-4.7-linux64/bin/prism";
+    private String prismDir = "./libs/prism-4.8/bin/prism.bat";
     private String prismModelDir;
     private String prismOutputDir;
     private String modelName;
     private String webRef;
     private double[][] droneRep;
     private double[][] taskRep;
+    private boolean debug = false;
+    private Process thisProcess;
+    private ProcessBuilder thisPb;
 
     public Model(String webRef, double[][] droneRep, double[][] taskRep, String modelName) {
         this.webRef = webRef;
@@ -115,6 +118,8 @@ public class Model {
                     .append("\n");
 
             agentBuilder.append("module agent").append(i).append("=agent0[").append("\n")
+                    .append("drainC0=drainC").append(i).append(",").append("\n")
+                    .append("moveC0=moveC").append(i).append(",").append("\n")
                     .append("place0=place").append(i).append(",").append("\n")
                     .append("taskLoc0=taskLoc").append(i).append(",").append("\n")
                     .append("battery0=battery").append(i).append(",").append("\n")
@@ -164,30 +169,6 @@ public class Model {
         boolean success = oldFile.renameTo(newFile);
         System.out.println("renaming success? = " + success);
 
-        /*
-        StringBuilder cmdSb = new StringBuilder(prismDir + ' ' + prismModelDir + "/" + modelName + ".pm" + ' ' + prismModelDir + "/property.pctl"
-                + ' ' + "-prop" + ' ' + "bounded" + ' ' + "-sim" + ' ' + "-exportresults" + ' ' + prismOutputDir + ' ' + "-const" + ' ');
-
-        for (int i=0; i<droneRep.length; i++) {
-            cmdSb
-                    .append("initPlace").append(i).append("=").append(droneRepAsInt[i][0]).append(",")
-                    .append("initTaskLoc").append(i).append("=").append(droneRepAsInt[i][1]).append(",")
-                    .append("initBattery").append(i).append("=").append(droneRepAsInt[i][2]).append(",")
-                    .append("initDelivered").append(i).append("=").append(droneRepAsInt[i][3]).append(",")
-                    .append("initCharge").append(i).append("=").append(droneRepAsInt[i][4]).append(",")
-                    .append("initReturn").append(i).append("=").append(droneRepAsInt[i][5]).append(",")
-                    .append("initAlive").append(i).append("=").append(droneRepAsInt[i][6]).append(",")
-                    .append("initTurning").append(i).append("=").append(droneRepAsInt[i][7]).append(",");
-        }
-
-        for (int j=0; j<7; j++) {
-            cmdSb.append("initTaskP").append(j + 1).append('=').append(taskConfiguration[j]).append(",");
-        }
-
-        cmdSb.append("T=300:300:30000");
-        String cmd = cmdSb.toString();
-         */
-
         ArrayList<String> cmd = new ArrayList<>();
         cmd.add(prismDir);
         cmd.add(prismModelDir + "/" + modelName + ".pm");
@@ -221,28 +202,30 @@ public class Model {
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
+        thisPb = processBuilder.inheritIO();
+        thisProcess = processBuilder.start();
 
-        /*
-        try {
-            String s;
-            BufferedReader stdOut = new BufferedReader(new
-                    InputStreamReader(process.getInputStream()));
-            while ((s = stdOut.readLine()) != null) {
-                System.out.println(s);
+        if (debug) {
+            try {
+                String s;
+                BufferedReader stdOut = new BufferedReader(new
+                        InputStreamReader(thisProcess.getInputStream()));
+                while ((s = stdOut.readLine()) != null) {
+                    System.out.println(s);
+                }
+
+                int exitCode = thisProcess.waitFor();
+                System.out.println("RUN - Finished with exit code " + exitCode);
+            } catch (InterruptedException e) {
+                thisProcess.destroy();
+                System.out.println("destroyed");
+                throw e;
             }
-
-            int exitCode = process.waitFor();
-            System.out.println("RUN - Finished with exit code " + exitCode);
-        } catch (InterruptedException e) {
-            process.destroy();
-            System.out.println("destroyed");
-            throw e;
         }
-         */
 
 
-        int exitCode = process.waitFor();
+
+        int exitCode = thisProcess.waitFor();
         System.out.println("RUN - Finished with exit code " + exitCode);
 
         ArrayList<String> outLines = new ArrayList<>();
@@ -265,6 +248,27 @@ public class Model {
 
         outLines.remove(0);
         return outLines;
+
+    }
+
+    public void cancel() {
+        System.out.println(thisProcess.info());
+        System.out.println("proc before -> " + thisProcess);
+
+        thisProcess.descendants().forEach(ProcessHandle::destroy);
+        Process code1 = thisProcess.destroyForcibly();
+
+        try {
+            int code2 = thisProcess.waitFor();
+            System.out.println(thisProcess.info());
+            System.out.println(code1 + " , " + code2);
+            System.out.println();
+        } catch (Exception e) {
+            System.out.println("excep");
+        }
+
+        System.out.println("proc after -> " + thisProcess);
+        System.out.println();
 
     }
 

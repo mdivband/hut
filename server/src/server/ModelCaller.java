@@ -12,6 +12,7 @@ public class ModelCaller {
     private Thread underThread = null;
     private Thread overThread = null;
     ArrayList<ArrayList<double[][]>> currentConfig = null;
+    Model[] models = new Model[3];
     private Logger LOGGER = Logger.getLogger(ModelCaller.class.getName());
     private String style = "justOn";
     private String webRef;
@@ -40,14 +41,17 @@ public class ModelCaller {
         if (currentThread != null) {
             //System.out.println("INTERRUPTING");
             //System.out.println("dest");
+            models[1].cancel();
             currentThread.interrupt();
             currentThread = null;
         }
         if (underThread != null) {
+            models[0].cancel();
             underThread.interrupt();
             underThread = null;
         }
         if (overThread != null) {
+            models[2].cancel();
             overThread.interrupt();
             overThread = null;
         }
@@ -83,6 +87,7 @@ public class ModelCaller {
      */
     private ArrayList<String> runScript(String modelName, int procIndex, ArrayList<double[][]> currentConfigTuple) throws IOException, InterruptedException {
         Model model = new Model(webRef, currentConfigTuple.get(0), currentConfigTuple.get(1), modelName);
+        models[procIndex] = model;
         return model.call();
     }
 
