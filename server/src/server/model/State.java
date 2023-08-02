@@ -661,7 +661,17 @@ public class State {
         this.estimatedCompletionOverTime = estimatedCompletionOverTime;
     }
 
-    
+    public double getEstimatedCompletionTime() {
+        return estimatedCompletionTime;
+    }
+
+    public double getEstimatedCompletionUnderTime() {
+        return estimatedCompletionUnderTime;
+    }
+
+    public double getEstimatedCompletionOverTime() {
+        return estimatedCompletionOverTime;
+    }
 
     /**
      * Resets log to a new filename

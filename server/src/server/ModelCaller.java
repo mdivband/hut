@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class ModelCaller {
+    private double confidence = 1;
     private Thread currentThread = null;
     private Thread underThread = null;
     private Thread overThread = null;
@@ -86,7 +87,7 @@ public class ModelCaller {
      * @throws InterruptedException
      */
     private ArrayList<String> runScript(String modelName, int procIndex, ArrayList<double[][]> currentConfigTuple) throws IOException, InterruptedException {
-        Model model = new Model(webRef, currentConfigTuple.get(0), currentConfigTuple.get(1), modelName);
+        Model model = new Model(webRef, currentConfigTuple.get(0), currentConfigTuple.get(1), modelName+(Simulator.instance.getPort()));
         models[procIndex] = model;
         return model.call();
     }
@@ -101,7 +102,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("curr", 1, currentConfig.get(1));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, 1);
+            double boundedResult = readTimeBoundedResultAsTime(output, confidence);
 
             Simulator.instance.getState().setEstimatedCompletionTime(boundedResult * 100);
 
@@ -109,6 +110,7 @@ public class ModelCaller {
             LOGGER.info(String.format("%s; MDDNO; Model done on the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), boundedResult, elapsed));
         } catch (IOException e) {
             System.out.println("RUN - An IO error occurred.");
+            e.printStackTrace();
         } catch (InterruptedException e) {
             System.out.println("RUN - Process interrupted.");
         }
@@ -131,7 +133,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("add1", 2, currentConfig.get(2));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, 1);
+            double boundedResult = readTimeBoundedResultAsTime(output, confidence);
 
             Simulator.instance.getState().setEstimatedCompletionOverTime(boundedResult * 100);
 
@@ -164,7 +166,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("rem1", 0, currentConfig.get(0));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, 1);
+            double boundedResult = readTimeBoundedResultAsTime(output, confidence);
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             Simulator.instance.getState().setEstimatedCompletionUnderTime(boundedResult * 100);

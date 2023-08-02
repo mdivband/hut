@@ -148,6 +148,3 @@ server/classes/
 server/src/META-INF/
 
 server/web/ModelFiles/*.txt
-
-
-server/libs/

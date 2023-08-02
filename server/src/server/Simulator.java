@@ -49,6 +49,7 @@ public class Simulator {
     private String nextFileName = "";
 
     private Thread mainLoopThread;
+    private int port;
 
     public Simulator() {
         instance = this;
@@ -170,7 +171,8 @@ public class Simulator {
             long startTime = System.currentTimeMillis();
 
             state.incrementTime(0.2);
-            if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+            //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+            if (state.getTime() >= state.getTimeLimit() * gameSpeed) {
                 System.out.println("DONE BY TIME: " + state.getTime());
                 System.out.println("agents = " + state.getAgents());
                 int numFailed = 0;
@@ -182,7 +184,9 @@ public class Simulator {
                     }
                 }
                 System.out.println("Num failed: " + numFailed);
-                modeller.outputResults();
+                try {
+                    modeller.outputResults();
+                } catch (Exception ignored){}
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }
@@ -204,6 +208,7 @@ public class Simulator {
                             }
                         }
                         System.out.println("Num failed: " + numFailed);
+                        System.out.println("RESULT: Pred=" + state.getEstimatedCompletionTime() / 100 + " Actual="+state.getTime());
                         this.reset();
                     }
 
@@ -240,14 +245,17 @@ public class Simulator {
                                             av.goHome();
                                         }
                                         // In-runtime allocation model
-                                        double successChance = modeller.calculateAll(agent);
-                                        state.setSuccessChance(successChance);
+                                        try {
+                                            double successChance = modeller.calculateAll(agent);
+                                            state.setSuccessChance(successChance);
+                                        } catch (Exception ignored){}
+
                                     } else if (agent.getBattery() < 0.9 && av.isAlive()) {
                                         // If no tasks available, charge up in case we need to replace it
                                         av.charge();
                                     } else {
                                         // Full battery AND no available task. Let's back up an existing task
-                                        System.out.println("RANDOM ASSIGN");
+                                        //System.out.println("RANDOM ASSIGN");
                                         getAllocator().dynamicAssign(agent, true);
                                         //av.heartbeat();
                                     }
@@ -305,6 +313,7 @@ public class Simulator {
 
                 if (!completedTasks.isEmpty()) {
                     completedTasks.forEach(t -> modeller.passRecords(t.getId()));
+                    //getAllocator().dynamicAssign(null, false);
 
                 }
 
@@ -347,7 +356,6 @@ public class Simulator {
         config.add(generatedUnder);
         config.add(generatedCurrent);
         config.add(generatedOver);
-
         modelCaller.startThread(webRef, config);
     }
 
@@ -478,6 +486,8 @@ public class Simulator {
     private void pushConfig(int port) {
         //webRef = webRef+port;
         connectionController.init(port, webRef);
+        this.port = port;
+
     }
 
     private boolean loadScenarioFromFile(String scenarioFile) {
@@ -837,5 +847,9 @@ public class Simulator {
 
     public ScoreController getScoreController() {
         return scoreController;
+    }
+
+    public int getPort() {
+        return port;
     }
 }

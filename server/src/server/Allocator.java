@@ -1080,7 +1080,7 @@ public class Allocator {
     public void dynamicAssign(Agent agent, boolean overlap) {
         List<AgentVirtual> homingAgents = new ArrayList<>();
         simulator.getState().getAgents().forEach(a -> {
-            if (a instanceof AgentVirtual av && ((av.isGoingHome() || av.isStopped()) || agent.equals(av)) && !(a instanceof Hub)) {
+            if (a instanceof AgentVirtual av && ((av.isGoingHome() || av.isStopped()) || (agent != null && agent.equals(av))) && !(a instanceof Hub)) {
                 homingAgents.add(av);
             }
         });

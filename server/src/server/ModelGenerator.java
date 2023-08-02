@@ -122,7 +122,7 @@ public class ModelGenerator {
                     needsToTurn = 1;
                     //System.out.println(a.getId() + " cond 1; taskid="+a.getAllocatedTaskId());
                 } else {
-                    needsToTurn = Math.abs(((AgentVirtual) a).calculateAngleToGoal() - Math.toRadians(a.getHeading())) > 0.3F ? 1 : 0;
+                    needsToTurn = Math.abs(((AgentVirtual) a).calculateAngleToGoal() - Math.toRadians(a.getHeading())) > 0.1F ? 1 : 0;
                     //System.out.println(a.getId() + " cond 2; angle="+(((AgentVirtual) a).calculateAngleToGoal() - Math.toRadians(a.getHeading()))+" ntt="+needsToTurn);
                 }
 

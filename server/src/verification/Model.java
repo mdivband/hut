@@ -26,6 +26,7 @@ public class Model {
 
         this.prismOutputDir = prismModelDir + "/" + modelName + ".txt";
         this.modelName = modelName;
+        System.out.println("Model created. DroneRep = " + Arrays.deepToString(droneRep));
     }
 
     public ArrayList<String> call() throws IOException, InterruptedException {
@@ -82,7 +83,8 @@ public class Model {
                     break;
                 }
             }
-            newTaskRep[j] = Math.min(effectiveDist + 1, 6);
+            // TODO here -> +1 or not??
+            newTaskRep[j] = effectiveDist;
         }
 
         int[][] droneRepAsInt = new int[droneRep.length][droneRep[0].length];
@@ -104,7 +106,6 @@ public class Model {
 
         StringBuilder parameterBuilder = new StringBuilder();
         StringBuilder agentBuilder = new StringBuilder();
-
         for (int i = 1; i<droneRep.length; i++) {
             parameterBuilder
                     .append("const int initPlace").append(i).append(";").append("\n")
@@ -163,7 +164,8 @@ public class Model {
             }
         }
         bw.close();
-
+        File contestedModel = new File(prismModelDir + "/" + modelName + ".pm");
+        contestedModel.delete();
         File oldFile = new File(prismModelDir + "/" + modelName + ".txt");
         File newFile = new File(prismModelDir + "/" + modelName + ".pm");
         boolean success = oldFile.renameTo(newFile);
@@ -173,9 +175,14 @@ public class Model {
         cmd.add(prismDir);
         cmd.add(prismModelDir + "/" + modelName + ".pm");
         cmd.add(prismModelDir + "/property.pctl");
+        // TODO precision here
         cmd.add("-prop");
         cmd.add("bounded");
         cmd.add("-sim");
+        //cmd.add("-simconf");
+        //cmd.add("0.01");
+        cmd.add("-simsamples");
+        cmd.add("300");
         cmd.add("-exportresults");
         cmd.add(prismOutputDir);
         cmd.add("-const");
@@ -197,7 +204,7 @@ public class Model {
             cmdSb.append("initTaskP").append(j + 1).append('=').append(taskConfiguration[j]).append(",");
         }
 
-        cmdSb.append("T=300:300:30000");
+        cmdSb.append("T=300:300:24000");
         cmd.add(cmdSb.toString());
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
@@ -205,22 +212,22 @@ public class Model {
         thisPb = processBuilder.inheritIO();
         thisProcess = processBuilder.start();
 
-        if (debug) {
-            try {
+        try {
+            if (debug) {
                 String s;
                 BufferedReader stdOut = new BufferedReader(new
                         InputStreamReader(thisProcess.getInputStream()));
                 while ((s = stdOut.readLine()) != null) {
                     System.out.println(s);
                 }
-
-                int exitCode = thisProcess.waitFor();
-                System.out.println("RUN - Finished with exit code " + exitCode);
-            } catch (InterruptedException e) {
-                thisProcess.destroy();
-                System.out.println("destroyed");
-                throw e;
             }
+
+            int exitCode = thisProcess.waitFor();
+            System.out.println("RUN - Finished with exit code " + exitCode);
+        } catch (InterruptedException e) {
+            thisProcess.destroy();
+            System.out.println("destroyed");
+            throw e;
         }
 
 
@@ -252,23 +259,17 @@ public class Model {
     }
 
     public void cancel() {
-        System.out.println(thisProcess.info());
-        System.out.println("proc before -> " + thisProcess);
-
-        thisProcess.descendants().forEach(ProcessHandle::destroy);
-        Process code1 = thisProcess.destroyForcibly();
-
         try {
-            int code2 = thisProcess.waitFor();
-            System.out.println(thisProcess.info());
-            System.out.println(code1 + " , " + code2);
-            System.out.println();
+            thisProcess.descendants().forEach(ProcessHandle::destroy);
         } catch (Exception e) {
-            System.out.println("excep");
+            System.out.println("Did not need to destroy descendants");
         }
 
-        System.out.println("proc after -> " + thisProcess);
-        System.out.println();
+        try {
+            thisProcess.destroyForcibly();
+        } catch (Exception e) {
+            System.out.println("Did not need to destroy process");
+        }
 
     }
 
