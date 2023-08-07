@@ -10,16 +10,16 @@
   "allocationStyle": "dynamic",
   "modelStyle": "justOn",
   "varianceParameters": {
-    "speedPerAgent": 0.5,
-    "batteryPerAgent": 0.0002
+    "speedPerAgent": 0.25,
+    "batteryPerAgent": 0.0001
   },
   "noiseParameters": {
-    "speedPerSecond": 0.25,
-    "batteryPerStep": 0.0001
+    "speedPerSecond": 0.125,
+    "batteryPerStep": 0.00005
   },
   "hub": {
-    "lat": 50.924960005573894,
-    "lng": -1.4097036668874585
+    "lat": 50.92496,
+    "lng": -1.40970
   },
   "timeLimitSeconds": 360,
   "uncertaintyRadius": 200.0,
@@ -29,20 +29,20 @@
   },
   "agents": [
     {
-      "lat": 50.924425463893395,
-      "lng": -1.4088101213508741
+      "lat": 50.9255,
+      "lng": -1.4097
     },
     {
-      "lat": 50.92393858723503,
-      "lng": -1.4097971742683546
+      "lat": 50.9250,
+      "lng": -1.411
     },
     {
-      "lat": 50.92402649589759,
-      "lng": -1.4078767126136915
+      "lat": 50.9250,
+      "lng": -1.408
     },
     {
-      "lat": 50.92330026788851,
-      "lng": -1.409243221988048
+      "lat": 50.9245,
+      "lng": -1.4097
     }
   ],
   "tasks": [

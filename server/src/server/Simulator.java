@@ -235,14 +235,15 @@ public class Simulator {
                                 } else {
                                     if (getAgentController().getScheduledRemovals() > 0) {
                                         agentsToRemove.add(agent);
-                                        System.out.println("Scheduled to remove " + agent.getId());
                                         getAgentController().decrementRemoval();
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
-                                        if (av.getBattery() > 0.15) {
+                                        if (av.getBattery() > 0.3) {
                                             getAllocator().dynamicAssign(av, false);
                                         } else {
-                                            av.goHome();
+                                            av.killBattery();
+                                            //av.goHome();
+
                                         }
                                         // In-runtime allocation model
                                         try {
@@ -250,7 +251,7 @@ public class Simulator {
                                             state.setSuccessChance(successChance);
                                         } catch (Exception ignored){}
 
-                                    } else if (agent.getBattery() < 0.9 && av.isAlive()) {
+                                    } else if (agent.getBattery() < 0.5 && av.isAlive()) {
                                         // If no tasks available, charge up in case we need to replace it
                                         av.charge();
                                     } else {

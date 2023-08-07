@@ -4,11 +4,12 @@ import verification.Model;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class ModelCaller {
-    private double confidence = 1;
+    private double confidence = 0.99;
     private Thread currentThread = null;
     private Thread underThread = null;
     private Thread overThread = null;

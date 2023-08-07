@@ -33,16 +33,16 @@ public class Model {
         // Process parameters
         //  Note the hardcoded length 8 line
 
-        int[] taskConfiguration = new int[7];
-        int[] boundaries = new int[]{899, 799, 699, 599, 499, 399, 299};
-        int[] taskBoundaries = new int[]{799, 699, 599, 499, 399, 299};
+        int[] taskConfiguration = new int[8];
+        int[] boundaries = new int[]{899, 799, 699, 599, 499, 399, 299, 199};
+        int[] taskBoundaries = new int[]{899, 799, 699, 599, 499, 399, 299, 199};
         double[] newTaskRep = new double[taskRep.length];
         for (int i=0; i<droneRep.length; i++) {
             int dist = (int) droneRep[i][0];
             int effectiveDist = 0;
-            for (int b=0; b<7; b++) {
+            for (int b=0; b<8; b++) {
                 if (dist > boundaries[b]) {
-                    effectiveDist = 7 - b;
+                    effectiveDist = 8 - b;
                     break;
                 }
             }
@@ -50,9 +50,9 @@ public class Model {
 
             int taskDist = (int) droneRep[i][1];
             int effectiveTaskDist = 1;
-            for (int b=0; b<6; b++) {
+            for (int b=0; b<8; b++) {
                 if (taskDist > taskBoundaries[b]) {
-                    effectiveTaskDist = 7 - b;
+                    effectiveTaskDist = 8 - b;
                     break;
                 }
             }
@@ -77,9 +77,9 @@ public class Model {
         for (int j=0; j<taskRep.length; j++) {
             int dist = (int) taskRep[j][0];
             int effectiveDist = 0;
-            for (int b=0; b<7; b++) {
+            for (int b=0; b<8; b++) {
                 if (dist > boundaries[b]) {
-                    effectiveDist = 7 - b;
+                    effectiveDist = 8 - b;
                     break;
                 }
             }
@@ -99,7 +99,7 @@ public class Model {
             taskRepAsInt[elem] = (int) newTaskRep[elem];
         }
 
-        for (int r = 0; r < 7; r++) {
+        for (int r = 0; r < 8; r++) {
             int finalR = r;
             taskConfiguration[r] = (int) Arrays.stream(taskRepAsInt).filter(c -> c == finalR).count();
         }
@@ -179,10 +179,10 @@ public class Model {
         cmd.add("-prop");
         cmd.add("bounded");
         cmd.add("-sim");
-        //cmd.add("-simconf");
-        //cmd.add("0.01");
+        cmd.add("-simconf");
+        cmd.add("0.00001");
         cmd.add("-simsamples");
-        cmd.add("300");
+        cmd.add("500");
         cmd.add("-exportresults");
         cmd.add(prismOutputDir);
         cmd.add("-const");
@@ -200,7 +200,7 @@ public class Model {
                     .append("initTurning").append(i).append("=").append(droneRepAsInt[i][7]).append(",");
         }
 
-        for (int j=0; j<7; j++) {
+        for (int j=0; j<8; j++) {
             cmdSb.append("initTaskP").append(j + 1).append('=').append(taskConfiguration[j]).append(",");
         }
 
