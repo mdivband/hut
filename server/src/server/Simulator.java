@@ -173,9 +173,8 @@ public class Simulator {
             state.incrementTime(0.2);
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
             if (state.getTime() >= state.getTimeLimit() * gameSpeed) {
-                System.out.println("DONE BY TIME: " + state.getTime());
-                System.out.println("agents = " + state.getAgents());
-                int numFailed = 0;
+                LOGGER.info(String.format("%s; TMCMP; Time completion - scenario completed by time with tasks completed (numComplete); %s ", getState().getTime(), getState().getCompletedTasks().size()));
+               /* int numFailed = 0;
                 for (Agent a : state.getAgents()) {
                     if (a instanceof AgentVirtual av) {
                         if (!av.isAlive()) {
@@ -186,7 +185,8 @@ public class Simulator {
                 System.out.println("Num failed: " + numFailed);
                 try {
                     modeller.outputResults();
-                } catch (Exception ignored){}
+                } catch (Exception ignored){}*/
+
                 if (state.isPassthrough()) {
                     updateNextValues();
                 }
@@ -197,9 +197,8 @@ public class Simulator {
 
                 if (state.getAllocationStyle().equals("dynamic")) {
                     if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
-                        System.out.println("DONE BY COMPLETION: " + state.getTime());
-                        System.out.println("agents = " + state.getAgents());
-                        int numFailed = 0;
+                        LOGGER.info(String.format("%s; FLCMP; Full completion - scenario completed all tasks with most recent prediction in time (pred); %s ", getState().getTime(), (state.getEstimatedCompletionTime() / 100)));
+                        /*int numFailed = 0;
                         for (Agent a : state.getAgents()) {
                             if (a instanceof AgentVirtual av) {
                                 if (!av.isAlive()) {
@@ -207,8 +206,7 @@ public class Simulator {
                                 }
                             }
                         }
-                        System.out.println("Num failed: " + numFailed);
-                        System.out.println("RESULT: Pred=" + state.getEstimatedCompletionTime() / 100 + " Actual="+state.getTime());
+                        System.out.println("Num failed: " + numFailed);*/
                         this.reset();
                     }
 
@@ -227,6 +225,7 @@ public class Simulator {
                                 } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
                                     av.charge();
                                 } else if (agent.getBattery() < 0.15 && av.isAlive()) {
+                                    LOGGER.info(String.format("%s; BTKIL; Agent battery dead - going home (agentId); %s;", getState().getTime(), av.getId()));
                                     modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                     av.killBattery();
                                 } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
@@ -234,12 +233,14 @@ public class Simulator {
                                     av.step(state.isFlockingEnabled());
                                 } else {
                                     if (getAgentController().getScheduledRemovals() > 0) {
+                                        LOGGER.info(String.format("%s; REMAG; Successfully removed agent - now there are (agentId, numAgents); %s; %s ", getState().getTime(), av.getId(), getState().getAgents().size() - 1));
                                         agentsToRemove.add(agent);
                                         getAgentController().decrementRemoval();
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
                                         if (av.getBattery() > 0.3) {
                                             getAllocator().dynamicAssign(av, false);
+                                            LOGGER.info(String.format("%s; ASGN; Agent assigned to task (agentId, taskId); %s; %s ", getState().getTime(), av.getId(), av.getTask().getId()));
                                         } else {
                                             av.killBattery();
                                             //av.goHome();
@@ -307,6 +308,7 @@ public class Simulator {
                 }
 
                 for (Task task : completedTasks) {
+                    LOGGER.info(String.format("%s; TSKCM; Task completed - there are now tasks left (taskId, numTasks); %s; %s ", getState().getTime(), task.getId(), getState().getTasks().size() - 1));
                     task.getAgents().forEach(a -> a.setType("standard"));
                     task.complete();
                     Simulator.instance.getScoreController().incrementCompletedTask();

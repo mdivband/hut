@@ -10,7 +10,7 @@
   "flockingEnabled": false,
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
-  "modelStyle": "justOn",
+  "modelStyle": "parallel",
   "verificationParameters": {
     "isEnabled" : true,
     "samples": 500,

@@ -49,8 +49,11 @@ public class AgentHandler extends RestHandler {
             // Update model and start thread
             simulator.updateMissionModel();
             a.stop();
+            // TODO check this count is correct
+            LOGGER.info(String.format("%s; SPWN; Hub spawed an agent - now there are (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
             resp.send(201, "Created new agent " + a.getId());
         } else {
+            LOGGER.info(String.format("%s; SPWNF; Hub FAILED to spawn an agent - there are still (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
             resp.send(400, "Unable to place agent. The hub area may be too full");
         }
     }
@@ -58,8 +61,10 @@ public class AgentHandler extends RestHandler {
     private void handleHubDespawn(Request req, Response resp) throws IOException {
         int res = Simulator.instance.getAgentController().despawnAgent();
         if (res == -1) {
+            LOGGER.info(String.format("%s; REMAF; Failed to schedule removal of an agent - there are stoll (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
             resp.send(400, "Can't remove, unspecified error");
         } else {
+            LOGGER.info(String.format("%s; REMA; Scheduled a removal of an agent", simulator.getState().getTime()));
             resp.send(201, "Scheduled a removal, " + res + " agents will be removed");
             simulator.updateMissionModel(res);
         }

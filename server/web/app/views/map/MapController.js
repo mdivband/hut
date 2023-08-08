@@ -125,7 +125,6 @@ var MapController = {
             MapController.onUndoRedoAvailableChange();
         });
         this.state.on("change:editMode change:uiOptions", function () {
-            alert("change edit/ui")
             MapController.swapMode(self.state.isEdit(), false);
         });
         this.state.on("change:scoreInfo", function () {
@@ -334,7 +333,6 @@ var MapController = {
     swapMode: function (toEditMode, sendUpdate) {
         self = this;
         this.state.getUiOptions().forEach(function (option) {
-            alert(option)
             if (option === "predictions") {
                 $("#prediction_wrapper_div").show();
             } else if (option === "uncertainties") {
