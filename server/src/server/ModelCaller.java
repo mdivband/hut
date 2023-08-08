@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class ModelCaller {
-    private double confidence = 0.99;
+    private double confidence = 0.995;
     private Thread currentThread = null;
     private Thread underThread = null;
     private Thread overThread = null;
@@ -20,6 +20,7 @@ public class ModelCaller {
     private String webRef;
     private int currentSalt;
     private double startTime;
+    private int samples = 1000;
 
     public void reset() {
         style = "justOn";
@@ -89,6 +90,7 @@ public class ModelCaller {
      */
     private ArrayList<String> runScript(String modelName, int procIndex, ArrayList<double[][]> currentConfigTuple) throws IOException, InterruptedException {
         Model model = new Model(webRef, currentConfigTuple.get(0), currentConfigTuple.get(1), modelName+(Simulator.instance.getPort()));
+        model.setup(samples);
         models[procIndex] = model;
         return model.call();
     }
@@ -320,4 +322,7 @@ public class ModelCaller {
         style = modelStyle;
     }
 
+    public void setSamples(int samples) {
+        this.samples = samples;
+    }
 }

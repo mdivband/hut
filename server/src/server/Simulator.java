@@ -586,6 +586,13 @@ public class Simulator {
                     state.putNoiseOption("locationNoise", GsonUtils.getValue(noiseJson, "locationNoise"));
                 }
             }
+
+            Object verificationJson = GsonUtils.getValue(obj, "verificationParameters");
+            if (verificationJson != null) {
+                if (GsonUtils.getValue(verificationJson, "samples") != null) {
+                    modelCaller.setSamples(((Double) GsonUtils.getValue(verificationJson, "samples")).intValue());
+                }
+            }
             
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");

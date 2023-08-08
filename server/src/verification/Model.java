@@ -16,6 +16,7 @@ public class Model {
     private boolean debug = false;
     private Process thisProcess;
     private ProcessBuilder thisPb;
+    private int samples = 1000;
 
     public Model(String webRef, double[][] droneRep, double[][] taskRep, String modelName) {
         this.webRef = webRef;
@@ -27,6 +28,10 @@ public class Model {
         this.prismOutputDir = prismModelDir + "/" + modelName + ".txt";
         this.modelName = modelName;
         System.out.println("Model created. DroneRep = " + Arrays.deepToString(droneRep));
+    }
+
+    public void setup(int samples){
+        this.samples = samples;
     }
 
     public ArrayList<String> call() throws IOException, InterruptedException {
@@ -180,9 +185,9 @@ public class Model {
         cmd.add("bounded");
         cmd.add("-sim");
         cmd.add("-simconf");
-        cmd.add("0.00001");
+        cmd.add("0.0001");
         cmd.add("-simsamples");
-        cmd.add("500");
+        cmd.add(String.valueOf(samples));
         cmd.add("-exportresults");
         cmd.add(prismOutputDir);
         cmd.add("-const");
@@ -204,7 +209,7 @@ public class Model {
             cmdSb.append("initTaskP").append(j + 1).append('=').append(taskConfiguration[j]).append(",");
         }
 
-        cmdSb.append("T=300:300:24000");
+        cmdSb.append("T=200:200:24000");
         cmd.add(cmdSb.toString());
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);

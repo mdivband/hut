@@ -9,8 +9,11 @@
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
   "modelStyle": "justOn",
+  "verificationParameters": {
+    "samples": 500
+  },
   "varianceParameters": {
-    "speedPerAgent": 0.25,
+    "speedPerAgent": 0.1,
     "batteryPerAgent": 0.0001
   },
   "noiseParameters": {

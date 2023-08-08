@@ -344,6 +344,7 @@ var MapAgentController = {
                 'transform': 'rotate(' + agent.getHeading() + 'deg)'
             });
             MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
+        } else {
         }
 
     },
@@ -377,6 +378,8 @@ var MapAgentController = {
         var batteryWidth = maxBatteryWidth*batteryLevel;
 
         var ctx = canvas.getContext("2d");
+        console.log(agent.getId() + " 1-> " + container)
+        console.log(agent.getId() + " 2-> " + ctx)
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.filter = 'hue-rotate(' + (10 + batteryLevel*100) + 'deg) brightness(1.5)';
         ctx.fillStyle = "red";
