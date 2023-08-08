@@ -1,5 +1,7 @@
 package verification;
 
+import server.Simulator;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,7 +110,8 @@ public class Model {
             int finalR = r;
             taskConfiguration[r] = (int) Arrays.stream(taskRepAsInt).filter(c -> c == finalR).count();
         }
-
+        System.out.println(Arrays.toString(taskConfiguration));
+        System.out.println(Arrays.toString(taskRepAsInt));
         StringBuilder parameterBuilder = new StringBuilder();
         StringBuilder agentBuilder = new StringBuilder();
         for (int i = 1; i<droneRep.length; i++) {
@@ -279,4 +282,14 @@ public class Model {
     }
 
 
+    public ArrayList<String> fakeCall(int delayTime, int delayBound) throws InterruptedException{
+        int delay = delayTime + (2 * Simulator.instance.getRandom().nextInt(delayBound) - delayBound);
+        System.out.println("Waiting for " + delay + " seconds");
+        Thread.sleep(delay * 1000L);
+        System.out.println("Done");
+        ArrayList<String> fakeResult = new ArrayList<>(1);
+        int fakePrediction = Simulator.instance.getRandom().nextInt(10000, 20000);
+        fakeResult.add(fakePrediction + "\t 1");
+        return fakeResult;
+    }
 }

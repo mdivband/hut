@@ -589,8 +589,22 @@ public class Simulator {
 
             Object verificationJson = GsonUtils.getValue(obj, "verificationParameters");
             if (verificationJson != null) {
+                Object isEnabled = GsonUtils.getValue(verificationJson, "isEnabled");
+                if(isEnabled.getClass() == Boolean.class) {
+                    modelCaller.setEnabled((Boolean) isEnabled);
+                }
                 if (GsonUtils.getValue(verificationJson, "samples") != null) {
                     modelCaller.setSamples(((Double) GsonUtils.getValue(verificationJson, "samples")).intValue());
+                }
+                Object isDummy = GsonUtils.getValue(verificationJson, "isDummy");
+                if(isDummy.getClass() == Boolean.class) {
+                    modelCaller.setDummy((Boolean) isDummy);
+                }
+                if (GsonUtils.getValue(verificationJson, "delayTime") != null) {
+                    modelCaller.setDelayTime(((Double) GsonUtils.getValue(verificationJson, "delayTime")).intValue());
+                }
+                if (GsonUtils.getValue(verificationJson, "delayBound") != null) {
+                    modelCaller.setDelayBound(((Double) GsonUtils.getValue(verificationJson, "delayBound")).intValue());
                 }
             }
             
@@ -632,6 +646,10 @@ public class Simulator {
                 if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
                     state.addUIOption("uncertainties");
                 }
+                if (GsonUtils.getValue(uiJson, "verification") != null && (boolean) GsonUtils.getValue(uiJson, "verification")) {
+                    state.addUIOption("verification");
+                }
+
             }
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {

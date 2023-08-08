@@ -160,7 +160,6 @@ var simulator = {
 
 
                     if (self.state.getUserName() === "") {
-                        // TODO get their name, also log it in backend
                         var name = null;
                         while (name == null || name === "") {
                             name = prompt("Please enter your prolific ID", "");

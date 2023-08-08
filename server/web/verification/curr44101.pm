@@ -79,6 +79,15 @@ const int initReturn3;
 const int initAlive3;
 const int initTurning3;
 
+const int initPlace4;
+const int initTaskLoc4;
+const int initBattery4;
+const int initDelivered4;
+const int initCharge4;
+const int initReturn4;
+const int initAlive4;
+const int initTurning4;
+
 
 
 // Agents
@@ -303,6 +312,29 @@ initCharge0=initCharge3,
 initReturn0=initReturn3,
 initAlive0=initAlive3,
 initTurning0=initTurning3
+]
+endmodule
+
+module agent4=agent0[
+drainC0=drainC4,
+moveC0=moveC4,
+place0=place4,
+taskLoc0=taskLoc4,
+battery0=battery4,
+ready0=ready4,
+return0=return4,
+delivered0=delivered4,
+charge0=charge4,
+alive0=alive4,
+turning0=turning4,
+initPlace0=initPlace4,
+initTaskLoc0=initTaskLoc4,
+initBattery0=initBattery4,
+initDelivered0=initDelivered4,
+initCharge0=initCharge4,
+initReturn0=initReturn4,
+initAlive0=initAlive4,
+initTurning0=initTurning4
 ]
 endmodule
 

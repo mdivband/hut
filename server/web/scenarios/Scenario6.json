@@ -1,17 +1,18 @@
 {
-  "gameId": "C2Parallel",
-  "gameDescription": "Scenario 2 (Parallel Model execution)",
+  "gameId": "Scenario 6",
+  "gameDescription": "Scenario 6",
+  "comment": "Setup 2; No Verification",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false,
-    "verification": true
+    "verification": false
   },
   "flockingEnabled": false,
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
   "modelStyle": "justOn",
   "verificationParameters": {
-    "isEnabled": true,
+    "isEnabled": false,
     "samples": 500,
     "isDummy": true,
     "delayTime": 15,

@@ -19,17 +19,17 @@ public class ScenarioGenerator {
     }
 
     public static void main(String[] args) {
-        double[] home = new double[]{50.924960005573894, -1.4097036668874585};
+        double[] home = new double[]{50.92893260355405, -1.4088842718500894};
         ScenarioGenerator sg = new ScenarioGenerator(home);
 
         HashMap<Integer, Integer> distMap = new HashMap<>();
-        distMap.put(299, 6);
-        distMap.put(399, 6);
-        distMap.put(499, 6);
-        distMap.put(599, 6);
-        distMap.put(699, 6);
-        distMap.put(799, 5);
-        distMap.put(899, 5);
+        distMap.put(299, 2);
+        distMap.put(399, 2);
+        distMap.put(499, 2);
+        distMap.put(599, 1);
+        distMap.put(699, 1);
+        distMap.put(799, 0);
+        distMap.put(899, 0);
 
         sg.generateTasks(distMap);
     }
@@ -83,7 +83,7 @@ public class ScenarioGenerator {
                 while (!taskValid) {
                     taskValid = true;
                     int dist = random.nextInt(botBound, topBound);
-                    double angle = random.nextDouble(0.9, 2.2);
+                    double angle = random.nextDouble(Math.PI / 3, 2 * Math.PI / 3);
                     double north_south_distance = dist * Math.sin(angle);
                     double east_west_distance = dist * Math.cos(angle);
                     lat = home[0] + north_south_distance / (60.0 * 1852.0);

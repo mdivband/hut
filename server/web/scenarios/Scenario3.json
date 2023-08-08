@@ -1,6 +1,7 @@
 {
-  "gameId": "C1Parallel",
-  "gameDescription": "Scenario 1 (Parallel Model execution)",
+  "gameId": "Scenario 3",
+  "gameDescription": "Scenario 3",
+  "comment": "Setup 1; No Verification",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false,

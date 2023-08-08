@@ -1,6 +1,7 @@
 {
-  "gameId": "C2Parallel",
-  "gameDescription": "Scenario 2 (Parallel Model execution)",
+  "gameId": "Scenario 4",
+  "gameDescription": "Scenario 4",
+  "comment": "Setup 2; Full Verification",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false,
@@ -13,7 +14,7 @@
   "verificationParameters": {
     "isEnabled": true,
     "samples": 500,
-    "isDummy": true,
+    "isDummy": false,
     "delayTime": 15,
     "delayBound": 5
   },

@@ -1,17 +1,18 @@
 {
-  "gameId": "C1Parallel",
-  "gameDescription": "Scenario 1 (Parallel Model execution)",
+  "gameId": "Scenario 1",
+  "gameDescription": "Scenario 1",
+  "comment": "Setup 1; Full Verification",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false,
-    "verification": false
+    "verification": true
   },
   "flockingEnabled": false,
   "allocationMethod" : "bestfirst",
   "allocationStyle": "dynamic",
   "modelStyle": "justOn",
   "verificationParameters": {
-    "isEnabled" : false,
+    "isEnabled" : true,
     "samples": 500,
     "isDummy": false,
     "delayTime": 15,

@@ -21,6 +21,10 @@ public class ModelCaller {
     private int currentSalt;
     private double startTime;
     private int samples = 1000;
+    private boolean isDummy;
+    private int delayTime;
+    private int delayBound;
+    private Boolean isEnabled;
 
     public void reset() {
         style = "justOn";
@@ -37,48 +41,49 @@ public class ModelCaller {
      * Also side effects the chances in State.
      */
     public void startThread(String webRef, ArrayList<ArrayList<double[][]>> config) {
-        currentSalt = Simulator.instance.getRandom().nextInt(10000);
-        startTime = Simulator.instance.getState().getTime();
-        this.webRef = webRef;
-        // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
-        if (currentThread != null) {
-            //System.out.println("INTERRUPTING");
-            //System.out.println("dest");
-            models[1].cancel();
-            currentThread.interrupt();
-            currentThread = null;
+        if (isEnabled) {
+            currentSalt = Simulator.instance.getRandom().nextInt(10000);
+            startTime = Simulator.instance.getState().getTime();
+            this.webRef = webRef;
+            // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
+            if (currentThread != null) {
+                //System.out.println("INTERRUPTING");
+                //System.out.println("dest");
+                models[1].cancel();
+                currentThread.interrupt();
+                currentThread = null;
+            }
+            if (underThread != null) {
+                models[0].cancel();
+                underThread.interrupt();
+                underThread = null;
+            }
+            if (overThread != null) {
+                models[2].cancel();
+                overThread.interrupt();
+                overThread = null;
+            }
+
+            currentConfig = config;
+            currentThread = new Thread(this::runOn);
+            // TODO not properly interrupted
+            currentThread.start();
+
+            if (style.equals("parallel")) {
+                underThread = new Thread(this::runUnder);
+                underThread.start();
+                overThread = new Thread(this::runOver);
+                overThread.start();
+            }
+
+            Simulator.instance.getState().setMissionSuccessChance(-1);
+            Simulator.instance.getState().setMissionSuccessOverChance(-1);
+            Simulator.instance.getState().setMissionSuccessUnderChance(-1);
+
+            Simulator.instance.getState().setEstimatedCompletionTime(-1);
+            Simulator.instance.getState().setEstimatedCompletionOverTime(-1);
+            Simulator.instance.getState().setEstimatedCompletionUnderTime(-1);
         }
-        if (underThread != null) {
-            models[0].cancel();
-            underThread.interrupt();
-            underThread = null;
-        }
-        if (overThread != null) {
-            models[2].cancel();
-            overThread.interrupt();
-            overThread = null;
-        }
-
-        currentConfig = config;
-        currentThread = new Thread(this::runOn);
-        // TODO not properly interrupted
-        currentThread.start();
-
-        if (style.equals("parallel")) {
-            underThread = new Thread(this::runUnder);
-            underThread.start();
-            overThread = new Thread(this::runOver);
-            overThread.start();
-        }
-
-        Simulator.instance.getState().setMissionSuccessChance(-1);
-        Simulator.instance.getState().setMissionSuccessOverChance(-1);
-        Simulator.instance.getState().setMissionSuccessUnderChance(-1);
-
-        Simulator.instance.getState().setEstimatedCompletionTime(-1);
-        Simulator.instance.getState().setEstimatedCompletionOverTime(-1);
-        Simulator.instance.getState().setEstimatedCompletionUnderTime(-1);
-
     }
 
     /**
@@ -89,10 +94,14 @@ public class ModelCaller {
      * @throws InterruptedException
      */
     private ArrayList<String> runScript(String modelName, int procIndex, ArrayList<double[][]> currentConfigTuple) throws IOException, InterruptedException {
-        Model model = new Model(webRef, currentConfigTuple.get(0), currentConfigTuple.get(1), modelName+(Simulator.instance.getPort()));
+        Model model = new Model(webRef, currentConfigTuple.get(0), currentConfigTuple.get(1), modelName + (Simulator.instance.getPort()));
         model.setup(samples);
         models[procIndex] = model;
-        return model.call();
+        if (!isDummy) {
+            return model.call();
+        } else {
+            return model.fakeCall(delayTime, delayBound);
+        }
     }
 
     /**
@@ -106,12 +115,11 @@ public class ModelCaller {
             ArrayList<String> output = runScript("curr", 1, currentConfig.get(1));
 
             double boundedResult = readTimeBoundedResultAsTime(output, confidence);
-
             Simulator.instance.getState().setEstimatedCompletionTime(boundedResult * 100);
-
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             LOGGER.info(String.format("%s; MDDNO; Model done on the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), boundedResult, elapsed));
-        } catch (IOException e) {
+
+          } catch (IOException e) {
             System.out.println("RUN - An IO error occurred.");
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -324,5 +332,21 @@ public class ModelCaller {
 
     public void setSamples(int samples) {
         this.samples = samples;
+    }
+
+    public void setDummy(Boolean isDummy) {
+        this.isDummy = isDummy;
+    }
+
+    public void setDelayTime(int delayTime) {
+        this.delayTime = delayTime;
+    }
+
+    public void setDelayBound(int delayBound) {
+        this.delayBound = delayBound;
+    }
+
+    public void setEnabled(Boolean isEnabled) {
+        this.isEnabled = isEnabled;
     }
 }
