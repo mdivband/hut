@@ -166,6 +166,7 @@ public class Simulator {
 
     private void mainLoop() {
         final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
+        double nextAutoRun = 0;
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
@@ -308,7 +309,7 @@ public class Simulator {
                 }
 
                 for (Task task : completedTasks) {
-                    LOGGER.info(String.format("%s; TSKCM; Task completed - there are now tasks left (taskId, numTasks); %s; %s ", getState().getTime(), task.getId(), getState().getTasks().size() - 1));
+                    LOGGER.info(String.format("%s; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); %s; %s; %s ", getState().getTime(), task.getId(), task.getAgents().get(0).getId(), getState().getTasks().size() - 1));
                     task.getAgents().forEach(a -> a.setType("standard"));
                     task.complete();
                     Simulator.instance.getScoreController().incrementCompletedTask();
@@ -334,6 +335,18 @@ public class Simulator {
             //System.out.println(state.getTime() + " - " + timeCheck + " " + ((-0.05 < timeCheck) && (timeCheck < 0.05)));
             if ((gameSpeed - 0.05 < timeCheck) || (timeCheck < 0.05)) {
                 scoreController.handleUpkeep();
+
+                // Now that we know this is a whole number step, let's round it to avoid wierd flop problems and check
+                //double autoRunCheck = Math.floor(state.getTime()) % (10 * gameSpeed);
+                //System.out.println(Math.floor(state.getTime()) + " % " + (10 * gameSpeed) + " = " + autoRunCheck);
+                //System.out.println(state.getTime() + " - " + timeCheck + " " + ((-0.05 < timeCheck) && (timeCheck < 0.05)));
+                //if (autoRunCheck == 0) {
+                if (modelCaller.getAutoRunFrequency() != 0 && state.getTime() > nextAutoRun) {
+                    LOGGER.info(String.format("%s; AUTRN; Autorun of model;", getState().getTime()));
+                    updateMissionModel();
+                    nextAutoRun = state.getTime() + (modelCaller.getAutoRunFrequency() * gameSpeed);
+                }
+
             }
             // Step hazard hits
             this.state.decayHazardHits();
@@ -607,6 +620,9 @@ public class Simulator {
                 }
                 if (GsonUtils.getValue(verificationJson, "delayBound") != null) {
                     modelCaller.setDelayBound(((Double) GsonUtils.getValue(verificationJson, "delayBound")).intValue());
+                }
+                if (GsonUtils.getValue(verificationJson, "autoRunFrequency") != null) {
+                    modelCaller.setAutorunFrequency(((Double) GsonUtils.getValue(verificationJson, "autoRunFrequency")).intValue());
                 }
             }
             

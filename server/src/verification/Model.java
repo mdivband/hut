@@ -1,13 +1,16 @@
 package verification;
 
+import server.ModelCaller;
 import server.Simulator;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class Model {
+    private Logger LOGGER = Logger.getLogger(Model.class.getName());
     private String prismDir = "./libs/prism-4.8/bin/prism.bat";
     private String prismModelDir;
     private String prismOutputDir;
@@ -29,7 +32,6 @@ public class Model {
 
         this.prismOutputDir = prismModelDir + "/" + modelName + ".txt";
         this.modelName = modelName;
-        System.out.println("Model created. DroneRep = " + Arrays.deepToString(droneRep));
     }
 
     public void setup(int samples){
@@ -90,7 +92,6 @@ public class Model {
                     break;
                 }
             }
-            // TODO here -> +1 or not??
             newTaskRep[j] = effectiveDist;
         }
 
@@ -110,8 +111,7 @@ public class Model {
             int finalR = r;
             taskConfiguration[r] = (int) Arrays.stream(taskRepAsInt).filter(c -> c == finalR).count();
         }
-        System.out.println(Arrays.toString(taskConfiguration));
-        System.out.println(Arrays.toString(taskRepAsInt));
+
         StringBuilder parameterBuilder = new StringBuilder();
         StringBuilder agentBuilder = new StringBuilder();
         for (int i = 1; i<droneRep.length; i++) {
@@ -177,7 +177,7 @@ public class Model {
         File oldFile = new File(prismModelDir + "/" + modelName + ".txt");
         File newFile = new File(prismModelDir + "/" + modelName + ".pm");
         boolean success = oldFile.renameTo(newFile);
-        System.out.println("renaming success? = " + success);
+        //System.out.println("renaming success? = " + success);
 
         ArrayList<String> cmd = new ArrayList<>();
         cmd.add(prismDir);
@@ -216,8 +216,15 @@ public class Model {
         cmd.add(cmdSb.toString());
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-        processBuilder.redirectErrorStream(true);
+        if (debug) {
+            processBuilder.redirectErrorStream(true);
+        }
         thisPb = processBuilder.inheritIO();
+
+        if (!debug) {
+            thisPb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        }
+
         thisProcess = processBuilder.start();
 
         try {
@@ -231,17 +238,17 @@ public class Model {
             }
 
             int exitCode = thisProcess.waitFor();
-            System.out.println("RUN - Finished with exit code " + exitCode);
+            //System.out.println("RUN - Finished with exit code " + exitCode);
         } catch (InterruptedException e) {
             thisProcess.destroy();
-            System.out.println("destroyed");
+            //System.out.println("destroyed");
             throw e;
         }
 
 
 
         int exitCode = thisProcess.waitFor();
-        System.out.println("RUN - Finished with exit code " + exitCode);
+        //System.out.println("RUN - Finished with exit code " + exitCode);
 
         ArrayList<String> outLines = new ArrayList<>();
         bf = new BufferedReader(new FileReader(prismOutputDir));
@@ -270,13 +277,13 @@ public class Model {
         try {
             thisProcess.descendants().forEach(ProcessHandle::destroy);
         } catch (Exception e) {
-            System.out.println("Did not need to destroy descendants");
+            //System.out.println("Did not need to destroy descendants");
         }
 
         try {
             thisProcess.destroyForcibly();
         } catch (Exception e) {
-            System.out.println("Did not need to destroy process");
+            //System.out.println("Did not need to destroy process");
         }
 
     }
@@ -284,9 +291,9 @@ public class Model {
 
     public ArrayList<String> fakeCall(int delayTime, int delayBound) throws InterruptedException{
         int delay = delayTime + (2 * Simulator.instance.getRandom().nextInt(delayBound) - delayBound);
-        System.out.println("Waiting for " + delay + " seconds");
+        //System.out.println("Waiting for " + delay + " seconds");
         Thread.sleep(delay * 1000L);
-        System.out.println("Done");
+        //System.out.println("Done");
         ArrayList<String> fakeResult = new ArrayList<>(1);
         int fakePrediction = Simulator.instance.getRandom().nextInt(10000, 20000);
         fakeResult.add(fakePrediction + "\t 1");

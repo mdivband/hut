@@ -73,8 +73,9 @@ App.Views.Prediction = Backbone.View.extend({
             pred = document.getElementById("bounded_prediction_text");
             background = document.getElementById("bounded_prediction_circle");
             if (this.state.getEstimatedCompletionTime() === -1) {
-                pred.innerHTML = "?%";
-                background.style.background = "rgb(255,255,255)";
+                var current = pred.innerHTML
+                pred.innerHTML = "?" + current;
+                //background.style.background = "rgb(255,255,255)";
             }  else {
                 console.log(this.state.getEstimatedCompletionTime())
                 var eta;

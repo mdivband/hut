@@ -13,10 +13,11 @@
   "modelStyle": "parallel",
   "verificationParameters": {
     "isEnabled" : true,
-    "samples": 500,
+    "samples": 100,
     "isDummy": false,
     "delayTime": 15,
-    "delayBound": 5
+    "delayBound": 5,
+    "autoRunFrequency": 10
   },
   "varianceParameters": {
     "speedPerAgent": 0.1,

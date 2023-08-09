@@ -1,5 +1,6 @@
 package server;
 
+import server.model.agents.AgentVirtual;
 import verification.Model;
 
 import java.io.*;
@@ -25,6 +26,7 @@ public class ModelCaller {
     private int delayTime;
     private int delayBound;
     private Boolean isEnabled;
+    private int autoRunFrequency = 0;
 
     public void reset() {
         style = "justOn";
@@ -123,7 +125,7 @@ public class ModelCaller {
             System.out.println("RUN - An IO error occurred.");
             e.printStackTrace();
         } catch (InterruptedException e) {
-            System.out.println("RUN - Process interrupted.");
+            //System.out.println("RUN - Process interrupted.");
         }
 
         if (style.equals("series")) {
@@ -153,7 +155,7 @@ public class ModelCaller {
         } catch (IOException e) {
             System.out.println("RUN OVER - An IO error occurred.");
         } catch (InterruptedException e) {
-            System.out.println("RUN OVER - Process interrupted.");
+            //System.out.println("RUN OVER - Process interrupted.");
         }
         //overThread.interrupt();
         overThread = null;
@@ -185,7 +187,7 @@ public class ModelCaller {
         } catch (IOException e) {
             System.out.println("RUN UNDER - An IO error occurred.");
         } catch (InterruptedException e) {
-            System.out.println("RUN UNDER - Process interrupted.");
+            //System.out.println("RUN UNDER - Process interrupted.");
         }
         //underThread.interrupt();
         underThread = null;
@@ -348,5 +350,13 @@ public class ModelCaller {
 
     public void setEnabled(Boolean isEnabled) {
         this.isEnabled = isEnabled;
+    }
+
+    public void setAutorunFrequency(int autoRunFrequency) {
+        this.autoRunFrequency = autoRunFrequency;
+    }
+
+    public int getAutoRunFrequency() {
+        return autoRunFrequency;
     }
 }
