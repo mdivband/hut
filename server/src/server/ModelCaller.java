@@ -27,6 +27,7 @@ public class ModelCaller {
     private int delayBound;
     private Boolean isEnabled;
     private int autoRunFrequency = 0;
+    private double nextAutoRun = 0;
 
     public void reset() {
         style = "justOn";
@@ -43,6 +44,7 @@ public class ModelCaller {
      * Also side effects the chances in State.
      */
     public void startThread(String webRef, ArrayList<ArrayList<double[][]>> config) {
+        nextAutoRun = Simulator.instance.getState().getTime() + (autoRunFrequency * Simulator.instance.getGameSpeed());
         if (isEnabled) {
             currentSalt = Simulator.instance.getRandom().nextInt(10000);
             startTime = Simulator.instance.getState().getTime();
@@ -358,5 +360,13 @@ public class ModelCaller {
 
     public int getAutoRunFrequency() {
         return autoRunFrequency;
+    }
+
+    public double getNextAutoRun() {
+        return nextAutoRun;
+    }
+
+    public void setNextAutoRun(double nextAutoRun) {
+        this.nextAutoRun = nextAutoRun;
     }
 }

@@ -166,7 +166,6 @@ public class Simulator {
 
     private void mainLoop() {
         final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
-        double nextAutoRun = 0;
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
@@ -341,10 +340,10 @@ public class Simulator {
                 //System.out.println(Math.floor(state.getTime()) + " % " + (10 * gameSpeed) + " = " + autoRunCheck);
                 //System.out.println(state.getTime() + " - " + timeCheck + " " + ((-0.05 < timeCheck) && (timeCheck < 0.05)));
                 //if (autoRunCheck == 0) {
-                if (modelCaller.getAutoRunFrequency() != 0 && state.getTime() > nextAutoRun) {
+                if (modelCaller.getAutoRunFrequency() != 0 && state.getTime() > modelCaller.getNextAutoRun()) {
                     LOGGER.info(String.format("%s; AUTRN; Autorun of model;", getState().getTime()));
                     updateMissionModel();
-                    nextAutoRun = state.getTime() + (modelCaller.getAutoRunFrequency() * gameSpeed);
+                    modelCaller.setNextAutoRun(state.getTime() + (modelCaller.getAutoRunFrequency() * gameSpeed));
                 }
 
             }
