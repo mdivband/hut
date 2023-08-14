@@ -328,9 +328,9 @@ var MapAgentController = {
                 icon = this.icons.UAVWithPack;
             } else if(agent.isTimedOut()) {
                 icon = this.icons.UAVTimedOut;
-            } else
+            } else {
                 icon = this.icons.UAV;
-
+            }
         }
         marker.setIcon(icon.Image);
         marker.setPosition(agent.getPosition());
@@ -344,7 +344,6 @@ var MapAgentController = {
                 'transform': 'rotate(' + agent.getHeading() + 'deg)'
             });
             MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
-        } else {
         }
 
     },
@@ -364,8 +363,7 @@ var MapAgentController = {
         var canvas;
         if(canvasEl.length) {
             canvas = canvasEl[0];
-        }
-        else {
+        } else {
             canvas = document.createElement('canvas');
             canvas.id = id;
             canvas.width = container.width();
@@ -382,6 +380,7 @@ var MapAgentController = {
         ctx.filter = 'hue-rotate(' + (10 + batteryLevel*100) + 'deg) brightness(1.5)';
         ctx.fillStyle = "red";
         ctx.fillRect(5, 71, batteryWidth, 4);
+
 
         container.css({
             'overflow': 'visible'

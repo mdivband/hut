@@ -158,7 +158,7 @@ var simulator = {
                     self.initialisedState = true;
                     MapController.swapMode(self.state.isEdit(), false);
 
-
+                    sleep(200)
                     if (self.state.getUserName() === "") {
                         var name = null;
                         while (name == null || name === "") {
@@ -167,8 +167,8 @@ var simulator = {
                         $.post("/mode/scenario/registerUser", {
                             userName: name
                         });
-
                     }
+                    sleep(200)
 
                     if (self.state.attributes.prov_doc == null) {
                         var api = new $.provStoreApi({
