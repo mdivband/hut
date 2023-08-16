@@ -15,8 +15,8 @@
     "isEnabled" : true,
     "samples": 500,
     "isDummy": true,
-    "delayTime": 15,
-    "delayBound": 5
+    "delayTime": 10,
+    "delayBound": 4
   },
   "varianceParameters": {
     "speedPerAgent": 0.1,

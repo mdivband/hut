@@ -1,65 +1,22 @@
-2023-08-16 11:13:07; 0.0; LGSTRT; Reset log (scenario, username); Scenario 1; 13 
-2023-08-16 11:13:10; 0.0; SIMST; Simulation started
-2023-08-16 11:13:10; 5.000000000000002; AUTRN; Autorun of model;
-2023-08-16 11:13:10; 5.000000000000002; MDSTO; Model starting on the current number of agents (#); 5
-2023-08-16 11:13:10; 5.000000000000002; MDSTU; Model starting at 1 under the current number of agents;
-2023-08-16 11:13:10; 5.000000000000002; MDSTV; Model starting at 1 over the current number of agents;
-2023-08-16 11:13:14; 24.599999999999945; MDSTO; Model starting on the current number of agents (#); 6
-2023-08-16 11:13:14; 24.599999999999945; MDSTV; Model starting at 1 over the current number of agents;
-2023-08-16 11:13:14; 24.599999999999945; SPWN; Hub spawed an agent - now there are (numAgents); 5 
-2023-08-16 11:13:14; 24.599999999999945; MDSTU; Model starting at 1 under the current number of agents;
-2023-08-16 11:13:15; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-1; Task-4 
-2023-08-16 11:13:15; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-2; Task-1 
-2023-08-16 11:13:15; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-3; Task-2 
-2023-08-16 11:13:15; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-4; Task-5 
-2023-08-16 11:13:15; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-5; Task-3 
-2023-08-16 11:13:15; 29.399999999999928; ASGN; Agent assigned to task (agentId, taskId); UAV-6; Task-6 
-2023-08-16 11:13:15; 29.799999999999926; MDSTU; Model starting at 1 under the current number of agents;
-2023-08-16 11:13:15; 29.799999999999926; MDSTO; Model starting on the current number of agents (#); 7
-2023-08-16 11:13:15; 29.799999999999926; MDSTV; Model starting at 1 over the current number of agents;
-2023-08-16 11:13:15; 29.799999999999926; SPWN; Hub spawed an agent - now there are (numAgents); 6 
-2023-08-16 11:13:16; 30.399999999999924; ASGN; Agent assigned to task (agentId, taskId); UAV-7; Task-7 
-2023-08-16 11:13:16; 30.399999999999924; MDSTO; Model starting on the current number of agents (#); 8
-2023-08-16 11:13:16; 30.399999999999924; MDSTU; Model starting at 1 under the current number of agents;
-2023-08-16 11:13:16; 30.599999999999923; SPWN; Hub spawed an agent - now there are (numAgents); 7 
-2023-08-16 11:13:16; 30.599999999999923; MDSTV; Model starting at 1 over the current number of agents;
-2023-08-16 11:13:16; 31.39999999999992; ASGN; Agent assigned to task (agentId, taskId); UAV-8; Task-12 
-2023-08-16 11:13:16; 31.79999999999992; MDSTO; Model starting on the current number of agents (#); 9
-2023-08-16 11:13:16; 31.79999999999992; MDSTU; Model starting at 1 under the current number of agents;
-2023-08-16 11:13:16; 31.79999999999992; SPWN; Hub spawed an agent - now there are (numAgents); 8 
-2023-08-16 11:13:16; 31.79999999999992; MDSTV; Model starting at 1 over the current number of agents;
-2023-08-16 11:13:27; 87.4000000000007; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-2; UAV-3; 39 
-2023-08-16 11:13:27; 87.4000000000007; DELTSK; Removed task (id, lat, lng); Task-2; 50.9295; -1.40493
-2023-08-16 11:13:28; 92.40000000000077; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-1; UAV-2; 38 
-2023-08-16 11:13:28; 92.40000000000077; DELTSK; Removed task (id, lat, lng); Task-1; 50.92861201823444; -1.4083548992865773
-2023-08-16 11:13:28; 94.2000000000008; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-4; UAV-1; 37 
-2023-08-16 11:13:28; 94.2000000000008; DELTSK; Removed task (id, lat, lng); Task-4; 50.92920912373895; -1.4065721725970581
-2023-08-16 11:13:29; 97.80000000000085; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-3; UAV-5; 36 
-2023-08-16 11:13:29; 97.80000000000085; DELTSK; Removed task (id, lat, lng); Task-3; 50.92994841492357; -1.4071062570258561
-2023-08-16 11:13:30; 100.20000000000088; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-5; UAV-4; 35 
-2023-08-16 11:13:30; 100.20000000000088; DELTSK; Removed task (id, lat, lng); Task-5; 50.92809666040806; -1.4093217629816241
-2023-08-16 11:13:30; 100.20000000000088; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-6; UAV-6; 34 
-2023-08-16 11:13:30; 100.20000000000088; DELTSK; Removed task (id, lat, lng); Task-6; 50.93005055983864; -1.4056972955868583
-2023-08-16 11:13:32; 112.20000000000105; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-7; UAV-7; 33 
-2023-08-16 11:13:32; 112.20000000000105; DELTSK; Removed task (id, lat, lng); Task-7; 50.93000751140818; -1.4033381902024118
-2023-08-16 11:13:34; 120.20000000000117; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-12; UAV-8; 32 
-2023-08-16 11:13:34; 120.20000000000117; DELTSK; Removed task (id, lat, lng); Task-12; 50.929786740075315; -1.40918219247446
-2023-08-16 11:13:37; 135.80000000000084; ASGN; Agent assigned to task (agentId, taskId); UAV-3; Task-9 
-2023-08-16 11:13:37; 138.0000000000007; ASGN; Agent assigned to task (agentId, taskId); UAV-1; Task-10 
-2023-08-16 11:13:38; 143.6000000000004; ASGN; Agent assigned to task (agentId, taskId); UAV-2; Task-11 
-2023-08-16 11:13:41; 158.39999999999955; ASGN; Agent assigned to task (agentId, taskId); UAV-4; Task-8 
-2023-08-16 11:13:42; 160.19999999999945; ASGN; Agent assigned to task (agentId, taskId); UAV-5; Task-15 
-2023-08-16 11:13:42; 160.59999999999943; ASGN; Agent assigned to task (agentId, taskId); UAV-6; Task-13 
-2023-08-16 11:13:45; 178.3999999999984; ASGN; Agent assigned to task (agentId, taskId); UAV-7; Task-17 
-2023-08-16 11:13:46; 181.59999999999823; MDDNU; Model done at 1 under the current number of agents in time (result, elapsed time); 1531.0; 30.087389633
-2023-08-16 11:13:49; 197.59999999999732; ASGN; Agent assigned to task (agentId, taskId); UAV-8; Task-18 
-2023-08-16 11:13:50; 203.399999999997; MDDNO; Model done on the current number of agents in time (result, elapsed time); 1271.0; 34.451099734
-2023-08-16 11:13:52; 210.59999999999658; MDDNV; Model done at 1 over the current number of agents in time (result, elapsed time); 1151.0; 35.887097184
-2023-08-16 11:13:53; 215.99999999999628; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-9; UAV-3; 31 
-2023-08-16 11:13:53; 215.99999999999628; DELTSK; Removed task (id, lat, lng); Task-9; 50.93066909873102; -1.4039824598576496
-2023-08-16 11:13:54; 219.39999999999608; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-10; UAV-1; 30 
-2023-08-16 11:13:54; 219.39999999999608; DELTSK; Removed task (id, lat, lng); Task-10; 50.93081696774981; -1.4061380751777348
-2023-08-16 11:13:56; 230.79999999999544; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-11; UAV-2; 29 
-2023-08-16 11:13:56; 230.79999999999544; DELTSK; Removed task (id, lat, lng); Task-11; 50.930798337916976; -1.407493372489891
-2023-08-16 11:13:58; 243.7999999999947; TSKCM; Task completed by agent - there are now tasks left (taskId, agentId numTasks); Task-8; UAV-4; 28 
-2023-08-16 11:13:58; 243.7999999999947; DELTSK; Removed task (id, lat, lng); Task-8; 50.92827852277433; -1.4110170656391918
+2023-08-16 14:29:22; 0.0; LGSTRT; Reset log (scenario, username); Scenario 1; + 
+2023-08-16 14:29:24; 0.0; SIMST; Simulation started
+2023-08-16 14:29:25; 5.000000000000002; AUTRN; Autorun of model;
+2023-08-16 14:29:25; 5.000000000000002; MDSTO; Model starting on the current number of agents (#); 5
+2023-08-16 14:29:25; 5.000000000000002; MDSTU; Model starting at 1 under the current number of agents;
+2023-08-16 14:29:25; 5.000000000000002; MDSTV; Model starting at 1 over the current number of agents;
+2023-08-16 14:29:29; 21.599999999999955; MDDNU; Model done at 1 under the current number of agents in time (result, elapsed time); 3005.0; 3.8885773
+2023-08-16 14:29:29; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-1; Task-4 
+2023-08-16 14:29:29; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-2; Task-1 
+2023-08-16 14:29:29; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-3; Task-2 
+2023-08-16 14:29:29; 25.199999999999942; ASGN; Agent assigned to task (agentId, taskId); UAV-4; Task-5 
+2023-08-16 14:29:30; 27.399999999999935; MDDNO; Model done on the current number of agents in time (result, elapsed time); 3005.0; 5.2397488
+2023-08-16 14:29:30; 27.799999999999933; SPWN; Hub spawed an agent - now there are (numAgents); 5 
+2023-08-16 14:29:30; 27.799999999999933; MDSTU; Model starting at 1 under the current number of agents;
+2023-08-16 14:29:30; 27.799999999999933; MDSTV; Model starting at 1 over the current number of agents;
+2023-08-16 14:29:30; 27.799999999999933; MDSTO; Model starting on the current number of agents (#); 6
+2023-08-16 14:29:30; 27.999999999999932; ASGN; Agent assigned to task (agentId, taskId); UAV-5; Task-6 
+2023-08-16 14:29:31; 31.39999999999992; ASGN; Agent assigned to task (agentId, taskId); UAV-6; Task-3 
+2023-08-16 14:29:31; 31.39999999999992; SPWN; Hub spawed an agent - now there are (numAgents); 6 
+2023-08-16 14:29:31; 31.39999999999992; MDSTV; Model starting at 1 over the current number of agents;
+2023-08-16 14:29:31; 31.39999999999992; MDSTO; Model starting on the current number of agents (#); 7
+2023-08-16 14:29:31; 31.39999999999992; MDSTU; Model starting at 1 under the current number of agents;

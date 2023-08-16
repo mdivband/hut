@@ -17,7 +17,7 @@
     "isDummy": false,
     "delayTime": 15,
     "delayBound": 5,
-    "autoRunFrequency": 60
+    "autoRunFrequency": 15
   },
   "varianceParameters": {
     "speedPerAgent": 0.1,
