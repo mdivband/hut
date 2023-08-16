@@ -11,14 +11,14 @@ import java.util.logging.Logger;
 
 public class Model {
     private Logger LOGGER = Logger.getLogger(Model.class.getName());
-    private String prismDir = "./libs/prism-4.8/bin/prism.bat";
+    private String prismDir = "./libs/prism-4.8/bin/prism";
     private String prismModelDir;
     private String prismOutputDir;
     private String modelName;
     private String webRef;
     private double[][] droneRep;
     private double[][] taskRep;
-    private boolean debug = false;
+    private boolean debug = true;
     private Process thisProcess;
     private ProcessBuilder thisPb;
     private int samples = 1000;
@@ -154,7 +154,17 @@ public class Model {
         String agentText = agentBuilder.toString();
 
         ArrayList<String> modelLines = new ArrayList<>();
-        BufferedReader bf = new BufferedReader(new FileReader(prismModelDir + "/template_" + modelName + ".txt"));
+        // BufferedReader bf = new BufferedReader(new FileReader(prismModelDir + "/template_" + modelName + ".txt"));
+        // 20230806_1739h - Ayo Abioye (aoa1f15@soton.ac.uk) removing port number from modelName for template .txt file
+        String modelNameNoPort = "";
+        if (modelName.contains("curr")){
+            modelNameNoPort = "curr";
+        } else if (modelName.contains("add1")) {
+            modelNameNoPort = "add1";
+        } else {
+            modelNameNoPort = "rem1";
+        }
+        BufferedReader bf = new BufferedReader(new FileReader(prismModelDir + "/template_" + modelNameNoPort + ".txt"));
         String line;
         while((line = bf.readLine()) != null){
             modelLines.add(line);

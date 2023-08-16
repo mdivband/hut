@@ -91,6 +91,10 @@ var simulator = {
             collapsible: true,
             active: false
         });
+        // 20230815_2107h - (Ayo Abioye) a.o.abioye@soton.ac.uk added mission cost
+        $("#mission_cost_canvas").accordion({
+            collapsible: true
+        });
 
         $("#accordion_score").accordion({
             collapsible: true
