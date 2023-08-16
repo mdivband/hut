@@ -290,9 +290,11 @@ public class AgentController extends AbstractController {
                         //agent.stop();
                     }
                 }
+                LOGGER.info(String.format("%s; SPWN; Hub spawed an agent - now there are (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
                 return agent;
             }
         }
+        LOGGER.info(String.format("%s; SPWNF; Hub FAILED to spawn an agent - there are still (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
         return null;
     }
 
@@ -303,6 +305,7 @@ public class AgentController extends AbstractController {
     public int despawnAgent() {
         Hub hub = Simulator.instance.getState().getHub();
         if (hub instanceof AgentHubProgrammed ahp) {
+            LOGGER.info(String.format("%s; REMA; Scheduled a removal of an agent", simulator.getState().getTime()));
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
             //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
@@ -313,6 +316,7 @@ public class AgentController extends AbstractController {
                 //return ah.scheduleRemoval(1);
             }
         }
+        LOGGER.info(String.format("%s; REMAF; Failed to schedule removal of an agent - there are stoll (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
         return -1;
     }
 

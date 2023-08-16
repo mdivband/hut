@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 public class Model {
@@ -27,7 +28,7 @@ public class Model {
         this.webRef = webRef;
         this.droneRep = droneRep;
         this.taskRep = taskRep;
-
+        LOGGER.addHandler(Simulator.instance.getLoggingFileHandler());
         prismModelDir = webRef+"/verification";
 
         this.prismOutputDir = prismModelDir + "/" + modelName + ".txt";

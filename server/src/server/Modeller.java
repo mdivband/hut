@@ -4,6 +4,7 @@ import server.model.agents.Agent;
 import server.model.task.Task;
 
 import java.util.*;
+import java.util.logging.FileHandler;
 
 public class Modeller {
     private Simulator simulator;

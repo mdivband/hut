@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.sql.Timestamp; // 20230806_1739h - Ayo Abioye (aoa1f15@soton.ac.uk) added to timestamp filename userName
@@ -51,6 +52,8 @@ public class Simulator {
 
     private Thread mainLoopThread;
     private int port;
+
+    private FileHandler fileHandler;
 
     public Simulator() {
         instance = this;
@@ -335,6 +338,9 @@ public class Simulator {
             //System.out.println(state.getTime() + " - " + timeCheck + " " + ((-0.05 < timeCheck) && (timeCheck < 0.05)));
             if ((gameSpeed - 0.05 < timeCheck) || (timeCheck < 0.05)) {
                 scoreController.handleUpkeep();
+                LOGGER.info(String.format("%s; SCORE; Score tick - (numAgents, completedTasks, score, missionCost, previous_mission_cost); %s; %s; %s; %s; %s ",
+                        getState().getTime(), getState().getAgents().size() - 1, scoreController.getCompletedTasks(), scoreController.getScore(),
+                        scoreController.getMission_cost(), scoreController.getPrevious_mission_cost()));
 
                 // Now that we know this is a whole number step, let's round it to avoid wierd flop problems and check
                 //double autoRunCheck = Math.floor(state.getTime()) % (10 * gameSpeed);
@@ -468,7 +474,7 @@ public class Simulator {
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             String fileNameTimeStamp = String.format("%s", timestamp).replaceAll("[-: ]","");
             String fileName = "./log/" + fileNameTimeStamp + "-" + userName + "-" + state.getGameId() + ".log";
-            FileHandler fileHandler = new FileHandler(fileName);
+            fileHandler = new FileHandler(fileName);
             LogManager.getLogManager().reset();
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
             LOGGER.addHandler(fileHandler);
@@ -479,6 +485,9 @@ public class Simulator {
             targetController.resetLogger(fileHandler);
             connectionController.resetLogger(fileHandler);
             hazardController.resetLogger(fileHandler);
+            modelCaller.resetLogger(fileHandler);
+            //handlers
+
             allocator.resetLogger(fileHandler);
             LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
 
@@ -899,5 +908,9 @@ public class Simulator {
 
     public int getPort() {
         return port;
+    }
+
+    public Handler getLoggingFileHandler() {
+        return fileHandler;
     }
 }

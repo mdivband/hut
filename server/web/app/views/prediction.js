@@ -9,6 +9,7 @@ App.Views.Prediction = Backbone.View.extend({
         this.views = options.views;
         this.canvas = options.canvas;
         this.type = options.type;
+        this.enabled = false;
         //this.ctx = options.ctx;
 
         var self = this;
@@ -48,85 +49,94 @@ App.Views.Prediction = Backbone.View.extend({
         self.update();
     },
     update: function () {
-        var chance;
-        var pred;
-        var background;
-        var self = this;
-        if (this.type === "allocation") {
-            chance = this.state.getSuccessChance();
-            pred = document.getElementById("prediction_text");
-            pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
-            background = document.getElementById("prediction_circle");
-            background.style.background = this.getAllocColor(chance.toFixed(0));
-        } else if (this.type === "mission") {
-            chance = this.state.getMissionSuccessChance();
-            pred = document.getElementById("mission_prediction_text");
-            background = document.getElementById("mission_prediction_circle");
-            if (chance === -1) {
-                pred.innerHTML = "?%";
-                background.style.background = "rgb(255,255,255)";
-            } else {
+        if (this.enabled) {
+            var chance;
+            var pred;
+            var background;
+            var self = this;
+            if (this.type === "allocation") {
+                chance = this.state.getSuccessChance();
+                pred = document.getElementById("prediction_text");
                 pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
-                background.style.background = this.getMissionColor(chance.toFixed(0));
-            }
-        } else if (this.type === "bounded") {
-            pred = document.getElementById("bounded_prediction_text");
-            background = document.getElementById("bounded_prediction_circle");
-            if (this.state.getEstimatedCompletionTime() === -1) {
-                var current = pred.innerHTML
-                pred.innerHTML = "?" + current;
-                //background.style.background = "rgb(255,255,255)";
-            }  else {
-                console.log(this.state.getEstimatedCompletionTime())
-                var eta;
-                if (this.state.getEstimatedCompletionTime() >= 300000) {
-                    eta = "10:00+"
+                background = document.getElementById("prediction_circle");
+                background.style.background = this.getAllocColor(chance.toFixed(0));
+            } else if (this.type === "mission") {
+                chance = this.state.getMissionSuccessChance();
+                pred = document.getElementById("mission_prediction_text");
+                background = document.getElementById("mission_prediction_circle");
+                if (chance === -1) {
+                    pred.innerHTML = "?%";
+                    background.style.background = "rgb(255,255,255)";
                 } else {
-                    eta = self.convertToCompletionTime(this.state.getEstimatedCompletionTime())
+                    pred.innerHTML = parseFloat(chance.toFixed(1)).toString() + "%";
+                    background.style.background = this.getMissionColor(chance.toFixed(0));
                 }
-                pred.innerHTML = eta;//parseFloat(chance.toFixed(1)).toString() + "%";
-                var scaledTime = ((this.state.getEstimatedCompletionTime() / 500) / 360)
-                console.log(eta + " -> " + scaledTime)
+            } else if (this.type === "bounded") {
+                pred = document.getElementById("bounded_prediction_text");
+                background = document.getElementById("bounded_prediction_circle");
+                if (this.state.getEstimatedCompletionTime() === -1) {
+                    var current = pred.innerHTML
+                    pred.innerHTML = "?" + current;
+                    //background.style.background = "rgb(255,255,255)";
+                } else {
+                    console.log(this.state.getEstimatedCompletionTime())
+                    var eta;
+                    if (this.state.getEstimatedCompletionTime() >= 300000) {
+                        eta = "10:00+"
+                    } else {
+                        eta = self.convertToCompletionTime(this.state.getEstimatedCompletionTime())
+                    }
+                    pred.innerHTML = eta;//parseFloat(chance.toFixed(1)).toString() + "%";
+                    var scaledTime = ((this.state.getEstimatedCompletionTime() / 500) / 360)
+                    console.log(eta + " -> " + scaledTime)
 
-                background.style.background = this.getMissionColor(100*scaledTime);
+                    background.style.background = this.getMissionColor(100 * scaledTime);
+                }
+                // IMPORTANT: Because these are deltas wrt the current prediction, they must be recomputed when the base
+                //  prediction comes through
+                self.updateUnderBound()
+                self.updateOverBound()
             }
-            // IMPORTANT: Because these are deltas wrt the current prediction, they must be recomputed when the base
-            //  prediction comes through
-            self.updateUnderBound()
-            self.updateOverBound()
         }
     },
     updateOverBound : function () {
         var addButton = document.getElementById("add_agent");
-        var timeDelta = (parseFloat(this.state.getEstimatedCompletionOverTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
-        timeDelta = timeDelta / 5
-        if (this.state.getEstimatedCompletionOverTime() === -1) {
-            addButton.innerText = "Add Agent (?)"
-        } else if (timeDelta === 0) {
-            addButton.innerText = "Add Agent (~0s)"
-        } else {
-            if (timeDelta < 1) {
-                addButton.innerText = "Add Agent (" + timeDelta + "s)";
+        if (this.enabled) {
+            var timeDelta = (parseFloat(this.state.getEstimatedCompletionOverTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
+            timeDelta = timeDelta / 5
+            if (this.state.getEstimatedCompletionOverTime() === -1) {
+                addButton.innerText = "Add Agent (?)"
+            } else if (timeDelta === 0) {
+                addButton.innerText = "Add Agent (~0s)"
             } else {
-                addButton.innerText = "Add Agent (+" + timeDelta + "s)";
+                if (timeDelta < 1) {
+                    addButton.innerText = "Add Agent (" + timeDelta + "s)";
+                } else {
+                    addButton.innerText = "Add Agent (+" + timeDelta + "s)";
+                }
             }
-
+        } else {
+            addButton.innerText = "Add Agent"
         }
     },
     updateUnderBound : function () {
         var removeButton = document.getElementById("remove_agent");
-        var timeDelta = (parseFloat(this.state.getEstimatedCompletionUnderTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
-        timeDelta = timeDelta / 5
-        if (this.state.getEstimatedCompletionUnderTime() === -1) {
-            removeButton.innerText = "Remove Agent (?)"
-        } else if (timeDelta === 0) {
-            removeButton.innerText = "Add Agent (~0s)"
-        } else {
-            if (timeDelta < 1) {
-                removeButton.innerText = "Remove Agent (" + timeDelta + "s)";
+        if (this.enabled) {
+            var timeDelta = (parseFloat(this.state.getEstimatedCompletionUnderTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
+            timeDelta = timeDelta / 5
+            if (this.state.getEstimatedCompletionUnderTime() === -1) {
+                removeButton.innerText = "Remove Agent (?)"
+            } else if (timeDelta === 0) {
+                removeButton.innerText = "Add Agent (~0s)"
             } else {
-                removeButton.innerText = "Remove Agent (+" + timeDelta + "s)";
+                if (timeDelta < 1) {
+                    removeButton.innerText = "Remove Agent (" + timeDelta + "s)";
+                } else {
+                    removeButton.innerText = "Remove Agent (+" + timeDelta + "s)";
+                }
             }
+        } else {
+            removeButton.innerText = "Remove Agent"
         }
     },
     convertToCompletionTime: function (time) {
@@ -150,6 +160,13 @@ App.Views.Prediction = Backbone.View.extend({
         var red = p > 80 ? 255 : Math.round((p) * 3.2);
         var green = p < 80 ? 255 : Math.round(256 - (p - 80) * 5.12);
         return "rgb(" + red + "," + green + ",0)";
+    },
+    activate: function (){
+        this.enabled = true
+        this.update()
+    },
+    deactivate: function () {
+        this.enabled = false
     }
 
 });

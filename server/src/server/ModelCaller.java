@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 public class ModelCaller {
@@ -368,5 +369,9 @@ public class ModelCaller {
 
     public void setNextAutoRun(double nextAutoRun) {
         this.nextAutoRun = nextAutoRun;
+    }
+
+    public void resetLogger(FileHandler fileHandler) {
+        LOGGER.addHandler(fileHandler);
     }
 }

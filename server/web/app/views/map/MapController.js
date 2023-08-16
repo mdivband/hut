@@ -340,6 +340,7 @@ var MapController = {
             } else if (option === "ranges") {
                 $("#ranges_wrapper_div").show();
             } else if (option === "verification") {
+                self.views.boundedPrediction.activate()
                 $("#bounded_prediction_canvas").show();
             }
         });

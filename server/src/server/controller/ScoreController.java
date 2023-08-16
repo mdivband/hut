@@ -104,4 +104,23 @@ public class ScoreController extends AbstractController {
         this.totalTasks = totalTasks;
     }
 
+    public int getCompletedTasks() {
+        return completedTasks;
+    }
+
+    public int getTotalTasks() {
+        return totalTasks;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public double getMission_cost() {
+        return mission_cost;
+    }
+
+    public double getPrevious_mission_cost() {
+        return previous_mission_cost;
+    }
 }
