@@ -72,30 +72,23 @@ http://www.prismmodelchecker.org/other-downloads.php
 
 PRISM was created and is still actively maintained by:
 
- * Dave Parker (University of Oxford)
+ * Dave Parker (University of Birmingham)
  * Gethin Norman (University of Glasgow)
  * Marta Kwiatkowska (University of Oxford) 
 
-Development of the tool is currently led from Oxford by Dave Parker.
+Development of the tool is currently led from Birmingham by Dave Parker. Other current key developers are:
 
-The following have made a wide range of contributions to
-PRISM covering many different aspects of the tool
-(in approximately reverse chronological order):
-
- * Steffen Märcker (Technische Universität Dresden)
  * Joachim Klein (formerly Technische Universität Dresden)
- * Vojtech Forejt (formerly University of Oxford)
 
-We also gratefully acknowledge contributions to the PRISM code-base from
-(in approximately reverse chronological order):
+We gratefully acknowledge contributions to the PRISM code-base from various sources,
+including (in approximately reverse chronological order):
 
- * Max Kurze: Language parser code improvements
- * Ludwig Pauly: Reward import/export
- * Alberto Puggelli: First version of interval DTMC/MDP code
  * Xueyi Zou: Partially observable Markov decision processes (POMDPs)
+ * Steffen Märcker: Fixes and improvements, especially in explicit engine
  * Chris Novakovic: Build infrastructure and explicit engine improvements
  * Ernst Moritz Hahn: Parametric model checking, fast adaptive uniformisation + various other features
  * Frits Dannenberg: Fast adaptive uniformisation
+ * Vojtech Forejt: Various model checking code, including multi-objective + GUI enhancements
  * Hongyang Qu: Multi-objective model checking
  * Mateusz Ujma: Bug fixes and GUI improvements
  * Christian von Essen: Symbolic/explicit-state model checking
@@ -126,9 +119,10 @@ If you have problems or questions regarding PRISM, please use the help forum pro
 Other comments and feedback about any aspect of PRISM are also very welcome. Please contact:
 
   Dave Parker  
-  (david.parker@cs.ox.ac.uk)  
-  Department of Computer Science  
-  University of Oxford  
-  Oxford  
-  OX1 3QG
-  UK
+  (d.a.parker@cs.bham.ac.uk)  
+  School of Computer Science  
+  University of Birmingham  
+  Edgbaston  
+  Birmingham  
+  B15 2TT  
+  ENGLAND

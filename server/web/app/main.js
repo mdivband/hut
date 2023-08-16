@@ -92,6 +92,10 @@ var simulator = {
             active: false
         });
 
+        $("#mission_cost_canvas").accordion({
+            collapsible: true
+        });
+
         $("#accordion_score").accordion({
             collapsible: true
         });

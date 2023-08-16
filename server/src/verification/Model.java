@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public class Model {
     private Logger LOGGER = Logger.getLogger(Model.class.getName());
-    private String prismDir = "./libs/prism-4.8/bin/prism.bat";
+    private String prismDir = "./libs/prism-4.8/bin/prism";
     private String prismModelDir;
     private String prismOutputDir;
     private String modelName;

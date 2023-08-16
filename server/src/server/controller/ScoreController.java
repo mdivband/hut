@@ -8,6 +8,8 @@ public class ScoreController extends AbstractController {
     private int completedTasks;
     private int totalTasks;
     private double score;
+    private double mission_cost = 0.00;
+    private double previous_mission_cost = 0.00;
     private int POINTS_PER_TASK = 100;
     private double UPKEEP_PER_SIM_SECOND = 0.25;
 
@@ -20,16 +22,20 @@ public class ScoreController extends AbstractController {
         simulator.getState().addScoreInfo("earned", 0.0);
         simulator.getState().addScoreInfo("progress", 0.0);
         simulator.getState().addScoreInfo("score", 0.0);
+        simulator.getState().addScoreInfo("mission_cost", 0.0);
     }
 
     public void reset() {
         completedTasks = 0;
         score = 500;
         totalTasks = 0;
+        previous_mission_cost = mission_cost;
+        mission_cost = 0.00;
         simulator.getState().addScoreInfo("upkeep", 0.0);
         simulator.getState().addScoreInfo("earned", 0.0);
         simulator.getState().addScoreInfo("progress", 0.0);
         simulator.getState().addScoreInfo("score", 0.0);
+        simulator.getState().addScoreInfo("mission_cost", 0.0);
     }
 
     public void handleUpkeep() {
@@ -44,6 +50,16 @@ public class ScoreController extends AbstractController {
 
         score -= upkeep;
         simulator.getState().addScoreInfo("score", score);
+
+        // 20230815_2107h - a.o.abioye@soton.ac.uk added mission cost
+        mission_cost += upkeep;
+        // added to if-else loop to fix resetting of mission cost at the end
+        if (previous_mission_cost > mission_cost) {
+            simulator.getState().addScoreInfo("mission_cost", previous_mission_cost);
+            previous_mission_cost = 0.00;
+        } else {
+            simulator.getState().addScoreInfo("mission_cost", mission_cost);
+        }
     }
 
     public void incrementCompletedTask() {
