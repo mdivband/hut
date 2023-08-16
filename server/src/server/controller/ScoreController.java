@@ -51,7 +51,7 @@ public class ScoreController extends AbstractController {
         score -= upkeep;
         simulator.getState().addScoreInfo("score", score);
 
-        // 20230815_2107h - a.o.abioye@soton.ac.uk added mission cost
+        // 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost
         mission_cost += upkeep;
         // added to if-else loop to fix resetting of mission cost at the end
         if (previous_mission_cost > mission_cost) {

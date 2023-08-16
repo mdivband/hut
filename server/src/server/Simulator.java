@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.sql.Timestamp; // 20230806_1739h - Ayo Abioye (aoa1f15@soton.ac.uk) added to timestamp filename userName
 
 /**
  * @author Feng Wu
@@ -462,7 +463,11 @@ public class Simulator {
 
     public void resetLogging(String userName) {
         try {
-            String fileName = userName + "-" + state.getGameId() + ".log";
+            // String fileName = userName + "-" + state.getGameId() + ".log";
+            // 20230806_1739h - Ayo Abioye (aoa1f15@soton.ac.uk) added timestamp to filename to avoid overwrite of non-unique userName
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            String fileNameTimeStamp = String.format("%s", timestamp).replaceAll("[-: ]","");
+            String fileName = "./log/" + fileNameTimeStamp + "-" + userName + "-" + state.getGameId() + ".log";
             FileHandler fileHandler = new FileHandler(fileName);
             LogManager.getLogManager().reset();
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));

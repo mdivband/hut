@@ -788,8 +788,10 @@ App.Views.Map = Backbone.View.extend({
         $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
         $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
         $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
+
+        // 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost
         $("#mission_cost").html("£ " + parseFloat(scoreInfo["mission_cost"]).toFixed(2));
-        if (parseFloat(scoreInfo["mission_cost"]) > 1500) {
+        if (parseFloat(scoreInfo["mission_cost"]) > 1800) {
             $("#mission_cost_background").css("background-color", "#D79334");
             if (parseFloat(scoreInfo["mission_cost"]) > 2200) {
                 $("#mission_cost_background").css("background-color", "#7E191B");

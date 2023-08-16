@@ -1,7 +1,7 @@
 ctmc
 
 // Number of rings
-const int nplaces = 7;
+const int nplaces = 8;
 
 // Battery drain rates
 const double battery_drain_high_mid = 0.00125;
@@ -20,22 +20,24 @@ const double place6_fail_r = 0.00000001;
 const double place7_fail_r = 0.00000001;
 
 // Movement rates (made up for now)
-const double mv_0_1_r = 0.003;
+const double mv_0_1_r = 0.002;
 const double mv_1_2_r = 0.01;
 const double mv_2_3_r = 0.01;
 const double mv_3_4_r = 0.01;
 const double mv_4_5_r = 0.01;
 const double mv_5_6_r = 0.01;
 const double mv_6_7_r = 0.01;
+const double mv_7_8_r = 0.01;
 
 // Movement rates
-const double mv_1_0_r = 0.003;
+const double mv_1_0_r = 0.002;
 const double mv_2_1_r = 0.01;
 const double mv_3_2_r = 0.01;
 const double mv_4_3_r = 0.01;
 const double mv_5_4_r = 0.01;
 const double mv_6_5_r = 0.01;
 const double mv_7_6_r = 0.01;
+const double mv_8_7_r = 0.01;
 
 // Rotate rate
 const double rt_r = 0.03;
@@ -112,6 +114,7 @@ module agent0
   [] (taskLoc0 = 5) & (charge0 = 1) & (delivered0 = 0) & (allocTasksP5 <= maxTasksPerRegion - 1) -> (taskLoc0' = 0) & (allocTasksP5' = allocTasksP5 + 1) & (nextTask' = 0) & (done' = false);
   [] (taskLoc0 = 6) & (charge0 = 1) & (delivered0 = 0) & (allocTasksP6 <= maxTasksPerRegion - 1) -> (taskLoc0' = 0) & (allocTasksP6' = allocTasksP6 + 1) & (nextTask' = 0) & (done' = false);
   [] (taskLoc0 = 7) & (charge0 = 1) & (delivered0 = 0) & (allocTasksP7 <= maxTasksPerRegion - 1) -> (taskLoc0' = 0) & (allocTasksP7' = allocTasksP7 + 1) & (nextTask' = 0) & (done' = false);
+  [] (taskLoc0 = 8) & (charge0 = 1) & (delivered0 = 0) & (allocTasksP8 <= maxTasksPerRegion - 1) -> (taskLoc0' = 0) & (allocTasksP8' = allocTasksP8 + 1) & (nextTask' = 0) & (done' = false);
 
   // Success
   [] (place0 = taskLoc0) & (taskLoc0 != 0) & (alive0 = 1) -> (delivered0' = 1) & (return0' = 1) & (taskLoc0' = 0) & (turning0' = 1) & (moveC0' = 0);
@@ -160,6 +163,11 @@ module agent0
   [] (place0 = 6) & (alive0 = 1) & (place0 != taskLoc0) & (delivered0 = 0) & (return0 = 0) & (moveC0 = 2) -> 4*mv_6_7_r : (moveC0' = 3);
   [] (place0 = 6) & (alive0 = 1) & (place0 != taskLoc0) & (delivered0 = 0) & (return0 = 0) & (moveC0 = 3) -> 4*mv_6_7_r : (place0' = 7) & (moveC0' = 0);
 
+  [] (place0 = 7) & (alive0 = 1) & (place0 != taskLoc0) & (delivered0 = 0) & (return0 = 0) & (moveC0 = 0) -> 4*mv_7_8_r : (moveC0' = 1);
+  [] (place0 = 7) & (alive0 = 1) & (place0 != taskLoc0) & (delivered0 = 0) & (return0 = 0) & (moveC0 = 1) -> 4*mv_7_8_r : (moveC0' = 2);
+  [] (place0 = 7) & (alive0 = 1) & (place0 != taskLoc0) & (delivered0 = 0) & (return0 = 0) & (moveC0 = 2) -> 4*mv_7_8_r : (moveC0' = 3);
+  [] (place0 = 7) & (alive0 = 1) & (place0 != taskLoc0) & (delivered0 = 0) & (return0 = 0) & (moveC0 = 3) -> 4*mv_7_8_r : (place0' = 8) & (moveC0' = 0);
+
   // Come back
   [] (place0 = 1) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 0) -> 4*mv_1_0_r : (moveC0' = 1);
   [] (place0 = 1) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 1) -> 4*mv_1_0_r : (moveC0' = 2);
@@ -195,6 +203,11 @@ module agent0
   [] (place0 = 7) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 1) -> 4*mv_7_6_r : (moveC0' = 2);
   [] (place0 = 7) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 2) -> 4*mv_7_6_r : (moveC0' = 3);
   [] (place0 = 7) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 3) -> 4*mv_7_6_r : (place0' = 6) & (moveC0' = 0);
+
+  [] (place0 = 8) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 0) -> 4*mv_8_7_r : (moveC0' = 1);
+  [] (place0 = 8) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 1) -> 4*mv_8_7_r : (moveC0' = 2);
+  [] (place0 = 8) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 2) -> 4*mv_8_7_r : (moveC0' = 3);
+  [] (place0 = 8) & (alive0 = 1) & (return0 = 1) & (turning0 = 0) & (moveC0 = 3) -> 4*mv_8_7_r : (place0' = 7) & (moveC0' = 0);
 endmodule
 
 // ADD TEXT FOR AGENTS
@@ -209,6 +222,7 @@ const int initTaskP4;
 const int initTaskP5;
 const int initTaskP6;
 const int initTaskP7;
+const int initTaskP8;
 
 global allocTasksP1 : [ 0 .. maxTasksPerRegion ] init initTaskP1;
 global allocTasksP2 : [ 0 .. maxTasksPerRegion ] init initTaskP2;
@@ -217,6 +231,7 @@ global allocTasksP4 : [ 0 .. maxTasksPerRegion ] init initTaskP4;
 global allocTasksP5 : [ 0 .. maxTasksPerRegion ] init initTaskP5;
 global allocTasksP6 : [ 0 .. maxTasksPerRegion ] init initTaskP6;
 global allocTasksP7 : [ 0 .. maxTasksPerRegion ] init initTaskP7;
+global allocTasksP8 : [ 0 .. maxTasksPerRegion ] init initTaskP8;
 
 // Allocate tasks to drones 
 global nextTask : [0 .. nplaces] init 0;
@@ -236,7 +251,8 @@ module Allocator
   [] (checkNext = 4) & (allocTasksP4 = 0) -> (checkNext' = 5) & (done' = true);
   [] (checkNext = 5) & (allocTasksP5 = 0) -> (checkNext' = 6) & (done' = true);
   [] (checkNext = 6) & (allocTasksP6 = 0) -> (checkNext' = 7) & (done' = true);
-  [] (checkNext = 7) & (allocTasksP7 = 0) -> (checkNext' = 0) & (done' = true); // No more tasks
+  [] (checkNext = 7) & (allocTasksP7 = 0) -> (checkNext' = 8) & (done' = true);
+  [] (checkNext = 8) & (allocTasksP8 = 0) -> (checkNext' = 0) & (done' = true); // No more tasks
 
   // Assign the next task
   [] (checkNext = 1) & (allocTasksP1 > 0) & (alloc) -> (nextTask' = 1) & (allocTasksP1' = allocTasksP1 - 1) & (alloc' = false);
@@ -246,4 +262,5 @@ module Allocator
   [] (checkNext = 5) & (allocTasksP5 > 0) & (alloc) -> (nextTask' = 5) & (allocTasksP5' = allocTasksP5 - 1) & (alloc' = false);
   [] (checkNext = 6) & (allocTasksP6 > 0) & (alloc) -> (nextTask' = 6) & (allocTasksP6' = allocTasksP6 - 1) & (alloc' = false);
   [] (checkNext = 7) & (allocTasksP7 > 0) & (alloc) -> (nextTask' = 7) & (allocTasksP7' = allocTasksP7 - 1) & (alloc' = false);
+  [] (checkNext = 8) & (allocTasksP8 > 0) & (alloc) -> (nextTask' = 8) & (allocTasksP8' = allocTasksP8 - 1) & (alloc' = false);
 endmodule
