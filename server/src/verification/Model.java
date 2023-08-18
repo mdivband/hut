@@ -69,13 +69,15 @@ public class Model {
             droneRep[i][1] = effectiveTaskDist;
 
             if (droneRep[i][2] < 0.15) {
-                droneRep[i][2] = 3;
+                droneRep[i][2] = 4;
             } else if (droneRep[i][2] < 0.4) {
                 droneRep[i][2] = 0;
-            } else if (droneRep[i][3] < 0.8) {
+            } else if (droneRep[i][2] < 0.6) {
                 droneRep[i][2] = 1;
-            } else {
+            } else if (droneRep[i][3] < 0.8) {
                 droneRep[i][2] = 2;
+            } else {
+                droneRep[i][2] = 3;
             }
 
             if (droneRep[i][0] == 0) {

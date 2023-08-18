@@ -51,20 +51,27 @@ public class ModelCaller {
             startTime = Simulator.instance.getState().getTime();
             this.webRef = webRef;
             // TODO edit the prediction python to take arguments of files, then we can run all 3 in parallel
+            models = new Model[]{null, null, null};
             if (currentThread != null) {
                 //System.out.println("INTERRUPTING");
                 //System.out.println("dest");
-                models[1].cancel();
+                if (models[1] != null) {
+                    models[1].cancel();
+                }
                 currentThread.interrupt();
                 currentThread = null;
             }
             if (underThread != null) {
-                models[0].cancel();
+                if (models[0] != null) {
+                    models[0].cancel();
+                }
                 underThread.interrupt();
                 underThread = null;
             }
             if (overThread != null) {
-                models[2].cancel();
+                if (models[2] != null) {
+                    models[2].cancel();
+                }
                 overThread.interrupt();
                 overThread = null;
             }

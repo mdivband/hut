@@ -4,8 +4,9 @@ ctmc
 const int nplaces = 8;
 
 // Battery drain rates
+const double battery_drain_full_high = 0.00125;
 const double battery_drain_high_mid = 0.00125;
-const double battery_drain_mid_low = 0.000625;
+const double battery_drain_mid_low = 0.00125;
 const double battery_drain_low_critical = 0.001;
 const double battery_charge = 0.0025;
 
@@ -61,7 +62,7 @@ module agent0
 
   place0   : [ 0..nplaces ] init initPlace0; // 0 is base
   taskLoc0 : [0..nplaces] init initTaskLoc0;
-  battery0 : [ 0..3 ] init initBattery0; // 0: low, 1: mid 2: high 3: critical
+  battery0 : [ 0..4 ] init initBattery0; // 0: low, 1: mid 2: high 3: critical
 
   ready0 : bool init false;
   delivered0 : [0..1] init initDelivered0; // true to force an initial allocation
@@ -71,6 +72,12 @@ module agent0
   turning0: [0..1] init initTurning0; // true to rotate
 
   // Battery drain while travelling
+  [] (battery0 = 3) & (alive0 = 1) & (place0 != 0) & (drainC0 = 0) -> 4*battery_drain_full_high : (drainC0' = 1);
+  [] (battery0 = 3) & (alive0 = 1) & (place0 != 0) & (drainC0 = 1) -> 4*battery_drain_full_high : (drainC0' = 2);
+  [] (battery0 = 3) & (alive0 = 1) & (place0 != 0) & (drainC0 = 2) -> 4*battery_drain_full_high : (drainC0' = 3);
+  [] (battery0 = 3) & (alive0 = 1) & (place0 != 0) & (drainC0 = 3) -> 4*battery_drain_full_high : (battery0' = 2) & (drainC0' = 0);
+
+
   [] (battery0 = 2) & (alive0 = 1) & (place0 != 0) & (drainC0 = 0) -> 4*battery_drain_high_mid : (drainC0' = 1);
   [] (battery0 = 2) & (alive0 = 1) & (place0 != 0) & (drainC0 = 1) -> 4*battery_drain_high_mid : (drainC0' = 2);
   [] (battery0 = 2) & (alive0 = 1) & (place0 != 0) & (drainC0 = 2) -> 4*battery_drain_high_mid : (drainC0' = 3);
@@ -84,13 +91,13 @@ module agent0
   [] (battery0 = 0) & (alive0 = 1) & (place0 != 0) & (drainC0 = 0) -> 4*battery_drain_low_critical : (drainC0' = 1);
   [] (battery0 = 0) & (alive0 = 1) & (place0 != 0) & (drainC0 = 1) -> 4*battery_drain_low_critical : (drainC0' = 2);
   [] (battery0 = 0) & (alive0 = 1) & (place0 != 0) & (drainC0 = 2) -> 4*battery_drain_low_critical : (drainC0' = 3);
-  [] (battery0 = 0) & (alive0 = 1) & (place0 != 0) & (drainC0 = 3) -> 4*battery_drain_low_critical : (battery0' = 3) & (charge0' = 1) & (return0' = 1) & (turning0' = 1) & (drainC0' = 0) & (moveC0' = 0);
+  [] (battery0 = 0) & (alive0 = 1) & (place0 != 0) & (drainC0 = 3) -> 4*battery_drain_low_critical : (battery0' = 4) & (charge0' = 1) & (return0' = 1) & (turning0' = 1) & (drainC0' = 0) & (moveC0' = 0);
 
   // Battery charge at base
-  [] (battery0 = 3) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 0) -> 4*battery_charge: (drainC0' = 1);
-  [] (battery0 = 3) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 1) -> 4*battery_charge: (drainC0' = 2);
-  [] (battery0 = 3) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 2) -> 4*battery_charge: (drainC0' = 3);
-  [] (battery0 = 3) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 3) -> 4*battery_charge: (battery0' = 2) & (charge0' = 0) & (drainC0' = 0);
+  [] (battery0 = 4) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 0) -> 4*battery_charge: (drainC0' = 1);
+  [] (battery0 = 4) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 1) -> 4*battery_charge: (drainC0' = 2);
+  [] (battery0 = 4) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 2) -> 4*battery_charge: (drainC0' = 3);
+  [] (battery0 = 4) & (charge0 = 1) & (alive0 = 1) & (place0 = 0) & (drainC0 = 3) -> 4*battery_charge: (battery0' = 3) & (charge0' = 0) & (drainC0' = 0);
 
   // Generic background failure
   // On its way out
