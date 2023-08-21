@@ -122,7 +122,7 @@
                         </div>
                     </div>
 
-                    <!-- 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost -->
+                    <!-- 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost & progress bars -->
                     <div id="mission_cost_canvas">
                         <h3>Mission Cost</h3>
                         <div>
@@ -142,7 +142,11 @@
                             </tr>
                             <tr>
                                 <td class="soho_title">Progress</td>
-                                <td><span id="score_progress">0</span></td>
+                                <td>
+                                    <div id="score_progress" style="width: 100%; background-color: #ddd; border-radius: 6px;">
+                                      <div class="progress-bar" style="width: 0%; height: 18px; text-align: center;  border-radius: 6px; background-color: #01386a; line-height: 18px; color: white; font-size: 0.95rem;">10.00%</div>
+                                    </div>
+                                </td>
                             </tr>
                             <tr>
                                 <td class="soho_title">Upkeep (pts/second)</td>
