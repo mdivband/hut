@@ -792,12 +792,15 @@ App.Views.Map = Backbone.View.extend({
 
         // 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost
         $("#mission_cost").html("£ " + parseFloat(scoreInfo["mission_cost"]).toFixed(2));
-        if (parseFloat(scoreInfo["mission_cost"]) > 1600) {
+        if (parseFloat(scoreInfo["mission_cost"]) > 1700) {
             $("#mission_cost_background").css("background-color", "#D79334");
             if (parseFloat(scoreInfo["mission_cost"]) > 2000) {
                 $("#mission_cost_background").css("background-color", "#7E191B");
             }
         }
+        let marker_tooltip = scoreInfo["mission_cost"] * 100 / 2000;
+        let marker_margin = marker_tooltip * 0.57;
+        $("#mission_cost_progress_marker").html('<div class="tooltip" style="margin-left: ' + marker_margin + '%;"><span class="tooltiptext">' + parseInt(marker_tooltip) + '%</span></div>');
 
     },
     updateClickedAgent: function (agent) {

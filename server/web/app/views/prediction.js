@@ -75,8 +75,12 @@ App.Views.Prediction = Backbone.View.extend({
                 pred = document.getElementById("bounded_prediction_text");
                 background = document.getElementById("bounded_prediction_circle");
                 if (this.state.getEstimatedCompletionTime() === -1) {
-                    var current = pred.innerHTML
-                    pred.innerHTML = "?" + current;
+                    // var current = pred.innerHTML;
+                    // pred.innerHTML = "?" + current;
+                    // 20230822_1501h - Ayo Abioye (a.o.abioye@soton.ac.uk) added loading spinner to completion time prediction
+                    background.classList.add("loader");
+                    pred.classList.remove("indicator_text");
+                    pred.classList.add("indicator_text_v2");
                     //background.style.background = "rgb(255,255,255)";
                 } else {
                     console.log(this.state.getEstimatedCompletionTime())
@@ -91,6 +95,9 @@ App.Views.Prediction = Backbone.View.extend({
                     console.log(eta + " -> " + scaledTime)
 
                     background.style.background = this.getMissionColor(100 * scaledTime);
+                    background.classList.remove("loader");
+                    pred.classList.remove("indicator_text_v2");
+                    pred.classList.add("indicator_text");
                 }
                 // IMPORTANT: Because these are deltas wrt the current prediction, they must be recomputed when the base
                 //  prediction comes through
