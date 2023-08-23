@@ -23,7 +23,8 @@
     "samples": 500,
     "isDummy": false,
     "delayTime": 15,
-    "delayBound": 5
+    "delayBound": 5,
+    "autoRunFrequency": 10
   },
   "hub": {
     "lat": 50.92893260355405,
