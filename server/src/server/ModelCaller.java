@@ -119,7 +119,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("curr", 1, currentConfig.get(1));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, confidence);
+            double boundedResult = readTimeBoundedResultAsTime(output, confidence, currentConfig.get(1));
             Simulator.instance.getState().setEstimatedCompletionTime(boundedResult * 100);
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             LOGGER.info(String.format("%s; MDDNO; Model done on the current number of agents in time (result, elapsed time); %s; %s", Simulator.instance.getState().getTime(), boundedResult, elapsed));
@@ -149,7 +149,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("add1", 2, currentConfig.get(2));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, confidence);
+            double boundedResult = readTimeBoundedResultAsTime(output, confidence, currentConfig.get(1));
 
             Simulator.instance.getState().setEstimatedCompletionOverTime(boundedResult * 100);
 
@@ -182,7 +182,7 @@ public class ModelCaller {
             double startTime = System.nanoTime();
             ArrayList<String> output = runScript("rem1", 0, currentConfig.get(0));
 
-            double boundedResult = readTimeBoundedResultAsTime(output, confidence);
+            double boundedResult = readTimeBoundedResultAsTime(output, confidence, currentConfig.get(1));
 
             double elapsed = (System.nanoTime() - startTime) / 10E8;
             Simulator.instance.getState().setEstimatedCompletionUnderTime(boundedResult * 100);
@@ -314,7 +314,7 @@ public class ModelCaller {
      * Read result from file. In future this may take an argument in future
      * @return
      */
-    private double readTimeBoundedResultAsTime(ArrayList<String> lines, double confidence) {
+    private double readTimeBoundedResultAsTime(ArrayList<String> lines, double confidence, List<double[][]> currentConfigTuple) {
         //e.g 18000	0.998
         String s;
         int timeToComplete = 0;
@@ -326,7 +326,12 @@ public class ModelCaller {
             }
         }
         if (timeToComplete == 0) {
-            timeToComplete = 30000;
+            if (currentConfigTuple.get(1).length < 5) {
+                LOGGER.info(String.format("%s; MDDEF; Model defaulting on small problem (#); %s", Simulator.instance.getState().getTime(), Simulator.instance.getState().getAgents().size()));
+                timeToComplete = 2500;
+            } else {
+                timeToComplete = 30000;
+            }
         }
         return (int) (startTime + (timeToComplete / 10));
     }
