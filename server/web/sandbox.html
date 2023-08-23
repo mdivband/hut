@@ -17,6 +17,100 @@
     <script type="text/javascript" src="loadMain.js"></script>
 
     <link rel="stylesheet" type="text/css" href="http://w2ui.com/src/w2ui-1.4.min.css"/>
+
+    <!-- 20230822_1501h - Ayo Abioye (a.o.abioye@soton.ac.uk) added loading spinner to completion time prediction -->
+    <style>
+        .loader {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .loader:before,
+        .loader:after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            animation: pulsOut 1.8s ease-in-out infinite;
+            filter: drop-shadow(0 0 0.7rem rgba(255, 255, 255, 0.75));
+        }
+        .loader:before {
+            width: 100%;
+            padding-bottom: 100%;
+            box-shadow: inset 0 0 0 0.7rem #fff;
+            animation-name: pulsIn;
+        }
+        .loader:after {
+            width: calc(100% - 1.4rem);
+            padding-bottom: calc(100% - 1.4rem);
+            box-shadow: 0 0 0 0 #fff;
+        }
+
+        @keyframes pulsIn {
+            0% {
+                box-shadow: inset 0 0 0 0.7rem #fff;
+                opacity: 1;
+            }
+            50%, 100% {
+                box-shadow: inset 0 0 0 0 #fff;
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulsOut {
+            0%, 50% {
+                box-shadow: 0 0 0 0 #fff;
+                opacity: 0;
+            }
+            100% {
+                box-shadow: 0 0 0 0.7rem #fff;
+                opacity: 1;
+            }
+        }
+
+        .indicator_text_v2 {
+            /* change font/size/etc here */
+            font: 40px "Tahoma", Arial, Serif;
+            text-align : center;
+            color: #000000;
+            top : 50%;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted black;
+            margin-top: 40px;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: visible;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 150%;
+            left: 50%;
+            width: 40px;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: black transparent transparent transparent;
+        }
+
+    </style>
 </head>
 <body>
 
@@ -115,18 +209,28 @@
                     <div id="bounded_prediction_canvas" style="display:none">
                         <h3>Estimated Completion Time</h3>
                         <div>
-                            <div class="indicator_circle" id="bounded_prediction_circle">
-                                <div class="indicator_text" id="bounded_prediction_text"></div>
+                            <div class="indicator_circle loader" id="bounded_prediction_circle" style="margin:10px;">
+                                <div class="indicator_text_v2" id="bounded_prediction_text"></div>
                             </div>
 
                         </div>
                     </div>
 
-                    <!-- 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost -->
+                    <!-- 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost & progress bars -->
                     <div id="mission_cost_canvas">
                         <h3>Mission Cost</h3>
                         <div>
-                            <div id="mission_cost_background" style="background-color: #01386a; border: solid 1px black; border-radius: 25px; margin: 20px; height: 80px; display: flex; align-items: center; justify-content: center;">
+
+                            <div id="mission_cost_progress_marker" style="margin: 5px;">
+                                <div class="tooltip" style="margin-left: 0%;">
+                                    <span class="tooltiptext">0%</span>
+                                </div>
+                            </div>
+                            <div id="mission_cost_progress_container" style="margin-left: 7%; margin-right: 7%; background-color: #ddd; border-radius: 6px; background-image: linear-gradient(0.25turn, #228b22 55%, #D79334 55%, #D79334 65%, #7E191B 65%, #7E191B);">
+                                <div class="mission_cost_progress_bar" style="width: 0%; height: 18px; border-radius: 6px; background-size: 400px 100%; /* background-color: #01386a; */ background-image: linear-gradient(0.25turn, #228b22 70%, #D79334 70%, #D79334 80%, #7E191B 80%, #7E191B); line-height: 18px; text-align: center; color: white; font-size: 0.95rem;"></div>
+                            </div>
+                            <p style="margin-top: 5px; text-align: center; font-size: 0.95rem; font-weight: bold;">Budget: £ 2000</p>
+                            <div id="mission_cost_background" style="background-color: #228b22; border: solid 2px #013220; border-radius: 25px; margin: 20px; height: 80px; display: flex; align-items: center; justify-content: center;">
                                 <div id="mission_cost" style="color: white; text-align: center; font-weight: bold; font-size: 2rem;">£ 0.00</div>
                             </div>
                         </div>
@@ -142,7 +246,11 @@
                             </tr>
                             <tr>
                                 <td class="soho_title">Progress</td>
-                                <td><span id="score_progress">0</span></td>
+                                <td>
+                                    <div id="score_progress" style="margin-right: 5px; margin-left: 5px; background-color: #ddd; border-radius: 6px;">
+                                      <div class="progress-bar" style="width: 0%; height: 18px; text-align: center;  border-radius: 6px; background-color: #01386a; line-height: 18px; color: white; font-size: 0.95rem;">0.00%</div>
+                                    </div>
+                                </td>
                             </tr>
                             <tr>
                                 <td class="soho_title">Upkeep (pts/second)</td>

@@ -784,19 +784,23 @@ App.Views.Map = Backbone.View.extend({
         var scoreInfo = this.state.getScoreInfo();
         var timeRem = $.fromTime((this.state.getTimeLimit() - (this.state.getTime() / 5)));
         $("#score_timeLeft").html(timeRem);
-        $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
+        // $("#score_progress").html(parseFloat(scoreInfo["progress"]).toFixed(2) + "%");
+        $("#score_progress").html('<div class="progress-bar" style="width: ' + parseFloat(scoreInfo["progress"]).toFixed(2) + '%; height: 18px; text-align: center; border-radius: 6px; background-color: #01386a; line-height: 18px; color: white; font-size: 0.95rem;">' + parseFloat(scoreInfo["progress"]).toFixed(2) + '%</div>');
         $("#score_upkeep").html(parseFloat(scoreInfo["upkeep"]).toFixed(2));
         $("#score_earned").html(parseFloat(scoreInfo["earned"]).toFixed(2));
         $("#score_score").html(parseFloat(scoreInfo["score"]).toFixed(2));
 
         // 20230815_2107h - Ayo Abioye (a.o.abioye@soton.ac.uk) added mission cost
         $("#mission_cost").html("£ " + parseFloat(scoreInfo["mission_cost"]).toFixed(2));
-        if (parseFloat(scoreInfo["mission_cost"]) > 1800) {
+        if (parseFloat(scoreInfo["mission_cost"]) > 1700) {
             $("#mission_cost_background").css("background-color", "#D79334");
-            if (parseFloat(scoreInfo["mission_cost"]) > 2200) {
+            if (parseFloat(scoreInfo["mission_cost"]) > 2000) {
                 $("#mission_cost_background").css("background-color", "#7E191B");
             }
         }
+        let marker_tooltip = scoreInfo["mission_cost"] * 100 / 2000;
+        let marker_margin = marker_tooltip * 0.57;
+        $("#mission_cost_progress_marker").html('<div class="tooltip" style="margin-left: ' + marker_margin + '%;"><span class="tooltiptext">' + parseInt(marker_tooltip) + '%</span></div>');
 
     },
     updateClickedAgent: function (agent) {
