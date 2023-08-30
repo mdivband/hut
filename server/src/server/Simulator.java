@@ -54,6 +54,8 @@ public class Simulator {
     private int port;
 
     private FileHandler fileHandler;
+    private int score_tick_log_freq = 10;
+    private int score_tick_log_freq_counter = 0;
 
     public Simulator() {
         instance = this;
@@ -177,6 +179,10 @@ public class Simulator {
             state.incrementTime(0.2);
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
             if (state.getTime() >= state.getTimeLimit() * gameSpeed) {
+                // 20230829_1334h - Ayo Abioye (a.o.abioye@soton.ac.uk) added score tick to log file after simulation timeout
+                LOGGER.info(String.format("%s; SCORE; Score tick - (numAgents, completedTasks, score, missionCost, previous_mission_cost); %s; %s; %s; %s; %s ",
+                        getState().getTime(), getState().getAgents().size() - 1, scoreController.getCompletedTasks(), scoreController.getScore(),
+                        scoreController.getMission_cost(), scoreController.getPrevious_mission_cost()));
                 LOGGER.info(String.format("%s; TMCMP; Time completion - scenario completed by time with tasks completed (numComplete); %s ", getState().getTime(), getState().getCompletedTasks().size()));
                /* int numFailed = 0;
                 for (Agent a : state.getAgents()) {
@@ -201,6 +207,10 @@ public class Simulator {
 
                 if (state.getAllocationStyle().equals("dynamic")) {
                     if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+                        // 20230829_1334h - Ayo Abioye (a.o.abioye@soton.ac.uk) added score tick to log file after successful simulation completion
+                        LOGGER.info(String.format("%s; SCORE; Score tick - (numAgents, completedTasks, score, missionCost, previous_mission_cost); %s; %s; %s; %s; %s ",
+                                getState().getTime(), getState().getAgents().size() - 1, scoreController.getCompletedTasks(), scoreController.getScore(),
+                                scoreController.getMission_cost(), scoreController.getPrevious_mission_cost()));
                         LOGGER.info(String.format("%s; FLCMP; Full completion - scenario completed all tasks with most recent prediction in time (pred); %s ", getState().getTime(), (state.getEstimatedCompletionTime() / 100)));
                         /*int numFailed = 0;
                         for (Agent a : state.getAgents()) {
@@ -338,17 +348,26 @@ public class Simulator {
             //System.out.println(state.getTime() + " - " + timeCheck + " " + ((-0.05 < timeCheck) && (timeCheck < 0.05)));
             if ((gameSpeed - 0.05 < timeCheck) || (timeCheck < 0.05)) {
                 scoreController.handleUpkeep();
-                LOGGER.info(String.format("%s; SCORE; Score tick - (numAgents, completedTasks, score, missionCost, previous_mission_cost); %s; %s; %s; %s; %s ",
-                        getState().getTime(), getState().getAgents().size() - 1, scoreController.getCompletedTasks(), scoreController.getScore(),
-                        scoreController.getMission_cost(), scoreController.getPrevious_mission_cost()));
+
+                // 20230829_1334h - Ayo Abioye (a.o.abioye@soton.ac.uk) update score tick logging frequency to log file to every 10s
+                score_tick_log_freq_counter++;
+                if (score_tick_log_freq_counter >= score_tick_log_freq) {
+                    LOGGER.info(String.format("%s; SCORE; Score tick - (numAgents, completedTasks, score, missionCost, previous_mission_cost); %s; %s; %s; %s; %s ",
+                            getState().getTime(), getState().getAgents().size() - 1, scoreController.getCompletedTasks(), scoreController.getScore(),
+                            scoreController.getMission_cost(), scoreController.getPrevious_mission_cost()));
+                    score_tick_log_freq_counter = 0;
+                }
 
                 // Now that we know this is a whole number step, let's round it to avoid wierd flop problems and check
                 //double autoRunCheck = Math.floor(state.getTime()) % (10 * gameSpeed);
                 //System.out.println(Math.floor(state.getTime()) + " % " + (10 * gameSpeed) + " = " + autoRunCheck);
                 //System.out.println(state.getTime() + " - " + timeCheck + " " + ((-0.05 < timeCheck) && (timeCheck < 0.05)));
                 //if (autoRunCheck == 0) {
-                if (modelCaller.getAutoRunFrequency() != 0 && state.getTime() > modelCaller.getNextAutoRun()) {
+
+                // 20230829_1334h - Ayo Abioye (a.o.abioye@soton.ac.uk) forcing autorun to start after 30s instead of 0s which was causing simulation to freeze
+                if ((modelCaller.getAutoRunFrequency() != 0) && (state.getTime() > modelCaller.getNextAutoRun()) && (modelCaller.getNextAutoRun() > 30)) {
                     LOGGER.info(String.format("%s; AUTRN; Autorun of model;", getState().getTime()));
+                    // System.out.println("Current time - " + state.getTime() + "; Next autorun - " + modelCaller.getNextAutoRun());
                     updateMissionModel();
                     modelCaller.setNextAutoRun(state.getTime() + (modelCaller.getAutoRunFrequency() * gameSpeed));
                 }

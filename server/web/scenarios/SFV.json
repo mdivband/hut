@@ -1,7 +1,7 @@
 {
-  "gameId": "Scenario 1",
-  "gameDescription": "Scenario 1",
-  "comment": "Setup 1; Full Verification",
+  "gameId": "SFV",
+  "gameDescription": "SFV",
+  "comment": "Setup 1.1; Scenario Full Verification",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false,
@@ -17,7 +17,7 @@
     "isDummy": false,
     "delayTime": 15,
     "delayBound": 5,
-    "autoRunFrequency": 60
+    "autoRunFrequency": 15
   },
   "varianceParameters": {
     "speedPerAgent": 0.1,

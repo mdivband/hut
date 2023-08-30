@@ -1,7 +1,7 @@
 {
-  "gameId": "Scenario 3",
-  "gameDescription": "Scenario 3",
-  "comment": "Setup 1; No Verification",
+  "gameId": "SNV",
+  "gameDescription": "SNV",
+  "comment": "Setup 1.3; Scenario No Verification",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false,
