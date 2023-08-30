@@ -116,10 +116,11 @@ App.Views.Prediction = Backbone.View.extend({
             } else if (timeDelta === 0) {
                 addButton.innerText = "Add Agent (~0s)"
             } else {
-                if (timeDelta < 1) {
-                    addButton.innerText = "Add Agent (" + timeDelta + "s)";
+                if (timeDelta > 0) {
+                    addButton.innerText = "Add Agent (~0s)"
                 } else {
-                    addButton.innerText = "Add Agent (+" + timeDelta + "s)";
+                    // No +, as - is included in the string
+                    addButton.innerText = "Add Agent (" + timeDelta + "s)";
                 }
             }
         } else {
@@ -136,8 +137,8 @@ App.Views.Prediction = Backbone.View.extend({
             } else if (timeDelta === 0) {
                 removeButton.innerText = "Add Agent (~0s)"
             } else {
-                if (timeDelta < 1) {
-                    removeButton.innerText = "Remove Agent (" + timeDelta + "s)";
+                if (timeDelta < 0) {
+                    removeButton.innerText = "Add Agent (~0s)"
                 } else {
                     removeButton.innerText = "Remove Agent (+" + timeDelta + "s)";
                 }

@@ -56,6 +56,8 @@ public class Simulator {
     private FileHandler fileHandler;
     private int score_tick_log_freq = 10;
     private int score_tick_log_freq_counter = 0;
+    private int stepsSinceLastRemoval = 1000;
+    private double lastBat = 1;
 
     public Simulator() {
         instance = this;
@@ -236,7 +238,7 @@ public class Simulator {
                                  */
 
                                 if (agent.isTimedOut()) {
-                                } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
+                                } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome()) && getState().getScheduledRemovals() == 0) {
                                     av.charge();
                                 } else if (agent.getBattery() < 0.15 && av.isAlive()) {
                                     LOGGER.info(String.format("%s; BTKIL; Agent battery dead - going home (agentId); %s;", getState().getTime(), av.getId()));
@@ -246,10 +248,12 @@ public class Simulator {
                                     //System.out.println(agent);
                                     av.step(state.isFlockingEnabled());
                                 } else {
-                                    if (getAgentController().getScheduledRemovals() > 0) {
+                                    if (getState().getScheduledRemovals() > 0) {
                                         LOGGER.info(String.format("%s; REMAG; Successfully removed agent - now there are (agentId, numAgents); %s; %s ", getState().getTime(), av.getId(), getState().getAgents().size() - 1));
                                         agentsToRemove.add(agent);
-                                        getAgentController().decrementRemoval();
+                                        stepsSinceLastRemoval = 0;
+                                        lastBat = agent.getBattery();
+                                        getState().decrementRemovals();
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
                                         if (av.getBattery() > 0.3) {
@@ -337,8 +341,8 @@ public class Simulator {
                 if (!modeller.isStarted()) {
                     modeller.start();
                     getState().setEstimatedCompletionTime(270000);
-                    getState().setEstimatedCompletionUnderTime(240000);
-                    getState().setEstimatedCompletionOverTime(300000);
+                    getState().setEstimatedCompletionUnderTime(270000);
+                    getState().setEstimatedCompletionOverTime(270000);
                     //updateMissionModel();
                 }
 
@@ -375,7 +379,7 @@ public class Simulator {
             }
             // Step hazard hits
             this.state.decayHazardHits();
-
+            stepsSinceLastRemoval++;
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));
             if (sleepTime < 0) {
@@ -511,6 +515,7 @@ public class Simulator {
             LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
 
         } catch (final IOException e) {
+            e.printStackTrace();
             Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
             Logger.getAnonymousLogger().severe(e.getMessage());
         }
@@ -931,5 +936,18 @@ public class Simulator {
 
     public Handler getLoggingFileHandler() {
         return fileHandler;
+    }
+
+    public int getStepsSinceLastRemoval() {
+        return stepsSinceLastRemoval;
+    }
+
+    public double getLastBat() {
+        return lastBat;
+    }
+
+    public void resetBatteryRemovalVals() {
+        stepsSinceLastRemoval = 1000;
+        lastBat = 1d;
     }
 }

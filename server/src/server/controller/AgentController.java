@@ -13,7 +13,6 @@ public class AgentController extends AbstractController {
 
     public static int nextAgentAltitude = 5;
     private static int uniqueAgentNumber = 1;
-    private int scheduledRemovals = 0;
 
     private Sensor sensor;
 
@@ -248,8 +247,8 @@ public class AgentController extends AbstractController {
      * @return
      */
     public Agent spawnAgent() {
-        if (scheduledRemovals > 0) {
-            scheduledRemovals--;
+        if (simulator.getState().getScheduledRemovals() > 0) {
+            simulator.getState().decrementRemovals();
         } else {
             if (Simulator.instance.getState().getAgents().size() < 11) {
                 boolean hasProgrammed = false;
@@ -309,28 +308,15 @@ public class AgentController extends AbstractController {
             return ahp.scheduleRemoval(1);
         } else if (hub instanceof AgentHub ah) {
             //if (Simulator.instance.getState().getAgents().size() - ah.getScheduledRemovals() > 6)
-            if (Simulator.instance.getState().getAgents().size() - scheduledRemovals > 4) {
-                System.out.println("Scheduling another removal, as " + Simulator.instance.getState().getAgents().size() + " - " + scheduledRemovals + " > 4");
+            if (Simulator.instance.getState().getAgents().size() - simulator.getState().getScheduledRemovals() > 4) {
+                System.out.println("Scheduling another removal, as " + Simulator.instance.getState().getAgents().size() + " - " + simulator.getState().getScheduledRemovals() + " > 4");
                 simulator.getAgentController().decrementAgentNumbers();
-                return simulator.getAgentController().incrementRemoval();
+                return simulator.getState().incrementRemovals();
                 //return ah.scheduleRemoval(1);
             }
         }
-        LOGGER.info(String.format("%s; REMAF; Failed to schedule removal of an agent - there are stoll (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
+        LOGGER.info(String.format("%s; REMAF; Failed to schedule removal of an agent - there are still (numAgents); %s ", simulator.getState().getTime(), simulator.getState().getAgents().size() - 1));
         return -1;
-    }
-
-    private int incrementRemoval() {
-        scheduledRemovals++;
-        return scheduledRemovals;
-    }
-
-    public void decrementRemoval() {
-        scheduledRemovals--;
-    }
-
-    public int getScheduledRemovals() {
-        return scheduledRemovals;
     }
 
     public Agent removeClosestAgentToHub() {

@@ -77,6 +77,7 @@ public class State {
     private double estimatedCompletionTime;
     private double estimatedCompletionUnderTime;
     private double estimatedCompletionOverTime;
+    private int scheduledRemovals = 0;
 
     private Map<String, Double> scoreInfo;
 
@@ -705,6 +706,24 @@ public class State {
 
     public double getNoiseValue(String key) {
         return noiseOptions.get(key);
+    }
+
+    public int getScheduledRemovals() {
+        return scheduledRemovals;
+    }
+
+    public void setScheduledRemovals(int scheduledRemovals) {
+        this.scheduledRemovals = scheduledRemovals;
+    }
+
+    public int decrementRemovals() {
+        this.scheduledRemovals--;
+        return scheduledRemovals;
+    }
+
+    public int incrementRemovals() {
+        this.scheduledRemovals++;
+        return scheduledRemovals;
     }
 
     /**

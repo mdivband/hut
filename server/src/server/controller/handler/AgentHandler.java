@@ -46,6 +46,11 @@ public class AgentHandler extends RestHandler {
     private void handleHubSpawn(Request req, Response resp) throws IOException {
         Agent a = simulator.getAgentController().spawnAgent();
         if (a != null) {
+            int stepsPassed = simulator.getStepsSinceLastRemoval();
+            double chargedBat = stepsPassed * 0.0025d;// Hardcoded recharge time
+            double newBat = Math.min(simulator.getLastBat() + chargedBat, 1.0);
+            simulator.resetBatteryRemovalVals();
+            a.setBattery(newBat);
             // Update model and start thread
             simulator.updateMissionModel();
             a.stop();
