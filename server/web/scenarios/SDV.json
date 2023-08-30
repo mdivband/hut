@@ -1,7 +1,7 @@
 {
-  "gameId": "Scenario 2",
-  "gameDescription": "Scenario 2",
-  "comment": "Setup 1; Dummy Verification",
+  "gameId": "SDV",
+  "gameDescription": "SDV",
+  "comment": "Setup 1.2; Scenario Dummy Verification",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false,

@@ -24,7 +24,7 @@
     "isDummy": false,
     "delayTime": 15,
     "delayBound": 5,
-    "autoRunFrequency": 10
+    "autoRunFrequency": 15
   },
   "hub": {
     "lat": 50.92893260355405,
