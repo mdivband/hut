@@ -59,6 +59,7 @@ public class AgentHandler extends RestHandler {
         } else {
             resp.send(400, "Unable to place agent. The hub area may be too full");
         }
+        simulator.getState().updateTempAddRemTicker();
     }
 
     private void handleHubDespawn(Request req, Response resp) throws IOException {
@@ -69,6 +70,7 @@ public class AgentHandler extends RestHandler {
             resp.send(201, "Scheduled a removal, " + res + " agents will be removed");
             simulator.updateMissionModel(res);
         }
+        simulator.getState().updateTempAddRemTicker();
     }
 
     @Override

@@ -78,6 +78,7 @@ public class State {
     private double estimatedCompletionUnderTime;
     private double estimatedCompletionOverTime;
     private int scheduledRemovals = 0;
+    private int tempCanAddRemAgents = 0;
 
     private Map<String, Double> scoreInfo;
 
@@ -724,6 +725,13 @@ public class State {
     public int incrementRemovals() {
         this.scheduledRemovals++;
         return scheduledRemovals;
+    }
+
+    public void updateTempAddRemTicker() {
+        tempCanAddRemAgents = (getAgents().size() - scheduledRemovals > 4) ? 0 : -1;
+        if (tempCanAddRemAgents == 0) {
+            tempCanAddRemAgents = (getAgents().size() - scheduledRemovals < 11) ? 0 : 1;
+        }
     }
 
     /**

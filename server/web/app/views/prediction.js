@@ -44,9 +44,40 @@ App.Views.Prediction = Backbone.View.extend({
                     self.updateUnderBound();
                 }
             });
-            // TODO over and under here
+            this.state.on("change:scheduledRemovals", function () {
+                self.updateRemovalsButton()
+            });
+            this.state.on("change:tempCanAddRemAgents", function () {
+                //alert(self.state.getTempCanAddRemAgents())
+                self.tempUpdateAddRemButtons()
+            });
         }
         self.update();
+    },
+    tempUpdateAddRemButtons: function () {
+        var self = this;
+        if (self.state.getTempCanAddRemAgents() === -1) {
+            // Not allowed to remove one
+            console.log("Can't remove one. Turning it off")
+            var remButton = document.getElementById("remove_agent");
+            $("#remove_agent").removeClass("remove_agent").addClass("remove_agent_greyed")
+            $("#remove_agent").prop('disabled', true);
+
+            var addButton = document.getElementById("add_agent");
+            $("#add_agent").removeClass("add_agent_greyed").addClass("add_agent")
+            $("#add_agent").prop('disabled', false);
+        } else if (self.state.getTempCanAddRemAgents() === 1) {
+            // Not allowed to add one
+            console.log("Can't add one. Turning it off")
+            var addButton = document.getElementById("add_agent");
+            $("#add_agent").removeClass("add_agent").addClass("add_agent_greyed")
+            $("#add_agent").prop('disabled', true);
+
+            var remButton = document.getElementById("remove_agent");
+            $("#remove_agent").removeClass("remove_agent_greyed").addClass("remove_agent")
+            $("#remove_agent").prop('disabled', false);
+
+        }
     },
     update: function () {
         if (this.enabled) {
@@ -146,6 +177,10 @@ App.Views.Prediction = Backbone.View.extend({
         } else {
             removeButton.innerText = "Remove Agent"
         }
+    },
+    updateRemovalsButton: function () {
+        //alert("===== FOR AYO ==== ")
+        //alert("Here is the scheduled removals: " + this.state.getScheduledRemovals())
     },
     convertToCompletionTime: function (time) {
         console.log("unaltered: " + time)

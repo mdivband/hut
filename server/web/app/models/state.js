@@ -45,6 +45,8 @@ App.Models.State  = Backbone.Model.extend({
         estimatedCompletionOverTime: 300000,
         estimatedCompletionUnderTime: 300000,
         scoreInfo: {},
+        scheduledRemovals: 0,
+        tempCanAddRemAgents: 0
     },
     url: function() {
         return "state.json?" + _.time();
@@ -187,4 +189,10 @@ App.Models.State  = Backbone.Model.extend({
     getMarkers: function () {
         return this.get("markers");
     },
+    getScheduledRemovals: function () {
+        return this.get("scheduledRemovals");
+    },
+    getTempCanAddRemAgents: function () {
+        return this.get("tempCanAddRemAgents");
+    }
 });
