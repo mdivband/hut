@@ -55,29 +55,45 @@ App.Views.Prediction = Backbone.View.extend({
         self.update();
     },
     tempUpdateAddRemButtons: function () {
-        var self = this;
-        if (self.state.getTempCanAddRemAgents() === -1) {
-            // Not allowed to remove one
+        let self = this;
+
+        // 20230904_0948h - Ayo Abioye (a.o.abioye@soton.ac.uk) added add/remove button disabling to UI when limit is reached
+        if (self.state.getTempCanAddRemAgents() === -1){
             console.log("Can't remove one. Turning it off")
-            var remButton = document.getElementById("remove_agent");
-            $("#remove_agent").removeClass("remove_agent").addClass("remove_agent_greyed")
-            $("#remove_agent").prop('disabled', true);
-
-            var addButton = document.getElementById("add_agent");
-            $("#add_agent").removeClass("add_agent_greyed").addClass("add_agent")
-            $("#add_agent").prop('disabled', false);
-        } else if (self.state.getTempCanAddRemAgents() === 1) {
-            // Not allowed to add one
-            console.log("Can't add one. Turning it off")
-            var addButton = document.getElementById("add_agent");
-            $("#add_agent").removeClass("add_agent").addClass("add_agent_greyed")
-            $("#add_agent").prop('disabled', true);
-
-            var remButton = document.getElementById("remove_agent");
-            $("#remove_agent").removeClass("remove_agent_greyed").addClass("remove_agent")
-            $("#remove_agent").prop('disabled', false);
-
+            $("#remove_agent").addClass("add_remove_agent_button_disabled");
+        } else {
+            $("#remove_agent").removeClass("add_remove_agent_button_disabled");
         }
+
+        if (self.state.getTempCanAddRemAgents() === 1){
+            console.log("Can't add one. Turning it off")
+            $("#add_agent").addClass("add_remove_agent_button_disabled");
+        } else {
+            $("#add_agent").removeClass("add_remove_agent_button_disabled");
+        }
+
+        // if (self.state.getTempCanAddRemAgents() === -1) {
+        //     // Not allowed to remove one
+        //     console.log("Can't remove one. Turning it off")
+        //     var remButton = document.getElementById("remove_agent");
+        //     $("#remove_agent").removeClass("remove_agent").addClass("remove_agent_greyed")
+        //     $("#remove_agent").prop('disabled', true);
+        //
+        //     var addButton = document.getElementById("add_agent");
+        //     $("#add_agent").removeClass("add_agent_greyed").addClass("add_agent")
+        //     $("#add_agent").prop('disabled', false);
+        // } else if (self.state.getTempCanAddRemAgents() === 1) {
+        //     // Not allowed to add one
+        //     console.log("Can't add one. Turning it off")
+        //     var addButton = document.getElementById("add_agent");
+        //     $("#add_agent").removeClass("add_agent").addClass("add_agent_greyed")
+        //     $("#add_agent").prop('disabled', true);
+        //
+        //     var remButton = document.getElementById("remove_agent");
+        //     $("#remove_agent").removeClass("remove_agent_greyed").addClass("remove_agent")
+        //     $("#remove_agent").prop('disabled', false);
+        //
+        // }
     },
     update: function () {
         if (this.enabled) {
@@ -138,6 +154,7 @@ App.Views.Prediction = Backbone.View.extend({
         }
     },
     updateOverBound : function () {
+        let scoreInfo = this.state.getScoreInfo();
         var addButton = document.getElementById("add_agent");
         if (this.enabled) {
             var timeDelta = (parseFloat(this.state.getEstimatedCompletionOverTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
@@ -145,13 +162,13 @@ App.Views.Prediction = Backbone.View.extend({
             if (this.state.getEstimatedCompletionOverTime() === -1) {
                 addButton.innerText = "Add Agent (?)"
             } else if (timeDelta === 0) {
-                addButton.innerText = "Add Agent (~0s)"
+                addButton.innerText = "Add Agent (~0s, £" + parseFloat(scoreInfo["upkeep_add_agent"]).toFixed(2) + ")"
             } else {
                 if (timeDelta > 0) {
-                    addButton.innerText = "Add Agent (~0s)"
+                    addButton.innerText = "Add Agent (~0s, £" + parseFloat(scoreInfo["upkeep_add_agent"]).toFixed(2) + ")"
                 } else {
                     // No +, as - is included in the string
-                    addButton.innerText = "Add Agent (" + timeDelta + "s)";
+                    addButton.innerText = "Add Agent (" + timeDelta + "s, £" + parseFloat(scoreInfo["upkeep_add_agent"]).toFixed(2) + ")";
                 }
             }
         } else {
@@ -159,6 +176,7 @@ App.Views.Prediction = Backbone.View.extend({
         }
     },
     updateUnderBound : function () {
+        let scoreInfo = this.state.getScoreInfo();
         var removeButton = document.getElementById("remove_agent");
         if (this.enabled) {
             var timeDelta = (parseFloat(this.state.getEstimatedCompletionUnderTime()) / 100) - (parseFloat(this.state.getEstimatedCompletionTime()) / 100);
@@ -166,12 +184,12 @@ App.Views.Prediction = Backbone.View.extend({
             if (this.state.getEstimatedCompletionUnderTime() === -1) {
                 removeButton.innerText = "Remove Agent (?)"
             } else if (timeDelta === 0) {
-                removeButton.innerText = "Add Agent (~0s)"
+                removeButton.innerText = "Remove Agent (~0s, £" + parseFloat(scoreInfo["upkeep_rm_agent"]).toFixed(2) + ")"
             } else {
                 if (timeDelta < 0) {
-                    removeButton.innerText = "Add Agent (~0s)"
+                    removeButton.innerText = "Remove Agent (~0s, £" + parseFloat(scoreInfo["upkeep_rm_agent"]).toFixed(2) + ")"
                 } else {
-                    removeButton.innerText = "Remove Agent (+" + timeDelta + "s)";
+                    removeButton.innerText = "Remove Agent (+" + timeDelta + "s, £" + parseFloat(scoreInfo["upkeep_rm_agent"]).toFixed(2) + ")";
                 }
             }
         } else {

@@ -45,6 +45,14 @@ public class ScoreController extends AbstractController {
         //double upkeep = simulator.getState().getAgents().size() * UPKEEP_PER_SIM_SECOND;
         simulator.getState().addScoreInfo("upkeep", upkeep * -1);
 
+        // 20230904_0948h - Ayo Abioye (a.o.abioye@soton.ac.uk) added upkeep prediction to add/remove agent button
+        int temp_n = n + 1;
+        double upkeep_add_agent = (0.1 * temp_n * temp_n) + 1.3;
+        simulator.getState().addScoreInfo("upkeep_add_agent", upkeep_add_agent);
+        temp_n = n - 1;
+        double upkeep_rm_agent = (0.1 * temp_n * temp_n) + 1.3;
+        simulator.getState().addScoreInfo("upkeep_rm_agent", upkeep_rm_agent);
+
         // TODO also add the time limit?
         //double timeRemaining =
 
