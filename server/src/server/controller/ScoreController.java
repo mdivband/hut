@@ -23,6 +23,8 @@ public class ScoreController extends AbstractController {
         simulator.getState().addScoreInfo("progress", 0.0);
         simulator.getState().addScoreInfo("score", 0.0);
         simulator.getState().addScoreInfo("mission_cost", 0.0);
+        simulator.getState().addScoreInfo("upkeep_add_agent", 0.0);
+        simulator.getState().addScoreInfo("upkeep_rm_agent", 0.0);
     }
 
     public void reset() {
@@ -36,6 +38,8 @@ public class ScoreController extends AbstractController {
         simulator.getState().addScoreInfo("progress", 0.0);
         simulator.getState().addScoreInfo("score", 0.0);
         simulator.getState().addScoreInfo("mission_cost", 0.0);
+        simulator.getState().addScoreInfo("upkeep_add_agent", 0.0);
+        simulator.getState().addScoreInfo("upkeep_rm_agent", 0.0);
     }
 
     public void handleUpkeep() {
@@ -46,10 +50,10 @@ public class ScoreController extends AbstractController {
         simulator.getState().addScoreInfo("upkeep", upkeep * -1);
 
         // 20230904_0948h - Ayo Abioye (a.o.abioye@soton.ac.uk) added upkeep prediction to add/remove agent button
-        int temp_n = n + 1;
+        int temp_n = (n - simulator.getState().getScheduledRemovals()) + 1;
         double upkeep_add_agent = (0.1 * temp_n * temp_n) + 1.3;
         simulator.getState().addScoreInfo("upkeep_add_agent", upkeep_add_agent);
-        temp_n = n - 1;
+        temp_n = (n - simulator.getState().getScheduledRemovals()) - 1;
         double upkeep_rm_agent = (0.1 * temp_n * temp_n) + 1.3;
         simulator.getState().addScoreInfo("upkeep_rm_agent", upkeep_rm_agent);
 

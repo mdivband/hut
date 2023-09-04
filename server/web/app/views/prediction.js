@@ -46,6 +46,7 @@ App.Views.Prediction = Backbone.View.extend({
             });
             this.state.on("change:scheduledRemovals", function () {
                 self.updateRemovalsButton()
+                self.update()
             });
             this.state.on("change:tempCanAddRemAgents", function () {
                 //alert(self.state.getTempCanAddRemAgents())
