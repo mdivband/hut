@@ -214,6 +214,7 @@ var MapTaskController = {
     onTaskCompleted: function (task) {
         console.log("Task completed " + task.getId());
         var self = this;
+        /*
         var uid = task.getId() + "_completed";
         var content = _.template($("#popup_left_right").html(), {
             left_content: task.getId() + " has been completed",
@@ -230,6 +231,8 @@ var MapTaskController = {
             self.map.panTo(task.getPosition());
             self.map.setZoom(19);
         });
+
+         */
 
         // TODO Determine if this is wrong to add here?
         var marker = this.$el.gmap("get", "markers")[task.getId()];

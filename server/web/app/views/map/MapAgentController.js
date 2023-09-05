@@ -61,7 +61,6 @@ var MapAgentController = {
         this.state.ghosts.on("change:visible", function (agent) {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
-
     },
     onAgentAdd: function (agent) {
         console.log('Agent added ' + agent.getId());
@@ -81,6 +80,18 @@ var MapAgentController = {
             raiseOnDrag: false,
             zIndex: 2,
             visible: agent.isVisible(),
+        });
+
+        var uid = agent.getId() + "_add";
+        var content = _.template($("#popup_left_right").html(), {
+            left_content: agent.getId() + " added",
+            right_content: "View",
+            uid: uid
+        });
+
+        spop({
+            template: content,
+            style: 'default'
         });
 
         //If real agent is added, zoom to it
@@ -138,6 +149,20 @@ var MapAgentController = {
     },
     onAgentRemove: function (agent) {
         console.log('Agent removed ' + agent.getId());
+
+        var uid = agent.getId() + "_removed";
+        var content = _.template($("#popup_left_right").html(), {
+            left_content: agent.getId() + " has been removed",
+            right_content: "View",
+            uid: uid
+        });
+
+        spop({
+            template: content,
+            style: 'default'
+        });
+
+
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         if (marker) {
             marker.setMap(null);

@@ -34,7 +34,7 @@
   "timeLimitSeconds": 360,
   "uncertaintyRadius": 200.0,
   "gameCentre": {
-    "lat": 50.929378522204615,
+    "lat": 50.931,
     "lng": -1.4080147702592285
   },
   "agents": [

@@ -34,6 +34,7 @@ var MapController = {
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
+        this.popUpRemovals = _.bind(this.popUpRemovals, context);
     },
     /**
      * Bind listeners for map view.
@@ -129,6 +130,9 @@ var MapController = {
         });
         this.state.on("change:scoreInfo", function () {
             self.updateScorePanel();
+        });
+        this.state.on("change:scheduledRemovals", function () {
+            MapController.popUpRemovals()
         });
 
         //Map listeners
@@ -369,6 +373,22 @@ var MapController = {
         this.hideForGametype();
         if(sendUpdate)
             this.state.toggleEdit(toEditMode);
+    },
+    popUpRemovals: function () {
+        console.log("rems = " + this.state.getScheduledRemovals())
+        if (this.state.getScheduledRemovals() > 0) {
+            var uid = "removal_pop"
+            var content = _.template($("#popup_left_right").html(), {
+                left_content: "Scheduled to remove " + this.state.getScheduledRemovals() + " UAV",
+                right_content: "View",
+                uid: uid
+            });
+
+            spop({
+                template: content,
+                style: 'error'
+            });
+        }
     },
     abortAllocation: function() {
         var mainAllocation = this.state.getAllocation();
