@@ -365,6 +365,8 @@ public class Simulator {
     }
 
     public void changeView(int modeFlag) {
+        System.out.println("TEMP FORCECHANGE: mode forced to task edit");
+        modeFlag = 2;
         LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
         if (modeFlag == 2) {
             //agentController.stopAllAgents();

@@ -52,7 +52,7 @@
         <!--Added by Y -->
         <!-- view mode change buttons -->
         <form>
-            <div id="view_mode" class="fixed-top">
+            <div id="view_mode" class="fixed-top" style="display: none">
                 <input type="radio" id="monitor" name="radio" value="monitor"><label
                     for="monitor">Monitor</label>
                 <input type="radio" id="editmode" name="radio" value="editmode"><label
@@ -65,7 +65,7 @@
         <!-- END Y -->
         <!-- camera and detail -->
         <div id="monitor_accordions">
-            <div id="accordion_smallview">
+            <div id="accordion_smallview" style="display: none">
                 <h3>Monitor view</h3>
                 <div class="canvas_small">
                     <div id="canvas_small_info">
@@ -130,7 +130,38 @@
                 </div>
             </div>
 
-            <div id="accordion_score" style="display: none">
+            <div id="accordion_agent_schedule_m" style="display: none">
+                <h3>Agent Schedule</h3>
+                <div>
+                    <canvas id="schedule"></canvas>
+                </div>
+            </div>
+
+
+            <div id="accordion_sotp_m" style="display: none">
+                <h3>Summary of the Operation</h3>
+                <table border="1">
+                    <tr>
+                        <td class="soho_title">Remaining Distance</td>
+                        <td><span id="remaining_dist">0.00km</span></td>
+                    </tr>
+                    <tr>
+                        <td class="soho_title">Estimated Remaining Time</td>
+                        <td><span id="remaining_time">00:00</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="addRemAgentButton" style="text-align: center;" class="edit_accordion">
+                <button class="edit_mode_buttons" id="add_agent">Add Agent</button>
+                <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
+            </div>
+
+        </div> <!-- end of monitor accordions-->
+
+        <div id="edit_contexts">
+
+            <div id="accordion_score">
                 <h3>Score</h3>
                 <table border="1">
                     <tr>
@@ -156,45 +187,14 @@
                 </table>
             </div>
 
-            <div id="accordion_agent_schedule_m">
-                <h3>Agent Schedule</h3>
-                <div>
-                    <canvas id="schedule"></canvas>
-                </div>
-            </div>
-
-
-            <div id="accordion_sotp_m">
-                <h3>Summary of the Operation</h3>
-                <table border="1">
-                    <tr>
-                        <td class="soho_title">Remaining Distance</td>
-                        <td><span id="remaining_dist">0.00km</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Estimated Remaining Time</td>
-                        <td><span id="remaining_time">00:00</span></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div id="addRemAgentButton" style="text-align: center;" class="edit_accordion">
-                <button class="edit_mode_buttons" id="add_agent">Add Agent</button>
-                <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
-            </div>
-
-        </div> <!-- end of monitor accordions-->
-
-        <div id="edit_contexts">
-
-            <div id="accordion_agent_schedule_e" class="edit_accordion">
+            <div id="accordion_agent_schedule_e" class="edit_accordion" style="display: none">
                 <h3>Agent Schedule</h3>
                 <div>
                     <canvas id="edit_schedule"></canvas>
                 </div>
             </div>
 
-            <div id="accordion_sotp_e" class="edit_accordion">
+            <div id="accordion_sotp_e" class="edit_accordion" style="display: none">
                 <h3>Summary of the Operation</h3>
                 <table border="1">
                     <tr>
@@ -218,7 +218,7 @@
             </div>
 
             <div style="text-align: center;" class="edit_accordion">
-                <div style="text-align: left; width: 95%">
+                <div style="display: none"> <!---"text-align: left; width: 95%">--->
                     <input title="Undo allocation change" type="image" src="icons/undo.png" class="edit_mode_icon_buttons" id="allocation_undo"/>
                     <input title="Redo allocation change" type="image" src="icons/redo.png" class="edit_mode_icon_buttons" id="allocation_redo"/>
                     <input title="Reset allocation" type="image" src="icons/reset.png" class="edit_mode_icon_buttons" id="allocation_reset"/>
@@ -226,6 +226,13 @@
                 <button class="edit_mode_buttons" id="run_auto_allocation">Run Auto Allocation</button>
                 <button class="edit_mode_buttons" id="confirm_allocation">Confirm Allocation</button>
                 <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
+            </div>
+
+            <div id="accordion_slider">
+                <h3>Workload</h3>
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="10" value="5" step="1" class="wl_slider" id="myRange">
+                </div>
             </div>
 
         </div>
@@ -375,9 +382,9 @@
         <div id="edit_buttons_sub" style="margin-bottom: 30px">
             <div id="pan_mode" class="map_sub_button"></div>
             <div id="add_waypoint_task_mode" class="map_sub_button"></div>
-            <div id="add_monitor_task_mode" class="map_sub_button"></div>
+            <!---<div id="add_monitor_task_mode" class="map_sub_button"></div>
             <div id="add_patrol_task_mode" class="map_sub_button"></div>
-            <div id="add_region_task_mode" class="map_sub_button"></div>
+            <div id="add_region_task_mode" class="map_sub_button"></div>--->
         </div>
 
         <div id="sandbox_buttons_sub" class="edit_buttons_sub">

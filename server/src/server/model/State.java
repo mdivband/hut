@@ -131,7 +131,7 @@ public class State {
         time = 0;
         timeLimit = 0;    // 0 means no time limit
         scenarioEndTime = 0; // 0 means no time limit
-        editMode = 1;
+        editMode = 2;//1;
         inProgress = false;
         allocationMethod = "maxsum";
         allocationStyle = "manualwithstop";
