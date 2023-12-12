@@ -28,6 +28,7 @@ var MapController = {
         this.onMapMarkerComplete = _.bind(this.onMapMarkerComplete, context);
         this.onMapPolylineComplete = _.bind(this.onMapPolylineComplete, context);
         this.onMapRectangleComplete = _.bind(this.onMapRectangleComplete, context);
+        this.onZoomChange = _.bind(this.onZoomChange, context);
         this.onTempAllocationChange = _.bind(this.onTempAllocationChange, context);
         this.onUndoRedoAvailableChange = _.bind(this.onUndoRedoAvailableChange, context);
         this.onCancelAllocationClick = _.bind(this.onCancelAllocationClick, context);
@@ -169,7 +170,16 @@ var MapController = {
         google.maps.event.addListener(this.drawing, "rectanglecomplete", function (rectangle) {
             MapController.onMapRectangleComplete(rectangle);
         });
+        google.maps.event.addListener(this.map, "zoom_changed", function () {
+            MapController.onZoomChange();
+        });
+    },
+    onZoomChange: function () {
+        zoomLevel = this.map.getZoom();
+        console.log("Zoom is now: " + zoomLevel)
 
+        //MapAgentController.updateAllAgentMarkerIcons()
+        MapTaskController.updateAllTaskIcons()
     },
     showPredictedPaths: function (setting) {
         MapController.predictionLength = setting;
@@ -552,5 +562,5 @@ var MapController = {
                 index: vertex - 1
             }
         });
-    }
+    },
 };

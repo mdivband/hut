@@ -285,7 +285,7 @@ App.Views.Images = Backbone.View.extend({
                 MapTargetController.checkIcon(thisId);
             }
         } catch (e) {
-            alert(e);
+            alert("Removal error: " + e);
         }
 
     }

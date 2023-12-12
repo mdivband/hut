@@ -251,10 +251,9 @@ var simulator = {
                 position: 'bottom-left',
                 autoclose: 5000
             };
-
             this.run();
         } catch (e) {
-            alert(e);
+            alert("Main creation error : " + e);
         }
     },
     run: function () {
@@ -369,7 +368,7 @@ var simulator = {
                 "margin-right": "0px"
             }).find("label").width("50%");
         } catch (e) {
-            alert(e)
+            alert("MainLoop error: " + e)
         }
     }
 };

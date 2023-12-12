@@ -268,7 +268,6 @@ App.Views.CameraGMap = Backbone.View.extend({
 	            if (zoom != 19) {
 	                self.map.setZoom(19);
 	            }
-
 	            var defZoom = self.mapOptions.zoom;
 	            var markers = self.$mapDiv.gmap("get", "markers");
 	            _.each(markers, function(marker) {

@@ -25,6 +25,7 @@ var MapTaskController = {
         this.processRegionTaskChange = _.bind(this.processRegionTaskChange, context);
         this.addDeepScanTask = _.bind(this.addDeepScanTask, context);
         this.addShallowScanTask = _.bind(this.addShallowScanTask, context);
+        this.updateAllTaskIcons = _.bind(this.updateAllTaskIcons, context);
     },
     /**
      * Bind listeners for task state add, change and remove events
@@ -289,6 +290,17 @@ var MapTaskController = {
         MapAgentController.taskIdToAllocateManually = null;
         this.updateAllocationRendering();
     },
+    updateAllTaskIcons: function() {
+        self = this;
+        this.state.tasks.each(function (task) {
+            // I'm temporarily stealing the Disco mode from deeper in this code as an indication of when the code is
+            //  working. Rest assured, it is not the end product -WH
+            var colorOptions = {'h': Math.random()*360, 's': 1, 'l': 1, 'name':'red'}
+            MapTaskController.updateTaskMarkerIcon(task.getId(), colorOptions)
+            console.log("Here we can get the zoom level and set visual style. It seems that these colors don't persist. \
+            We may be able to optimize by setting heatmap on/off here then not touching in the normal update")
+        });
+    },
     updateTaskRendering: function (taskId, colourOptions) {
         var task = this.state.tasks.get(taskId);
         var self = this;
@@ -330,7 +342,7 @@ var MapTaskController = {
         }
     },
     /**
-     * Update the icon of a task marker.
+     * Update the icon of a task marker. This is run on every timestep
      * @param taskId - Id of task to change.
      * @param colourOptions - Alter the hue, saturation and brightness of the colour relative to the base red icon.
      *  hue - hue-rotate centered as zero=red

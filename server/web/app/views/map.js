@@ -29,9 +29,9 @@ App.Views.Map = Backbone.View.extend({
 
         this.state = options.state;
         this.views = options.views;
-
         MapController.bind(this);
         MapAgentController.bind(this);
+        MapHeatmapController.bind(this);
         MapTaskController.bind(this);
         MapHazardController.bind(this);
         MapTargetController.bind(this);
@@ -102,6 +102,7 @@ App.Views.Map = Backbone.View.extend({
         this.render();
         MapController.bindEvents();
         MapAgentController.bindEvents();
+        MapHeatmapController.bindEvents();
         MapTaskController.bindEvents();
         MapHazardController.bindEvents();
         MapTargetController.bindEvents();
@@ -110,6 +111,7 @@ App.Views.Map = Backbone.View.extend({
         setTimeout(function () {
             self.setupROS();
         }, 800);
+
     },
     render: function () {
         var self = this;
@@ -398,7 +400,7 @@ App.Views.Map = Backbone.View.extend({
 
             }
         } catch (e) {
-            alert(e);
+            alert("Marker drawing error: " + e);
         }
 
         // Clumsy, just add manually if using shapes for now. infutue should be done in the same way as above
@@ -576,7 +578,83 @@ App.Views.Map = Backbone.View.extend({
             }
         });
     },
+    updateAllocationRenderingWithHeatmaps: function () {
+        // Here is where we will make the changes to the markers. We are not going to mess around with switching in the
+        //  backend if we can help it. When we iterate we can make our decisions and make heatmaps.
+        //  NOTE: There is no click handler for a heatmap so we may need to make a new marker for it
+        //console.log("----------------")
+        MapHeatmapController.drawTaskMaps();
+
+        /*
+        var self = this;
+        var mainAllocation = this.state.getAllocation();
+        var tempAllocation = this.state.getTempAllocation();
+        var droppedAllocation = this.state.getDroppedAllocation();
+
+        //console.log(mainAllocation)
+        //console.log()
+        //console.log(tempAllocation)
+        //console.log()
+        //console.log(droppedAllocation)
+        //console.log()
+
+        var heatmapData = [
+            {location: new google.maps.LatLng(50.93317765587725, -1.4166905097497628)},
+            {location: new google.maps.LatLng(50.93264059833184, -1.415921521160377)},
+            {location: new google.maps.LatLng(50.932087558122255, -1.4167988460937186)},
+            {location: new google.maps.LatLng(50.931113855439996, -1.4167773884215995)},
+            {location: new google.maps.LatLng(50.93062699645464, -1.4161336582580253)},
+            {location: new google.maps.LatLng(50.93026184887127, -1.4156615894714042)},
+            {location: new google.maps.LatLng(50.929585642073235, -1.415189520684783)},
+            {location: new google.maps.LatLng(50.930153656444205, -1.4161336582580253)},
+            {location: new google.maps.LatLng(50.932087558122255, -1.4159190815368339)},
+            {location: new google.maps.LatLng(50.93319647246031, -1.4177858990111991)},
+            {location: new google.maps.LatLng(50.9340484252721, -1.418064848748748)},
+            {location: new google.maps.LatLng(50.93293953124759, -1.4150393169799491)},
+            {location: new google.maps.LatLng(50.9338455807801, -1.4155757587829276)},
+            {location: new google.maps.LatLng(50.931925275757465, -1.4149534862914726)},
+            {location: new google.maps.LatLng(50.933561597004974, -1.4142024677673026)}
+        ];
+
+
+        var heatmapData2 = [
+            {location: new google.maps.LatLng(50.92198870096719, -1.414033522705842), weight: 3},
+            {location: new google.maps.LatLng(50.92129884725947, -1.4145270491645823), weight: 3},
+            {location: new google.maps.LatLng(50.92182638336794, -1.4133683348701487), weight: 3},
+            {location: new google.maps.LatLng(50.920974206681265, -1.4142695570991526), weight: 3},
+            {location: new google.maps.LatLng(50.92101478687743, -1.4115658904121409), weight: 3},
+            {location: new google.maps.LatLng(50.91998674433291, -1.4132395888374338), weight: 3},
+            {location: new google.maps.LatLng(50.92075777837076, -1.4138189459846506), weight: 3},
+            {location: new google.maps.LatLng(50.921474693293554, -1.4129177237556467), weight: 3},
+            {location: new google.maps.LatLng(50.92101478687743, -1.412660231690217), weight: 3},
+            {location: new google.maps.LatLng(50.91983794681976, -1.4139047766731272), weight: 3},
+            {location: new google.maps.LatLng(50.92025728404685, -1.4148918295906077), weight: 3},
+            {location: new google.maps.LatLng(50.91954035036591, -1.414956202606965), weight: 3},
+            {location: new google.maps.LatLng(50.92155585277743, -1.410514464478303), weight: 3}
+        ];
+
+
+
+        var heatmap = new google.maps.visualization.HeatmapLayer({
+            data: heatmapData
+        });
+        heatmap.setOptions({radius: 50})
+        heatmap.setMap(this.map);
+
+        var heatmap2 = new google.maps.visualization.HeatmapLayer({
+            data: heatmapData2
+        });
+        heatmap2.setOptions({radius: 50})
+        heatmap2.setMap(this.map);
+
+
+        */
+    },
     updateAllocationRendering: function () {
+        // For now we just refer to the heatmapped version. In future we can have a flag for this.
+        this.updateAllocationRenderingWithHeatmaps();
+        /*
+        console.log("asfdasf")
         var self = this;
         var mainAllocation = this.state.getAllocation();
         var tempAllocation = this.state.getTempAllocation();
@@ -624,6 +702,7 @@ App.Views.Map = Backbone.View.extend({
         //Colour task marker that is being hovered over when manually allocating
         if (MapAgentController.taskIdToAllocateManually)
             MapTaskController.updateTaskRendering(MapAgentController.taskIdToAllocateManually, this.MarkerColourEnum.BLUE);
+         */
     },
     drawAllocation: function (lineId, lineColour, agentId, taskId) {
         var self = this;
