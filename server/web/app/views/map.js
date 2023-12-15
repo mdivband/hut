@@ -652,7 +652,7 @@ App.Views.Map = Backbone.View.extend({
     },
     updateAllocationRendering: function () {
         // For now we just refer to the heatmapped version. In future we can have a flag for this.
-        this.updateAllocationRenderingWithHeatmaps();
+        //this.updateAllocationRenderingWithHeatmaps();
         /*
         console.log("asfdasf")
         var self = this;

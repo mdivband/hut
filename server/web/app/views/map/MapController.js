@@ -179,7 +179,7 @@ var MapController = {
         console.log("Zoom is now: " + zoomLevel)
 
         //MapAgentController.updateAllAgentMarkerIcons()
-        MapTaskController.updateAllTaskIcons()
+        //MapTaskController.updateAllTaskIcons()
     },
     showPredictedPaths: function (setting) {
         MapController.predictionLength = setting;

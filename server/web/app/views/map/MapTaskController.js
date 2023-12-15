@@ -8,6 +8,7 @@ var MapTaskController = {
     bind: function (context) {
         this.bindEvents = _.bind(this.bindEvents, context);
         this.onTaskAdd = _.bind(this.onTaskAdd, context);
+        this.heatmapTaskUpdateGeneric = _.bind(this.heatmapTaskUpdateGeneric, context);
         this.onTaskChange = _.bind(this.onTaskChange, context);
         this.onTaskRemove = _.bind(this.onTaskRemove, context)
         this.onTaskMarkerLeftClick = _.bind(this.onTaskMarkerLeftClick, context);
@@ -45,7 +46,17 @@ var MapTaskController = {
             MapTaskController.onTaskCompleted(task);
         });
     },
+    heatmapTaskUpdateGeneric: function (task) {
+        console.log("Task added (heatmap version) " + task.getId());
+        if (task.getType() === this.state.tasks.TASK_WAYPOINT) {
+            MapHeatmapController.drawTaskMaps();
+        } else {
+            console.log("ERROR: Other task types not supported in this mode")
+        }
+    },
     onTaskAdd: function (task) {
+        MapTaskController.heatmapTaskUpdateGeneric(task);
+        /*
         console.log("Task added " + task.getId());
         if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
             this.$el.gmap("addMarker", {
@@ -172,14 +183,20 @@ var MapTaskController = {
                 MapTaskController.onTaskMarkerMouseout(marker);
             });
         }
+         */
     },
     onTaskChange: function (task) {
+        MapTaskController.heatmapTaskUpdateGeneric(task);
+        /*
         var marker = this.$el.gmap("get", "markers")[task.getId()];
         if (marker)
             marker.setPosition(task.getPosition());
         this.views.control.trigger("update:agents");
+         */
     },
     onTaskRemove: function (task) {
+        MapTaskController.heatmapTaskUpdateGeneric(task);
+        /*
         console.log('Task removed ' + task.getId());
         if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
             var marker = this.$el.gmap("get", "markers")[task.getId()];
@@ -208,8 +225,11 @@ var MapTaskController = {
             }
         }
         task.destroy();
+         */
     },
     onTaskCompleted: function (task) {
+        MapTaskController.heatmapTaskUpdateGeneric(task);
+        /*
         console.log("Task completed " + task.getId());
         var self = this;
 
@@ -250,6 +270,7 @@ var MapTaskController = {
                 self.map.setZoom(19);
             });
         }
+         */
     },
     onTaskMarkerLeftClick: function (marker) {},
     onTaskMarkerRightClick: function (marker) {
