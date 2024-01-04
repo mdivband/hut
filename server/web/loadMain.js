@@ -78,7 +78,7 @@ $LAB.setOptions({
     .script("app/views/review.js")
     .script("app/views/map/MapController.js")
     .script("app/views/map/MapAgentController.js")
-    .script("app/views/map/MapHeatmapController.js")
+    .script("app/views/map/MapTaskHeatmapController.js")
     .script("app/views/map/MapTaskController.js")
     .script("app/views/map/MapHazardController.js")
     .script("app/views/map/MapTargetController.js")

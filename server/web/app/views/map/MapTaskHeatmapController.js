@@ -1,4 +1,4 @@
-var MapHeatmapController = {
+var MapTaskHeatmapController = {
     taskHeatmaps: [],
     addedGroups: [],
     taskMarkers: [],
@@ -14,6 +14,7 @@ var MapHeatmapController = {
         this.drawTaskMaps = _.bind(this.drawTaskMaps, context);
         this.removeTaskMarkerFor = _.bind(this.removeTaskMarkerFor, context);
         this.addTaskMarkerFor = _.bind(this.addTaskMarkerFor, context);
+        this.updateAllTaskMarkers = _.bind(this.updateAllTaskMarkers, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -22,11 +23,12 @@ var MapHeatmapController = {
         
     },
     drawTaskMaps: function () {
+        console.log("========================================")
         var mainAllocation = this.state.getAllocation();
         var tempAllocation = this.state.getTempAllocation();
         var droppedAllocation = this.state.getDroppedAllocation();
 
-        if (MapHeatmapController.arraysEqual(this.state.tasks, MapHeatmapController.addedGroups.flat(1))) {
+        if (MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
             // No need to redraw
         } else {
             if (!this.state.tasks.isEmpty()) {
@@ -39,7 +41,7 @@ var MapHeatmapController = {
 
                 tasks.forEach((t) => {
                     //console.log("Considering " + t.getId())
-                    if (!MapHeatmapController.checkIfIn2DList(t, groups)) {
+                    if (!MapTaskHeatmapController.checkIfIn2DList(t, groups)) {
                         //console.log("-pushed new list")
                         // This is not in any group so should start a new one
                         groups.push([t])
@@ -49,37 +51,39 @@ var MapHeatmapController = {
                     tasks.forEach((n) => {
                         //console.log(t.getId() + " -> " + n.getId())
                         //if (t !== n && !MapHeatmapController.checkIfIn2DList(n, groups) && Math.abs(tasks[n] - tasks[t]) <= grouping_dist) {
-                        if (t !== n && !MapHeatmapController.checkIfIn2DList(n, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
+                        if (t !== n && !MapTaskHeatmapController.checkIfIn2DList(n, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
                             //console.log("-newAdd")
                             groups.forEach((g) => {
                                 if (g.includes(t) && !g.includes(n)) {
                                     g.push(n)
                                 }
                             });
-                        } else if (t !== n && !MapHeatmapController.checkIfInGroupOf(n, t, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
-                            // t and n are within range of each other, and n is in a group (t might also be)
-                            //console.log("-groupMerge")
-
-                            new_group = []
-
-                            // TODO fiddling about with this will probably fix things. Problem at is map merging
+                        } else if (t !== n && !MapTaskHeatmapController.checkIfInGroupOf(n, t, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
+                            // t and n are within range of each other, and n and t are not in the same group
+                            //  n is in a group, t only might be.
+                            const new_group = [];
                             let indexToReplace = null;
                             let indexToRemove = null;
                             groups.forEach((group) => {
                                 if (group.includes(t) || group.includes(n)) {
+                                    if (indexToReplace === null) {
+                                        indexToReplace = groups.indexOf(group)
+                                    } else if (indexToRemove === null) {
+                                        indexToRemove = groups.indexOf(group)
+                                    }
                                     group.forEach((g) => {
                                         new_group.push(g)
-                                        if (indexToReplace === null) {
-                                            indexToReplace = groups.indexOf(group)
-                                        } else if (indexToRemove === null) {
-                                            indexToRemove = groups.indexOf(group)
-                                        }
-
                                         //groups.splice(groups.indexOf(group), 1)
-
                                     });
                                 }
                             });
+
+                            if (!new_group.includes(n)) {
+                                new_group.push(n)
+                            }
+                            if (!new_group.includes(t)) {
+                                new_group.push(t)
+                            }
                             //indicesToRemove.forEach((i) => {
                             //    groups.splice(i, 1)
                             //});
@@ -89,7 +93,7 @@ var MapHeatmapController = {
                                 groups[indexToReplace] = new_group;
                             }
                             if (indexToRemove !== null) {
-                                groups[indexToReplace] = [];
+                                groups[indexToRemove] = [];
 
                             }
 
@@ -98,20 +102,12 @@ var MapHeatmapController = {
                     });
                 });
 
-                console.log("Groups: " + groups.length)
-                groups.forEach((group) => {
-                    console.log(" g: ")
-                    group.forEach((g) => {
-                        console.log("    " + g.getId())
-                    });
-                });
-
                 for (let group_index = 0; group_index < groups.length; group_index++){
                     const group = groups[group_index];
                     if (group.length !== 0) {
                         var added = false;
-                        MapHeatmapController.addedGroups.forEach((addedGroup) => {
-                            if (MapHeatmapController.arraysEqual(addedGroup, group)) {
+                        MapTaskHeatmapController.addedGroups.forEach((addedGroup) => {
+                            if (MapTaskHeatmapController.arraysEqual(addedGroup, group)) {
                                 // This exact group is already here
                                 added = true;
                             }
@@ -124,64 +120,105 @@ var MapHeatmapController = {
                             group.forEach((g) => {
                                 heatmapData.push({
                                     location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                    weight: 0.1
+                                    weight: 0.3
                                 });
                             })
-                            var heatmap = new google.maps.visualization.HeatmapLayer({
-                                data: heatmapData
-                            });
+
 
                             // Remove the heatmap that contains these tasks (if any)
 
-                            console.log("Pre markers:")
+                            //console.log("Pre markers:")
 
 
                             var matchedMap = null;
-                            for (let i = 0; i < MapHeatmapController.addedGroups.length; i++) {
-                                console.log("i = " + i)
-                                MapHeatmapController.addedGroups[i].forEach((a) => {
-                                    console.log("AddGr: " + a.getId());
+                            for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++) {
+                                MapTaskHeatmapController.addedGroups[i].forEach((a) => {
+                                    //console.log("AddGr: " + a.getId());
                                 });
-                                group.forEach((g) => {
-                                    if (MapHeatmapController.addedGroups[i].includes(g)) {
-                                        console.log("group: " + g.getId())
+                                for (const g of group) {
+                                    if (MapTaskHeatmapController.addedGroups[i].includes(g)) {
+                                        //console.log("group: " + g.getId())
                                         matchedMap = i;
+                                        break;
                                     }
-                                });
+                                }
+
                             }
 
                             if (matchedMap !== null) {
+
+                                MapTaskHeatmapController.addedGroups[matchedMap].forEach((g) => {
+                                    heatmapData.push({
+                                        location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
+                                        weight: 0.3
+                                    });
+                                });
+
+                                var heatmap = new google.maps.visualization.HeatmapLayer({
+                                    data: heatmapData
+                                });
+
                                 //MapHeatmapController.addedGroups.splice(matchedMap, 1)
-                                MapHeatmapController.addedGroups[matchedMap] = group;
+                                MapTaskHeatmapController.addedGroups[matchedMap] = group;
 
-                                MapHeatmapController.taskHeatmaps[matchedMap].setMap(null);
-                                delete MapHeatmapController.taskHeatmaps[matchedMap];
-                                MapHeatmapController.taskHeatmaps[matchedMap] = heatmap;
-
-                                console.log("A " + matchedMap);
-                                // TODO this sometimes gets the wrong index for late merging additions
+                                MapTaskHeatmapController.taskHeatmaps[matchedMap].setMap(null);
+                                delete MapTaskHeatmapController.taskHeatmaps[matchedMap];
+                                MapTaskHeatmapController.taskHeatmaps[matchedMap] = heatmap;
                             } else {
                                 // Otherwise the index is the end of the list
-                                matchedMap = MapHeatmapController.addedGroups.length;
-                                MapHeatmapController.addedGroups.push(group);
-                                MapHeatmapController.taskHeatmaps.push(heatmap);
-                                console.log("B " + matchedMap)
+
+                                var heatmap = new google.maps.visualization.HeatmapLayer({
+                                    data: heatmapData
+                                });
+
+                                matchedMap = MapTaskHeatmapController.addedGroups.length;
+                                MapTaskHeatmapController.addedGroups.push(group);
+                                MapTaskHeatmapController.taskHeatmaps.push(heatmap);
                             }
 
-                            // TODO add a marker for this heatmap
-                            MapHeatmapController.addTaskMarkerFor(group, matchedMap);
+                            //MapTaskHeatmapController.addTaskMarkerFor(group, matchedMap);
 
                             heatmap.setOptions({radius: 150})
                             heatmap.setMap(this.map);
                         }
                     } else {
                         // This is an empty group so we should remove its heatmap and task marker
-                        MapHeatmapController.taskHeatmaps[group_index] = [];
-                        MapHeatmapController.addedGroups[group_index] = [];
+                        //alert("removing " + group_index)
+                        MapTaskHeatmapController.taskHeatmaps[group_index] = [];
+                        MapTaskHeatmapController.addedGroups[group_index] = [];
 
-                        MapHeatmapController.removeTaskMarkerFor(group_index);
+                        // TODO doesn't add marker immediately
+
                     }
                 }
+
+                MapTaskHeatmapController.addedGroups = groups
+                console.log("Groups after heatmap bit: " + groups.length)
+                groups.forEach((group) => {
+                    console.log(" g: ")
+                    group.forEach((g) => {
+                        console.log("    " + g.getId())
+                    });
+                });
+                console.log("AddedGroups after heatmap bit: " + MapTaskHeatmapController.addedGroups.length)
+                MapTaskHeatmapController.addedGroups.forEach((group) => {
+                    console.log(" g: ")
+                    group.forEach((g) => {
+                        console.log("    " + g.getId())
+                    });
+                });
+            }
+            MapTaskHeatmapController.updateAllTaskMarkers();
+        }
+    },
+    updateAllTaskMarkers: function () {
+        for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
+            if (MapTaskHeatmapController.addedGroups[i].length === 0) {
+                console.log("Removing " + i + " groupsize = " + MapTaskHeatmapController.addedGroups[i].length)
+                MapTaskHeatmapController.removeTaskMarkerFor(i);
+            } else {
+                console.log("Adding " + i + " groupsize = " + MapTaskHeatmapController.addedGroups[i].length)
+                MapTaskHeatmapController.addTaskMarkerFor(MapTaskHeatmapController.addedGroups[i], i);
             }
         }
     },
@@ -277,18 +314,18 @@ var MapHeatmapController = {
      * @returns {boolean}
      */
     arraysEqual: function (a, b) {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    if (a.length !== b.length) return false;
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
 
-    // If you don't care about the order of the elements inside
-    // the array, you should sort both arrays here.
-    // Please note that calling sort on an array will modify that array.
-    // you might want to clone your array first.
+        // If you don't care about the order of the elements inside
+        // the array, you should sort both arrays here.
+        // Please note that calling sort on an array will modify that array.
+        // you might want to clone your array first.
 
-    for (var i = 0; i < a.length; ++i) {
-        if (a[i] !== b[i]) return false;
-    }
-    return true;
+        for (var i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
     }
 };
