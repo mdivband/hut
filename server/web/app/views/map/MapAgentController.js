@@ -13,6 +13,7 @@ var MapAgentController = {
         this.bindEvents = _.bind(this.bindEvents, context);
         this.onAgentAdd = _.bind(this.onAgentAdd, context);
         this.onGhostAdd = _.bind(this.onGhostAdd, context);
+        this.heatmapAgentUpdateGeneric  = _.bind(this.heatmapAgentUpdateGeneric, context);
         this.onAgentChange = _.bind(this.onAgentChange, context);
         this.onGhostChange = _.bind(this.onGhostChange, context);
         this.onAgentRemove = _.bind(this.onAgentRemove, context);
@@ -59,7 +60,13 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
     },
+    heatmapAgentUpdateGeneric: function (agent) {
+        console.log("Agent added (heatmap version) " + agent.getId());
+        MapAgentHeatmapController.drawAgentMaps();
+    },
     onAgentAdd: function (agent) {
+        MapAgentController.heatmapAgentUpdateGeneric(agent);
+        /*
         console.log('Agent added ' + agent.getId());
         var id = agent.getId();
 
@@ -94,6 +101,8 @@ var MapAgentController = {
         }).dragend(function () {
             MapAgentController.onAgentMarkerDragEnd(marker);
         });
+
+         */
     },
     /**
      * Adds a ghost agent marker to the map

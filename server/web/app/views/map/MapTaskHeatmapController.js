@@ -15,6 +15,7 @@ var MapTaskHeatmapController = {
         this.removeTaskMarkerFor = _.bind(this.removeTaskMarkerFor, context);
         this.addTaskMarkerFor = _.bind(this.addTaskMarkerFor, context);
         this.updateAllTaskMarkers = _.bind(this.updateAllTaskMarkers, context);
+        this.updateTaskRendering = _.bind(this.updateTaskRendering, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -234,7 +235,7 @@ var MapTaskHeatmapController = {
         var newPos = _.position(latSum / group.length, lngSum / group.length);
         // TODO this (after adjusting/creating marker)? this.views.control.trigger("update:agents");
         // Check if we already have it
-        var marker = this.$el.gmap("get", "markers")["Group-"+index];
+        var marker = this.$el.gmap("get", "markers")["TaskGroup-"+index];
         if (marker) {
             marker.setPosition(newPos);
             marker.setOptions({labelContent: "[" + index + "] " + group.length + " Tasks"});
@@ -245,8 +246,9 @@ var MapTaskHeatmapController = {
             this.$el.gmap("addMarker", {
                 bounds: false,
                 draggable: true,
-                id: "Group-" + index,
+                id: "TaskGroup-" + index,
                 position: newPos,
+                centrePos: newPos,
                 marker: MarkerWithLabel,
                 labelContent: "[" + index + "] " + group.length + " Tasks",
                 labelAnchor: new google.maps.Point(25, 65),
@@ -255,23 +257,15 @@ var MapTaskHeatmapController = {
                 raiseOnDrag: false,
                 zIndex: 3
             });
-            var marker = this.$el.gmap("get", "markers")["Group-" + index];
+            var marker = this.$el.gmap("get", "markers")["TaskGroup-" + index];
 
             // TODO what is this???
-            MapTaskController.updateTaskRendering("Group-" + index, this.MarkerColourEnum.RED);
+            //MapTaskController.updateTaskRendering("TaskGroup-" + index, this.MarkerColourEnum.RED);
 
-            $(marker).click(function () {
-                MapTaskController.onTaskMarkerLeftClick(marker);
-            }).rightclick(function () {
-                MapTaskController.onTaskMarkerRightClick(marker);
-            }).drag(function () {
-                MapTaskController.onTaskMarkerDrag(marker);
-            }).dragend(function () {
-                MapTaskController.onTaskMarkerDragEnd(marker);
-            }).mouseover(function () {
-                MapTaskController.onTaskMarkerMouseover(marker);
+            $(marker).mouseover(function () {
+                MapTaskHeatmapController.onTaskMarkerMouseover(marker);
             }).mouseout(function () {
-                MapTaskController.onTaskMarkerMouseout(marker);
+                MapTaskHeatmapController.onTaskMarkerMouseout(marker);
             });
 
         }
@@ -327,5 +321,38 @@ var MapTaskHeatmapController = {
             if (a[i] !== b[i]) return false;
         }
         return true;
+    },
+    onTaskMarkerMouseover: function (marker) {
+        // TODO update this to a list of tasks
+        //If in manual allocation mode, update the task id that will be manually allocated
+        console.log("mouseover")
+        if(MapAgentHeatmapController.isManuallyAllocating) {
+            MapAgentHeatmapController.groupIdToAllocateManually = marker.id;
+            console.log("here")
+            //this.updateAllocationRendering();
+        }
+    },
+    onTaskMarkerMouseout: function (marker) {
+        MapAgentHeatmapController.groupIdToAllocateManually = null;
+        //this.updateAllocationRendering();
+    },
+    updateTaskRendering: function (taskId, colourOptions) {
+        var marker = this.$el.gmap("get", "markers")[taskId];
+        var icon = this.icons.MarkerMonitor;
+        marker.setIcon(icon.Image);
+        if (marker.icon) {
+            //Add task id to end of marker url, this makes them unique.
+            marker.icon.url = marker.icon.url + "#" + taskId;
+            var h = colourOptions['h'];
+            var s = colourOptions['s'];
+            var l = colourOptions['l'];
+
+
+            //Grab actual marker element by the (now unique) image src and set its colour
+            $('img[src=\"' + marker.icon.url + '\"]').css({
+                '-webkit-filter': 'hue-rotate(' + h + 'deg) saturate(' + s + ') brightness(' + l + ')',
+                'filter': 'hue-rotate(' + h + 'deg) saturate(' + s + ') brightness(' + l + ')'
+            });
+        }
     }
 };

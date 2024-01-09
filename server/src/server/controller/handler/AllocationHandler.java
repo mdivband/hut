@@ -1,10 +1,13 @@
 package server.controller.handler;
 
 import server.Simulator;
+import server.model.agents.Agent;
+import server.model.task.Task;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +34,8 @@ public class AllocationHandler extends RestHandler {
             case "allocate":
                 handleAllocate(req, resp);
                 break;
+            case "groupAllocate":
+                handleGroupAllocate(req, resp);
             case "undo":
                 handleUndo(resp);
                 break;
@@ -80,6 +85,27 @@ public class AllocationHandler extends RestHandler {
         simulator.getAllocator().putInTempAllocation(agentId, taskId);
         resp.sendOkay();
     }
+
+    private void handleGroupAllocate(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Arrays.asList("agentIds", "taskIds");
+
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+
+        List<Agent> agentIdsAsArray = new ArrayList<>();
+        Arrays.stream(params.get("agentIds").split(",")).forEach(a -> agentIdsAsArray.add(Simulator.instance.getState().getAgent(a)));
+
+        List<Task> taskIdsAsArray = new ArrayList<>();
+        Arrays.stream(params.get("taskIds").split(",")).forEach(t -> taskIdsAsArray.add(Simulator.instance.getState().getTask(t)));
+
+        simulator.getAllocator().dynamicRandomAssignSubgroup(agentIdsAsArray, taskIdsAsArray);
+        simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
+
+
+        resp.sendOkay();
+    }
+
 
     private void handleUndo(Response resp) throws IOException {
         simulator.getAllocator().undoAllocationChange();

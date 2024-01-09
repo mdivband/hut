@@ -697,7 +697,9 @@ public class Allocator {
         return null;
     }
 
-    private Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
+
+
+    protected Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
         MaxSum maxsum = new MaxSum();
         HashMap<Agent, Task> resultObjs = new HashMap<>(); // TEMP solution
         HashMap<String, String> result = new HashMap<>();
@@ -1224,6 +1226,17 @@ public class Allocator {
             } catch (Exception e) {
                 System.out.println("Caught exception. This should be due to agent failure during reassignment?");
             }
+        });
+    }
+
+    public void dynamicRandomAssignSubgroup(List<Agent> agents, List<Task> tasks) {
+        Map<String, String> result = randomCompute(agents, tasks, false);
+        result.forEach((k, v) -> {
+            //simulator.getState().getAgent(k).setAllocatedTaskId(v);
+            //simulator.getState().getAgent(k).setTempRoute(Collections.singletonList(simulator.getState().getTask(v).getCoordinate()));
+            putInTempAllocation(k, v);
+            System.out.println(k + " -> " + v);
+
         });
     }
 

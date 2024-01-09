@@ -32,6 +32,7 @@ App.Views.Map = Backbone.View.extend({
         MapController.bind(this);
         MapAgentController.bind(this);
         MapTaskHeatmapController.bind(this);
+        MapAgentHeatmapController.bind(this);
         MapTaskController.bind(this);
         MapHazardController.bind(this);
         MapTargetController.bind(this);
@@ -103,6 +104,7 @@ App.Views.Map = Backbone.View.extend({
         MapController.bindEvents();
         MapAgentController.bindEvents();
         MapTaskHeatmapController.bindEvents();
+        MapAgentHeatmapController.bindEvents();
         MapTaskController.bindEvents();
         MapHazardController.bindEvents();
         MapTargetController.bindEvents();
@@ -580,9 +582,9 @@ App.Views.Map = Backbone.View.extend({
     },
     updateAllocationRendering: function () {
         // For now we just refer to the heatmapped version. In future we can have a flag for this.
-        //this.updateAllocationRenderingWithHeatmaps();
+        // TODO fix (restore) the allocation renderings here
+        MapAgentHeatmapController.updateHeatmapAllocationRendering();
         /*
-        console.log("asfdasf")
         var self = this;
         var mainAllocation = this.state.getAllocation();
         var tempAllocation = this.state.getTempAllocation();
