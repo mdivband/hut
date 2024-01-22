@@ -4,6 +4,7 @@ var MapAgentHeatmapController = {
     taskMarkers: [],
     groupIdToAllocateManually: null,
     isManuallyAllocating: null,
+    running: false,
 
     /**
      * Binds all the methods to use the given context.
@@ -20,6 +21,8 @@ var MapAgentHeatmapController = {
         this.updateAllAgentMarkers = _.bind(this.updateAllAgentMarkers, context);
         this.onAgentMarkerDrag = _.bind(this.onAgentMarkerDrag, context);
         this.onAgentMarkerDragEnd = _.bind(this.onAgentMarkerDragEnd, context);
+        this.updateTaskRendering = _.bind(this.updateTaskRendering, context);
+        this.adjustHeatmapLocation = _.bind(this.adjustHeatmapLocation, context);
 
     },
     /**
@@ -28,15 +31,16 @@ var MapAgentHeatmapController = {
     bindEvents: function () {
         
     },
-    drawAgentMaps: function () {
+    drawAgentMaps: function (reset) {
         console.log("========================================")
         var mainAllocation = this.state.getAllocation();
         var tempAllocation = this.state.getTempAllocation();
         var droppedAllocation = this.state.getDroppedAllocation();
 
-        if (MapAgentHeatmapController.arraysEqual(this.state.agents, MapAgentHeatmapController.addedGroups.flat(1))) {
+        if (!reset && (MapAgentHeatmapController.running || MapAgentHeatmapController.arraysEqual(this.state.agents, MapAgentHeatmapController.addedGroups.flat(1)))) {
             // No need to redraw
         } else {
+            MapAgentHeatmapController.running = true;
             if (!this.state.agents.isEmpty()) {
                 let groups = [];
                 let grouping_dist = 150;
@@ -122,11 +126,11 @@ var MapAgentHeatmapController = {
                         if (added) {
                             // Already have this heatmap
                         } else {
-                            var heatmapData = []
+                            var heatmapData = new google.maps.MVCArray();
                             group.forEach((g) => {
                                 heatmapData.push({
                                     location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                    weight: 0.3
+                                    weight: 0.15
                                 });
                             })
 
@@ -156,7 +160,7 @@ var MapAgentHeatmapController = {
                                 MapAgentHeatmapController.addedGroups[matchedMap].forEach((g) => {
                                     heatmapData.push({
                                         location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                        weight: 0.3
+                                        weight: 0.15
                                     });
                                 });
 
@@ -166,9 +170,15 @@ var MapAgentHeatmapController = {
 
                                 //MapHeatmapController.addedGroups.splice(matchedMap, 1)
                                 MapAgentHeatmapController.addedGroups[matchedMap] = group;
+                                console.log("MAP: ")
+                                console.log(MapAgentHeatmapController.agentHeatmaps[matchedMap])
+                                if (MapAgentHeatmapController.agentHeatmaps[matchedMap] !== null)  {// || MapAgentHeatmapController.agentHeatmaps[matchedMap].isEmpty())) {
+                                    try {
+                                        MapAgentHeatmapController.agentHeatmaps[matchedMap].setMap(null);
+                                        delete MapAgentHeatmapController.agentHeatmaps[matchedMap];
+                                    } catch (e) {}
+                                }
 
-                                MapAgentHeatmapController.agentHeatmaps[matchedMap].setMap(null);
-                                delete MapAgentHeatmapController.agentHeatmaps[matchedMap];
                                 MapAgentHeatmapController.agentHeatmaps[matchedMap] = heatmap;
                             } else {
                                 // Otherwise the index is the end of the list
@@ -231,6 +241,7 @@ var MapAgentHeatmapController = {
                 });
             }
             MapAgentHeatmapController.updateAllAgentMarkers();
+            MapAgentHeatmapController.running = false;
         }
     },
     updateHeatmapAllocationRendering: function () {
@@ -307,6 +318,7 @@ var MapAgentHeatmapController = {
 
     },
     updateAllAgentMarkers: function () {
+        var self = this;
         for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++){
             if (MapAgentHeatmapController.addedGroups[i].length === 0) {
                 console.log("Removing " + i + " groupsize = " + MapAgentHeatmapController.addedGroups[i].length)
@@ -314,6 +326,38 @@ var MapAgentHeatmapController = {
             } else {
                 console.log("Adding " + i + " groupsize = " + MapAgentHeatmapController.addedGroups[i].length)
                 MapAgentHeatmapController.addAgentMarkerFor(MapAgentHeatmapController.addedGroups[i], i);
+            }
+        }
+
+        /*
+        // TODO this lookup is not very efficient. A better data structure or else a hashmap of Agent -> (i, j) could be
+        //  used to make this quicker -WH
+        for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++) {
+            for (let j = 0; j < MapAgentHeatmapController.addedGroups[i].length; j++) {
+                MapAgentHeatmapController.addedGroups[i][j] = self.state.agents.get(MapAgentHeatmapController.addedGroups[i][j]);
+            }
+        }
+
+         */
+    },
+    adjustHeatmapLocation: function (agent) {
+        for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++){
+            for (let j = 0; j < MapAgentHeatmapController.addedGroups[i].length; j++){
+               if (MapAgentHeatmapController.addedGroups[i][j].getId() === agent.getId()) {
+
+                   //pointArray.setAt(pointArray.indexOf(oldLatLng), newLatLng)`
+
+                   MapAgentHeatmapController.addedGroups[i][j] = agent;
+                   //MapAgentHeatmapController.agentHeatmaps[i][j] = {
+                   console.log(MapAgentHeatmapController.agentHeatmaps[i])
+                   MapAgentHeatmapController.agentHeatmaps[i].data.setAt(j, {
+                       location: new google.maps.LatLng(agent.getPosition().lat(), agent.getPosition().lng()),
+                       weight: 0.15
+                   })
+                  //     location: new google.maps.LatLng(agent.getPosition().lat(), agent.getPosition().lng()),
+                  //     weight: 0.15
+                   //};
+               }
             }
         }
     },
@@ -358,7 +402,7 @@ var MapAgentHeatmapController = {
             }).dragend(function () {
                 MapAgentHeatmapController.onAgentMarkerDragEnd(marker);
             });
-
+            MapAgentHeatmapController.updateTaskRendering("AgentGroup-"+index, this.MarkerColourEnum.GREEN)
         }
     },
     removeAgentMarkerFor: function (index) {
@@ -485,4 +529,23 @@ var MapAgentHeatmapController = {
         this.hidePolyline('manual_allocation')
         console.log("end")
     },
+    updateTaskRendering: function (agentId, colourOptions) {
+        var marker = this.$el.gmap("get", "markers")[agentId];
+        var icon = this.icons.MarkerMonitor;
+        marker.setIcon(icon.Image);
+        if (marker.icon) {
+            //Add task id to end of marker url, this makes them unique.
+            marker.icon.url = marker.icon.url + "#" + agentId;
+            var h = colourOptions['h'];
+            var s = colourOptions['s'];
+            var l = colourOptions['l'];
+
+
+            //Grab actual marker element by the (now unique) image src and set its colour
+            $('img[src=\"' + marker.icon.url + '\"]').css({
+                '-webkit-filter': 'hue-rotate(' + h + 'deg) saturate(' + s + ') brightness(' + l + ')',
+                'filter': 'hue-rotate(' + h + 'deg) saturate(' + s + ') brightness(' + l + ')'
+            });
+        }
+    }
 };

@@ -195,6 +195,7 @@ var MapTaskController = {
          */
     },
     onTaskRemove: function (task) {
+        MapAgentController.heatmapAgentUpdateGeneric();
         MapTaskController.heatmapTaskUpdateGeneric(task);
         /*
         console.log('Task removed ' + task.getId());

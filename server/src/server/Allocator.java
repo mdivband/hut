@@ -1236,8 +1236,8 @@ public class Allocator {
             //simulator.getState().getAgent(k).setTempRoute(Collections.singletonList(simulator.getState().getTask(v).getCoordinate()));
             putInTempAllocation(k, v);
             System.out.println(k + " -> " + v);
-
         });
+        int a =2;
     }
 
     /**

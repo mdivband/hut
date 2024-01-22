@@ -2,6 +2,7 @@ var MapTaskHeatmapController = {
     taskHeatmaps: [],
     addedGroups: [],
     taskMarkers: [],
+    running: false,
 
     /**
      * Binds all the methods to use the given context.
@@ -29,9 +30,10 @@ var MapTaskHeatmapController = {
         var tempAllocation = this.state.getTempAllocation();
         var droppedAllocation = this.state.getDroppedAllocation();
 
-        if (MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
+        if (MapTaskHeatmapController.running || MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
             // No need to redraw
         } else {
+            MapTaskHeatmapController.running = true;
             if (!this.state.tasks.isEmpty()) {
                 let groups = [];
                 let grouping_dist = 150;
@@ -121,7 +123,7 @@ var MapTaskHeatmapController = {
                             group.forEach((g) => {
                                 heatmapData.push({
                                     location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                    weight: 0.3
+                                    weight: 0.15
                                 });
                             })
 
@@ -151,7 +153,7 @@ var MapTaskHeatmapController = {
                                 MapTaskHeatmapController.addedGroups[matchedMap].forEach((g) => {
                                     heatmapData.push({
                                         location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                        weight: 0.3
+                                        weight: 0.15
                                     });
                                 });
 
@@ -210,6 +212,7 @@ var MapTaskHeatmapController = {
                 });
             }
             MapTaskHeatmapController.updateAllTaskMarkers();
+            MapTaskHeatmapController.running = false;
         }
     },
     updateAllTaskMarkers: function () {
@@ -267,6 +270,7 @@ var MapTaskHeatmapController = {
             }).mouseout(function () {
                 MapTaskHeatmapController.onTaskMarkerMouseout(marker);
             });
+            MapTaskHeatmapController.updateTaskRendering("TaskGroup-" + index, this.MarkerColourEnum.BLUE)
 
         }
     },

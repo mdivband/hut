@@ -60,12 +60,11 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
     },
-    heatmapAgentUpdateGeneric: function (agent) {
-        console.log("Agent added (heatmap version) " + agent.getId());
-        MapAgentHeatmapController.drawAgentMaps();
+    heatmapAgentUpdateGeneric: function (reset) {
+        MapAgentHeatmapController.drawAgentMaps(reset);
     },
     onAgentAdd: function (agent) {
-        MapAgentController.heatmapAgentUpdateGeneric(agent);
+        MapAgentController.heatmapAgentUpdateGeneric(true);
         /*
         console.log('Agent added ' + agent.getId());
         var id = agent.getId();
@@ -133,6 +132,8 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerIcon(agent);
         this.updateTable();
         MapTargetController.checkForReveal(agent);
+        MapAgentHeatmapController.updateAllAgentMarkers();
+        MapAgentHeatmapController.adjustHeatmapLocation(agent);
     },
     onGhostChange: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
