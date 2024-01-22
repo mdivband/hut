@@ -47,12 +47,12 @@ var MapTaskController = {
         });
     },
     heatmapTaskUpdateGeneric: function (task) {
-        console.log("Task added (heatmap version) " + task.getId());
-        if (task.getType() === this.state.tasks.TASK_WAYPOINT) {
-            MapTaskHeatmapController.drawTaskMaps();
-        } else {
-            console.log("ERROR: Other task types not supported in this mode")
-        }
+        //console.log("Task added (heatmap version) " + task.getId());
+        //if (task.getType() === this.state.tasks.TASK_WAYPOINT) {
+        MapTaskHeatmapController.drawTaskMaps();
+        //} else {
+        //    console.log("ERROR: Other task types not supported in this mode")
+        //}
     },
     onTaskAdd: function (task) {
         MapTaskController.heatmapTaskUpdateGeneric(task);

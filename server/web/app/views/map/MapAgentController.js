@@ -27,6 +27,7 @@ var MapAgentController = {
         this.updateAgentMarkerVisibility = _.bind(this.updateAgentMarkerVisibility, context);
         this.updateAllAgentMarkerIcons = _.bind(this.updateAllAgentMarkerIcons, context);
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
+        this.forceRedrawMaps = _.bind(this.forceRedrawMaps, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -59,9 +60,18 @@ var MapAgentController = {
         this.state.ghosts.on("change:visible", function (agent) {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
+        this.state.agents.on("change:agentTeam", function (agent) {
+            MapAgentController.forceRedrawMaps();
+        });
     },
     heatmapAgentUpdateGeneric: function (reset) {
         MapAgentHeatmapController.drawAgentMaps(reset);
+    },
+    forceRedrawMaps: function () {
+        this.state.agents.forEach((a) => {
+            MapAgentHeatmapController.adjustHeatmapLocation(a)
+            MapAgentHeatmapController.drawAgentMaps();
+        })
     },
     onAgentAdd: function (agent) {
         MapAgentController.heatmapAgentUpdateGeneric(true);

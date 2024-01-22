@@ -24,6 +24,7 @@ import maxsum.EvaluationFunction;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Object that handles the allocation.
@@ -1231,13 +1232,17 @@ public class Allocator {
 
     public void dynamicRandomAssignSubgroup(List<Agent> agents, List<Task> tasks) {
         Map<String, String> result = randomCompute(agents, tasks, false);
+        List<String> groupIds = result.keySet().stream().toList();
         result.forEach((k, v) -> {
             //simulator.getState().getAgent(k).setAllocatedTaskId(v);
             //simulator.getState().getAgent(k).setTempRoute(Collections.singletonList(simulator.getState().getTask(v).getCoordinate()));
             putInTempAllocation(k, v);
             System.out.println(k + " -> " + v);
+            ((AgentVirtual) simulator.getState().getAgent(k)).setAgentTeam(new ArrayList<>(groupIds));
+
         });
-        int a =2;
+        //result.entrySet().stream().map(AgentVirtual::getId).collect(Collectors.toList());
+        new ArrayList<>(result.keySet());
     }
 
     /**

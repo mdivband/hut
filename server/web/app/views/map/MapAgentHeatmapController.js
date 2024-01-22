@@ -5,6 +5,7 @@ var MapAgentHeatmapController = {
     groupIdToAllocateManually: null,
     isManuallyAllocating: null,
     running: false,
+    groupStatuses: [],
 
     /**
      * Binds all the methods to use the given context.
@@ -50,6 +51,8 @@ var MapAgentHeatmapController = {
                 });
 
                 agents.forEach((t) => {
+                    console.log("Agent Teams:")
+                    console.log(t.getAgentTeam())
                     //console.log("Considering " + t.getId())
                     if (!MapAgentHeatmapController.checkIfIn2DList(t, groups)) {
                         //console.log("-pushed new list")
@@ -61,21 +64,22 @@ var MapAgentHeatmapController = {
                     agents.forEach((n) => {
                         //console.log(t.getId() + " -> " + n.getId())
                         //if (t !== n && !MapHeatmapController.checkIfIn2DList(n, groups) && Math.abs(tasks[n] - tasks[t]) <= grouping_dist) {
-                        if (t !== n && !MapAgentHeatmapController.checkIfIn2DList(n, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
+
+                        if (t !== n && (t.getAgentTeam().includes(n.getId()) || ((t.getAgentTeam().length === 0 && n.getAgentTeam().length === 0) && !MapAgentHeatmapController.checkIfIn2DList(n, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist))) {
                             //console.log("-newAdd")
                             groups.forEach((g) => {
                                 if (g.includes(t) && !g.includes(n)) {
                                     g.push(n)
                                 }
                             });
-                        } else if (t !== n && !MapAgentHeatmapController.checkIfInGroupOf(n, t, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
+                        } else if (t !== n && (t.getAgentTeam().includes(n.getId()) || ((t.getAgentTeam().length === 0 && n.getAgentTeam().length === 0) && !MapAgentHeatmapController.checkIfInGroupOf(n, t, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist))) {
                             // t and n are within range of each other, and n and t are not in the same group
                             //  n is in a group, t only might be.
                             const new_group = [];
                             let indexToReplace = null;
                             let indexToRemove = null;
                             groups.forEach((group) => {
-                                if (group.includes(t) || group.includes(n)) {
+                                if (((t.getAgentTeam().length === 0 && n.getAgentTeam().length === 0) || t.getAgentTeam().includes(n.getId())) && (group.includes(t) || group.includes(n))) {
                                     if (indexToReplace === null) {
                                         indexToReplace = groups.indexOf(group)
                                     } else if (indexToRemove === null) {
@@ -170,8 +174,8 @@ var MapAgentHeatmapController = {
 
                                 //MapHeatmapController.addedGroups.splice(matchedMap, 1)
                                 MapAgentHeatmapController.addedGroups[matchedMap] = group;
-                                console.log("MAP: ")
-                                console.log(MapAgentHeatmapController.agentHeatmaps[matchedMap])
+                                //console.log("MAP: ")
+                                //console.log(MapAgentHeatmapController.agentHeatmaps[matchedMap])
                                 if (MapAgentHeatmapController.agentHeatmaps[matchedMap] !== null)  {// || MapAgentHeatmapController.agentHeatmaps[matchedMap].isEmpty())) {
                                     try {
                                         MapAgentHeatmapController.agentHeatmaps[matchedMap].setMap(null);
@@ -210,7 +214,7 @@ var MapAgentHeatmapController = {
                                 "rgba(255, 0, 0, 1)",
                             ];
 
-                            heatmap.setOptions({radius: 150, gradient: gradient})
+                            heatmap.setOptions({radius: 150, gradient: gradient, zIndex: 0})
                             heatmap.setMap(this.map);
                         }
                     } else {
@@ -225,20 +229,20 @@ var MapAgentHeatmapController = {
                 }
 
                 MapAgentHeatmapController.addedGroups = groups
-                console.log("Groups after heatmap bit: " + groups.length)
-                groups.forEach((group) => {
-                    console.log(" g: ")
-                    group.forEach((g) => {
-                        console.log("    " + g.getId())
-                    });
-                });
-                console.log("AddedGroups after heatmap bit: " + MapAgentHeatmapController.addedGroups.length)
-                MapAgentHeatmapController.addedGroups.forEach((group) => {
-                    console.log(" g: ")
-                    group.forEach((g) => {
-                        console.log("    " + g.getId())
-                    });
-                });
+                //console.log("Groups after heatmap bit: " + groups.length)
+                //groups.forEach((group) => {
+                //    console.log(" g: ")
+                //    group.forEach((g) => {
+                //        console.log("    " + g.getId())
+                //    });
+                //});
+                // console.log("AddedGroups after heatmap bit: " + MapAgentHeatmapController.addedGroups.length)
+                // MapAgentHeatmapController.addedGroups.forEach((group) => {
+                //     console.log(" g: ")
+                //     group.forEach((g) => {
+                //         console.log("    " + g.getId())
+                //     });
+                // });
             }
             MapAgentHeatmapController.updateAllAgentMarkers();
             MapAgentHeatmapController.running = false;
@@ -321,10 +325,10 @@ var MapAgentHeatmapController = {
         var self = this;
         for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++){
             if (MapAgentHeatmapController.addedGroups[i].length === 0) {
-                console.log("Removing " + i + " groupsize = " + MapAgentHeatmapController.addedGroups[i].length)
+                //console.log("Removing " + i + " groupsize = " + MapAgentHeatmapController.addedGroups[i].length)
                 MapAgentHeatmapController.removeAgentMarkerFor(i);
             } else {
-                console.log("Adding " + i + " groupsize = " + MapAgentHeatmapController.addedGroups[i].length)
+                //console.log("Adding " + i + " groupsize = " + MapAgentHeatmapController.addedGroups[i].length)
                 MapAgentHeatmapController.addAgentMarkerFor(MapAgentHeatmapController.addedGroups[i], i);
             }
         }
@@ -349,11 +353,18 @@ var MapAgentHeatmapController = {
 
                    MapAgentHeatmapController.addedGroups[i][j] = agent;
                    //MapAgentHeatmapController.agentHeatmaps[i][j] = {
-                   console.log(MapAgentHeatmapController.agentHeatmaps[i])
-                   MapAgentHeatmapController.agentHeatmaps[i].data.setAt(j, {
-                       location: new google.maps.LatLng(agent.getPosition().lat(), agent.getPosition().lng()),
-                       weight: 0.15
-                   })
+                   //console.log(MapAgentHeatmapController.agentHeatmaps[i])
+                   try {
+                       MapAgentHeatmapController.agentHeatmaps[i].data.setAt(j, {
+                           location: new google.maps.LatLng(agent.getPosition().lat(), agent.getPosition().lng()),
+                           weight: 0.15
+                       })
+                       //var marker = this.$el.gmap("get", "markers")["AgentGroup-"+i];
+                       //if (marker) {
+                       //     var newPos =
+                       //    marker.setPosition(newPos);
+                       //}
+                   } catch (e) {}
                   //     location: new google.maps.LatLng(agent.getPosition().lat(), agent.getPosition().lng()),
                   //     weight: 0.15
                    //};
@@ -362,7 +373,7 @@ var MapAgentHeatmapController = {
         }
     },
     addAgentMarkerFor: function (group, index) {
-        console.log("Group size " + group.length + " index = " + index)
+        //console.log("Group size " + group.length + " index = " + index)
         // 1. Find centre of coords
         var latSum = 0;
         var lngSum = 0;
@@ -455,10 +466,25 @@ var MapAgentHeatmapController = {
         return true;
     },
     onAgentMarkerDrag: function (marker) {
+        var self = this;
         MapAgentHeatmapController.isManuallyAllocating = true
         var agentGroup = MapAgentHeatmapController.addedGroups[marker.id.split("-")[1]];
 
-        var groupPos = marker.centrePos
+        var latSum = 0;
+        var lngSum = 0;
+        var groupLen = 0
+        agentGroup.forEach((agent) => {
+            self.state.agents.forEach((a) => {
+                if (a.getId() === agent.id) {
+                    latSum += agent.getPosition().lat();
+                    lngSum += agent.getPosition().lng();
+                    groupLen += 1;
+                }
+            })
+        });
+        var groupPos = _.position(latSum / groupLen, lngSum / groupLen);
+
+         marker.setOptions({groupPos});
 
         //Grab marker position (under cursor) then reposition marker to agent position so it doesn't actually move.
         var cursorPosition = marker.getPosition();
@@ -498,7 +524,8 @@ var MapAgentHeatmapController = {
     onAgentMarkerDragEnd: function (marker) {
         var agentGroup = MapAgentHeatmapController.addedGroups[marker.id.split("-")[1]];
 
-        var groupPos = marker.centrePos
+        var groupPos = marker.groupPos
+
 
         //No longer manually allocating since drag has ended
         MapAgentHeatmapController.isManuallyAllocating = false;
@@ -511,9 +538,11 @@ var MapAgentHeatmapController = {
             });
 
             var taskIdsToPass = []
-            MapTaskHeatmapController.addedGroups[MapAgentHeatmapController.groupIdToAllocateManually.split("-")[1]].forEach((t) => {
-                taskIdsToPass.push(t.id)
-            });
+            try {
+                MapTaskHeatmapController.addedGroups[MapAgentHeatmapController.groupIdToAllocateManually.split("-")[1]].forEach((t) => {
+                    taskIdsToPass.push(t.id)
+                });
+            } catch (e) {}
 
             // TODO made a change here now it stack overflows
             $.post("/allocation/groupAllocate", {
@@ -527,7 +556,7 @@ var MapAgentHeatmapController = {
 
         MapAgentHeatmapController.groupIdToAllocateManually = null;
         this.hidePolyline('manual_allocation')
-        console.log("end")
+        //console.log("end")
     },
     updateTaskRendering: function (agentId, colourOptions) {
         var marker = this.$el.gmap("get", "markers")[agentId];

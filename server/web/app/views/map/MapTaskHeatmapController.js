@@ -30,190 +30,188 @@ var MapTaskHeatmapController = {
         var tempAllocation = this.state.getTempAllocation();
         var droppedAllocation = this.state.getDroppedAllocation();
 
-        if (MapTaskHeatmapController.running || MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
+        //if (MapTaskHeatmapController.running || MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
+        //if(MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
             // No need to redraw
-        } else {
-            MapTaskHeatmapController.running = true;
-            if (!this.state.tasks.isEmpty()) {
-                let groups = [];
-                let grouping_dist = 150;
-                let tasks = []
-                this.state.tasks.forEach(function (t) {
-                    tasks.push(t);
-                });
+        //} else {
+        //MapTaskHeatmapController.running = true;
+        if (!this.state.tasks.isEmpty()) {
+            let groups = [];
+            let grouping_dist = 150;
+            let tasks = []
+            this.state.tasks.forEach(function (t) {
+                tasks.push(t);
+            });
 
-                tasks.forEach((t) => {
-                    //console.log("Considering " + t.getId())
-                    if (!MapTaskHeatmapController.checkIfIn2DList(t, groups)) {
-                        //console.log("-pushed new list")
-                        // This is not in any group so should start a new one
-                        groups.push([t])
+            tasks.forEach((t) => {
+                //console.log("Considering " + t.getId())
+                if (!MapTaskHeatmapController.checkIfIn2DList(t, groups)) {
+                    //console.log("-pushed new list")
+                    // This is not in any group so should start a new one
+                    groups.push([t])
+                }
+
+                let new_group;
+                tasks.forEach((n) => {
+                    //console.log(t.getId() + " -> " + n.getId())
+                    //if (t !== n && !MapHeatmapController.checkIfIn2DList(n, groups) && Math.abs(tasks[n] - tasks[t]) <= grouping_dist) {
+                    if (t !== n && !MapTaskHeatmapController.checkIfIn2DList(n, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
+                        //console.log("-newAdd")
+                        groups.forEach((g) => {
+                            if (g.includes(t) && !g.includes(n)) {
+                                g.push(n)
+                            }
+                        });
+                    } else if (t !== n && !MapTaskHeatmapController.checkIfInGroupOf(n, t, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
+                        // t and n are within range of each other, and n and t are not in the same group
+                        //  n is in a group, t only might be.
+                        const new_group = [];
+                        let indexToReplace = null;
+                        let indexToRemove = null;
+                        groups.forEach((group) => {
+                            if (group.includes(t) || group.includes(n)) {
+                                if (indexToReplace === null) {
+                                    indexToReplace = groups.indexOf(group)
+                                } else if (indexToRemove === null) {
+                                    indexToRemove = groups.indexOf(group)
+                                }
+                                group.forEach((g) => {
+                                    new_group.push(g)
+                                    //groups.splice(groups.indexOf(group), 1)
+                                });
+                            }
+                        });
+
+                        if (!new_group.includes(n)) {
+                            new_group.push(n)
+                        }
+                        if (!new_group.includes(t)) {
+                            new_group.push(t)
+                        }
+                        //indicesToRemove.forEach((i) => {
+                        //    groups.splice(i, 1)
+                        //});
+                        // groups.push(new_group)
+
+                        if (indexToReplace !== null) {
+                            groups[indexToReplace] = new_group;
+                        }
+                        if (indexToRemove !== null) {
+                            groups[indexToRemove] = [];
+
+                        }
+
                     }
 
-                    let new_group;
-                    tasks.forEach((n) => {
-                        //console.log(t.getId() + " -> " + n.getId())
-                        //if (t !== n && !MapHeatmapController.checkIfIn2DList(n, groups) && Math.abs(tasks[n] - tasks[t]) <= grouping_dist) {
-                        if (t !== n && !MapTaskHeatmapController.checkIfIn2DList(n, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
-                            //console.log("-newAdd")
-                            groups.forEach((g) => {
-                                if (g.includes(t) && !g.includes(n)) {
-                                    g.push(n)
-                                }
+                });
+            });
+
+            for (let group_index = 0; group_index < groups.length; group_index++){
+                const group = groups[group_index];
+                if (group.length !== 0) {
+                    var added = false;
+                    MapTaskHeatmapController.addedGroups.forEach((addedGroup) => {
+                        if (MapTaskHeatmapController.arraysEqual(addedGroup, group)) {
+                            // This exact group is already here
+                            added = true;
+                        }
+                    });
+
+                    if (added) {
+                        // Already have this heatmap
+                    } else {
+                        var heatmapData = []
+                        group.forEach((g) => {
+                            heatmapData.push({
+                                location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
+                                weight: 0.15
                             });
-                        } else if (t !== n && !MapTaskHeatmapController.checkIfInGroupOf(n, t, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
-                            // t and n are within range of each other, and n and t are not in the same group
-                            //  n is in a group, t only might be.
-                            const new_group = [];
-                            let indexToReplace = null;
-                            let indexToRemove = null;
-                            groups.forEach((group) => {
-                                if (group.includes(t) || group.includes(n)) {
-                                    if (indexToReplace === null) {
-                                        indexToReplace = groups.indexOf(group)
-                                    } else if (indexToRemove === null) {
-                                        indexToRemove = groups.indexOf(group)
-                                    }
-                                    group.forEach((g) => {
-                                        new_group.push(g)
-                                        //groups.splice(groups.indexOf(group), 1)
-                                    });
+                        })
+
+
+                        // Remove the heatmap that contains these tasks (if any)
+
+                        //console.log("Pre markers:")
+
+
+                        var matchedMap = null;
+                        for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++) {
+                            for (const g of group) {
+                                if (MapTaskHeatmapController.addedGroups[i].includes(g)) {
+                                    //console.log("group: " + g.getId())
+                                    matchedMap = i;
+                                    break;
                                 }
-                            });
-
-                            if (!new_group.includes(n)) {
-                                new_group.push(n)
-                            }
-                            if (!new_group.includes(t)) {
-                                new_group.push(t)
-                            }
-                            //indicesToRemove.forEach((i) => {
-                            //    groups.splice(i, 1)
-                            //});
-                            // groups.push(new_group)
-
-                            if (indexToReplace !== null) {
-                                groups[indexToReplace] = new_group;
-                            }
-                            if (indexToRemove !== null) {
-                                groups[indexToRemove] = [];
-
                             }
 
                         }
 
-                    });
-                });
+                        if (matchedMap !== null) {
 
-                for (let group_index = 0; group_index < groups.length; group_index++){
-                    const group = groups[group_index];
-                    if (group.length !== 0) {
-                        var added = false;
-                        MapTaskHeatmapController.addedGroups.forEach((addedGroup) => {
-                            if (MapTaskHeatmapController.arraysEqual(addedGroup, group)) {
-                                // This exact group is already here
-                                added = true;
-                            }
-                        });
-
-                        if (added) {
-                            // Already have this heatmap
-                        } else {
-                            var heatmapData = []
-                            group.forEach((g) => {
+                            MapTaskHeatmapController.addedGroups[matchedMap].forEach((g) => {
                                 heatmapData.push({
                                     location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
                                     weight: 0.15
                                 });
-                            })
+                            });
 
+                            var heatmap = new google.maps.visualization.HeatmapLayer({
+                                data: heatmapData
+                            });
 
-                            // Remove the heatmap that contains these tasks (if any)
+                            //MapHeatmapController.addedGroups.splice(matchedMap, 1)
+                            MapTaskHeatmapController.addedGroups[matchedMap] = group;
 
-                            //console.log("Pre markers:")
+                            MapTaskHeatmapController.taskHeatmaps[matchedMap].setMap(null);
+                            delete MapTaskHeatmapController.taskHeatmaps[matchedMap];
+                            MapTaskHeatmapController.taskHeatmaps[matchedMap] = heatmap;
+                        } else {
+                            // Otherwise the index is the end of the list
 
+                            var heatmap = new google.maps.visualization.HeatmapLayer({
+                                data: heatmapData
+                            });
 
-                            var matchedMap = null;
-                            for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++) {
-                                MapTaskHeatmapController.addedGroups[i].forEach((a) => {
-                                    //console.log("AddGr: " + a.getId());
-                                });
-                                for (const g of group) {
-                                    if (MapTaskHeatmapController.addedGroups[i].includes(g)) {
-                                        //console.log("group: " + g.getId())
-                                        matchedMap = i;
-                                        break;
-                                    }
-                                }
-
-                            }
-
-                            if (matchedMap !== null) {
-
-                                MapTaskHeatmapController.addedGroups[matchedMap].forEach((g) => {
-                                    heatmapData.push({
-                                        location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                        weight: 0.15
-                                    });
-                                });
-
-                                var heatmap = new google.maps.visualization.HeatmapLayer({
-                                    data: heatmapData
-                                });
-
-                                //MapHeatmapController.addedGroups.splice(matchedMap, 1)
-                                MapTaskHeatmapController.addedGroups[matchedMap] = group;
-
-                                MapTaskHeatmapController.taskHeatmaps[matchedMap].setMap(null);
-                                delete MapTaskHeatmapController.taskHeatmaps[matchedMap];
-                                MapTaskHeatmapController.taskHeatmaps[matchedMap] = heatmap;
-                            } else {
-                                // Otherwise the index is the end of the list
-
-                                var heatmap = new google.maps.visualization.HeatmapLayer({
-                                    data: heatmapData
-                                });
-
-                                matchedMap = MapTaskHeatmapController.addedGroups.length;
-                                MapTaskHeatmapController.addedGroups.push(group);
-                                MapTaskHeatmapController.taskHeatmaps.push(heatmap);
-                            }
-
-                            //MapTaskHeatmapController.addTaskMarkerFor(group, matchedMap);
-
-                            heatmap.setOptions({radius: 150})
-                            heatmap.setMap(this.map);
+                            matchedMap = MapTaskHeatmapController.addedGroups.length;
+                            MapTaskHeatmapController.addedGroups.push(group);
+                            MapTaskHeatmapController.taskHeatmaps.push(heatmap);
                         }
-                    } else {
-                        // This is an empty group so we should remove its heatmap and task marker
-                        //alert("removing " + group_index)
-                        MapTaskHeatmapController.taskHeatmaps[group_index] = [];
-                        MapTaskHeatmapController.addedGroups[group_index] = [];
 
-                        // TODO doesn't add marker immediately
+                        //MapTaskHeatmapController.addTaskMarkerFor(group, matchedMap);
 
+                        heatmap.setOptions({radius: 150, zIndex: -1})
+                        heatmap.setMap(this.map);
                     }
-                }
+                } else {
+                    // This is an empty group so we should remove its heatmap and task marker
+                    //alert("removing " + group_index)
+                    MapTaskHeatmapController.taskHeatmaps[group_index] = [];
+                    MapTaskHeatmapController.addedGroups[group_index] = [];
 
-                MapTaskHeatmapController.addedGroups = groups
-                console.log("Groups after heatmap bit: " + groups.length)
-                groups.forEach((group) => {
-                    console.log(" g: ")
-                    group.forEach((g) => {
-                        console.log("    " + g.getId())
-                    });
-                });
-                console.log("AddedGroups after heatmap bit: " + MapTaskHeatmapController.addedGroups.length)
-                MapTaskHeatmapController.addedGroups.forEach((group) => {
-                    console.log(" g: ")
-                    group.forEach((g) => {
-                        console.log("    " + g.getId())
-                    });
-                });
+                    // TODO doesn't add marker immediately
+
+                }
             }
-            MapTaskHeatmapController.updateAllTaskMarkers();
-            MapTaskHeatmapController.running = false;
+
+            MapTaskHeatmapController.addedGroups = groups
+            console.log("Groups after heatmap bit: " + groups.length)
+            groups.forEach((group) => {
+                console.log(" g: ")
+                group.forEach((g) => {
+                    console.log("    " + g.getId())
+                });
+            });
+            console.log("AddedGroups after heatmap bit: " + MapTaskHeatmapController.addedGroups.length)
+            MapTaskHeatmapController.addedGroups.forEach((group) => {
+                console.log(" g: ")
+                group.forEach((g) => {
+                    console.log("    " + g.getId())
+                });
+            });
         }
+        MapTaskHeatmapController.updateAllTaskMarkers();
+        //MapTaskHeatmapController.running = false;
+
     },
     updateAllTaskMarkers: function () {
         for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){

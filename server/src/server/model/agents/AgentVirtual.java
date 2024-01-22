@@ -67,7 +67,7 @@ public class AgentVirtual extends Agent {
             double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) / Simulator.instance.getGameSpeed();
             double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(distToMove);
-            System.out.println(this.getId() + " Moving towards " + this.getAllocatedTaskId() + " dist = " + distToMove);
+            //System.out.println(this.getId() + " Moving towards " + this.getAllocatedTaskId() + " dist = " + distToMove);
         }
     }
 

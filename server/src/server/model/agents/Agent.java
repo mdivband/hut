@@ -48,6 +48,8 @@ public abstract class Agent extends MObject implements Serializable {
     protected List<Task> taskQueue =  new ArrayList<>();
     protected List<Coordinate> coordQueue = new ArrayList<>();
 
+    private List<String> agentTeam = new ArrayList<>();
+
     public Agent(String id, Coordinate position, boolean simulated) {
         super(id, position);
 
@@ -202,6 +204,7 @@ public abstract class Agent extends MObject implements Serializable {
 
     public void setAllocatedTaskId(String taskId) {
         this.allocatedTaskId = taskId;
+
     }
 
     public Task getTask() {
@@ -443,6 +446,15 @@ public abstract class Agent extends MObject implements Serializable {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public List<String> getAgentTeam() {
+        return agentTeam;
+    }
+
+    public void setAgentTeam(List<String> agentTeam) {
+        System.out.println(agentTeam);
+        this.agentTeam = agentTeam;
     }
 
     @Override

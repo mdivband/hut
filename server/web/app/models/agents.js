@@ -19,7 +19,8 @@ App.Models.Agent = App.Models.MObject.extend({
         isLeader: false,
         type: "standard",
         visible: false,
-        coordQueue: []
+        coordQueue: [],
+        agentTeam: [],
 
     },
     destroy: function() {
@@ -73,6 +74,9 @@ App.Models.Agent = App.Models.MObject.extend({
     },
     getCoordQueue: function () {
         return this.get("coordQueue");
+    },
+    getAgentTeam: function () {
+        return this.get("agentTeam");
     }
 });
 
