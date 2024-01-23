@@ -6,6 +6,23 @@
     "predictions": false,
     "uncertainties": false
   },
+  "dynamicUIFeatures": {
+    "1": [
+      ""
+    ],
+    "2": [
+      ""
+    ],
+    "3": [
+      ""
+    ],
+    "4": [
+      "heatmap"
+    ],
+    "5": [
+      "heatmap"
+    ]
+  },
   "flockingEnabled" : false,
   "loggingById": true,
   "gameCentre": {

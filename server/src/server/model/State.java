@@ -92,8 +92,8 @@ public class State {
     private double missionBoundedSuccessOverChance;
     private boolean loggingById;
 
+    private List<List<String>> dynamicUIFeatures;
     private Map<String, Double> scoreInfo;
-
     // We could combine these, but it might be little more efficient to let them stay separate
     private Hub hub;
     private Coordinate hubLocation;
@@ -106,6 +106,7 @@ public class State {
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
     private final List<String> pendingIds = new ArrayList<>(16);
+    private Integer workloadLevel;
 
     public State() {
         agents = new ArrayList<>();
@@ -122,6 +123,8 @@ public class State {
         successChance = 100.00;
         allocationUndoAvailable = false;
         allocationRedoAvailable = false;
+        dynamicUIFeatures = new ArrayList<>();
+        workloadLevel = 3;
 
         reset();
     }
@@ -150,6 +153,7 @@ public class State {
         userName = "";
         modelStyle = "off";
         showReviewPanel = false;
+        workloadLevel = 3;
 
         agents.clear();
         ghosts.clear();
@@ -166,8 +170,9 @@ public class State {
 
         storedImages.clear();
         uiOptions.clear();
-
+        dynamicUIFeatures.clear();
         hazardHits.init();
+
     }
 
     /**
@@ -798,6 +803,23 @@ public class State {
 
     public void setLoggingById(boolean loggingById) {
         this.loggingById = loggingById;
+    }
+
+    public List<List<String>> getDynamicUIFeatures() {
+        return dynamicUIFeatures;
+    }
+
+    public void setDynamicUIFeatures(List<List<String>> dynamicUIFeatures) {
+        System.out.println(dynamicUIFeatures);
+        this.dynamicUIFeatures = dynamicUIFeatures;
+    }
+
+    public Integer getWorkloadLevel() {
+        return workloadLevel;
+    }
+
+    public void setWorkloadLevel(Integer workloadLevel) {
+        this.workloadLevel = workloadLevel;
     }
 
     private class HazardHit {

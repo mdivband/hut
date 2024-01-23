@@ -47,7 +47,9 @@ App.Models.State  = Backbone.Model.extend({
         missionBoundedSuccessUnderChance: 100.00,
         scoreInfo: {},
         modelStyle: "off",
-        loggingById: false
+        loggingById: false,
+        dynamicUIFeatures: [[], [], [], ["heatmap"] ,["heatmap"]],
+        workloadLevel: 3,
     },
     url: function () {
         return "state.json?" + _.time();
@@ -218,5 +220,8 @@ App.Models.State  = Backbone.Model.extend({
             $("#map_title").html("Image Review");
         }
         $.post("/changeview", {edit: modeFlag});
+    },
+    getDynamicUIFeatures: function () {
+        return this.get("dynamicUIFeatures");//[this.get("workloadLevel") - 1]
     },
 });

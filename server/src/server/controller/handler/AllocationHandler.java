@@ -7,10 +7,7 @@ import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.FileHandler;
 
 /**
@@ -83,6 +80,7 @@ public class AllocationHandler extends RestHandler {
         if(!taskExists(taskId, resp))
             return;
         simulator.getAllocator().putInTempAllocation(agentId, taskId);
+        simulator.getState().getAgent(agentId).setAgentTeam(new ArrayList<>(Collections.singleton(taskId)));
         resp.sendOkay();
     }
 

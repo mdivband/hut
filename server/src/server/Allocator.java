@@ -1238,7 +1238,7 @@ public class Allocator {
             //simulator.getState().getAgent(k).setTempRoute(Collections.singletonList(simulator.getState().getTask(v).getCoordinate()));
             putInTempAllocation(k, v);
             System.out.println(k + " -> " + v);
-            ((AgentVirtual) simulator.getState().getAgent(k)).setAgentTeam(new ArrayList<>(groupIds));
+            simulator.getState().getAgent(k).setAgentTeam(new ArrayList<>(groupIds));
 
         });
         //result.entrySet().stream().map(AgentVirtual::getId).collect(Collectors.toList());

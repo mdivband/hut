@@ -66,6 +66,7 @@ public abstract class Task extends MObject implements Serializable {
 
     public void complete() {
         Agent a = agents.get(0);
+        a.getAgentTeam().clear();
         if (a instanceof AgentVirtual av) {
             Task t = av.getNextTaskFromQueue();
             if (t != null) {

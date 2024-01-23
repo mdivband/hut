@@ -4,6 +4,7 @@ var MapController = {
     showRanges: false,
     uncertaintyRadius: 10,
     communicationRange: 100,
+    workload_level: 3,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -105,6 +106,15 @@ var MapController = {
             } else {
                 MapController.showPredictedPaths($(this).val());
             }
+        });
+        $('#workload_slider').on('change', function() {
+            MapController.workload_level = $(this).val();
+            $.post("/review/report/workload", {
+                level: MapController.workload_level
+            });
+            console.log("level = " + MapController.workload_level)
+            MapAgentController.updateAllAgentMarkerIcons(true);
+            MapTaskController.updateAllTaskIcons(true);
         });
         $('#uncertainties_toggle').change(function () {
             MapController.toggleUncertainties( $(this).is(":checked"));

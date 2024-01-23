@@ -742,6 +742,19 @@ public class Simulator {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
             }
 
+            Object dynamicUIFeaturesJson = GsonUtils.getValue(obj, "dynamicUIFeatures");
+            if (dynamicUIFeaturesJson != null) {
+                List<List<String>> featureList = new ArrayList<>(5);
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "1"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "2"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "3"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "4"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "5"));
+                this.state.setDynamicUIFeatures(featureList);
+            }
+
+
+
             return true;
         } catch (IOException e) {
             e.printStackTrace();

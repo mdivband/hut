@@ -47,231 +47,226 @@ var MapTaskController = {
         });
     },
     heatmapTaskUpdateGeneric: function (task) {
-        //console.log("Task added (heatmap version) " + task.getId());
-        //if (task.getType() === this.state.tasks.TASK_WAYPOINT) {
         MapTaskHeatmapController.drawTaskMaps();
-        //} else {
-        //    console.log("ERROR: Other task types not supported in this mode")
-        //}
     },
     onTaskAdd: function (task) {
-        MapTaskController.heatmapTaskUpdateGeneric(task);
-        /*
-        console.log("Task added " + task.getId());
-        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
-            this.$el.gmap("addMarker", {
-                bounds: false,
-                draggable: true,
-                id: task.getId(),
-                position: task.getPosition(),
-                marker: MarkerWithLabel,
-                labelContent: task.getId(),
-                labelAnchor: new google.maps.Point(25, 65),
-                labelClass: "labels",
-                labelStyle: {opacity: 1.0},
-                raiseOnDrag: false,
-                zIndex: 3
-            });
-            var marker = this.$el.gmap("get", "markers")[task.getId()];
-            MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
-            $(marker).click(function () {
-                MapTaskController.onTaskMarkerLeftClick(marker);
-            }).rightclick(function () {
-                MapTaskController.onTaskMarkerRightClick(marker);
-            }).drag(function () {
-                MapTaskController.onTaskMarkerDrag(marker);
-            }).dragend(function () {
-                MapTaskController.onTaskMarkerDragEnd(marker);
-            }).mouseover(function () {
-                MapTaskController.onTaskMarkerMouseover(marker);
-            }).mouseout(function () {
-                MapTaskController.onTaskMarkerMouseout(marker);
-            });
-        }
-        else if(task.getType() === this.state.tasks.TASK_PATROL) {
-            var path = [];
-            for (var i = 0; i < task.getPoints().length; i++) {
-                var point = task.getPoints()[i];
-                path.push(_.position(point.latitude, point.longitude));
+        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+            MapTaskController.heatmapTaskUpdateGeneric(task);
+        } else {
+            console.log("Task added " + task.getId());
+            if (task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: true,
+                    id: task.getId(),
+                    position: task.getPosition(),
+                    marker: MarkerWithLabel,
+                    labelContent: task.getId(),
+                    labelAnchor: new google.maps.Point(25, 65),
+                    labelClass: "labels",
+                    labelStyle: {opacity: 1.0},
+                    raiseOnDrag: false,
+                    zIndex: 3
+                });
+                var marker = this.$el.gmap("get", "markers")[task.getId()];
+                MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
+                $(marker).click(function () {
+                    MapTaskController.onTaskMarkerLeftClick(marker);
+                }).rightclick(function () {
+                    MapTaskController.onTaskMarkerRightClick(marker);
+                }).drag(function () {
+                    MapTaskController.onTaskMarkerDrag(marker);
+                }).dragend(function () {
+                    MapTaskController.onTaskMarkerDragEnd(marker);
+                }).mouseover(function () {
+                    MapTaskController.onTaskMarkerMouseover(marker);
+                }).mouseout(function () {
+                    MapTaskController.onTaskMarkerMouseout(marker);
+                });
+            } else if (task.getType() === this.state.tasks.TASK_PATROL) {
+                var path = [];
+                for (var i = 0; i < task.getPoints().length; i++) {
+                    var point = task.getPoints()[i];
+                    path.push(_.position(point.latitude, point.longitude));
+                }
+
+                this.$el.gmap("addShape", "Polyline", {
+                    id: task.getId(),
+                    editable: true,
+                    path: path,
+                    strokeOpacity: 0.8,
+                    strokeColor: 'black',
+                    strokeWeight: 5,
+                    zIndex: 0
+                });
+                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
+                google.maps.event.addListener(polyline.getPath(), 'insert_at', function (vertex) {
+                    MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
+                });
+                google.maps.event.addListener(polyline.getPath(), 'set_at', function (vertex) {
+                    MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
+                });
+                google.maps.event.addListener(polyline.getPath(), 'remove_at', function (vertex) {
+                    MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
+                });
+                google.maps.event.addListener(polyline, "rightclick", function (event) {
+                    MapTaskController.onPatrolTaskRightClick(task.getId(), polyline, event)
+                });
+
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    id: task.getId(),
+                    position: task.getPosition(),
+                    zIndex: 3
+                });
+                var marker = this.$el.gmap("get", "markers")[task.getId()];
+                $(marker).mouseover(function () {
+                    MapTaskController.onTaskMarkerMouseover(marker);
+                }).mouseout(function () {
+                    MapTaskController.onTaskMarkerMouseout(marker);
+                });
+            } else if (task.getType() === this.state.tasks.TASK_REGION) {
+                var path = [];
+                for (var i = 0; i < task.getPoints().length; i++) {
+                    var point = task.getPoints()[i];
+                    path.push(_.position(point.latitude, point.longitude));
+                }
+                this.$el.gmap("addShape", "Polyline", {
+                    id: task.getId(),
+                    editable: false,
+                    clickable: false,
+                    path: path,
+                    strokeOpacity: 0.3,
+                    strokeColor: 'black',
+                    strokeWeight: 5,
+                    zIndex: 0
+                });
+
+                var corners = task.getCorners();
+                var sw = _.position(corners[3].latitude, corners[3].longitude);
+                var ne = _.position(corners[1].latitude, corners[1].longitude);
+                this.$el.gmap("addShape", "Rectangle", {
+                    id: task.getId(),
+                    editable: true,
+                    bounds: new google.maps.LatLngBounds(sw, ne),
+                    strokeOpacity: 0.8,
+                    strokeColor: 'black',
+                    strokeWeight: 5,
+                    zIndex: 0
+                });
+                var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
+                google.maps.event.addListener(rectangle, "bounds_changed", function () {
+                    MapTaskController.processRegionTaskChange(task.getId(), rectangle)
+                });
+                google.maps.event.addListener(rectangle, "rightclick", function (event) {
+                    MapTaskController.openTaskEditWindow(task, event.latLng);
+                });
+
+                this.$el.gmap("addMarker", {
+                    bounds: false,
+                    draggable: false,
+                    id: task.getId(),
+                    position: task.getPosition(),
+                    zIndex: 3
+                });
+                var marker = this.$el.gmap("get", "markers")[task.getId()];
+                $(marker).mouseover(function () {
+                    MapTaskController.onTaskMarkerMouseover(marker);
+                }).mouseout(function () {
+                    MapTaskController.onTaskMarkerMouseout(marker);
+                });
             }
-
-            this.$el.gmap("addShape", "Polyline", {
-                id: task.getId(),
-                editable: true,
-                path: path,
-                strokeOpacity: 0.8,
-                strokeColor: 'black',
-                strokeWeight: 5,
-                zIndex: 0
-            });
-            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
-            google.maps.event.addListener(polyline.getPath(), 'insert_at', function (vertex) {
-                MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
-            });
-            google.maps.event.addListener(polyline.getPath(), 'set_at', function (vertex) {
-                MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
-            });
-            google.maps.event.addListener(polyline.getPath(), 'remove_at', function (vertex) {
-                MapTaskController.processPatrolTaskPathChange(task.getId(), polyline, vertex);
-            });
-            google.maps.event.addListener(polyline, "rightclick", function (event) {
-                MapTaskController.onPatrolTaskRightClick(task.getId(), polyline, event)
-            });
-
-            this.$el.gmap("addMarker", {
-                bounds: false,
-                draggable: false,
-                id: task.getId(),
-                position: task.getPosition(),
-                zIndex: 3
-            });
-            var marker = this.$el.gmap("get", "markers")[task.getId()];
-            $(marker).mouseover(function () {
-                MapTaskController.onTaskMarkerMouseover(marker);
-            }).mouseout(function () {
-                MapTaskController.onTaskMarkerMouseout(marker);
-            });
         }
-        else if(task.getType() === this.state.tasks.TASK_REGION) {
-            var path = [];
-            for (var i = 0; i < task.getPoints().length; i++) {
-                var point = task.getPoints()[i];
-                path.push(_.position(point.latitude, point.longitude));
-            }
-            this.$el.gmap("addShape", "Polyline", {
-                id: task.getId(),
-                editable: false,
-                clickable: false,
-                path: path,
-                strokeOpacity: 0.3,
-                strokeColor: 'black',
-                strokeWeight: 5,
-                zIndex: 0
-            });
-
-            var corners = task.getCorners();
-            var sw = _.position(corners[3].latitude, corners[3].longitude);
-            var ne = _.position(corners[1].latitude, corners[1].longitude);
-            this.$el.gmap("addShape", "Rectangle", {
-                id: task.getId(),
-                editable: true,
-                bounds: new google.maps.LatLngBounds(sw, ne),
-                strokeOpacity: 0.8,
-                strokeColor: 'black',
-                strokeWeight: 5,
-                zIndex: 0
-            });
-            var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
-            google.maps.event.addListener(rectangle, "bounds_changed", function() {
-                MapTaskController.processRegionTaskChange(task.getId(), rectangle)
-            });
-            google.maps.event.addListener(rectangle, "rightclick", function(event) {
-                MapTaskController.openTaskEditWindow(task, event.latLng);
-            });
-
-            this.$el.gmap("addMarker", {
-                bounds: false,
-                draggable: false,
-                id: task.getId(),
-                position: task.getPosition(),
-                zIndex: 3
-            });
-            var marker = this.$el.gmap("get", "markers")[task.getId()];
-            $(marker).mouseover(function () {
-                MapTaskController.onTaskMarkerMouseover(marker);
-            }).mouseout(function () {
-                MapTaskController.onTaskMarkerMouseout(marker);
-            });
-        }
-         */
     },
     onTaskChange: function (task) {
-        MapTaskController.heatmapTaskUpdateGeneric(task);
-        /*
-        var marker = this.$el.gmap("get", "markers")[task.getId()];
-        if (marker)
-            marker.setPosition(task.getPosition());
-        this.views.control.trigger("update:agents");
-         */
+        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+            MapTaskController.heatmapTaskUpdateGeneric(task);
+        } else {
+            var marker = this.$el.gmap("get", "markers")[task.getId()];
+            if (marker)
+                marker.setPosition(task.getPosition());
+            this.views.control.trigger("update:agents");
+        }
     },
     onTaskRemove: function (task) {
-        MapAgentController.heatmapAgentUpdateGeneric();
-        MapTaskController.heatmapTaskUpdateGeneric(task);
-        /*
-        console.log('Task removed ' + task.getId());
-        if(task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
-            var marker = this.$el.gmap("get", "markers")[task.getId()];
-            if (marker) {
-                marker.setMap(null);
-                delete marker;
+        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+            MapAgentController.heatmapAgentUpdateGeneric();
+            MapTaskController.heatmapTaskUpdateGeneric(task);
+        } else {
+            console.log('Task removed ' + task.getId());
+            if (task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
+                var marker = this.$el.gmap("get", "markers")[task.getId()];
+                if (marker) {
+                    marker.setMap(null);
+                    delete marker;
+                }
+            } else if (task.getType() === this.state.tasks.TASK_PATROL) {
+                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
+                if (polyline) {
+                    polyline.setMap(null);
+                    delete polyline;
+                }
+            } else if (task.getType() === this.state.tasks.TASK_REGION) {
+                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
+                if (polyline) {
+                    polyline.setMap(null);
+                    delete polyline;
+                }
+                var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
+                if (rectangle) {
+                    rectangle.setMap(null);
+                    delete rectangle;
+                }
             }
+            task.destroy();
         }
-        else if(task.getType() === this.state.tasks.TASK_PATROL) {
-            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
-            if (polyline) {
-                polyline.setMap(null);
-                delete polyline;
-            }
-        }
-        else if(task.getType() === this.state.tasks.TASK_REGION) {
-            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
-            if (polyline) {
-                polyline.setMap(null);
-                delete polyline;
-            }
-            var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
-            if (rectangle) {
-                rectangle.setMap(null);
-                delete rectangle;
-            }
-        }
-        task.destroy();
-         */
     },
     onTaskCompleted: function (task) {
-        MapTaskController.heatmapTaskUpdateGeneric(task);
-        /*
-        console.log("Task completed " + task.getId());
-        var self = this;
-
-        // TODO Maybe consider changing the image now. Probably not until the image is dealt with though
-        var uid = task.getId() + "_completed";
-        if (task.getType() === this.state.tasks.TASK_SHALLOW_SCAN || task.getType() === this.state.tasks.TASK_DEEP_SCAN) {
-            var content = _.template($("#popup_left_right").html(), {
-                left_content: task.getId() + " scanned.",
-                right_content: "View",
-                uid: uid
-            });
-
-            spop({
-                template: content,
-                style: 'default'
-            });
-
-            // TODO Maybe mount this on the target popup instead
-            $("#" + uid).on('click', function () {
-                alert("temp approach. In future this should change view and trigger an opening of this image");
-                MapImageController.showImage(task)
-            });
-
+        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+            MapTaskController.heatmapTaskUpdateGeneric(task);
         } else {
-            var content = _.template($("#popup_left_right").html(), {
-                left_content: task.getId() + " has been completed",
-                right_content: "View",
-                uid: uid
-            });
+            console.log("Task completed " + task.getId());
+            var self = this;
 
-            spop({
-                template: content,
-                style: 'default'
-            });
+            // TODO Maybe consider changing the image now. Probably not until the image is dealt with though
+            var uid = task.getId() + "_completed";
+            if (task.getType() === this.state.tasks.TASK_SHALLOW_SCAN || task.getType() === this.state.tasks.TASK_DEEP_SCAN) {
+                var content = _.template($("#popup_left_right").html(), {
+                    left_content: task.getId() + " scanned.",
+                    right_content: "View",
+                    uid: uid
+                });
 
-            $("#" + uid).on('click', function () {
-                self.map.panTo(task.getPosition());
-                self.map.setZoom(19);
-            });
+                spop({
+                    template: content,
+                    style: 'default'
+                });
+
+                // TODO Maybe mount this on the target popup instead
+                $("#" + uid).on('click', function () {
+                    alert("temp approach. In future this should change view and trigger an opening of this image");
+                    MapImageController.showImage(task)
+                });
+
+            } else {
+                var content = _.template($("#popup_left_right").html(), {
+                    left_content: task.getId() + " has been completed",
+                    right_content: "View",
+                    uid: uid
+                });
+
+                spop({
+                    template: content,
+                    style: 'default'
+                });
+
+                $("#" + uid).on('click', function () {
+                    self.map.panTo(task.getPosition());
+                    self.map.setZoom(19);
+                });
+            }
         }
-         */
     },
     onTaskMarkerLeftClick: function (marker) {},
     onTaskMarkerRightClick: function (marker) {
@@ -312,16 +307,33 @@ var MapTaskController = {
         MapAgentController.taskIdToAllocateManually = null;
         this.updateAllocationRendering();
     },
-    updateAllTaskIcons: function() {
-        self = this;
-        this.state.tasks.each(function (task) {
-            // I'm temporarily stealing the Disco mode from deeper in this code as an indication of when the code is
-            //  working. Rest assured, it is not the end product -WH
-            var colorOptions = {'h': Math.random()*360, 's': 1, 'l': 1, 'name':'red'}
-            MapTaskController.updateTaskMarkerIcon(task.getId(), colorOptions)
-            console.log("Here we can get the zoom level and set visual style. It seems that these colors don't persist. \
+    updateAllTaskIcons: function(newChange) {
+        var self = this;
+        if (newChange) {
+            self.state.tasks.each(function (task) {
+                var marker = self.$el.gmap("get", "markers")[task.getId()];
+                if (marker) {
+                    marker.setMap(null);
+                    delete marker;
+                }
+            });
+            MapTaskHeatmapController.clearAll();
+        }
+
+        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+            console.log("redrawing task maps")
+            MapTaskController.heatmapTaskUpdateGeneric();
+        } else {
+            console.log("redrawing task markers")
+            this.state.tasks.each(function (task) {
+                // I'm temporarily stealing the Disco mode from deeper in this code as an indication of when the code is
+                //  working. Rest assured, it is not the end product -WH
+                var colorOptions = {'h': Math.random() * 360, 's': 1, 'l': 1, 'name': 'red'}
+                MapTaskController.updateTaskMarkerIcon(task.getId(), colorOptions)
+                console.log("Here we can get the zoom level and set visual style. It seems that these colors don't persist. \
             We may be able to optimize by setting heatmap on/off here then not touching in the normal update")
-        });
+            });
+        }
     },
     updateTaskRendering: function (taskId, colourOptions) {
         var task = this.state.tasks.get(taskId);

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Handles classification of images in the review scene
+ * Handles review of data, reporting of stats, and any other information reported back by the user
  * @author William Hunt
  */
 public class ReviewHandler extends RestHandler {
@@ -31,11 +31,15 @@ public class ReviewHandler extends RestHandler {
             case "/classify":
                 handleClassify(req, resp);
                 break;
-
+            case "/report/workload":
+                handleReportWorkload(req, resp);
+                break;
             default:
                 throw new UnregisteredPathException("No method for handling POST request on " + req.getPath());
         }
     }
+
+
 
     /**
      * This will handle an incoming ruling and:
@@ -57,6 +61,19 @@ public class ReviewHandler extends RestHandler {
         boolean status = Boolean.parseBoolean(params.get("status"));
 
         this.simulator.getImageController().classify(ref, status);
+
+    }
+
+    private void handleReportWorkload(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = List.of("level");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+
+        Integer level = Integer.valueOf(params.get("level"));
+
+        // TODO possibly make another controller for all of this
+        this.simulator.getState().setWorkloadLevel(level);
 
     }
 

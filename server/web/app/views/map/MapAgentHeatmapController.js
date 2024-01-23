@@ -24,7 +24,6 @@ var MapAgentHeatmapController = {
         this.onAgentMarkerDragEnd = _.bind(this.onAgentMarkerDragEnd, context);
         this.updateTaskRendering = _.bind(this.updateTaskRendering, context);
         this.adjustHeatmapLocation = _.bind(this.adjustHeatmapLocation, context);
-
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -51,8 +50,6 @@ var MapAgentHeatmapController = {
                 });
 
                 agents.forEach((t) => {
-                    console.log("Agent Teams:")
-                    console.log(t.getAgentTeam())
                     //console.log("Considering " + t.getId())
                     if (!MapAgentHeatmapController.checkIfIn2DList(t, groups)) {
                         //console.log("-pushed new list")
@@ -278,7 +275,7 @@ var MapAgentHeatmapController = {
 
         for (let i = 0; i < groupAllocation.length; i++) {
             const g = groupAllocation[i];
-            //console.log("    " + i + " -> " + g)
+            console.log("    " + i + " -> " + g)
 
             var groupId = "AgentGroup-" + i;
             var mainLineId = groupId + "main";
@@ -288,38 +285,17 @@ var MapAgentHeatmapController = {
 
             //Draw or hide 'real' allocation.
             if (g !== null) {
+                console.log("drawing from " + groupId + " to " + taskGroupId)
                 self.drawAllocation(mainLineId, "green", groupId, taskGroupId);
             } else {
                 self.hidePolyline(mainLineId);
             }
         }
 
-
-
-        /*
-        //Draw or hide 'temp' allocation.
-        if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
-            MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
-            if((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
-                self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
-        }
-        else
-            self.hidePolyline(tempLineId);
-
-        //Draw or hide 'dropped' allocation.
-        if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
-            self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
-        else
-            self.hidePolyline(droppedLineId);
-
-         */
-
-
         //Colour task marker that is being hovered over when manually allocating
         if (MapAgentHeatmapController.groupIdToAllocateManually) {
-            MapTaskHeatmapController.updateTaskRendering(MapAgentHeatmapController.groupIdToAllocateManually, this.MarkerColourEnum.BLUE);
+            MapTaskHeatmapController.updateTaskRendering(MapAgentHeatmapController.groupIdToAllocateManually, self.MarkerColourEnum.BLUE);
         }
-
     },
     updateAllAgentMarkers: function () {
         var self = this;
@@ -387,7 +363,8 @@ var MapAgentHeatmapController = {
         var marker = this.$el.gmap("get", "markers")["AgentGroup-"+index];
         if (marker) {
             marker.setPosition(newPos);
-            marker.setOptions({labelContent: "[" + index + "] " + group.length + " Agents"});
+            //marker.setOptions({labelContent: "[" + index + "] " + group.length + " Agents"});
+            marker.setOptions({labelContent: group.length + " Agents"});
         } else {
 
 
@@ -399,7 +376,8 @@ var MapAgentHeatmapController = {
                 centrePos: newPos,
                 position: newPos,
                 marker: MarkerWithLabel,
-                labelContent: "[" + index + "] " + group.length + " Agents",
+                //labelContent: "[" + index + "] " + group.length + " Agents",
+                labelContent: group.length + " Agents",
                 labelAnchor: new google.maps.Point(25, 65),
                 labelClass: "labels",
                 labelStyle: {opacity: 1.0},
@@ -576,5 +554,21 @@ var MapAgentHeatmapController = {
                 'filter': 'hue-rotate(' + h + 'deg) saturate(' + s + ') brightness(' + l + ')'
             });
         }
+    },
+    clearAll: function () {
+        MapAgentHeatmapController.agentHeatmaps.forEach((h) => {
+            try {
+                h.setMap(null);
+                delete h;
+            } catch (e) {}
+        })
+
+        MapAgentHeatmapController.agentHeatmaps = [];
+        MapAgentHeatmapController.addedGroups = [];
+        MapAgentHeatmapController.taskMarkers = [];
+        MapAgentHeatmapController.groupIdToAllocateManually = null;
+        MapAgentHeatmapController.isManuallyAllocating = null;
+        MapAgentHeatmapController.running = false;
+        MapAgentHeatmapController.groupStatuses = [];
     }
 };
