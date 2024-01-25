@@ -18,6 +18,7 @@ var MapTaskController = {
         this.onTaskMarkerMouseover = _.bind(this.onTaskMarkerMouseover, context);
         this.onTaskMarkerMouseout = _.bind(this.onTaskMarkerMouseout, context);
         this.onTaskCompleted = _.bind(this.onTaskCompleted, context);
+        this.clearAll = _.bind(this.clearAll, context);
         this.updateTaskRendering = _.bind(this.updateTaskRendering, context);
         this.updateTaskMarkerIcon = _.bind(this.updateTaskMarkerIcon, context);
         this.processPatrolTaskPathChange = _.bind(this.processPatrolTaskPathChange, context);
@@ -46,12 +47,41 @@ var MapTaskController = {
             MapTaskController.onTaskCompleted(task);
         });
     },
-    heatmapTaskUpdateGeneric: function (task) {
+    heatmapTaskUpdateGeneric: function () {
         MapTaskHeatmapController.drawTaskMaps();
     },
     onTaskAdd: function (task) {
         if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
+            this.$el.gmap("addMarker", {
+                bounds: false,
+                draggable: true,
+                id: task.getId(),
+                position: task.getPosition(),
+                marker: MarkerWithLabel,
+                labelContent: task.getId(),
+                labelAnchor: new google.maps.Point(25, 65),
+                labelClass: "labels",
+                labelStyle: {opacity: 1.0},
+                raiseOnDrag: false,
+                zIndex: 3
+            });
+            var marker = this.$el.gmap("get", "markers")[task.getId()];
+            MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
+            $(marker).click(function () {
+                MapTaskController.onTaskMarkerLeftClick(marker);
+            }).rightclick(function () {
+                MapTaskController.onTaskMarkerRightClick(marker);
+            }).drag(function () {
+                MapTaskController.onTaskMarkerDrag(marker);
+            }).dragend(function () {
+                MapTaskController.onTaskMarkerDragEnd(marker);
+            }).mouseover(function () {
+                MapTaskController.onTaskMarkerMouseover(marker);
+            }).mouseout(function () {
+                MapTaskController.onTaskMarkerMouseout(marker);
+            });
+            marker.setMap(null)
         } else {
             console.log("Task added " + task.getId());
             if (task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
@@ -190,37 +220,39 @@ var MapTaskController = {
         }
     },
     onTaskRemove: function (task) {
+        // TODO on remove, make heatmap markers clear
+        MapTaskHeatmapController.updateFor(task);
         if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
             MapAgentController.heatmapAgentUpdateGeneric();
-            MapTaskController.heatmapTaskUpdateGeneric(task);
-        } else {
-            console.log('Task removed ' + task.getId());
-            if (task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
-                var marker = this.$el.gmap("get", "markers")[task.getId()];
-                if (marker) {
-                    marker.setMap(null);
-                    delete marker;
-                }
-            } else if (task.getType() === this.state.tasks.TASK_PATROL) {
-                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
-                if (polyline) {
-                    polyline.setMap(null);
-                    delete polyline;
-                }
-            } else if (task.getType() === this.state.tasks.TASK_REGION) {
-                var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
-                if (polyline) {
-                    polyline.setMap(null);
-                    delete polyline;
-                }
-                var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
-                if (rectangle) {
-                    rectangle.setMap(null);
-                    delete rectangle;
-                }
+            MapTaskController.heatmapTaskUpdateGeneric();
+        } //else {
+        console.log('Task removed ' + task.getId());
+        if (task.getType() === this.state.tasks.TASK_WAYPOINT || task.getType() === this.state.tasks.TASK_MONITOR || task.getType() === this.state.tasks.TASK_VISIT) {
+            var marker = this.$el.gmap("get", "markers")[task.getId()];
+            if (marker) {
+                marker.setMap(null);
+                delete marker;
             }
-            task.destroy();
+        } else if (task.getType() === this.state.tasks.TASK_PATROL) {
+            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
+            if (polyline) {
+                polyline.setMap(null);
+                delete polyline;
+            }
+        } else if (task.getType() === this.state.tasks.TASK_REGION) {
+            var polyline = this.$el.gmap("get", "overlays > Polyline", [])[task.getId()];
+            if (polyline) {
+                polyline.setMap(null);
+                delete polyline;
+            }
+            var rectangle = this.$el.gmap("get", "overlays > Rectangle", [])[task.getId()];
+            if (rectangle) {
+                rectangle.setMap(null);
+                delete rectangle;
+            }
         }
+        task.destroy();
+        //}
     },
     onTaskCompleted: function (task) {
         if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
@@ -267,6 +299,7 @@ var MapTaskController = {
                 });
             }
         }
+        MapTaskHeatmapController.updateFor(task);
     },
     onTaskMarkerLeftClick: function (marker) {},
     onTaskMarkerRightClick: function (marker) {
@@ -318,6 +351,7 @@ var MapTaskController = {
                 }
             });
             MapTaskHeatmapController.clearAll();
+            MapTaskController.clearAll();
         }
 
         if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
@@ -326,14 +360,19 @@ var MapTaskController = {
         } else {
             console.log("redrawing task markers")
             this.state.tasks.each(function (task) {
-                // I'm temporarily stealing the Disco mode from deeper in this code as an indication of when the code is
-                //  working. Rest assured, it is not the end product -WH
-                var colorOptions = {'h': Math.random() * 360, 's': 1, 'l': 1, 'name': 'red'}
-                MapTaskController.updateTaskMarkerIcon(task.getId(), colorOptions)
-                console.log("Here we can get the zoom level and set visual style. It seems that these colors don't persist. \
-            We may be able to optimize by setting heatmap on/off here then not touching in the normal update")
+                var marker = self.$el.gmap("get", "markers")[task.getId()];
+                marker.setMap(self.map)
             });
         }
+    },
+    clearAll: function () {
+        this.state.tasks.forEach((t) => {
+            var marker = this.$el.gmap("get", "markers")[t.getId()];
+            if (marker) {
+                marker.setMap(null);
+                delete marker;
+            }
+        })
     },
     updateTaskRendering: function (taskId, colourOptions) {
         var task = this.state.tasks.get(taskId);

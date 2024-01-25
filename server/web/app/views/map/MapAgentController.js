@@ -80,7 +80,6 @@ var MapAgentController = {
         console.log(this.state.getDynamicUIFeatures()[MapController.workload_level - 1])
         if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
             MapAgentController.heatmapAgentUpdateGeneric(true);
-            // TODO may need to remove these markers when we switch up
         } else {
             console.log('Agent added ' + agent.getId());
             var id = agent.getId();
@@ -362,6 +361,7 @@ var MapAgentController = {
     },
     updateAgentMarkerVisibility: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
+        marker.setMap(self.map)
         marker.setVisible(agent.isVisible());
         console.log("set " + agent.getId() + " is now " + agent.isVisible())
     },
@@ -376,6 +376,7 @@ var MapAgentController = {
                 }
             });
             MapAgentHeatmapController.clearAll();
+            self.clearAllocationRendering()
         }
         if (self.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
             console.log("redrawing agent maps")
@@ -384,6 +385,7 @@ var MapAgentController = {
             console.log("redrawing agent markers")
             self.state.agents.each(function (agent) {
                 MapAgentController.updateAgentMarkerIcon(agent);
+                MapAgentController.updateAgentMarkerVisibility(agent);
             });
         }
     },

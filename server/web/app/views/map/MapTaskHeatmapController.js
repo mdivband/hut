@@ -16,6 +16,7 @@ var MapTaskHeatmapController = {
         this.removeTaskMarkerFor = _.bind(this.removeTaskMarkerFor, context);
         this.addTaskMarkerFor = _.bind(this.addTaskMarkerFor, context);
         this.updateAllTaskMarkers = _.bind(this.updateAllTaskMarkers, context);
+        this.updateFor = _.bind(this.updateFor, context);
         this.updateTaskRendering = _.bind(this.updateTaskRendering, context);
         this.clearAll = _.bind(this.clearAll, context);
     },
@@ -225,6 +226,16 @@ var MapTaskHeatmapController = {
             }
         }
     },
+    updateFor: function (task) {
+        // TODO remove this marker's group. The whole map is then refreshed above
+        for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
+            const g = MapTaskHeatmapController.addedGroups[i];
+            if (g.includes(task)) {
+                MapTaskHeatmapController.removeTaskMarkerFor(i);
+            }
+
+        }
+    },
     addTaskMarkerFor: function (group, index) {
         //console.log("Group size " + group.length + " index = " + index)
         // 1. Find centre of coords
@@ -240,8 +251,8 @@ var MapTaskHeatmapController = {
         var marker = this.$el.gmap("get", "markers")["TaskGroup-"+index];
         if (marker) {
             marker.setPosition(newPos);
-            //marker.setOptions({labelContent: "[" + index + "] " + group.length + " Tasks"});
-            marker.setOptions({labelContent: group.length + " Tasks"});
+            marker.setOptions({labelContent: "[" + index + "] " + group.length + " Tasks"});
+            //marker.setOptions({labelContent: group.length + " Tasks"});
         } else {
 
 
@@ -253,15 +264,15 @@ var MapTaskHeatmapController = {
                 position: newPos,
                 centrePos: newPos,
                 marker: MarkerWithLabel,
-                //labelContent: "[" + index + "] " + group.length + " Tasks",
-                labelContent: group.length + " Tasks",
+                labelContent: "[" + index + "] " + group.length + " Tasks",
+                //labelContent: group.length + " Tasks",
                 labelAnchor: new google.maps.Point(25, 65),
                 labelClass: "labels",
                 labelStyle: {opacity: 1.0},
                 raiseOnDrag: false,
                 zIndex: 3
             });
-            var marker = this.$el.gmap("get", "markers")["TaskGroup-" + index];
+            marker = this.$el.gmap("get", "markers")["TaskGroup-" + index];
 
             // TODO what is this???
             //MapTaskController.updateTaskRendering("TaskGroup-" + index, this.MarkerColourEnum.RED);
@@ -274,9 +285,10 @@ var MapTaskHeatmapController = {
             MapTaskHeatmapController.updateTaskRendering("TaskGroup-" + index, this.MarkerColourEnum.BLUE)
 
         }
+        marker.setMap(this.map)
     },
     removeTaskMarkerFor: function (index) {
-        var marker = this.$el.gmap("get", "markers")["Group-"+index];
+        var marker = this.$el.gmap("get", "markers")["TaskGroup-"+index];
         if (marker) {
             marker.setMap(null);
             delete marker;
@@ -367,6 +379,12 @@ var MapTaskHeatmapController = {
                 delete h;
             } catch (e) {}
         })
+
+        for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
+            try {
+                MapTaskHeatmapController.removeTaskMarkerFor(i)
+            } catch (e) {}
+        }
 
         MapTaskHeatmapController.taskHeatmaps = [];
         MapTaskHeatmapController.addedGroups = [];

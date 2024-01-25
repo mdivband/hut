@@ -682,13 +682,23 @@ public class Allocator {
             for (Agent agent : workingAgents) {
                 agents.remove(agent);
             }
-
+            System.out.println(tasks);
+            System.out.println(agents);
+            List<Agent> agentsCopy = new ArrayList<>(agents);
+            int i = 0;
             for (Task task : tasks) {
                 if (task.getAgents().size() < task.getGroup()) {
-                    int rnd = new Random().nextInt(agents.size());
-                    Agent agent = agents.get(rnd);
-                    result.put(agent.getId(), task.getId());
-                    agents.remove(agent);
+                    if (i < agents.size()) {
+                        int rnd = new Random().nextInt(agents.size());
+                        Agent agent = agents.get(rnd);
+                        result.put(agent.getId(), task.getId());
+                        agents.remove(agent);
+                    } else {
+                        int rnd = new Random().nextInt(agentsCopy.size());
+                        Agent agent = agentsCopy.get(rnd);
+                        ((AgentVirtual) agent).addTaskToQueue(task);
+                    }
+                    i++;
                 }
             }
 
@@ -1231,6 +1241,9 @@ public class Allocator {
     }
 
     public void dynamicRandomAssignSubgroup(List<Agent> agents, List<Task> tasks) {
+        System.out.println("Was fed:");
+        System.out.println(agents);
+        System.out.println(tasks);
         Map<String, String> result = randomCompute(agents, tasks, false);
         List<String> groupIds = result.keySet().stream().toList();
         result.forEach((k, v) -> {

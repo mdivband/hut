@@ -183,7 +183,8 @@ public class Simulator {
                 this.reset();
             }
 
-            if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
+            //if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
+            if (true) {
 
                 if (state.getAllocationStyle().equals("dynamic")) {
                     if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {

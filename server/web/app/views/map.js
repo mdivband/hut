@@ -582,8 +582,8 @@ App.Views.Map = Backbone.View.extend({
     },
     updateAllocationRendering: function () {
         // TODO fix (restore) the allocation renderings here
-        //if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
-        if (false) {
+        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+            MapTaskController.heatmapTaskUpdateGeneric();
             MapAgentHeatmapController.updateHeatmapAllocationRendering()
         } else {
             var self = this;
@@ -632,6 +632,18 @@ App.Views.Map = Backbone.View.extend({
             if (MapAgentController.taskIdToAllocateManually)
                 MapTaskController.updateTaskRendering(MapAgentController.taskIdToAllocateManually, this.MarkerColourEnum.BLUE);
         }
+    },
+    clearAllocationRendering: function () {
+        // TODO not working
+        var self = this;
+        this.state.agents.each(function (agent) {
+            var mainLineId = agent.id + "main";
+            self.hidePolyline(mainLineId);
+            var tempLineId = agent.id + "temp";
+            self.hidePolyline(tempLineId);
+            var droppedLineId = agent.id + "dropped";
+            self.hidePolyline(droppedLineId);
+        });
     },
     drawAllocation: function (lineId, lineColour, agentId, taskId) {
         var self = this;
