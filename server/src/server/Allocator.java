@@ -685,10 +685,11 @@ public class Allocator {
             System.out.println(tasks);
             System.out.println(agents);
             List<Agent> agentsCopy = new ArrayList<>(agents);
-            int i = 0;
+            //int i = 0;
             for (Task task : tasks) {
                 if (task.getAgents().size() < task.getGroup()) {
-                    if (i < agents.size()) {
+                    //if (i < agents.size()) {
+                    if (agents.size() > 0) {
                         int rnd = new Random().nextInt(agents.size());
                         Agent agent = agents.get(rnd);
                         result.put(agent.getId(), task.getId());
@@ -698,7 +699,7 @@ public class Allocator {
                         Agent agent = agentsCopy.get(rnd);
                         ((AgentVirtual) agent).addTaskToQueue(task);
                     }
-                    i++;
+                    //i++;
                 }
             }
 

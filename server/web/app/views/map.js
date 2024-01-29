@@ -40,11 +40,22 @@ App.Views.Map = Backbone.View.extend({
 
         // The MapTypeId is the default setting (ROADMAP and SATELLITE are the standard two)
         // The _Control variables enable and disable buttons for the user to change this
+
+        var myStyles =[
+            {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [
+                    { visibility: "off" }
+                ]
+            }
+        ];
+
         this.mapOptions = {
             zoom: 18,
             center: new google.maps.LatLng(50.939025, -1.461583),
             mapTypeId: google.maps.MapTypeId.ROADMAP,
-
+            styles: myStyles,
             zoomControl: true,
             zoomControlOptions: {
                 position: google.maps.ControlPosition.RIGHT_BOTTOM,

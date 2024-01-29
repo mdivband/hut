@@ -255,8 +255,10 @@ var MapTaskController = {
         //}
     },
     onTaskCompleted: function (task) {
+        MapTaskHeatmapController.updateFor(task);
         if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
+            MapAgentController.heatmapAgentUpdateGeneric();
         } else {
             console.log("Task completed " + task.getId());
             var self = this;
@@ -299,7 +301,6 @@ var MapTaskController = {
                 });
             }
         }
-        MapTaskHeatmapController.updateFor(task);
     },
     onTaskMarkerLeftClick: function (marker) {},
     onTaskMarkerRightClick: function (marker) {

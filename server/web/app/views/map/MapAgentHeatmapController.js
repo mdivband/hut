@@ -40,6 +40,7 @@ var MapAgentHeatmapController = {
         var droppedAllocation = this.state.getDroppedAllocation();
 
         if (!reset && (MapAgentHeatmapController.running || MapAgentHeatmapController.arraysEqual(this.state.agents, MapAgentHeatmapController.addedGroups.flat(1)))) {
+        //if (false) {
             // No need to redraw
         } else {
             MapAgentHeatmapController.running = true;
@@ -115,19 +116,25 @@ var MapAgentHeatmapController = {
                     });
                 });
 
+                // We have now built the groups that we need to make into maps
                 for (let group_index = 0; group_index < groups.length; group_index++){
                     const group = groups[group_index];
                     if (group.length !== 0) {
-                        var added = false;
-                        MapAgentHeatmapController.addedGroups.forEach((addedGroup) => {
-                            if (MapAgentHeatmapController.arraysEqual(addedGroup, group)) {
+                        var addedIndex = -1;
+                        for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++){
+                            if (MapAgentHeatmapController.arraysEqual(MapAgentHeatmapController.addedGroups[i], group)) {
                                 // This exact group is already here
-                                added = true;
+                                addedIndex = i;
+                                break
                             }
-                        });
+                        }
 
-                        if (added) {
+                        //if (addedIndex !== -1 && MapAgentHeatmapController.agentHeatmaps.hasOwnProperty(addedIndex) && MapAgentHeatmapController.agentHeatmaps[addedIndex] !== null) {
+                        if (false) {
                             // Already have this heatmap
+                            //alert("No change for " + addedIndex)
+                            // TODO I think this is where we still need to update the location
+
                         } else {
                             var heatmapData = new google.maps.MVCArray();
                             group.forEach((g) => {
@@ -160,6 +167,7 @@ var MapAgentHeatmapController = {
 
                             if (matchedMap !== null) {
 
+                                /*
                                 MapAgentHeatmapController.addedGroups[matchedMap].forEach((g) => {
                                     heatmapData.push({
                                         location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
@@ -167,14 +175,15 @@ var MapAgentHeatmapController = {
                                     });
                                 });
 
+                                 */
+
                                 var heatmap = new google.maps.visualization.HeatmapLayer({
                                     data: heatmapData
                                 });
 
-                                //MapHeatmapController.addedGroups.splice(matchedMap, 1)
+
                                 MapAgentHeatmapController.addedGroups[matchedMap] = group;
-                                //console.log("MAP: ")
-                                //console.log(MapAgentHeatmapController.agentHeatmaps[matchedMap])
+
                                 if (MapAgentHeatmapController.agentHeatmaps[matchedMap] !== null)  {// || MapAgentHeatmapController.agentHeatmaps[matchedMap].isEmpty())) {
                                     try {
                                         MapAgentHeatmapController.agentHeatmaps[matchedMap].setMap(null);
@@ -219,8 +228,14 @@ var MapAgentHeatmapController = {
                     } else {
                         // This is an empty group so we should remove its heatmap and task marker
                         //alert("removing " + group_index)
+                        try {
+                            MapAgentHeatmapController.agentHeatmaps[group_index].setMap(null);
+                            delete MapAgentHeatmapController.agentHeatmaps[group_index];
+                        } catch (e) {}
+                        MapAgentHeatmapController.removeAgentMarkerFor(group_index)
                         MapAgentHeatmapController.agentHeatmaps[group_index] = [];
                         MapAgentHeatmapController.addedGroups[group_index] = [];
+                        //group[group_index] = [];
 
                         // TODO doesn't add marker immediately
 
@@ -228,6 +243,7 @@ var MapAgentHeatmapController = {
                 }
 
                 MapAgentHeatmapController.addedGroups = groups
+
                 //console.log("Groups after heatmap bit: " + groups.length)
                 //groups.forEach((group) => {
                 //    console.log(" g: ")

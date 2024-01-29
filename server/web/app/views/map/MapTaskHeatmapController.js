@@ -195,7 +195,8 @@ var MapTaskHeatmapController = {
                 }
             }
 
-            MapTaskHeatmapController.addedGroups = groups
+            //MapTaskHeatmapController.addedGroups = groups
+
             //console.log("Groups after heatmap bit: " + groups.length)
             //groups.forEach((group) => {
             //    console.log(" g: ")
@@ -231,7 +232,12 @@ var MapTaskHeatmapController = {
         for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
             const g = MapTaskHeatmapController.addedGroups[i];
             if (g.includes(task)) {
+                MapTaskHeatmapController.addedGroups[i] = []
                 MapTaskHeatmapController.removeTaskMarkerFor(i);
+                try {
+                    MapTaskHeatmapController.taskHeatmaps[i].setMap(null);
+                    delete MapTaskHeatmapController.taskHeatmaps[i];
+                } catch (e) {}
             }
 
         }
@@ -259,7 +265,7 @@ var MapTaskHeatmapController = {
             // 2. Add a new marker with label "X tasks" and related to this group
             this.$el.gmap("addMarker", {
                 bounds: false,
-                draggable: true,
+                draggable: false,
                 id: "TaskGroup-" + index,
                 position: newPos,
                 centrePos: newPos,
@@ -290,6 +296,7 @@ var MapTaskHeatmapController = {
     removeTaskMarkerFor: function (index) {
         var marker = this.$el.gmap("get", "markers")["TaskGroup-"+index];
         if (marker) {
+            //alert("Removing marker " + index)
             marker.setMap(null);
             delete marker;
         }
