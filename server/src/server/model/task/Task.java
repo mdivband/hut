@@ -76,8 +76,12 @@ public abstract class Task extends MObject implements Serializable {
             }
         }
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
-        if (a.getAgentTeam().stream().allMatch(n -> Simulator.instance.getState().getAgent(n).getTask() == null)) {
-            a.getAgentTeam().stream().filter(a1 -> !a.getId().equals(a1)).forEach(a1 -> Simulator.instance.getState().getAgent(a1).getAgentTeam().clear());
+        try {
+            if (!a.getAgentTeam().isEmpty() && a.getAgentTeam().stream().allMatch(n -> Simulator.instance.getState().getAgent(n).getTask() == null)) {
+                a.getAgentTeam().stream().filter(a1 -> !a.getId().equals(a1)).forEach(a1 -> Simulator.instance.getState().getAgent(a1).getAgentTeam().clear());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         LOGGER.info(String.format("%s; TSKCMP; Task completed (id); %s", Simulator.instance.getState().getTime(), this.getId()));
     }

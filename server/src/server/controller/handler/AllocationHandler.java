@@ -80,7 +80,7 @@ public class AllocationHandler extends RestHandler {
         if(!taskExists(taskId, resp))
             return;
         simulator.getAllocator().putInTempAllocation(agentId, taskId);
-        simulator.getState().getAgent(agentId).setAgentTeam(new ArrayList<>(Collections.singleton(taskId)));
+        simulator.getState().getAgent(agentId).setAgentTeam(new ArrayList<>(Collections.singleton(agentId)));
         simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
         resp.sendOkay();
     }
