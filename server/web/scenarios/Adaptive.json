@@ -1,13 +1,11 @@
 {
-  "gameId": "Dynamic Low",
+  "gameId": "ADAPTIVE",
   "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
   "comment": "TODO make this be our scenario with randomly spawning tasks. Will need a controller for it",
   "extendedUIOptions": {
     "predictions": false,
     "uncertainties": false
   },
-  "taskSpawnRate": 15,
-  "spawnRadius": 2000,
   "dynamicUIFeatures": {
     "1": [
       ""
