@@ -6,6 +6,8 @@
     "predictions": false,
     "uncertainties": false
   },
+  "taskSpawnRate": 45,
+  "spawnRadius": 2500,
   "dynamicUIFeatures": {
     "1": [
       ""

@@ -351,6 +351,10 @@ public class State {
         this.gameCentre = gameCentre;
     }
 
+    public Coordinate getGameCentre() {
+        return gameCentre;
+    }
+
     public synchronized void setAllocationMethod(String allocationMethod) {
         this.allocationMethod = allocationMethod;
     }

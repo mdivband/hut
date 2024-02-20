@@ -41,6 +41,8 @@ public class Simulator {
     private final TargetController targetController;
     private final ConnectionController connectionController;
     private final ScoreController scoreController;
+
+    private final MissionController missionController;
     private final HazardController hazardController;
     private final Allocator allocator;
     private final Modeller modeller;
@@ -68,6 +70,7 @@ public class Simulator {
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
+        missionController = new MissionController(this);
         modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
@@ -182,6 +185,10 @@ public class Simulator {
                 }
                 this.reset();
             }
+
+            // Decide if we should spawn a new task.
+            missionController.spawnIfRequired(state.getTime());
+
 
             //if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
             if (true) {
@@ -754,7 +761,13 @@ public class Simulator {
                 this.state.setDynamicUIFeatures(featureList);
             }
 
+            if(GsonUtils.hasKey(obj,"taskSpawnRate")) {
+                this.missionController.setTaskSpawnRate(((Double) GsonUtils.getValue(obj, "taskSpawnRate")).intValue());
+            }
 
+            if(GsonUtils.hasKey(obj,"spawnRadius")) {
+                this.missionController.setSpawnRadius(GsonUtils.getValue(obj, "spawnRadius"));
+            }
 
             return true;
         } catch (IOException e) {
@@ -861,5 +874,9 @@ public class Simulator {
 
     public ScoreController getScoreController() {
         return scoreController;
+    }
+
+    public MissionController getMissionController() {
+        return missionController;
     }
 }
