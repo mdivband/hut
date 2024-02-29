@@ -269,6 +269,7 @@ var simulator = {
                         self.initialisedState = true;
                         MapController.swapMode(self.state.getEditMode(), false);
 
+                        /*
                         if (self.state.getUserName() === "" && self.state.isLoggingById()) {
                             // TODO get their name, also log it in backend
                             var name = null;
@@ -278,8 +279,8 @@ var simulator = {
                             $.post("/mode/scenario/registerUser", {
                                 userName: name
                             });
-
                         }
+                         */
 
                         if (self.state.attributes.prov_doc == null) {
                             var api = new $.provStoreApi({
@@ -307,7 +308,8 @@ var simulator = {
                     } else if (!self.state.isInProgress()) {
                         self.views.map.clearAll()
                         var scenario_end_panel = document.createElement("div");
-                        if (!self.state.isPassthrough()) {
+                        alert("Finishing. PT = " + self.state.hasPassthrough())
+                        if (!self.state.hasPassthrough()) {
                             // Return to menu
                             scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                                 title: "Scenario Ended",

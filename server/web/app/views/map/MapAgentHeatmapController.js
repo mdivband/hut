@@ -46,7 +46,7 @@ var MapAgentHeatmapController = {
             MapAgentHeatmapController.running = true;
             if (!this.state.agents.isEmpty()) {
                 let groups = [];
-                let grouping_dist = 150;
+                let grouping_dist = 200;
                 let agents = []
                 this.state.agents.forEach(function (t) {
                     agents.push(t);

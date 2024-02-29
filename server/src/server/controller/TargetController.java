@@ -118,12 +118,21 @@ public class TargetController extends AbstractController {
      * @return
      */
     public Target getTargetAt(Coordinate c) {
+        getTargetAt(c, 5);
+        return null;
+    }
+
+    /**
+     * Returns the target at this coordinate (within epsilon m)
+     * @param c
+     * @return
+     */
+    public Target getTargetAt(Coordinate c, double epsilon) {
         for (Target t : Simulator.instance.getState().getTargets()) {
-            if(t.getCoordinate().getDistance(c) < 5) {  // TODO work out appropriate epsilon value
+            if(t.getCoordinate().getDistance(c) < epsilon) {
                 return t;
             }
         }
-        System.out.println("IMAGE ERROR: No target found near coordinate: " + c);
         return null;
     }
 

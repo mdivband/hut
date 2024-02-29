@@ -35,7 +35,7 @@ public class Simulator {
     private final State state;
     private final Sensor sensor;
 
-    private final QueueManager queueManager;
+    //private final QueueManager queueManager;
     private final AgentController agentController;
     private final TaskController taskController;
     private final TargetController targetController;
@@ -45,7 +45,7 @@ public class Simulator {
     private final MissionController missionController;
     private final HazardController hazardController;
     private final Allocator allocator;
-    private final Modeller modeller;
+    //private final Modeller modeller;
     private final ModelCaller modelCaller;
 
     private final ImageController imageController;
@@ -54,7 +54,6 @@ public class Simulator {
 
     private static final double gameSpeed = 5;
     private final Random random;
-    private final String nextFileName = "";
 
     private Thread mainLoopThread;
 
@@ -64,20 +63,20 @@ public class Simulator {
         sensor = new Sensor(this);
         connectionController = new ConnectionController(this);
         allocator = new Allocator(this);
-        queueManager = new QueueManager(this);
+        //queueManager = new QueueManager(this);
         agentController = new AgentController(this, sensor);
         taskController = new TaskController(this);
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
         missionController = new MissionController(this);
-        modeller = new Modeller(this);
+        //modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
 
         imageController = new ImageController(this);
 
-        queueManager.initDroneDataConsumer();
+        //queueManager.initDroneDataConsumer();
     }
 
     public static void main(String[] args) {
@@ -163,12 +162,14 @@ public class Simulator {
 
     private void mainLoop() {
         final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
+        int effCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addtion
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
             state.incrementTime(0.2);
             if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
+                /*
                 System.out.println("agents = " + state.getAgents());
                 int numFailed = 0;
                 for (Agent a : state.getAgents()) {
@@ -180,14 +181,25 @@ public class Simulator {
                 }
                 System.out.println("Num failed: " + numFailed);
                 modeller.outputResults();
-                if (state.isPassthrough()) {
+                 */
+                if (state.hasPassthrough()) {
                     updateNextValues();
                 }
+                //this.reset();
+                state.setInProgress(false);
                 this.reset();
+                //passthrough();
+
+
             }
 
-            // Decide if we should spawn a new task.
-            missionController.spawnIfRequired(state.getTime());
+            // Decide if we should spawn a new task
+            effCounter++;
+            if (effCounter == 5) {
+                missionController.spawnIfRequired(state.getTime());
+                effCounter = 0;
+            }
+
 
 
             //if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
@@ -214,7 +226,7 @@ public class Simulator {
                         for (Agent agent : state.getAgents()) {
                             if (agent instanceof AgentVirtual av) {
                                 if (agentController.modelFailure(av)) {
-                                    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                 }
 
                                 if (agent.isTimedOut()) {
@@ -222,7 +234,7 @@ public class Simulator {
                                 } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
                                     av.charge();
                                 } else if (agent.getBattery() < 0.15 && av.isAlive()) {
-                                    modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                     av.killBattery();
                                 } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
                                     //System.out.println(agent);
@@ -236,8 +248,8 @@ public class Simulator {
                                         getAllocator().dynamicAssign(av);
                                         Simulator.instance.getScoreController().incrementCompletedTask();
                                         // In-runtime allocation model
-                                        double successChance = modeller.calculateAll(agent);
-                                        state.setSuccessChance(successChance);
+                                        //double successChance = modeller.calculateAll(agent);
+                                        //state.setSuccessChance(successChance);
                                     } else if (agent.getBattery() < 0.9 && av.isAlive()) {
                                         // If no tasks available, charge up in case we need to replace it
                                         av.charge();
@@ -296,27 +308,28 @@ public class Simulator {
                         task.complete();
                     }
 
-                    if (!completedTasks.isEmpty()) {
-                        completedTasks.forEach(t -> modeller.passRecords(t.getId()));
+                    //if (!completedTasks.isEmpty()) {
+                        //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
     
-                    }
+                    //}
                 }
-                if (!modeller.isStarted()) {
-                    modeller.start();
-                    updateMissionModel();
-                }
+
+                //if (!modeller.isStarted()) {
+                //    modeller.start();
+                //    updateMissionModel();
+                //}
 
             }
 
-            scoreController.handleUpkeep();
+            //scoreController.handleUpkeep();
 
             // Step hazard hits
-            this.state.decayHazardHits();
+            //this.state.decayHazardHits();
 
             // Check and trigger images that are scheduled
-            if (state.isShowReviewPanel()) {
-                imageController.checkForImages();
-            }
+            //if (state.isShowReviewPanel()) {
+            //    imageController.checkForImages();
+            //}
 
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));
@@ -345,9 +358,27 @@ public class Simulator {
         }
     }
 
+    private void passthrough() {
+        state.reset();
+        agentController.resetAgentNumbers();
+        hazardController.resetHazardNumbers();
+        targetController.resetTargetNumbers();
+        taskController.resetTaskNumbers();
+        scoreController.reset();
+        modelCaller.reset();
+        //modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
+
+        LOGGER.info(String.format("%s; SVRST; Server temporarily reset ", getState().getTime()));
+        imageController.reset();
+
+        loadScenarioFromFile("web/scenarios/" + state.getNextFileName());
+
+        //startSimulation();
+    }
+
     private void updateNextValues() {
         try {
-            String json = GsonUtils.readFile("web/scenarios/" + nextFileName);
+            String json = GsonUtils.readFile("web/scenarios/" + getState().getNextFileName());
             Object obj = GsonUtils.fromJson(json);
             state.setGameId(GsonUtils.getValue(obj, "gameId"));
             state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
@@ -401,7 +432,7 @@ public class Simulator {
     public synchronized void reset() {
         if (this.mainLoopThread != null) {
             this.mainLoopThread.interrupt();
-        }
+         }
         state.reset();
         agentController.resetAgentNumbers();
         hazardController.resetHazardNumbers();
@@ -409,7 +440,7 @@ public class Simulator {
         taskController.resetTaskNumbers();
         scoreController.reset();
         modelCaller.reset();
-        modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
+        //modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
         imageController.reset();
@@ -424,7 +455,7 @@ public class Simulator {
             LOGGER.addHandler(fileHandler);
             state.resetLogger(fileHandler);
             taskController.resetLogger(fileHandler);
-            queueManager.resetLogger(fileHandler);
+            //queueManager.resetLogger(fileHandler);
             agentController.resetLogger(fileHandler);
             targetController.resetLogger(fileHandler);
             connectionController.resetLogger(fileHandler);
@@ -468,6 +499,17 @@ public class Simulator {
             this.state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
             Object centre = GsonUtils.getValue(obj, "gameCentre");
             this.state.setGameCentre(new Coordinate(GsonUtils.getValue(centre, "lat"), GsonUtils.getValue(centre, "lng")));
+
+            Object dynamicUIFeaturesJson = GsonUtils.getValue(obj, "dynamicUIFeatures");
+            if (dynamicUIFeaturesJson != null) {
+                List<List<String>> featureList = new ArrayList<>(5);
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "1"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "2"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "3"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "4"));
+                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "5"));
+                this.state.setDynamicUIFeatures(featureList);
+            }
 
             if(GsonUtils.hasKey(obj,"allocationMethod")) {
                 String allocationMethod = GsonUtils.getValue(obj, "allocationMethod")
@@ -750,23 +792,19 @@ public class Simulator {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
             }
 
-            Object dynamicUIFeaturesJson = GsonUtils.getValue(obj, "dynamicUIFeatures");
-            if (dynamicUIFeaturesJson != null) {
-                List<List<String>> featureList = new ArrayList<>(5);
-                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "1"));
-                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "2"));
-                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "3"));
-                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "4"));
-                featureList.add(GsonUtils.getValue(dynamicUIFeaturesJson, "5"));
-                this.state.setDynamicUIFeatures(featureList);
-            }
-
-            if(GsonUtils.hasKey(obj,"taskSpawnRate")) {
-                this.missionController.setTaskSpawnRate(((Double) GsonUtils.getValue(obj, "taskSpawnRate")).intValue());
-            }
-
             if(GsonUtils.hasKey(obj,"spawnRadius")) {
-                this.missionController.setSpawnRadius(GsonUtils.getValue(obj, "spawnRadius"));
+                this.missionController.setSpawnRadius((GsonUtils.getValue(obj, "spawnRadius")));
+            }
+
+            List<Object> spawnPairs = GsonUtils.getValue(obj, "taskSpawnTrack");
+            if (spawnPairs != null) {
+                for (Object spawnPair : spawnPairs) {
+                    Integer spawnTime = ((Double) GsonUtils.getValue(spawnPair, "spawnTime")).intValue();
+                    Integer spawnRate = ((Double) GsonUtils.getValue(spawnPair, "spawnRate")).intValue();
+
+                    this.missionController.addPair(spawnTime, spawnRate);
+                }
+                this.missionController.orderPairs();
             }
 
             return true;
@@ -857,7 +895,8 @@ public class Simulator {
     }
 
     public QueueManager getQueueManager() {
-        return queueManager;
+    //    return queueManager;
+        return null;
     }
 
     public ImageController getImageController() {

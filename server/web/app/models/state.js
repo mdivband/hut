@@ -30,7 +30,6 @@ App.Models.State  = Backbone.Model.extend({
         uncertaintyRadius: 0,
         storedImages: {},
         deepScannedIds: {},
-        passthrough: false,
         nextFileName: "",
         deepAllowed: false,
         showReviewPanel: false,
@@ -48,7 +47,7 @@ App.Models.State  = Backbone.Model.extend({
         scoreInfo: {},
         modelStyle: "off",
         loggingById: false,
-        dynamicUIFeatures: [[], [], [], ["heatmap"] ,["heatmap"]],
+        dynamicUIFeatures: [[], [], [], [], []],
         workloadLevel: 3,
     },
     url: function () {
@@ -171,8 +170,8 @@ App.Models.State  = Backbone.Model.extend({
     getScoreInfo: function () {
         return this.get("scoreInfo");
     },
-    isPassthrough: function () {
-        return this.get("passthrough");
+    hasPassthrough: function () {
+        return this.get("hasPassthrough");
     },
     getTimeLimit: function () {
         // TODO this doesn't use the actual gamespeed
@@ -222,6 +221,6 @@ App.Models.State  = Backbone.Model.extend({
         $.post("/changeview", {edit: modeFlag});
     },
     getDynamicUIFeatures: function () {
-        return this.get("dynamicUIFeatures");//[this.get("workloadLevel") - 1]
+        return this.get("dynamicUIFeatures");
     },
 });

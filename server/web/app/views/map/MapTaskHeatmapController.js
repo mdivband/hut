@@ -39,7 +39,7 @@ var MapTaskHeatmapController = {
         //MapTaskHeatmapController.running = true;
         if (!this.state.tasks.isEmpty()) {
             let groups = [];
-            let grouping_dist = 150;
+            let grouping_dist = 250;
             let tasks = []
             this.state.tasks.forEach(function (t) {
                 tasks.push(t);

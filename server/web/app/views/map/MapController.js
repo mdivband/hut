@@ -492,6 +492,7 @@ var MapController = {
 
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
+        MapAgentController.updateAllAgentMarkerIcons(true)
         if(sendUpdate)
             this.state.pushMode(modeFlag);
     },

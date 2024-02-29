@@ -1242,16 +1242,16 @@ public class Allocator {
     }
 
     public void dynamicRandomAssignSubgroup(List<Agent> agents, List<Task> tasks) {
-        System.out.println("Was fed:");
-        System.out.println(agents);
-        System.out.println(tasks);
+        //System.out.println("Was fed:");
+        //System.out.println(agents);
+        //System.out.println(tasks);
         Map<String, String> result = randomCompute(agents, tasks, false);
         List<String> groupIds = result.keySet().stream().toList();
         result.forEach((k, v) -> {
             //simulator.getState().getAgent(k).setAllocatedTaskId(v);
             //simulator.getState().getAgent(k).setTempRoute(Collections.singletonList(simulator.getState().getTask(v).getCoordinate()));
             putInTempAllocation(k, v);
-            System.out.println(k + " -> " + v);
+            //System.out.println(k + " -> " + v);
             simulator.getState().getAgent(k).setAgentTeam(new ArrayList<>(groupIds));
 
         });

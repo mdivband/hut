@@ -16,7 +16,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -46,7 +45,7 @@ public class State {
     // editMode 1 = monitor
     //          2 = edit
     //          3 = images
-    private boolean passthrough = false;
+    private boolean hasPassthrough = false;
     private String nextFileName = "";
     private boolean deepAllowed = false;
     private boolean showReviewPanel = false;
@@ -179,7 +178,7 @@ public class State {
      * Resets all the values for if we pass through to another scenario after this one
      */
     public void resetNext() {
-        passthrough = false;
+        hasPassthrough = false;
         nextFileName = "";
         scenarioEndTime = 0; // 0 means no time limit
         timeLimit = 0;    // 0 means no time limit
@@ -492,12 +491,12 @@ public class State {
         hazardHits.decayAll();
     }
 
-    public void setPassthrough(boolean passthrough) {
-        this.passthrough = passthrough;
+    public void setPassthrough(boolean hasPassthrough) {
+        this.hasPassthrough = hasPassthrough;
     }
 
-    public boolean isPassthrough() {
-        return passthrough;
+    public boolean hasPassthrough() {
+        return hasPassthrough;
     }
 
     /**
