@@ -96,6 +96,7 @@ App.Views.Map = Backbone.View.extend({
             UAVWithPack: $.loadIcon("icons/used/uav_with_pack.png", "icons/plane.shadow.png", 30, 30),
             UAVSelected: $.loadIcon("icons/used/uav_selected.png", "icons/plane.shadow.png", 30, 30),
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
+            UAVMini: $.loadIcon("icons/used/uav_timedout_mini.png", "icons/plane.shadow.png", 30, 30),
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
             MarkerMonitor: $.loadIcon("icons/used/marker_monitor.png", "icons/msmarker.shadow.png", 10, 34),
             TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
@@ -680,7 +681,7 @@ App.Views.Map = Backbone.View.extend({
         var theta = agent.getHeading();
         var lat = coordinate.lat();
         var lng = coordinate.lng();
-        
+
         var delta = 50 / 6371000; // Distance/radius = angular distance in radians
         var thetaRad = theta * Math.PI / 180; // Convert theta to radians
 

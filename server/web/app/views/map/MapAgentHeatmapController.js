@@ -24,6 +24,7 @@ var MapAgentHeatmapController = {
         this.onAgentMarkerDragEnd = _.bind(this.onAgentMarkerDragEnd, context);
         this.updateTaskRendering = _.bind(this.updateTaskRendering, context);
         this.adjustHeatmapLocation = _.bind(this.adjustHeatmapLocation, context);
+        this.drawSubAllocation = _.bind(this.drawSubAllocation, context);
         this.drawHeatmapAllocation = _.bind(this.drawHeatmapAllocation, context);
         this.hideHeatmapPolyline = _.bind(this.hideHeatmapPolyline, context);
     },
@@ -315,6 +316,12 @@ var MapAgentHeatmapController = {
                 if (g !== null) {
                     //console.log("drawing from " + groupId + " to " + taskGroupId)
                     MapAgentHeatmapController.drawHeatmapAllocation(mainLineId, "green", groupId, taskGroupId);
+                    console.log("HERE:")
+                    for (let agentIndex = 0; agentIndex < MapAgentHeatmapController.addedGroups[i].length; agentIndex++){
+                        MapAgentHeatmapController.drawSubAllocation(MapAgentHeatmapController.addedGroups[i][agentIndex],
+                            MapAgentHeatmapController.addedGroups[i][agentIndex].getAllocatedTaskId())
+                    }
+
                 } else {
                     MapAgentHeatmapController.hideHeatmapPolyline(mainLineId);
                 }
@@ -324,6 +331,116 @@ var MapAgentHeatmapController = {
         //Colour task marker that is being hovered over when manually allocating
         if (MapAgentHeatmapController.groupIdToAllocateManually) {
             MapTaskHeatmapController.updateTaskRendering(MapAgentHeatmapController.groupIdToAllocateManually, self.MarkerColourEnum.BLUE);
+        }
+    },
+    drawSubAllocation: function (agent, taskId) {
+        // AGENT
+
+        var subMarker = this.$el.gmap("get", "markers")["sub_"+agent.getId()];
+        if (!subMarker) {
+            this.$el.gmap("addMarker", {
+                marker: MarkerWithLabel,
+                //draggable: true, //Allows use of drag and dragend events even though the marker shouldn't be moved by dragging.
+                //labelContent: id,
+                //labelAnchor: new google.maps.Point(22, -18),
+                //labelClass: "labels",
+                //labelStyle: {opacity: 1.0},
+                id: "sub_"+agent.getId(),
+                position: agent.getPosition(),
+                heading: agent.getHeading(),
+                raiseOnDrag: false,
+                zIndex: -20000000,
+            });
+            subMarker = this.$el.gmap("get", "markers")["sub_"+agent.getId()];
+            var icon = this.icons.UAVMini;
+            subMarker.setIcon(icon.Image);
+        } else {
+            var icon = this.icons.UAVMini;
+            //subMarker.setOptions({clickable: false, draggable: false})
+
+            subMarker.setIcon(icon.Image);
+            subMarker.setPosition(agent.getPosition());
+            //Rotate agent marker - seems clunky but GoogleMapsAPI doesn't allow for marker rotation...
+            if (subMarker.icon) {
+                //Add agent id to end of marker url, this makes them unique.
+                subMarker.icon.url = subMarker.icon.url + "#" + agent.getId();
+                //Grab actual marker element by the (now unique) image src and rotate it by the agent's heading
+                var markerImgEl = $('img[src=\"' + subMarker.icon.url + '\"]');
+                markerImgEl.css({
+                    'transform': 'rotate(' + agent.getHeading() + 'deg)'
+                });
+                //MapAgentController.drawAgentBattery(markerImgEl.parent(), agent);
+            }
+
+        }
+
+
+
+        // TASKS (lines)
+
+        var thisTask = null;
+        MapTaskHeatmapController.addedGroups.forEach((group) => {
+            group.forEach((g) => {
+                if (g.getId() === taskId) {
+                    thisTask = g;
+                }
+            });
+        });
+
+        if (thisTask !== null) {
+            var path = [];
+            var route = [agent.getPosition(), thisTask.getPosition()]
+            var convertedRoute = route.map(function (c) {
+                return new google.maps.LatLng(c.lat(), c.lng());
+            });
+            path = path.concat(convertedRoute);
+            var polyline = this.$el.gmap("get", "overlays > Polyline", [])["sub_" + agent.getId()];
+
+            if (polyline) {
+                //Only render arrow on the end of the polyline if the last leg is long enough
+                var dist = google.maps.geometry.spherical.computeDistanceBetween(path[path.length - 2], path[path.length - 1]);
+                var relativeSize = 0.05;
+                var bounds = this.map.getBounds();
+                var center = this.map.getCenter();
+                if (bounds && center) {
+                    var ne = bounds.getNorthEast();
+                    var radius = google.maps.geometry.spherical.computeDistanceBetween(center, ne);
+                }
+                if (dist < relativeSize * radius)
+                    polyline.setOptions({icons: []});
+                else
+                    polyline.setOptions({icons: [this.polylineIcon]});
+
+                //Show polyline if currently hidden.
+                if (!polyline.getMap())
+                    polyline.setMap(this.map);
+
+                //Update polyline path if path doesn't match. Add listeners here since the path object is overwritten.
+                if (!_.doPathsMatch(polyline.getPath(), new google.maps.MVCArray(path))) {
+                    polyline.setOptions({path: path});
+                    google.maps.event.addListener(polyline.getPath(), 'insert_at', function (vertex) {
+                        MapController.processWaypointChange(agentId, polyline, vertex, true);
+                    });
+                    google.maps.event.addListener(polyline.getPath(), 'set_at', function (vertex) {
+                        MapController.processWaypointChange(agentId, polyline, vertex, false);
+                    });
+                    google.maps.event.addListener(polyline.getPath(), 'remove_at', function (vertex) {
+                        MapController.processWaypointDelete(agentId, vertex);
+                    });
+                }
+            }
+            //If arrow doesn't exist, create it
+            else {
+                this.$el.gmap("addShape", "Polyline", {
+                    id: "sub_" + agent.getId(),
+                    editable: false,
+                    icons: [this.polylineIcon],
+                    strokeOpacity: 0.2,
+                    strokeColor: "red",
+                    strokeWeight: 1,
+                    zIndex: 2
+                });
+            }
         }
     },
     drawHeatmapAllocation: function (lineId, lineColour, agentId, taskId) {
@@ -427,6 +544,7 @@ var MapAgentHeatmapController = {
                 });
             }
         }
+
     },
     hideHeatmapPolyline: function (lineId) {
         var polyline = this.$el.gmap("get", "overlays > Polyline", [])[lineId];
