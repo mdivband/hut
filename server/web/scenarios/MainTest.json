@@ -1,0 +1,116 @@
+{
+  "gameId": "Main Test",
+  "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
+  "flockingEnabled" : true,
+  "loggingById": true,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "allocationMethod": "maxsum",
+  "allocationStyle": "manual",
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.4094788872327502
+    },
+    {
+      "lat": 50.929378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 1.0
+    },
+    {
+      "lat": 50.9318636656946,
+      "lng": -1.4065928983124234,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92780002299894,
+      "lng": -1.4094788872327502,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.930378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92775213234095,
+      "lng": -1.4071363295995343,
+      "battery": 1
+    },
+    {
+      "lat": 50.92875295435936,
+      "lng": -1.4060849036656964,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.93007833416138,
+      "lng": -1.4094108428441632,
+      "battery": 1
+    },
+    {
+      "lat": 50.92948327035036,
+      "lng": -1.4108914222203839,
+      "battery": 1
+    },
+    {
+      "lat": 50.92826607066169,
+      "lng": -1.4111489142858136,
+      "battery": 1
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 0
+    }
+  ],
+  "targets": [
+    {
+      "lat": 50.92993483453923,
+      "lng": -1.4083502511379038,
+      "type": 0
+    },
+    {
+      "lat": 50.92918290193244,
+      "lng": -1.4116303880113037,
+      "type": 0
+    },
+    {
+      "lat": 50.93029188552423,
+      "lng": -1.4125745255845459,
+      "type": 0
+    },
+    {
+      "lat": 50.93117093909728,
+      "lng": -1.4113943536179931,
+      "type": 0
+    },
+    {
+      "lat": 50.93224606665045,
+      "lng": -1.4123277623551758,
+      "type": 0
+    },
+    {
+      "lat": 50.93334145406898,
+      "lng": -1.4108793694871338,
+      "type": 0
+    },
+    {
+      "lat": 50.93258415193955,
+      "lng": -1.4068131406205566,
+      "type": 0
+    },
+    {
+      "lat": 50.93359839306123,
+      "lng": -1.4084975678819092,
+      "type": 0
+    }
+  ]
+}
