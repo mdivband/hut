@@ -93,7 +93,7 @@ var MapAgentController = {
                 position: agent.getPosition(),
                 heading: agent.getHeading(),
                 raiseOnDrag: false,
-                zIndex: 2,
+                zIndex: 20000000,
             });
 
             //If real agent is added, zoom to it
@@ -293,7 +293,7 @@ var MapAgentController = {
                     strokeOpacity: 0.8,
                     strokeColor: 'blue',
                     strokeWeight: 5,
-                    zIndex: 3
+                    zIndex: 2
                 });
             }
         }

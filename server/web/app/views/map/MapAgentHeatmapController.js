@@ -385,7 +385,7 @@ var MapAgentHeatmapController = {
                 strokeOpacity: 0.8,
                 strokeColor: lineColour,
                 strokeWeight: 5,
-                zIndex: isTempLine ? 2 : 1
+                zIndex: 1
             });
             //Polyline right click listener for temp lines
             if (isTempLine) {
@@ -632,7 +632,7 @@ var MapAgentHeatmapController = {
                 strokeOpacity: 0.8,
                 strokeColor: 'blue',
                 strokeWeight: 5,
-                zIndex: 3
+                zIndex: 1
             });
         }
     },

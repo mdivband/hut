@@ -664,13 +664,49 @@ App.Views.Map = Backbone.View.extend({
         var agent = this.state.agents.get(agentId);
         var polyline = this.$el.gmap("get", "overlays > Polyline", [])[lineId];
 
-        //Get polyline path
-        var path = [agentMarker.getPosition()];
+
+        var coordinate = agent.getPosition()
+        //alert(agent.getHeading())
+
+        /*
+        var thetaRadians = (agent.getHeading() + 90) * Math.PI / 180;
+
+        var yOff = 50 * Math.sin(thetaRadians);
+        var xOff = 50 * Math.cos(thetaRadians);
+
+        var lat = coordinate.lat() + yOff / (60.0 * 1852.0);
+        var lng = coordinate.lng() + xOff / (60.0 * 1852.0)// * Math.cos(coordinate.lat() * Math.PI / 180.0));
+        */
+        var theta = agent.getHeading();
+        var lat = coordinate.lat();
+        var lng = coordinate.lng();
+        
+        var delta = 50 / 6371000; // Distance/radius = angular distance in radians
+        var thetaRad = theta * Math.PI / 180; // Convert theta to radians
+
+        // Convert latitude to radians
+        var latRad = lat * Math.PI / 180;
+
+        // Calculate new latitude
+        var newLatRad = Math.asin(Math.sin(latRad) * Math.cos(delta) +
+            Math.cos(latRad) * Math.sin(delta) * Math.cos(thetaRad));
+
+        // Calculate new longitude
+        var newLngRad = lng * Math.PI / 180 + Math.atan2(Math.sin(thetaRad) * Math.sin(delta) * Math.cos(latRad),
+            Math.cos(delta) - Math.sin(latRad) * Math.sin(newLatRad));
+
+        // Convert radians back to degrees
+        var newLat = newLatRad * 180 / Math.PI;
+        var newLng = newLngRad * 180 / Math.PI;
+
+        var path = [new google.maps.LatLng(newLat, newLng)];//[agent.getPosition()];
         var route = isTempLine ? agent.getTempRoute() : agent.getRoute();
         var convertedRoute = route.map(function (c) {
             return new google.maps.LatLng(c.latitude, c.longitude);
         });
         path = path.concat(convertedRoute);
+
+
 
         //Alter existing polyline if it exists
         if (polyline) {
@@ -683,10 +719,11 @@ App.Views.Map = Backbone.View.extend({
                 var ne = bounds.getNorthEast();
                 var radius = google.maps.geometry.spherical.computeDistanceBetween(center, ne);
             }
-            if (dist < relativeSize * radius)
+            if (dist < relativeSize * radius) {
                 polyline.setOptions({icons: []});
-            else
+            } else {
                 polyline.setOptions({icons: [this.polylineIcon]});
+            }
 
             //Show polyline if currently hidden.
             if (!polyline.getMap())

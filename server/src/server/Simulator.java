@@ -286,6 +286,7 @@ public class Simulator {
 
                     synchronized (state.getAgents()) {
                         for (Agent agent : state.getAgents()) {
+                            agent.setType(agent.getTask() != null ? "withpack" : "standard");
                             agent.step(getState().isFlockingEnabled());
                         }
                     }
