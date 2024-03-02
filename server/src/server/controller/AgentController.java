@@ -3,6 +3,7 @@ package server.controller;
 import server.Simulator;
 import server.model.*;
 import server.model.agents.*;
+import server.model.target.Target;
 import server.model.task.PatrolTask;
 import server.model.task.Task;
 
@@ -465,6 +466,30 @@ public class AgentController extends AbstractController {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns the agent at this coordinate (within 5m)
+     * @param c
+     * @return
+     */
+    public Agent getAgentAt(Coordinate c) {
+        getAgentAt(c, 5);
+        return null;
+    }
+
+    /**
+     * Returns the agent at this coordinate (within epsilon m)
+     * @param c
+     * @return
+     */
+    public Agent getAgentAt(Coordinate c, double epsilon) {
+        for (Agent a : Simulator.instance.getState().getAgents()) {
+            if(a.getCoordinate().getDistance(c) < epsilon) {
+                return a;
+            }
+        }
+        return null;
     }
 
 }

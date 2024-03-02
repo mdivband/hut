@@ -147,8 +147,8 @@ server/classes/
 
 server/src/META-INF/
 
-server/classes/
+server/web/ModelFiles/*.txt
 
-server/src/META-INF/
+server/*.log
 
-server/web44101/ModelFiles/*.txt
+server/web/PrismModel/*.pm

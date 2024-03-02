@@ -1,0 +1,113 @@
+{
+  "gameId": "WSGA",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common <br />You do NOT have access to high-resolution scans in this mode, so you will only see the basic scans that are added to the view window automatically",
+  "comment": "This is the Non-Complex - Low scenario",
+  "loggingById": true,
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
+  "uncertaintyRadius": 20.0,
+  "timeLimitSeconds": 480,
+  "deepAllowed": false,
+  "reviewPanel": true,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.409
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.408
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.407
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.406
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.405
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 1
+    }
+  ],
+  "targets": [
+    {
+      "lat": 50.92450259349932,
+      "lng": -1.405674554768035,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighNT1.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowNT1.png",
+      "real": false
+    },
+    {
+      "lat": 50.93356393802675,
+      "lng": -1.4114037532238455,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighT3.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowT3.png",
+      "real": true
+    },
+    {
+      "lat": 50.93134610043392,
+      "lng": -1.4035717029003592,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighT2.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowT2.png",
+      "real": true
+    },
+    {
+      "lat": 50.93543008528254,
+      "lng": -1.4052024859814138,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighNT2.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowNT2.png",
+      "real": false
+    },
+    {
+      "lat": 50.92658807294463,
+      "lng": -1.4115149667324078,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighT5.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowT5.png",
+      "real": true
+    },
+    {
+      "lat": 50.92247369243777,
+      "lng": -1.4129701632885427,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighNT3.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowNT3.png",
+      "real": false
+    },
+    {
+      "lat": 50.93088629159964,
+      "lng": -1.414236165943572,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighT4.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowT4.png",
+      "real": true
+    },
+    {
+      "lat": 50.92462022635584,
+      "lng": -1.4092209619232365,
+      "type": 1,
+      "highRes": "Non-Complex/Non-Complex - High Res/NonComplexHighT1.png",
+      "lowRes": "Non-Complex/Non-Complex - Low Res/NonComplexLowT1.png",
+      "real": true
+    }
+  ]
+}

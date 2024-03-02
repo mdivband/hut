@@ -1,0 +1,94 @@
+{
+  "gameId": "Dynamic High",
+  "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
+  "comment": "TODO make this be our scenario with randomly spawning tasks. Will need a controller for it",
+  "extendedUIOptions": {
+    "predictions": false,
+    "uncertainties": false
+  },
+  "taskSpawnRate": 30,
+  "spawnRadius": 2000,
+  "dynamicUIFeatures": {
+    "1": [
+      ""
+    ],
+    "2": [
+      ""
+    ],
+    "3": [
+      ""
+    ],
+    "4": [
+      "heatmap"
+    ],
+    "5": [
+      "heatmap"
+    ]
+  },
+  "flockingEnabled" : false,
+  "loggingById": true,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "allocationMethod": "maxsum",
+  "allocationStyle": "manual",
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.4094788872327502
+    },
+    {
+      "lat": 50.929378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 1.0
+    },
+    {
+      "lat": 50.9318636656946,
+      "lng": -1.4065928983124234,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92780002299894,
+      "lng": -1.4094788872327502,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.930378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92775213234095,
+      "lng": -1.4071363295995343,
+      "battery": 1
+    },
+    {
+      "lat": 50.92875295435936,
+      "lng": -1.4060849036656964,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.93007833416138,
+      "lng": -1.4094108428441632,
+      "battery": 1
+    },
+    {
+      "lat": 50.92948327035036,
+      "lng": -1.4108914222203839,
+      "battery": 1
+    },
+    {
+      "lat": 50.92826607066169,
+      "lng": -1.4111489142858136,
+      "battery": 1
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 0
+    }
+  ]
+}

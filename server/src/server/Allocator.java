@@ -24,6 +24,7 @@ import maxsum.EvaluationFunction;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Object that handles the allocation.
@@ -681,13 +682,24 @@ public class Allocator {
             for (Agent agent : workingAgents) {
                 agents.remove(agent);
             }
-
+            System.out.println(tasks);
+            System.out.println(agents);
+            List<Agent> agentsCopy = new ArrayList<>(agents);
+            //int i = 0;
             for (Task task : tasks) {
                 if (task.getAgents().size() < task.getGroup()) {
-                    int rnd = new Random().nextInt(agents.size());
-                    Agent agent = agents.get(rnd);
-                    result.put(agent.getId(), task.getId());
-                    agents.remove(agent);
+                    //if (i < agents.size()) {
+                    if (agents.size() > 0) {
+                        int rnd = new Random().nextInt(agents.size());
+                        Agent agent = agents.get(rnd);
+                        result.put(agent.getId(), task.getId());
+                        agents.remove(agent);
+                    } else {
+                        int rnd = new Random().nextInt(agentsCopy.size());
+                        Agent agent = agentsCopy.get(rnd);
+                        ((AgentVirtual) agent).addTaskToQueue(task);
+                    }
+                    //i++;
                 }
             }
 
@@ -697,7 +709,9 @@ public class Allocator {
         return null;
     }
 
-    private Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
+
+
+    protected Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
         MaxSum maxsum = new MaxSum();
         HashMap<Agent, Task> resultObjs = new HashMap<>(); // TEMP solution
         HashMap<String, String> result = new HashMap<>();
@@ -1225,6 +1239,25 @@ public class Allocator {
                 System.out.println("Caught exception. This should be due to agent failure during reassignment?");
             }
         });
+    }
+
+    public void dynamicRandomAssignSubgroup(List<Agent> agents, List<Task> tasks) {
+        //System.out.println("Was fed:");
+        //System.out.println(agents);
+        //System.out.println(tasks);
+        Map<String, String> result = randomCompute(agents, tasks, false);
+        List<String> groupIds = result.keySet().stream().toList();
+        result.forEach((k, v) -> {
+            //simulator.getState().getAgent(k).setAllocatedTaskId(v);
+            //simulator.getState().getAgent(k).setTempRoute(Collections.singletonList(simulator.getState().getTask(v).getCoordinate()));
+            putInTempAllocation(k, v);
+            //System.out.println(k + " -> " + v);
+            simulator.getState().getAgent(k).setAgentTeam(new ArrayList<>(groupIds));
+
+        });
+        //result.entrySet().stream().map(AgentVirtual::getId).collect(Collectors.toList());
+
+        new ArrayList<>(result.keySet());
     }
 
     /**

@@ -111,7 +111,8 @@ var simulator = {
 
             // setup accordion for jquery ui
             $("#accordion_smallview").accordion({
-                collapsible: true
+                collapsible: true,
+                active: false
             });
             $("#accordion_agent_schedule_m").accordion({
                 collapsible: true,
@@ -120,8 +121,12 @@ var simulator = {
             $("#accordion_score").accordion({
                 collapsible: true
             });
-            $("#accordion_sotp_m").accordion({
+            $("#accordion_slider").accordion({
                 collapsible: true
+            });
+            $("#accordion_sotp_m").accordion({
+                collapsible: true,
+                active: false
             });
             $("#accordion_otherlayer_m").accordion({
                 collapsible: true,
@@ -132,12 +137,12 @@ var simulator = {
             });
             $("#prediction_canvas").accordion({
                 collapsible: true,
-                heightStyle: "content",
-                active: false
+                heightStyle: "content"
             });
             $("#mission_prediction_canvas").accordion({
                 collapsible: true,
-                heightStyle: "content"
+                heightStyle: "content",
+                active: false
             });
             $("#bounded_prediction_canvas").accordion({
                 collapsible: true,
@@ -246,10 +251,9 @@ var simulator = {
                 position: 'bottom-left',
                 autoclose: 5000
             };
-
             this.run();
         } catch (e) {
-            alert(e);
+            alert("Main creation error : " + e);
         }
     },
     run: function () {
@@ -265,7 +269,8 @@ var simulator = {
                         self.initialisedState = true;
                         MapController.swapMode(self.state.getEditMode(), false);
 
-                        if (self.state.getUserName() === "") {
+                        /*
+                        if (self.state.getUserName() === "" && self.state.isLoggingById()) {
                             // TODO get their name, also log it in backend
                             var name = null;
                             while (name == null || name === "") {
@@ -274,8 +279,8 @@ var simulator = {
                             $.post("/mode/scenario/registerUser", {
                                 userName: name
                             });
-
                         }
+                         */
 
                         if (self.state.attributes.prov_doc == null) {
                             var api = new $.provStoreApi({
@@ -303,11 +308,11 @@ var simulator = {
                     } else if (!self.state.isInProgress()) {
                         self.views.map.clearAll()
                         var scenario_end_panel = document.createElement("div");
-                        if (!self.state.isPassthrough()) {
+                        if (!self.state.hasPassthrough()) {
                             // Return to menu
                             scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                                 title: "Scenario Ended",
-                                description: "This scenario has ended, please close your browser tab and continue with the MS form"
+                                description: "This scenario has ended, please close."
                             });
                             $.blockWithContent(scenario_end_panel);
                             $('#end_scenario').on('click', function () {
@@ -316,19 +321,19 @@ var simulator = {
                             });
                         } else {
                             // Has a scenario to pass through too
-                            scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                            scenario_end_panel.innerHTML = _.template($("#scenario_passthrough_panel").html(), {
                                 title: "Scenario Ended",
                                 description: "This scenario has ended, please press close to continue to the next experiment"
                             });
                             $.blockWithContent(scenario_end_panel);
-                            var endScenarioDiv = $("#end_scenario");
+                            var nextScenarioDiv = $("#next_scenario");
 
-                            endScenarioDiv.on('click', function () {
+                            nextScenarioDiv.on('click', function () {
                                 var fileName = self.state.getNextFileName();
                                 //$.post("/reset");
                                 $.post('/mode/scenario', {'file-name': fileName}, function () {
-                                    endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
-                                    endScenarioDiv[0].addEventListener("animationend", function () {
+                                    nextScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
+                                    nextScenarioDiv[0].addEventListener("animationend", function () {
                                         window.location = "/sandbox.html";
                                     })
                                 }).fail(function () {
@@ -364,7 +369,7 @@ var simulator = {
                 "margin-right": "0px"
             }).find("label").width("50%");
         } catch (e) {
-            alert(e)
+            alert("MainLoop error: " + e)
         }
     }
 };

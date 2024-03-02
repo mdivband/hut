@@ -1,0 +1,148 @@
+{
+  "gameId": "LKXR",
+  "gameDescription": "When you click begin, try to find as many of the targets as you can. They are all inside the green area of Southampton Common",
+  "comment": "This is the Complex - Low scenario",
+  "loggingById": true,
+  "extendedUIOptions": {
+    "predictions": true,
+    "uncertainties": true
+  },
+  "hub": {
+    "lat": 50.928955248687274,
+    "lng": -1.40882186832185
+  },
+  "uncertaintyRadius": 20.0,
+  "timeLimitSeconds": 300,
+  "deepAllowed": true,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.409
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.408
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.407
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.406
+    },
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.405
+    }
+  ],
+  "hazards": [
+    {
+      "lat": 50.93229829426595,
+      "lng": -1.4090726010153958,
+      "type": 1
+    }
+  ],
+  "targets": [
+    {
+      "lat": 50.929082575328884,
+      "lng": -1.4122195030671403,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighT6.png",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowT6.png",
+      "real": true
+    },
+    {
+      "lat": 50.932706968098096,
+      "lng": -1.4157600189667985,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighT3.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowT3.png ",
+      "real": true
+    },
+    {
+      "lat": 50.93443792170355,
+      "lng": -1.4063186432343766,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighNT3.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowNT3.png ",
+      "real": false
+    },
+    {
+      "lat": 50.93528985177357,
+      "lng": -1.4016837860566422,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighT2.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowT2.png ",
+      "real": true
+    },
+    {
+      "lat": 50.93166566028517,
+      "lng": -1.4099449898225114,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighT4.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowT4.png ",
+      "real": true
+    },
+    {
+      "lat": 50.9337617756191,
+      "lng": -1.4113397385102555,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighT5.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowT5.png",
+      "real": true
+    },
+    {
+      "lat": 50.92613416693238,
+      "lng": -1.4120907570344254,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighNT1.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowNT1.png ",
+      "real": false
+    },
+    {
+      "lat": 50.924795149121294,
+      "lng": -1.4071125771027848,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighT1.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowT1.png",
+      "real": true
+    },
+    {
+      "lat": 50.92404534912641,
+      "lng": -1.4129705215913102,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighNT2.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowNT2.png ",
+      "real": false
+    },
+    {
+      "lat": 50.92194879590028,
+      "lng": -1.4124126221162125,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighNT5.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowNT5.png ",
+      "real": false
+    },
+    {
+      "lat": 50.9268992149016,
+      "lng": -1.4055890823823258,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighT7.png",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowT7.png",
+      "real": true
+    },
+    {
+      "lat": 50.93263936324419,
+      "lng": -1.4068650667178773,
+      "type": 1,
+      "highRes": "Complex/Complex - High Res/ComplexHighNT4.png ",
+      "lowRes": "Complex/Complex - Low Res/ComplexLowNT4.png ",
+      "real": false
+    }
+  ]
+}

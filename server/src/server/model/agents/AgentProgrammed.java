@@ -4,7 +4,7 @@ import server.Simulator;
 import server.controller.TaskController;
 import server.model.Coordinate;
 import server.model.Sensor;
-import server.model.task.Task;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -116,7 +116,7 @@ public class AgentProgrammed extends Agent {
                 if(!isStopped() && this.adjustHeadingTowardsGoal()) {
                     // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
                     // We also check if we are closer than 1 move step; in which case
-                    double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+                    double distToMove = Math.min(speed * Simulator.instance.getStepScale(), getCoordinate().getDistance(getCurrentDestination()));
                     this.moveAlongHeading(distToMove);
                     //this.moveAlongHeading(1);
                 }
@@ -156,7 +156,7 @@ public class AgentProgrammed extends Agent {
             if(!isStopped() && this.adjustHeadingTowardsGoal()) {
                 // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
                 // We also check if we are closer than 1 move step; in which case
-                double distToMove = Math.min(speed / Simulator.instance.getGameSpeed(), getCoordinate().getDistance(getCurrentDestination()));
+                double distToMove = Math.min(speed * Simulator.instance.getStepScale(), getCoordinate().getDistance(getCurrentDestination()));
                 this.moveAlongHeading(distToMove);
                 //this.moveAlongHeading(1);
             }

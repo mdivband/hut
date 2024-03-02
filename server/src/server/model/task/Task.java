@@ -65,6 +65,20 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
+
+
+        System.out.println("All Agents:");
+        Simulator.instance.getState().getAgents().forEach(a -> {
+            System.out.println(a.getId() + " -> " + a.getAgentTeam());
+        });
+
+
+
+
+
+
+
+
         Agent a = agents.get(0);
         if (a instanceof AgentVirtual av) {
             Task t = av.getNextTaskFromQueue();
@@ -76,6 +90,18 @@ public abstract class Task extends MObject implements Serializable {
             }
         }
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);
+        //System.out.println("INT5: " + a.getId() + " -> " + a.getAgentTeam());
+        /*
+        try {
+            if (!a.getAgentTeam().isEmpty() && a.getAgentTeam().stream().allMatch(n -> Simulator.instance.getState().getAgent(n).getTask() == null)) {
+                a.getAgentTeam().stream().filter(a1 -> !a.getId().equals(a1)).forEach(a1 -> Simulator.instance.getState().getAgent(a1).getAgentTeam().clear());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+         */
+        //System.out.println("INT6: " + a.getId() + " -> " + a.getAgentTeam());
         LOGGER.info(String.format("%s; TSKCMP; Task completed (id); %s", Simulator.instance.getState().getTime(), this.getId()));
     }
 

@@ -52,7 +52,7 @@
         <!--Added by Y -->
         <!-- view mode change buttons -->
         <form>
-            <div id="view_mode" class="fixed-top">
+            <div id="view_mode" class="fixed-top" style="display: none">
                 <input type="radio" id="monitor" name="radio" value="monitor"><label
                     for="monitor">Monitor</label>
                 <input type="radio" id="editmode" name="radio" value="editmode"><label
@@ -65,7 +65,7 @@
         <!-- END Y -->
         <!-- camera and detail -->
         <div id="monitor_accordions">
-            <div id="accordion_smallview">
+            <div id="accordion_smallview" style="display: none">
                 <h3>Monitor view</h3>
                 <div class="canvas_small">
                     <div id="canvas_small_info">
@@ -130,7 +130,38 @@
                 </div>
             </div>
 
-            <div id="accordion_score" style="display: none">
+            <div id="accordion_agent_schedule_m" style="display: none">
+                <h3>Agent Schedule</h3>
+                <div>
+                    <canvas id="schedule"></canvas>
+                </div>
+            </div>
+
+
+            <div id="accordion_sotp_m" style="display: none">
+                <h3>Summary of the Operation</h3>
+                <table border="1">
+                    <tr>
+                        <td class="soho_title">Remaining Distance</td>
+                        <td><span id="remaining_dist">0.00km</span></td>
+                    </tr>
+                    <tr>
+                        <td class="soho_title">Estimated Remaining Time</td>
+                        <td><span id="remaining_time">00:00</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="addRemAgentButton" style="text-align: center;" class="edit_accordion">
+                <button class="edit_mode_buttons" id="add_agent">Add Agent</button>
+                <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
+            </div>
+
+        </div> <!-- end of monitor accordions-->
+
+        <div id="edit_contexts">
+
+            <div id="accordion_score">
                 <h3>Score</h3>
                 <table border="1">
                     <tr>
@@ -156,45 +187,14 @@
                 </table>
             </div>
 
-            <div id="accordion_agent_schedule_m">
-                <h3>Agent Schedule</h3>
-                <div>
-                    <canvas id="schedule"></canvas>
-                </div>
-            </div>
-
-
-            <div id="accordion_sotp_m">
-                <h3>Summary of the Operation</h3>
-                <table border="1">
-                    <tr>
-                        <td class="soho_title">Remaining Distance</td>
-                        <td><span id="remaining_dist">0.00km</span></td>
-                    </tr>
-                    <tr>
-                        <td class="soho_title">Estimated Remaining Time</td>
-                        <td><span id="remaining_time">00:00</span></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div id="addRemAgentButton" style="text-align: center;" class="edit_accordion">
-                <button class="edit_mode_buttons" id="add_agent">Add Agent</button>
-                <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
-            </div>
-
-        </div> <!-- end of monitor accordions-->
-
-        <div id="edit_contexts">
-
-            <div id="accordion_agent_schedule_e" class="edit_accordion">
+            <div id="accordion_agent_schedule_e" class="edit_accordion" style="display: none">
                 <h3>Agent Schedule</h3>
                 <div>
                     <canvas id="edit_schedule"></canvas>
                 </div>
             </div>
 
-            <div id="accordion_sotp_e" class="edit_accordion">
+            <div id="accordion_sotp_e" class="edit_accordion" style="display: none">
                 <h3>Summary of the Operation</h3>
                 <table border="1">
                     <tr>
@@ -218,7 +218,7 @@
             </div>
 
             <div style="text-align: center;" class="edit_accordion">
-                <div style="text-align: left; width: 95%">
+                <div style="display: none"> <!---"text-align: left; width: 95%">--->
                     <input title="Undo allocation change" type="image" src="icons/undo.png" class="edit_mode_icon_buttons" id="allocation_undo"/>
                     <input title="Redo allocation change" type="image" src="icons/redo.png" class="edit_mode_icon_buttons" id="allocation_redo"/>
                     <input title="Reset allocation" type="image" src="icons/reset.png" class="edit_mode_icon_buttons" id="allocation_reset"/>
@@ -228,6 +228,20 @@
                 <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
             </div>
 
+            <div id = "wk_sld_wrapper" style="width: 350px; margin-right: auto; margin-left: auto; border: solid 1px black; text-align: left; padding: 10px;">
+                <div id="accordion_slider">
+                    <h3 style="margin-top: 5px; margin-bottom: 5px;">Workload</h3>
+                    <div class="slidecontainer" style="font-size:0.9rem;">
+                        <input type="range" min="1" max="5" value="3" step="1" class="wl_slider" id="workload_slider" list="level_markers" style="width: 300px; margin: 0;">
+                        <datalist id="level_markers" style="display: flex; flex-direction: row; justify-content: space-between; width: 300px;">
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option>5</option>
+                        </datalist>
+                    </div>
+                </div>
         </div>
 
         <div id="scan_view">
@@ -348,6 +362,7 @@
     <div id="game_info" style="margin: 2px;">
         <div id="game_id" class="game_info_item"></div>
         <div id="game_time" class="game_info_item">Time: 00:00:00</div>
+        <div id="sim_time" class="game_info_item">Sim Time: 00:00:00</div>
         <div class="game_info_item", style="text-align: left;">
             <input id="explored_overlay_toggle" type="checkbox">Explored Overlay</input><br>
             <input id="hazard_overlay_toggle" type="checkbox">Hazard Overlay</input><br>
@@ -375,9 +390,9 @@
         <div id="edit_buttons_sub" style="margin-bottom: 30px">
             <div id="pan_mode" class="map_sub_button"></div>
             <div id="add_waypoint_task_mode" class="map_sub_button"></div>
-            <div id="add_monitor_task_mode" class="map_sub_button"></div>
+            <!---<div id="add_monitor_task_mode" class="map_sub_button"></div>
             <div id="add_patrol_task_mode" class="map_sub_button"></div>
-            <div id="add_region_task_mode" class="map_sub_button"></div>
+            <div id="add_region_task_mode" class="map_sub_button"></div>--->
         </div>
 
         <div id="sandbox_buttons_sub" class="edit_buttons_sub">
@@ -398,6 +413,14 @@
             <h><%= title %></h>
             <p><%= description %></p>
             <!--<button id="end_scenario" style="cursor: pointer;">Close</button> -->
+        </div>
+    </script>
+
+    <script type="text/template" id="scenario_passthrough_panel">
+        <div style="margin: 10px;">
+            <h><%= title %></h>
+            <p><%= description %></p>
+            <button id="next_scenario" style="cursor: pointer;">Next Scenario</button>
         </div>
     </script>
 

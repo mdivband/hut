@@ -1,0 +1,104 @@
+{
+  "gameId": "Dynamic High (HEATMAP)",
+  "gameDescription": "You will now continue in this high workload condition but with an interface that abstracts unrequired data.",
+  "extendedUIOptions": {
+    "predictions": false,
+    "uncertainties": false,
+    "workloadSlider": false
+  },
+  "taskSpawnTrack": [
+    {
+      "spawnTime": 0,
+      "spawnRate": 30
+    }
+  ],
+  "spawnRadius": 1200,
+  "timeLimitSeconds": 60,
+  "dynamicUIFeatures": {
+    "1": [
+      "heatmap"
+    ],
+    "2": [
+      "heatmap"
+    ],
+    "3": [
+      "heatmap"
+    ],
+    "4": [
+      "heatmap"
+    ],
+    "5": [
+      "heatmap"
+    ]
+  },
+  "flockingEnabled" : false,
+  "loggingById": true,
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  },
+  "allocationMethod": "maxsum",
+  "allocationStyle": "manual",
+  "agents": [
+    {
+      "lat": 50.93224847285517,
+      "lng": -1.407486104075537,
+      "battery": 1
+    },
+    {
+      "lat": 50.931612865891275,
+      "lng": -1.406692170207129,
+      "battery": 1
+    },
+    {
+      "lat": 50.93163991317308,
+      "lng": -1.408237122599707,
+      "battery": 1
+    },
+    {
+      "lat": 50.924918179948456,
+      "lng": -1.407936715190039,
+      "battery": 1
+    },
+    {
+      "lat": 50.92594611353195,
+      "lng": -1.4089666834517578,
+      "battery": 1
+    },
+    {
+      "lat": 50.92955722645207,
+      "lng": -1.4043532839461426,
+      "battery": 1
+    },
+    {
+      "lat": 50.928745764822224,
+      "lng": -1.4032589426680664,
+      "battery": 1
+    },
+    {
+      "lat": 50.929476080926136,
+      "lng": -1.4116918078108887,
+      "battery": 1
+    },
+    {
+      "lat": 50.92882691162226,
+      "lng": -1.4128719797774414,
+      "battery": 1
+    },
+    {
+      "lat": 50.92430663528027,
+      "lng": -1.4097313840287584,
+      "battery": 1
+    },
+    {
+      "lat": 50.927904350745614,
+      "lng": -1.4047102887528795,
+      "battery": 1
+    },
+    {
+      "lat": 50.92793140018398,
+      "lng": -1.4110188443559069,
+      "battery": 1
+    }
+  ]
+}

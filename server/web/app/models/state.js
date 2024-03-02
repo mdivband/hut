@@ -30,7 +30,6 @@ App.Models.State  = Backbone.Model.extend({
         uncertaintyRadius: 0,
         storedImages: {},
         deepScannedIds: {},
-        passthrough: false,
         nextFileName: "",
         deepAllowed: false,
         showReviewPanel: false,
@@ -46,7 +45,10 @@ App.Models.State  = Backbone.Model.extend({
         missionBoundedSuccessOverChance: 100.00,
         missionBoundedSuccessUnderChance: 100.00,
         scoreInfo: {},
-        modelStyle: "off"
+        modelStyle: "off",
+        loggingById: false,
+        dynamicUIFeatures: [["none"], ["none"], ["none"], ["none"], ["none"]],
+        workloadLevel: 3,
     },
     url: function () {
         return "state.json?" + _.time();
@@ -168,8 +170,8 @@ App.Models.State  = Backbone.Model.extend({
     getScoreInfo: function () {
         return this.get("scoreInfo");
     },
-    isPassthrough: function () {
-        return this.get("passthrough");
+    hasPassthrough: function () {
+        return this.get("hasPassthrough");
     },
     getTimeLimit: function () {
         // TODO this doesn't use the actual gamespeed
@@ -177,6 +179,9 @@ App.Models.State  = Backbone.Model.extend({
     },
     getUserName: function () {
         return this.get("userName");
+    },
+    getNextFileName: function () {
+        return this.get("nextFileName")
     },
     getModelStyle: function () {
         return this.get("modelStyle");
@@ -199,6 +204,9 @@ App.Models.State  = Backbone.Model.extend({
     getStoredImages: function () {
         return this.get("storedImages")
     },
+    isLoggingById: function () {
+        return this.get("loggingById")
+    },
     pushMode: function(modeFlag) {
         // modeflag 1 = monitor
         //          2 = edit
@@ -215,4 +223,13 @@ App.Models.State  = Backbone.Model.extend({
         }
         $.post("/changeview", {edit: modeFlag});
     },
+    getDynamicUIFeatures: function () {
+        return this.get("dynamicUIFeatures");
+    },
+    getWorkloadLevel: function () {
+        return this.get("workloadLevel");
+    },
+    getGameSpeed: function () {
+        return this.get("gameSpeed");
+    }
 });

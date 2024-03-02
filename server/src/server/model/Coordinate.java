@@ -87,6 +87,19 @@ public class Coordinate implements Serializable {
     }
 
     /**
+     * @param distance meter
+     * @param angle    radian
+     * @return c
+     */
+    public Coordinate getCoordinateElliptical(double distance, double angle, double xScale, double yScale) {
+        double north_south_distance = yScale * distance * Math.sin(angle);
+        double east_west_distance = xScale * distance * Math.cos(angle);
+        double lat = latitude + north_south_distance / (60.0 * 1852.0);
+        double lng = longitude + east_west_distance / (60.0 * 1852.0 * Math.cos(latitude * Math.PI / 180.0));
+        return new Coordinate(lat, lng);
+    }
+
+    /**
      * Convert a LatLng position to cartesian coords.
      * @param lat0 - Latitude for aspect ratio (degrees) - should be in middle of area calculating coords for.
      * @return double array containing x, y

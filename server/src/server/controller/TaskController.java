@@ -229,6 +229,24 @@ public class TaskController extends AbstractController {
        return foundTasks;
     }
 
+    /**
+     * Returns all tasks within epsilon metres of this coordinate
+     * @param coordinate
+     * @param epsilon
+     * @return
+     */
+    public List<Task> getAllTasksAt(Coordinate coordinate, double epsilon, List<Task> exceptedList) {
+        List<Task> foundTasks = new ArrayList<>(2);
+
+        for (Task t : simulator.getState().getTasks()) {
+            if (!exceptedList.contains(t) && t.getCoordinate().getDistance(coordinate) < epsilon) {
+                foundTasks.add(t);
+            }
+        }
+
+        return foundTasks;
+    }
+
     public synchronized void resetTaskNumbers() {
         this.uniqueTaskNumber = 1;
     }

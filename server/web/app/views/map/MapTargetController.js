@@ -116,7 +116,7 @@ var MapTargetController = {
                 });
 
         } catch (e) {
-            alert(e)
+            alert("Scan window error: " + e)
         }
     },
     checkIcon : function (targetId) {
@@ -248,7 +248,7 @@ var MapTargetController = {
             var marker = this.$el.gmap("get", "markers")[thisId];
             marker.setIcon(icon.Image);
         } catch (e) {
-            alert(e);
+            alert("Placing empty marker error " + e);
         }
     }
 };

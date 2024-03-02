@@ -13,6 +13,7 @@ var MapAgentController = {
         this.bindEvents = _.bind(this.bindEvents, context);
         this.onAgentAdd = _.bind(this.onAgentAdd, context);
         this.onGhostAdd = _.bind(this.onGhostAdd, context);
+        this.heatmapAgentUpdateGeneric  = _.bind(this.heatmapAgentUpdateGeneric, context);
         this.onAgentChange = _.bind(this.onAgentChange, context);
         this.onGhostChange = _.bind(this.onGhostChange, context);
         this.onAgentRemove = _.bind(this.onAgentRemove, context);
@@ -26,6 +27,7 @@ var MapAgentController = {
         this.updateAgentMarkerVisibility = _.bind(this.updateAgentMarkerVisibility, context);
         this.updateAllAgentMarkerIcons = _.bind(this.updateAllAgentMarkerIcons, context);
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
+        this.forceRedrawMaps = _.bind(this.forceRedrawMaps, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -58,42 +60,60 @@ var MapAgentController = {
         this.state.ghosts.on("change:visible", function (agent) {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
+        this.state.agents.on("change:agentTeam", function (agent) {
+            MapAgentController.updateAllAgentMarkerIcons(false);
+        });
+    },
+    heatmapAgentUpdateGeneric: function (reset) {
+        MapAgentHeatmapController.drawAgentMaps(reset);
+    },
+    forceRedrawMaps: function () {
+        this.state.agents.forEach((a) => {
+            MapAgentHeatmapController.drawAgentMaps(false);
+            MapAgentHeatmapController.adjustHeatmapLocation(a)
+        })
     },
     onAgentAdd: function (agent) {
-        console.log('Agent added ' + agent.getId());
-        var id = agent.getId();
+        console.log("Agent add")
+        if (this.state.getDynamicUIFeatures().length > 0 && this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+            MapAgentController.heatmapAgentUpdateGeneric(true);
+        } else {
+            console.log('Agent added ' + agent.getId());
+            var id = agent.getId();
 
-        this.$el.gmap("addMarker", {
-            bounds: !agent.isSimulated(), //Centre in map if real agent
-            marker: MarkerWithLabel,
-            draggable: true, //Allows use of drag and dragend events even though the marker shouldn't be moved by dragging.
-            labelContent: id,
-            labelAnchor: new google.maps.Point(22, -18),
-            labelClass: "labels",
-            labelStyle: {opacity: 1.0},
-            id: id,
-            position: agent.getPosition(),
-            heading: agent.getHeading(),
-            raiseOnDrag: false,
-            zIndex: 2,
-        });
+            this.$el.gmap("addMarker", {
+                bounds: !agent.isSimulated(), //Centre in map if real agent
+                marker: MarkerWithLabel,
+                draggable: true, //Allows use of drag and dragend events even though the marker shouldn't be moved by dragging.
+                labelContent: id,
+                labelAnchor: new google.maps.Point(22, -18),
+                labelClass: "labels",
+                labelStyle: {opacity: 1.0},
+                id: id,
+                position: agent.getPosition(),
+                heading: agent.getHeading(),
+                raiseOnDrag: false,
+                zIndex: 20000000,
+            });
 
-        //If real agent is added, zoom to it
-        if (!agent.isSimulated())
-            this.map.setZoom(19);
+            //If real agent is added, zoom to it
+            if (!agent.isSimulated())
+                this.map.setZoom(19);
 
-        MapAgentController.updateAgentMarkerIcon(agent);
-        var marker = this.$el.gmap("get", "markers")[id];
+            MapAgentController.updateAgentMarkerIcon(agent);
+            var marker = this.$el.gmap("get", "markers")[id];
 
-        $(marker).click(function () {
-            MapAgentController.onAgentMarkerLeftClick(marker);
-        }).rightclick(function () {
-            MapAgentController.onAgentMarkerRightClick(marker);
-        }).drag(function () {
-            MapAgentController.onAgentMarkerDrag(marker);
-        }).dragend(function () {
-            MapAgentController.onAgentMarkerDragEnd(marker);
-        });
+            $(marker).click(function () {
+                MapAgentController.onAgentMarkerLeftClick(marker);
+            }).rightclick(function () {
+                MapAgentController.onAgentMarkerRightClick(marker);
+            }).drag(function () {
+                MapAgentController.onAgentMarkerDrag(marker);
+            }).dragend(function () {
+                MapAgentController.onAgentMarkerDragEnd(marker);
+            });
+        }
+
     },
     /**
      * Adds a ghost agent marker to the map
@@ -124,6 +144,10 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerIcon(agent);
         this.updateTable();
         MapTargetController.checkForReveal(agent);
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+            MapAgentHeatmapController.updateAllAgentMarkers();
+            MapAgentHeatmapController.adjustHeatmapLocation(agent);
+        }
     },
     onGhostChange: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
@@ -185,7 +209,7 @@ var MapAgentController = {
              this.updateClickedAgent(null);
          else
              this.updateClickedAgent(agent);
-         MapAgentController.updateAllAgentMarkerIcons();
+         MapAgentController.updateAllAgentMarkerIcons(false);
     },
     onAgentMarkerRightClick: function (marker) {
         var self = this;
@@ -269,7 +293,7 @@ var MapAgentController = {
                     strokeOpacity: 0.8,
                     strokeColor: 'blue',
                     strokeWeight: 5,
-                    zIndex: 3
+                    zIndex: 2
                 });
             }
         }
@@ -335,13 +359,33 @@ var MapAgentController = {
     },
     updateAgentMarkerVisibility: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
+        marker.setMap(self.map)
         marker.setVisible(agent.isVisible());
         console.log("set " + agent.getId() + " is now " + agent.isVisible())
     },
-    updateAllAgentMarkerIcons: function () {
-        this.state.agents.each(function (agent) {
-            MapAgentController.updateAgentMarkerIcon(agent);
-        });
+    updateAllAgentMarkerIcons: function (newChange) {
+        var self = this;
+        if (newChange) {
+            self.state.agents.each(function (agent) {
+                var marker = self.$el.gmap("get", "markers")[agent.getId()];
+                if (marker) {
+                    marker.setMap(null);
+                    delete marker;
+                }
+            });
+            MapAgentHeatmapController.clearAll();
+            self.clearAllocationRendering()
+        }
+        if (this.state.getDynamicUIFeatures().length > 0 && self.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+            console.log("redrawing agent maps")
+            MapAgentController.forceRedrawMaps();
+        } else {
+            console.log("redrawing agent markers")
+            self.state.agents.each(function (agent) {
+                MapAgentController.updateAgentMarkerIcon(agent);
+                MapAgentController.updateAgentMarkerVisibility(agent);
+            });
+        }
     },
     drawAgentBattery: function (container, agent, rotation) {
         var id = "MarkerCanvas_" + agent.getId();

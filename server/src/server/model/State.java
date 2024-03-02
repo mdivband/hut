@@ -16,7 +16,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -40,13 +39,13 @@ public class State {
     private String modelStyle;
     private Boolean flockingEnabled;
     private double time;
-    private double timeLimit;
-    private long scenarioEndTime;
+    private Integer timeLimit;
+    //private Long scenarioEndTime;
     private int editMode;
     // editMode 1 = monitor
     //          2 = edit
     //          3 = images
-    private boolean passthrough = false;
+    private boolean hasPassthrough = false;
     private String nextFileName = "";
     private boolean deepAllowed = false;
     private boolean showReviewPanel = false;
@@ -90,9 +89,10 @@ public class State {
     private double missionBoundedSuccessChance;
     private double missionBoundedSuccessUnderChance;
     private double missionBoundedSuccessOverChance;
+    private boolean loggingById;
 
+    private List<List<String>> dynamicUIFeatures;
     private Map<String, Double> scoreInfo;
-
     // We could combine these, but it might be little more efficient to let them stay separate
     private Hub hub;
     private Coordinate hubLocation;
@@ -105,6 +105,8 @@ public class State {
     private final Map<String, String> storedImages = new ConcurrentHashMap<>(16);
     private final List<String> deepScannedIds = new ArrayList<>(16);
     private final List<String> pendingIds = new ArrayList<>(16);
+    private Integer workloadLevel;
+    private Integer gameSpeed;
 
     public State() {
         agents = new ArrayList<>();
@@ -121,6 +123,8 @@ public class State {
         successChance = 100.00;
         allocationUndoAvailable = false;
         allocationRedoAvailable = false;
+        dynamicUIFeatures = new ArrayList<>();
+        workloadLevel = 3;
 
         reset();
     }
@@ -129,8 +133,8 @@ public class State {
         // Define defaults
         time = 0;
         timeLimit = 0;    // 0 means no time limit
-        scenarioEndTime = 0; // 0 means no time limit
-        editMode = 1;
+        //scenarioEndTime = 0; // 0 means no time limit
+        editMode = 2;//1;
         inProgress = false;
         allocationMethod = "maxsum";
         allocationStyle = "manualwithstop";
@@ -149,6 +153,7 @@ public class State {
         userName = "";
         modelStyle = "off";
         showReviewPanel = false;
+        workloadLevel = 3;
 
         agents.clear();
         ghosts.clear();
@@ -165,17 +170,18 @@ public class State {
 
         storedImages.clear();
         uiOptions.clear();
-
+        dynamicUIFeatures.clear();
         hazardHits.init();
+
     }
 
     /**
      * Resets all the values for if we pass through to another scenario after this one
      */
     public void resetNext() {
-        passthrough = false;
+        hasPassthrough = false;
         nextFileName = "";
-        scenarioEndTime = 0; // 0 means no time limit
+        //scenarioEndTime = 0; // 0 means no time limit
         timeLimit = 0;    // 0 means no time limit
     }
 
@@ -275,6 +281,7 @@ public class State {
         setTime(this.time + increment);
     }
 
+    /*
     public synchronized double getTimeLimit() {
         return timeLimit;
     }
@@ -298,6 +305,7 @@ public class State {
             this.scenarioEndTime = 0;
         } else {
             this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
+
         }
     }
 
@@ -307,6 +315,19 @@ public class State {
         } else {
             this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
         }
+    }
+
+     */
+
+    /** The exising method uses real seconds. In some situations this may be useful but for most purposes sim ticks
+     * would be better -WH
+     */
+    public synchronized void setSimTimeLimit(Integer secondsToEnd) {
+        this.timeLimit = secondsToEnd;
+    }
+
+    public Integer getTimeLimit() {
+        return timeLimit;
     }
 
     public synchronized int getEditMode() {
@@ -345,6 +366,10 @@ public class State {
         this.gameCentre = gameCentre;
     }
 
+    public Coordinate getGameCentre() {
+        return gameCentre;
+    }
+
     public synchronized void setAllocationMethod(String allocationMethod) {
         this.allocationMethod = allocationMethod;
     }
@@ -366,7 +391,6 @@ public class State {
     }
 
     public void setModelStyle(String modelStyle) {
-        System.out.println("setting style to " + modelStyle);
         this.modelStyle = modelStyle;
     }
 
@@ -483,12 +507,12 @@ public class State {
         hazardHits.decayAll();
     }
 
-    public void setPassthrough(boolean passthrough) {
-        this.passthrough = passthrough;
+    public void setPassthrough(boolean hasPassthrough) {
+        this.hasPassthrough = hasPassthrough;
     }
 
-    public boolean isPassthrough() {
-        return passthrough;
+    public boolean hasPassthrough() {
+        return hasPassthrough;
     }
 
     /**
@@ -790,6 +814,39 @@ public class State {
 
     public boolean isShowReviewPanel() {
         return showReviewPanel;
+    }
+
+    public boolean isLoggingById() {
+        return loggingById;
+    }
+
+    public void setLoggingById(boolean loggingById) {
+        this.loggingById = loggingById;
+    }
+
+    public List<List<String>> getDynamicUIFeatures() {
+        return dynamicUIFeatures;
+    }
+
+    public void setDynamicUIFeatures(List<List<String>> dynamicUIFeatures) {
+        System.out.println(dynamicUIFeatures);
+        this.dynamicUIFeatures = dynamicUIFeatures;
+    }
+
+    public Integer getWorkloadLevel() {
+        return workloadLevel;
+    }
+
+    public void setWorkloadLevel(Integer workloadLevel) {
+        this.workloadLevel = workloadLevel;
+    }
+
+    public Integer getGameSpeed() {
+        return gameSpeed;
+    }
+
+    public void setGameSpeed(Integer gameSpeed) {
+        this.gameSpeed = gameSpeed;
     }
 
     private class HazardHit {

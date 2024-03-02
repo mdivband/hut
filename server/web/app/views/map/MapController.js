@@ -28,6 +28,7 @@ var MapController = {
         this.onMapMarkerComplete = _.bind(this.onMapMarkerComplete, context);
         this.onMapPolylineComplete = _.bind(this.onMapPolylineComplete, context);
         this.onMapRectangleComplete = _.bind(this.onMapRectangleComplete, context);
+        this.onZoomChange = _.bind(this.onZoomChange, context);
         this.onTempAllocationChange = _.bind(this.onTempAllocationChange, context);
         this.onUndoRedoAvailableChange = _.bind(this.onUndoRedoAvailableChange, context);
         this.onCancelAllocationClick = _.bind(this.onCancelAllocationClick, context);
@@ -96,6 +97,10 @@ var MapController = {
         this.state.on("change:scoreInfo", function () {
             self.updateScorePanel();
         });
+        this.state.on("change:workloadLevel change:dynamicUIFeatures", function () {
+            MapAgentController.updateAllAgentMarkerIcons(true);
+            MapTaskController.updateAllTaskIcons(true);
+        });
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
                 MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
@@ -104,6 +109,15 @@ var MapController = {
             } else {
                 MapController.showPredictedPaths($(this).val());
             }
+        });
+        $('#workload_slider').on('change', function() {
+            self.state.workloadLevel = $(this).val();
+            $.post("/review/report/workload", {
+                level: self.state.getWorkloadLevel()
+            });
+            //console.log("level = " + MapController.workloadLevel)
+            MapAgentController.updateAllAgentMarkerIcons(true);
+            MapTaskController.updateAllTaskIcons(true);
         });
         $('#uncertainties_toggle').change(function () {
             MapController.toggleUncertainties( $(this).is(":checked"));
@@ -169,7 +183,16 @@ var MapController = {
         google.maps.event.addListener(this.drawing, "rectanglecomplete", function (rectangle) {
             MapController.onMapRectangleComplete(rectangle);
         });
+        google.maps.event.addListener(this.map, "zoom_changed", function () {
+            MapController.onZoomChange();
+        });
+    },
+    onZoomChange: function () {
+        zoomLevel = this.map.getZoom();
+        console.log("Zoom is now: " + zoomLevel)
 
+        //MapAgentController.updateAllAgentMarkerIcons()
+        //MapTaskController.updateAllTaskIcons()
     },
     showPredictedPaths: function (setting) {
         MapController.predictionLength = setting;
@@ -259,18 +282,15 @@ var MapController = {
             }
     },
     onTick: function () {
-        // TODO this is a temp feature and should be hardcoded
-        var tempTime = this.state.getTime();
-        var tempLimit = this.state.getTimeLimit();
-        var time = $.fromTime(tempTime / 6);
-        var limit = $.fromTime(tempLimit / 6);
-        /*
         var time = $.fromTime(this.state.getTime());
-        var limit = $.fromTime(this.state.getTimeLimit());
-        //$("#game_time").html("Time: " + time);
-         */
+        var limit = $.fromTime( this.state.getTimeLimit());
+        var simTime = $.fromTime(this.state.getTime() * this.state.getGameSpeed());
+        //var simTimeLimit = $.fromTime( this.state.getTimeLimit() * this.state.getGameSpeed());
         $("#game_time").html("Time: " + time + "/" + limit);
-        this.updateAllocationRendering();
+        $("#sim_time").html("Sim Time: " + simTime);
+        if (this.state.isInProgress()) {
+            this.updateAllocationRendering();
+        }
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);
             this.drawPredictedGhostPath(MapController.predictionLength);
@@ -361,7 +381,9 @@ var MapController = {
         }
     },
     onTempAllocationChange: function () {
-        this.updateAllocationRendering();
+        if (this.state.isInProgress()) {
+            this.updateAllocationRendering();
+        }
     },
     onUndoRedoAvailableChange: function () {
         $("#allocation_undo").prop('disabled', !this.state.isAllocationUndoAvailable());
@@ -400,16 +422,29 @@ var MapController = {
             $("#scan_button_group").hide()
         }
 
+        if (this.state.getUiOptions().includes("workloadSlider")) {
+            $("#wk_sld_wrapper").show();
+        } else {
+            $("#wk_sld_wrapper").hide();
+        }
+
         // Boxes to be shown or not as per modes
         if (this.state.getModelStyle() === "off") {
             $("#prediction_canvas").hide();
             $("#mission_prediction_canvas").hide();
             $("#bounded_prediction_canvas").hide();
+            $("#accordion_smallview").accordion({
+                collapsible: true
+            });
             $("#addRemAgentButton").hide()
         } else {
             $("#prediction_canvas").show();
             $("#mission_prediction_canvas").show();
             $("#bounded_prediction_canvas").show();
+            $("#accordion_smallview").accordion({
+                collapsible: true,
+                active: false
+            });
             $("#addRemAgentButton").show()
         }
 
@@ -465,6 +500,7 @@ var MapController = {
 
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
+        MapAgentController.updateAllAgentMarkerIcons(true)
         if(sendUpdate)
             this.state.pushMode(modeFlag);
     },
@@ -545,5 +581,5 @@ var MapController = {
                 index: vertex - 1
             }
         });
-    }
+    },
 };

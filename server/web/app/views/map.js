@@ -29,9 +29,10 @@ App.Views.Map = Backbone.View.extend({
 
         this.state = options.state;
         this.views = options.views;
-
         MapController.bind(this);
         MapAgentController.bind(this);
+        MapTaskHeatmapController.bind(this);
+        MapAgentHeatmapController.bind(this);
         MapTaskController.bind(this);
         MapHazardController.bind(this);
         MapTargetController.bind(this);
@@ -39,11 +40,23 @@ App.Views.Map = Backbone.View.extend({
 
         // The MapTypeId is the default setting (ROADMAP and SATELLITE are the standard two)
         // The _Control variables enable and disable buttons for the user to change this
-        this.mapOptions = {
-            zoom: 18,
-            center: new google.maps.LatLng(50.939025, -1.461583),
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
 
+        var myStyles =[
+            {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [
+                    { visibility: "off" }
+                ]
+            }
+        ];
+
+        this.mapOptions = {
+            zoom: 15,
+            //center: new google.maps.LatLng(50.939025, -1.461583),
+            center: new google.maps.LatLng(50.939025, -1.521583),
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            styles: myStyles,
             zoomControl: true,
             zoomControlOptions: {
                 position: google.maps.ControlPosition.RIGHT_BOTTOM,
@@ -83,6 +96,7 @@ App.Views.Map = Backbone.View.extend({
             UAVWithPack: $.loadIcon("icons/used/uav_with_pack.png", "icons/plane.shadow.png", 30, 30),
             UAVSelected: $.loadIcon("icons/used/uav_selected.png", "icons/plane.shadow.png", 30, 30),
             UAVTimedOut: $.loadIcon("icons/used/uav_timedout.png", "icons/plane.shadow.png", 30, 30),
+            UAVMini: $.loadIcon("icons/used/uav_timedout_mini.png", "icons/plane.shadow.png", 30, 30),
             Marker: $.loadIcon("icons/used/marker.png", "icons/msmarker.shadow.png", 10, 34),
             MarkerMonitor: $.loadIcon("icons/used/marker_monitor.png", "icons/msmarker.shadow.png", 10, 34),
             TargetHuman: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
@@ -102,6 +116,8 @@ App.Views.Map = Backbone.View.extend({
         this.render();
         MapController.bindEvents();
         MapAgentController.bindEvents();
+        MapTaskHeatmapController.bindEvents();
+        MapAgentHeatmapController.bindEvents();
         MapTaskController.bindEvents();
         MapHazardController.bindEvents();
         MapTargetController.bindEvents();
@@ -110,6 +126,7 @@ App.Views.Map = Backbone.View.extend({
         setTimeout(function () {
             self.setupROS();
         }, 800);
+
     },
     render: function () {
         var self = this;
@@ -398,7 +415,7 @@ App.Views.Map = Backbone.View.extend({
 
             }
         } catch (e) {
-            alert(e);
+            alert("Marker drawing error: " + e);
         }
 
         // Clumsy, just add manually if using shapes for now. infutue should be done in the same way as above
@@ -577,53 +594,69 @@ App.Views.Map = Backbone.View.extend({
         });
     },
     updateAllocationRendering: function () {
-        var self = this;
-        var mainAllocation = this.state.getAllocation();
-        var tempAllocation = this.state.getTempAllocation();
-        var droppedAllocation = this.state.getDroppedAllocation();
+        // TODO fix (restore) the allocation renderings here
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+            MapTaskController.heatmapTaskUpdateGeneric();
+            MapAgentHeatmapController.updateHeatmapAllocationRendering()
+        } else {
+            var self = this;
+            var mainAllocation = this.state.getAllocation();
+            var tempAllocation = this.state.getTempAllocation();
+            var droppedAllocation = this.state.getDroppedAllocation();
 
-        //Set all task markers to red
-        this.state.tasks.each(function (task) {
-            MapTaskController.updateTaskRendering(task.getId(), self.MarkerColourEnum.RED);
-        });
+            //Set all task markers to red
+            this.state.tasks.each(function (task) {
+                MapTaskController.updateTaskRendering(task.getId(), self.MarkerColourEnum.RED);
+            });
 
-        this.state.agents.each(function (agent) {
-            var agentId = agent.getId();
-            var mainLineId = agentId + "main";
-            var tempLineId = agentId + "temp";
-            var droppedLineId = agentId + "dropped";
+            this.state.agents.each(function (agent) {
+                var agentId = agent.getId();
+                var mainLineId = agentId + "main";
+                var tempLineId = agentId + "temp";
+                var droppedLineId = agentId + "dropped";
 
-            //Draw or hide 'real' allocation.
-            if (agentId in mainAllocation) {
-                if (self.state.getEditMode() === 1)
-                    MapTaskController.updateTaskRendering(mainAllocation[agentId], self.MarkerColourEnum.GREEN);
-                if (!agent.isWorking())
-                    self.drawAllocation(mainLineId, "green", agentId, mainAllocation[agentId]);
-                else
+                //Draw or hide 'real' allocation.
+                if (agentId in mainAllocation) {
+                    if (self.state.getEditMode() === 1)
+                        MapTaskController.updateTaskRendering(mainAllocation[agentId], self.MarkerColourEnum.GREEN);
+                    if (!agent.isWorking())
+                        self.drawAllocation(mainLineId, "green", agentId, mainAllocation[agentId]);
+                    else
+                        self.hidePolyline(mainLineId);
+                } else
                     self.hidePolyline(mainLineId);
-            }
-            else
-                self.hidePolyline(mainLineId);
 
-            //Draw or hide 'temp' allocation.
-            if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
-                MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
-                if((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
-                    self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
-            }
-            else
-                self.hidePolyline(tempLineId);
+                //Draw or hide 'temp' allocation.
+                if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
+                    MapTaskController.updateTaskRendering(tempAllocation[agentId], self.MarkerColourEnum.ORANGE);
+                    if ((!agent.isWorking() || agent.getAllocatedTaskId() !== tempAllocation[agentId]))
+                        self.drawAllocation(tempLineId, "orange", agentId, tempAllocation[agentId]);
+                } else
+                    self.hidePolyline(tempLineId);
 
-            //Draw or hide 'dropped' allocation.
-            if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
-                self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
-            else
-                self.hidePolyline(droppedLineId);
+                //Draw or hide 'dropped' allocation.
+                if (self.state.getEditMode() === 2 && agentId in droppedAllocation)
+                    self.drawAllocation(droppedLineId, "grey", agentId, droppedAllocation[agentId]);
+                else
+                    self.hidePolyline(droppedLineId);
+            });
+
+            //Colour task marker that is being hovered over when manually allocating
+            if (MapAgentController.taskIdToAllocateManually)
+                MapTaskController.updateTaskRendering(MapAgentController.taskIdToAllocateManually, this.MarkerColourEnum.BLUE);
+        }
+    },
+    clearAllocationRendering: function () {
+        // TODO not working
+        var self = this;
+        this.state.agents.each(function (agent) {
+            var mainLineId = agent.id + "main";
+            self.hidePolyline(mainLineId);
+            var tempLineId = agent.id + "temp";
+            self.hidePolyline(tempLineId);
+            var droppedLineId = agent.id + "dropped";
+            self.hidePolyline(droppedLineId);
         });
-
-        //Colour task marker that is being hovered over when manually allocating
-        if (MapAgentController.taskIdToAllocateManually)
-            MapTaskController.updateTaskRendering(MapAgentController.taskIdToAllocateManually, this.MarkerColourEnum.BLUE);
     },
     drawAllocation: function (lineId, lineColour, agentId, taskId) {
         var self = this;
@@ -632,13 +665,49 @@ App.Views.Map = Backbone.View.extend({
         var agent = this.state.agents.get(agentId);
         var polyline = this.$el.gmap("get", "overlays > Polyline", [])[lineId];
 
-        //Get polyline path
-        var path = [agentMarker.getPosition()];
+
+        var coordinate = agent.getPosition()
+        //alert(agent.getHeading())
+
+        /*
+        var thetaRadians = (agent.getHeading() + 90) * Math.PI / 180;
+
+        var yOff = 50 * Math.sin(thetaRadians);
+        var xOff = 50 * Math.cos(thetaRadians);
+
+        var lat = coordinate.lat() + yOff / (60.0 * 1852.0);
+        var lng = coordinate.lng() + xOff / (60.0 * 1852.0)// * Math.cos(coordinate.lat() * Math.PI / 180.0));
+        */
+        var theta = agent.getHeading();
+        var lat = coordinate.lat();
+        var lng = coordinate.lng();
+
+        var delta = 50 / 6371000; // Distance/radius = angular distance in radians
+        var thetaRad = theta * Math.PI / 180; // Convert theta to radians
+
+        // Convert latitude to radians
+        var latRad = lat * Math.PI / 180;
+
+        // Calculate new latitude
+        var newLatRad = Math.asin(Math.sin(latRad) * Math.cos(delta) +
+            Math.cos(latRad) * Math.sin(delta) * Math.cos(thetaRad));
+
+        // Calculate new longitude
+        var newLngRad = lng * Math.PI / 180 + Math.atan2(Math.sin(thetaRad) * Math.sin(delta) * Math.cos(latRad),
+            Math.cos(delta) - Math.sin(latRad) * Math.sin(newLatRad));
+
+        // Convert radians back to degrees
+        var newLat = newLatRad * 180 / Math.PI;
+        var newLng = newLngRad * 180 / Math.PI;
+
+        var path = [new google.maps.LatLng(newLat, newLng)];//[agent.getPosition()];
         var route = isTempLine ? agent.getTempRoute() : agent.getRoute();
         var convertedRoute = route.map(function (c) {
             return new google.maps.LatLng(c.latitude, c.longitude);
         });
         path = path.concat(convertedRoute);
+
+
 
         //Alter existing polyline if it exists
         if (polyline) {
@@ -651,10 +720,11 @@ App.Views.Map = Backbone.View.extend({
                 var ne = bounds.getNorthEast();
                 var radius = google.maps.geometry.spherical.computeDistanceBetween(center, ne);
             }
-            if (dist < relativeSize * radius)
+            if (dist < relativeSize * radius) {
                 polyline.setOptions({icons: []});
-            else
+            } else {
                 polyline.setOptions({icons: [this.polylineIcon]});
+            }
 
             //Show polyline if currently hidden.
             if (!polyline.getMap())
@@ -709,8 +779,7 @@ App.Views.Map = Backbone.View.extend({
                                 });
                             });
                         });
-                    }
-                    else {
+                    } else {
                         self.$el.gmap("openInfoWindow", {minWidth: 300}, null, function (iw) {
                             var property = document.createElement("div");
                             property.innerHTML = _.template($("#waypoint_remove").html(), {});
