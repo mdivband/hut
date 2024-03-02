@@ -1256,6 +1256,7 @@ public class Allocator {
 
         });
         //result.entrySet().stream().map(AgentVirtual::getId).collect(Collectors.toList());
+
         new ArrayList<>(result.keySet());
     }
 

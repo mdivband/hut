@@ -235,11 +235,11 @@ public class TaskController extends AbstractController {
      * @param epsilon
      * @return
      */
-    public List<Task> getAllTasksAt(Coordinate coordinate, double epsilon) {
+    public List<Task> getAllTasksAt(Coordinate coordinate, double epsilon, List<Task> exceptedList) {
         List<Task> foundTasks = new ArrayList<>(2);
 
         for (Task t : simulator.getState().getTasks()) {
-            if (t.getCoordinate().getDistance(coordinate) < epsilon) {
+            if (!exceptedList.contains(t) && t.getCoordinate().getDistance(coordinate) < epsilon) {
                 foundTasks.add(t);
             }
         }

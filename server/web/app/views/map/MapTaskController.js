@@ -47,7 +47,8 @@ var MapTaskController = {
             MapTaskController.onTaskCompleted(task);
         });
     },
-    heatmapTaskUpdateGeneric: function () {
+    heatmapTaskUpdateGeneric: function (task) {
+        MapTaskHeatmapController.removeTaskMarkerForTask(task)
         MapTaskHeatmapController.drawTaskMaps();
     },
     onTaskAdd: function (task) {
@@ -223,6 +224,7 @@ var MapTaskController = {
         // TODO on remove, make heatmap markers clear
         MapTaskHeatmapController.updateFor(task);
         if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+            MapAgentHeatmapController.removeAgentMarkerForAgentWithTask(task)
             MapAgentController.heatmapAgentUpdateGeneric();
             MapTaskController.heatmapTaskUpdateGeneric();
         } //else {
@@ -258,7 +260,7 @@ var MapTaskController = {
         MapTaskHeatmapController.updateFor(task);
         if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
-            MapAgentController.heatmapAgentUpdateGeneric();
+            MapAgentController.heatmapAgentUpdateGeneric(true);
         } else {
             console.log("Task completed " + task.getId());
             var self = this;

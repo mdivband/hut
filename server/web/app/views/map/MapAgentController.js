@@ -69,7 +69,7 @@ var MapAgentController = {
     },
     forceRedrawMaps: function () {
         this.state.agents.forEach((a) => {
-            MapAgentHeatmapController.drawAgentMaps(true);
+            MapAgentHeatmapController.drawAgentMaps(false);
             MapAgentHeatmapController.adjustHeatmapLocation(a)
         })
     },

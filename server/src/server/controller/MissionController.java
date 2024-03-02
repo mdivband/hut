@@ -14,7 +14,7 @@ public class MissionController extends AbstractController {
     private double spawnRadius = 0;
     private double batchSize = 3;
     private final int batchRand = 1;  // Could merge this and above to a range
-    private double batchRadius = 200;
+    private double batchRadius = 60;
     private List<Integer[]> spawnPairs = new ArrayList<>();
 
     public MissionController(Simulator simulator) {
@@ -35,6 +35,7 @@ public class MissionController extends AbstractController {
         }
 
         if (lastSpawn + (60 / (taskSpawnRate / batchSize)) < time) {
+            List<Task> tasksInThisBatch = new ArrayList<>((int) (batchSize + batchRand));
             lastSpawn = time;
             boolean acceptableSpawn = false;
             Coordinate newPos = null;
@@ -48,21 +49,23 @@ public class MissionController extends AbstractController {
                     acceptableSpawn = true;
                 }
             }
-            simulator.getTaskController().createTask(0, newPos.getLatitude(), newPos.getLongitude());
+            Task createdTask = simulator.getTaskController().createTask(0, newPos.getLatitude(), newPos.getLongitude());
+            tasksInThisBatch.add(createdTask);
+            Coordinate relPos = newPos.clone();
             for (int i=1; i<(batchSize + simulator.getRandom().nextInt(0, batchRand + 1)); i++) {
                 acceptableSpawn = false;
-                Coordinate relPos = null;
                 while (!acceptableSpawn) {
                     double theta = simulator.getRandom().nextDouble(2 * Math.PI);
                     double r = simulator.getRandom().nextDouble(batchRadius);
                     //System.out.println("Spawning; r = " + r + ", th = " + theta);
                     //Coordinate newPos = simulator.getState().getGameCentre().getCoordinate(r, theta);
-                    relPos = newPos.getCoordinateElliptical(r, theta, 1.5, 1);
-                    if (isAcceptable(relPos, 0.30)) {
+                    relPos = relPos.getCoordinateElliptical(r, theta, 1.5, 1);
+                    if (isAcceptable(relPos, 1, tasksInThisBatch)) {  // May need to exclude
                         acceptableSpawn = true;
                     }
                 }
-                simulator.getTaskController().createTask(0, relPos.getLatitude(), relPos.getLongitude());
+                createdTask = simulator.getTaskController().createTask(0, relPos.getLatitude(), relPos.getLongitude());
+                tasksInThisBatch.add(createdTask);
             }
         }
     }
@@ -80,15 +83,16 @@ public class MissionController extends AbstractController {
     }
 
     private boolean isAcceptable(Coordinate position) {
-        return isAcceptable(position, 1d);
+        return isAcceptable(position, 1d, new ArrayList<>());
 
     }
 
-    private boolean isAcceptable(Coordinate position, double scale) {
+    private boolean isAcceptable(Coordinate position, double scale, List<Task> toExclude) {
         // Immediately return false if any condition is not met
-        return simulator.getTaskController().getAllTasksAt(position, scale * 150).isEmpty() &&
-                //simulator.getTargetController().getTargetAt(position, scale * 200) == null &&
-                simulator.getAgentController().getAgentAt(position, scale * 400) == null;
+        return simulator.getTaskController().getAllTasksAt(position, scale * 300, toExclude).isEmpty() &&
+                (simulator.getAgentController().getAgentAt(position, scale * 400) == null);
+
+        //simulator.getTargetController().getTargetAt(position, scale * 200) == null
     }
 
     public void reset() {

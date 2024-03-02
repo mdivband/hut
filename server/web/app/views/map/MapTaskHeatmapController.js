@@ -28,9 +28,6 @@ var MapTaskHeatmapController = {
     },
     drawTaskMaps: function () {
         //console.log("========================================")
-        var mainAllocation = this.state.getAllocation();
-        var tempAllocation = this.state.getTempAllocation();
-        var droppedAllocation = this.state.getDroppedAllocation();
 
         //if (MapTaskHeatmapController.running || MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
         //if(MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
@@ -299,6 +296,13 @@ var MapTaskHeatmapController = {
             //alert("Removing marker " + index)
             marker.setMap(null);
             delete marker;
+        }
+    },
+    removeTaskMarkerForTask: function (task) {
+        for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
+            if (MapTaskHeatmapController.addedGroups[i].includes(task)) {
+                MapTaskHeatmapController.removeTaskMarkerFor(i)
+            }
         }
     },
     checkIfIn2DList: function (itemToCheck, lists) {

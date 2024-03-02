@@ -6,6 +6,7 @@ var MapAgentHeatmapController = {
     isManuallyAllocating: null,
     running: false,
     groupStatuses: [],
+    agentMarkers: [],
 
     /**
      * Binds all the methods to use the given context.
@@ -36,9 +37,9 @@ var MapAgentHeatmapController = {
     },
     drawAgentMaps: function (reset) {
         //console.log("========================================")
-        var mainAllocation = this.state.getAllocation();
-        var tempAllocation = this.state.getTempAllocation();
-        var droppedAllocation = this.state.getDroppedAllocation();
+        if (reset) {
+            MapAgentHeatmapController.clearAll();
+        }
 
         if (!reset && (MapAgentHeatmapController.running || MapAgentHeatmapController.arraysEqual(this.state.agents, MapAgentHeatmapController.addedGroups.flat(1)))) {
         //if (false) {
@@ -47,13 +48,13 @@ var MapAgentHeatmapController = {
             MapAgentHeatmapController.running = true;
             if (!this.state.agents.isEmpty()) {
                 let groups = [];
-                let grouping_dist = 200;
-                let agents = []
-                this.state.agents.forEach(function (t) {
-                    agents.push(t);
-                });
+                let grouping_dist = 250;
+                //let agents = []
+                //this.state.agents.forEach(function (t) {
+                //    agents.push(t);
+                //});
 
-                agents.forEach((t) => {
+                this.state.agents.forEach((t) => {
                     //console.log("Considering " + t.getId())
                     if (!MapAgentHeatmapController.checkIfIn2DList(t, groups)) {
                         //console.log("-pushed new list")
@@ -62,7 +63,7 @@ var MapAgentHeatmapController = {
                     }
 
                     let new_group;
-                    agents.forEach((n) => {
+                    this.state.agents.forEach((n) => {
                         //console.log(t.getId() + " -> " + n.getId())
                         //if (t !== n && !MapHeatmapController.checkIfIn2DList(n, groups) && Math.abs(tasks[n] - tasks[t]) <= grouping_dist) {
 
@@ -245,13 +246,13 @@ var MapAgentHeatmapController = {
 
                 MapAgentHeatmapController.addedGroups = groups
 
-                //console.log("Groups after heatmap bit: " + groups.length)
-                //groups.forEach((group) => {
-                //    console.log(" g: ")
-                //    group.forEach((g) => {
-                //        console.log("    " + g.getId())
-                //    });
-                //});
+                console.log("Groups after heatmap bit: " + groups.length)
+                groups.forEach((group) => {
+                   console.log(" g: ")
+                   group.forEach((g) => {
+                       console.log("    " + g.getId() + "     (" + g.getAgentTeam() + ")")
+                   });
+                });
                 // console.log("AddedGroups after heatmap bit: " + MapAgentHeatmapController.addedGroups.length)
                 // MapAgentHeatmapController.addedGroups.forEach((group) => {
                 //     console.log(" g: ")
@@ -352,6 +353,7 @@ var MapAgentHeatmapController = {
                 zIndex: -20000000,
             });
             subMarker = this.$el.gmap("get", "markers")["sub_"+agent.getId()];
+            MapAgentHeatmapController.agentMarkers.push(subMarker);
             var icon = this.icons.UAVMini;
             subMarker.setIcon(icon.Image);
         } else {
@@ -552,7 +554,6 @@ var MapAgentHeatmapController = {
             polyline.setMap(null);
     },
     updateAllAgentMarkers: function () {
-        var self = this;
         for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++){
             if (MapAgentHeatmapController.addedGroups[i].length === 0) {
                 //console.log("Removing " + i + " groupsize = " + MapAgentHeatmapController.addedGroups[i].length)
@@ -639,6 +640,7 @@ var MapAgentHeatmapController = {
                 zIndex: 3
             });
             marker = this.$el.gmap("get", "markers")["AgentGroup-"+index];
+            MapAgentHeatmapController.agentMarkers.push(marker);
 
             $(marker).drag(function () {
                 MapAgentHeatmapController.onAgentMarkerDrag(marker);
@@ -651,9 +653,24 @@ var MapAgentHeatmapController = {
     },
     removeAgentMarkerFor: function (index) {
         var marker = this.$el.gmap("get", "markers")["AgentGroup-"+index];
+        for (let i = 0; i < MapAgentHeatmapController.agentMarkers.length; i++){
+            //if (MapAgentHeatmapController.agentMarkers[i] === marker) {
+            //    MapAgentHeatmapController.agentMarkers.slice(i);
+            //}
+        }
         if (marker) {
             marker.setMap(null);
             delete marker;
+        }
+
+    },
+    removeAgentMarkerForAgentWithTask: function (task) {
+        for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++){
+            for (let j = 0; j < MapAgentHeatmapController.addedGroups[i].length; j++){
+                if (MapAgentHeatmapController.addedGroups[i][j].getAllocatedTaskId() === task.getId()) {
+                    MapAgentHeatmapController.removeAgentMarkerFor(i)
+                }
+            }
         }
     },
     checkIfIn2DList: function (itemToCheck, lists) {
@@ -824,6 +841,15 @@ var MapAgentHeatmapController = {
             } catch (e) {}
         }
 
+
+        for (let i = 0; i < MapAgentHeatmapController.agentMarkers.length; i++){
+            try {
+                MapAgentHeatmapController.agentMarkers[i].setMap(null);
+                delete MapAgentHeatmapController.agentMarkers[i];
+            } catch (e) {}
+
+        }
+        MapAgentHeatmapController.agentMarkers = [];
         MapAgentHeatmapController.agentHeatmaps = [];
         MapAgentHeatmapController.addedGroups = [];
         MapAgentHeatmapController.taskMarkers = [];
@@ -831,5 +857,8 @@ var MapAgentHeatmapController = {
         MapAgentHeatmapController.isManuallyAllocating = null;
         MapAgentHeatmapController.running = false;
         MapAgentHeatmapController.groupStatuses = [];
+
+        console.log("Cleared all markers")
+        console.log(MapAgentHeatmapController.agentMarkers)
     }
 };

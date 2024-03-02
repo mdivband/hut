@@ -80,7 +80,8 @@ public class AllocationHandler extends RestHandler {
         if(!taskExists(taskId, resp))
             return;
         simulator.getAllocator().putInTempAllocation(agentId, taskId);
-        simulator.getState().getAgent(agentId).setAgentTeam(new ArrayList<>(Collections.singleton(agentId)));
+        // TODO Temp workaround for demo is to lock in groups as unchangeable
+        //simulator.getState().getAgent(agentId).setAgentTeam(new ArrayList<>(Collections.singleton(agentId)));
         simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
         resp.sendOkay();
     }
@@ -100,7 +101,6 @@ public class AllocationHandler extends RestHandler {
 
         simulator.getAllocator().dynamicRandomAssignSubgroup(agentIdsAsArray, taskIdsAsArray);
         simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
-
 
         resp.sendOkay();
     }

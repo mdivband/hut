@@ -13,7 +13,7 @@
     }
   ],
   "spawnRadius": 1200,
-  "timeLimitSeconds": 45,
+  "timeLimitSeconds": 60,
   "dynamicUIFeatures": {
     "1": [
       "heatmap"

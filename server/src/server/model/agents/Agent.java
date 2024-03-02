@@ -454,8 +454,10 @@ public abstract class Agent extends MObject implements Serializable {
     }
 
     public void setAgentTeam(List<String> agentTeam) {
-        //System.out.println(agentTeam);
-        this.agentTeam = agentTeam;
+        // TODO Temp workaround for demo is to lock in groups as unchangeable
+        if (this.agentTeam.isEmpty()) {
+            this.agentTeam = agentTeam;
+        }
     }
 
     @Override
