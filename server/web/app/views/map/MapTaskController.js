@@ -51,7 +51,7 @@ var MapTaskController = {
         MapTaskHeatmapController.drawTaskMaps();
     },
     onTaskAdd: function (task) {
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
             this.$el.gmap("addMarker", {
                 bounds: false,
@@ -210,7 +210,7 @@ var MapTaskController = {
         }
     },
     onTaskChange: function (task) {
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
         } else {
             var marker = this.$el.gmap("get", "markers")[task.getId()];
@@ -222,7 +222,7 @@ var MapTaskController = {
     onTaskRemove: function (task) {
         // TODO on remove, make heatmap markers clear
         MapTaskHeatmapController.updateFor(task);
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapAgentController.heatmapAgentUpdateGeneric();
             MapTaskController.heatmapTaskUpdateGeneric();
         } //else {
@@ -256,7 +256,7 @@ var MapTaskController = {
     },
     onTaskCompleted: function (task) {
         MapTaskHeatmapController.updateFor(task);
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
             MapAgentController.heatmapAgentUpdateGeneric();
         } else {
@@ -355,7 +355,7 @@ var MapTaskController = {
             MapTaskController.clearAll();
         }
 
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures().length > 0 && this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             console.log("redrawing task maps")
             MapTaskController.heatmapTaskUpdateGeneric();
         } else {

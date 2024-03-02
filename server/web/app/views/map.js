@@ -594,7 +594,7 @@ App.Views.Map = Backbone.View.extend({
     },
     updateAllocationRendering: function () {
         // TODO fix (restore) the allocation renderings here
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric();
             MapAgentHeatmapController.updateHeatmapAllocationRendering()
         } else {

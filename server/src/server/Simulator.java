@@ -122,7 +122,7 @@ public class Simulator {
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
         if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
-            //LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
+            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
             return true;
         } else {
             LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
@@ -182,12 +182,14 @@ public class Simulator {
                 System.out.println("Num failed: " + numFailed);
                 modeller.outputResults();
                  */
+                //state.setInProgress(false);
                 if (state.hasPassthrough()) {
                     updateNextValues();
                 }
                 //this.reset();
-                state.setInProgress(false);
-                this.reset();
+                this.reset(false);
+
+                break;
                 //passthrough();
 
 
@@ -270,14 +272,14 @@ public class Simulator {
 
                 } else {
                     // Step agents
-                    checkAgentsForTimeout();
+                    //checkAgentsForTimeout();
 
-                    Hub hub = state.getHub();
-                    if (hub instanceof AgentHub ah) {
-                        ah.step(state.isFlockingEnabled());
-                    } else if (hub instanceof AgentHubProgrammed ahp) {
-                        ahp.step(state.isFlockingEnabled());
-                    }
+                    //Hub hub = state.getHub();
+                    //if (hub instanceof AgentHub ah) {
+                    //    ah.step(state.isFlockingEnabled());
+                    //} else if (hub instanceof AgentHubProgrammed ahp) {
+                    //    ahp.step(state.isFlockingEnabled());
+                    //}
                     // ELSE no hub
 
                     synchronized (state.getAgents()) {
@@ -287,11 +289,11 @@ public class Simulator {
                     }
                 }
 
-                if (state.isCommunicationConstrained()) {
-                    state.updateAgentVisibility();
-                    state.updateGhosts();
-                    state.moveGhosts();
-                }
+                //if (state.isCommunicationConstrained()) {
+                //    state.updateAgentVisibility();
+                //    state.updateGhosts();
+                //    state.moveGhosts();
+                //}
                 // Step tasks - requires completed tasks array to avoid concurrent modification.
                 List<Task> completedTasks = new ArrayList<>();
                 for (Task task : state.getTasks()) {
@@ -302,7 +304,7 @@ public class Simulator {
                     }
                 }
 
-                synchronized (Simulator.instance.getState().getCompletedTasks()) {
+                //synchronized (Simulator.instance.getState().getCompletedTasks()) {
                     for (Task task : completedTasks) {
                         task.getAgents().forEach(a -> a.setType("standard"));
                         task.complete();
@@ -312,7 +314,7 @@ public class Simulator {
                         //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
     
                     //}
-                }
+                //}
 
                 //if (!modeller.isStarted()) {
                 //    modeller.start();
@@ -430,7 +432,11 @@ public class Simulator {
     }
 
     public synchronized void reset() {
-        if (this.mainLoopThread != null) {
+        reset(true);
+    }
+
+    public synchronized void reset(boolean interruptMain) {
+        if (interruptMain && this.mainLoopThread != null) {
             this.mainLoopThread.interrupt();
          }
         state.reset();
@@ -660,6 +666,10 @@ public class Simulator {
                 if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
                     state.addUIOption("uncertainties");
                 }
+                if (GsonUtils.getValue(uiJson, "workloadSlider") != null && (boolean) GsonUtils.getValue(uiJson, "workloadSlider")) {
+                    state.addUIOption("workloadSlider");
+                }
+
             }
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {

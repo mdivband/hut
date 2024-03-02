@@ -308,12 +308,11 @@ var simulator = {
                     } else if (!self.state.isInProgress()) {
                         self.views.map.clearAll()
                         var scenario_end_panel = document.createElement("div");
-                        alert("Finishing. PT = " + self.state.hasPassthrough())
                         if (!self.state.hasPassthrough()) {
                             // Return to menu
                             scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                                 title: "Scenario Ended",
-                                description: "This scenario has ended, please close your browser tab and continue with the MS form"
+                                description: "This scenario has ended, please close."
                             });
                             $.blockWithContent(scenario_end_panel);
                             $('#end_scenario').on('click', function () {
@@ -322,19 +321,19 @@ var simulator = {
                             });
                         } else {
                             // Has a scenario to pass through too
-                            scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
+                            scenario_end_panel.innerHTML = _.template($("#scenario_passthrough_panel").html(), {
                                 title: "Scenario Ended",
                                 description: "This scenario has ended, please press close to continue to the next experiment"
                             });
                             $.blockWithContent(scenario_end_panel);
-                            var endScenarioDiv = $("#end_scenario");
+                            var nextScenarioDiv = $("#next_scenario");
 
-                            endScenarioDiv.on('click', function () {
+                            nextScenarioDiv.on('click', function () {
                                 var fileName = self.state.getNextFileName();
                                 //$.post("/reset");
                                 $.post('/mode/scenario', {'file-name': fileName}, function () {
-                                    endScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
-                                    endScenarioDiv[0].addEventListener("animationend", function () {
+                                    nextScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
+                                    nextScenarioDiv[0].addEventListener("animationend", function () {
                                         window.location = "/sandbox.html";
                                     })
                                 }).fail(function () {

@@ -57,7 +57,7 @@ public class MissionController extends AbstractController {
                     //System.out.println("Spawning; r = " + r + ", th = " + theta);
                     //Coordinate newPos = simulator.getState().getGameCentre().getCoordinate(r, theta);
                     relPos = newPos.getCoordinateElliptical(r, theta, 1.5, 1);
-                    if (isAcceptable(relPos, 0.4)) {
+                    if (isAcceptable(relPos, 0.30)) {
                         acceptableSpawn = true;
                     }
                 }

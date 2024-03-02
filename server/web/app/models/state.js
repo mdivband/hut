@@ -47,7 +47,7 @@ App.Models.State  = Backbone.Model.extend({
         scoreInfo: {},
         modelStyle: "off",
         loggingById: false,
-        dynamicUIFeatures: [[], [], [], [], []],
+        dynamicUIFeatures: [["none"], ["none"], ["none"], ["none"], ["none"]],
         workloadLevel: 3,
     },
     url: function () {
@@ -180,6 +180,9 @@ App.Models.State  = Backbone.Model.extend({
     getUserName: function () {
         return this.get("userName");
     },
+    getNextFileName: function () {
+        return this.get("nextFileName")
+    },
     getModelStyle: function () {
         return this.get("modelStyle");
     },
@@ -223,4 +226,7 @@ App.Models.State  = Backbone.Model.extend({
     getDynamicUIFeatures: function () {
         return this.get("dynamicUIFeatures");
     },
+    getWorkloadLevel: function () {
+        return this.get("workloadLevel");
+    }
 });

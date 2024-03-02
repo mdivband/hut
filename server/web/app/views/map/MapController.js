@@ -4,7 +4,6 @@ var MapController = {
     showRanges: false,
     uncertaintyRadius: 10,
     communicationRange: 100,
-    workload_level: 3,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -98,6 +97,10 @@ var MapController = {
         this.state.on("change:scoreInfo", function () {
             self.updateScorePanel();
         });
+        this.state.on("change:workloadLevel change:dynamicUIFeatures", function () {
+            MapAgentController.updateAllAgentMarkerIcons(true);
+            MapTaskController.updateAllTaskIcons(true);
+        });
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
                 MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
@@ -108,11 +111,11 @@ var MapController = {
             }
         });
         $('#workload_slider').on('change', function() {
-            MapController.workload_level = $(this).val();
+            self.state.workloadLevel = $(this).val();
             $.post("/review/report/workload", {
-                level: MapController.workload_level
+                level: self.state.getWorkloadLevel()
             });
-            console.log("level = " + MapController.workload_level)
+            //console.log("level = " + MapController.workloadLevel)
             MapAgentController.updateAllAgentMarkerIcons(true);
             MapTaskController.updateAllTaskIcons(true);
         });
@@ -290,7 +293,9 @@ var MapController = {
         //$("#game_time").html("Time: " + time);
          */
         $("#game_time").html("Time: " + time + "/" + limit);
-        this.updateAllocationRendering();
+        if (this.state.isInProgress()) {
+            this.updateAllocationRendering();
+        }
         if (MapController.predictionLength > 0) {
             this.drawPredictedPath(MapController.predictionLength);
             this.drawPredictedGhostPath(MapController.predictionLength);
@@ -381,7 +386,9 @@ var MapController = {
         }
     },
     onTempAllocationChange: function () {
-        this.updateAllocationRendering();
+        if (this.state.isInProgress()) {
+            this.updateAllocationRendering();
+        }
     },
     onUndoRedoAvailableChange: function () {
         $("#allocation_undo").prop('disabled', !this.state.isAllocationUndoAvailable());
@@ -418,6 +425,12 @@ var MapController = {
             $("#review_panel").hide();
             $("#image_review").hide();
             $("#scan_button_group").hide()
+        }
+
+        if (this.state.getUiOptions().includes("workloadSlider")) {
+            $("#wk_sld_wrapper").show();
+        } else {
+            $("#wk_sld_wrapper").hide();
         }
 
         // Boxes to be shown or not as per modes

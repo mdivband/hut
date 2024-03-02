@@ -4,7 +4,8 @@
   "comment": "TODO make this be our scenario with randomly spawning tasks. Will need a controller for it",
   "extendedUIOptions": {
     "predictions": false,
-    "uncertainties": false
+    "uncertainties": false,
+    "workloadSlider": true
   },
   "dynamicUIFeatures": {
     "1": [

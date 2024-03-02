@@ -1,10 +1,10 @@
 {
-  "gameId": "Dynamic LowToHigh (HEATMAP)",
-  "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
-  "comment": "TODO make this be our scenario with randomly spawning tasks. Will need a controller for it",
+  "gameId": "Dynamic High (HEATMAP)",
+  "gameDescription": "You will now continue in this high workload condition but with an interface that abstracts unrequired data.",
   "extendedUIOptions": {
     "predictions": false,
-    "uncertainties": false
+    "uncertainties": false,
+    "workloadSlider": false
   },
   "taskSpawnTrack": [
     {
@@ -13,7 +13,7 @@
     }
   ],
   "spawnRadius": 1200,
-  "timeLimitSeconds": 30,
+  "timeLimitSeconds": 45,
   "dynamicUIFeatures": {
     "1": [
       "heatmap"

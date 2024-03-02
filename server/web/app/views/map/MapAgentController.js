@@ -75,10 +75,7 @@ var MapAgentController = {
     },
     onAgentAdd: function (agent) {
         console.log("Agent add")
-        console.log(MapController.workload_level - 1)
-        console.log(this.state.getDynamicUIFeatures())
-        console.log(this.state.getDynamicUIFeatures()[MapController.workload_level - 1])
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures().length > 0 && this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapAgentController.heatmapAgentUpdateGeneric(true);
         } else {
             console.log('Agent added ' + agent.getId());
@@ -116,6 +113,7 @@ var MapAgentController = {
                 MapAgentController.onAgentMarkerDragEnd(marker);
             });
         }
+
     },
     /**
      * Adds a ghost agent marker to the map
@@ -146,7 +144,7 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerIcon(agent);
         this.updateTable();
         MapTargetController.checkForReveal(agent);
-        if (this.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapAgentHeatmapController.updateAllAgentMarkers();
             MapAgentHeatmapController.adjustHeatmapLocation(agent);
         }
@@ -378,7 +376,7 @@ var MapAgentController = {
             MapAgentHeatmapController.clearAll();
             self.clearAllocationRendering()
         }
-        if (self.state.getDynamicUIFeatures()[MapController.workload_level - 1].includes("heatmap")) {
+        if (this.state.getDynamicUIFeatures().length > 0 && self.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             console.log("redrawing agent maps")
             MapAgentController.forceRedrawMaps();
         } else {
