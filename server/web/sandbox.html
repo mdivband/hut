@@ -23,7 +23,7 @@
 <!-- Map Panel -->
 <div class="ui-layout-center">
     <div id="map_canvas"></div>
-    <div id="review_panel" style="float: top; display: none">
+    <div id="review_panel">
         <button type="button" id="rev_real" class="rev_buttons">Casualty Present</button>
         <button type="button" id="rev_false" class="rev_buttons">No Casualty</button>
         <button type="button" id="rev_deep" class="rev_buttons" style="display: none;">Request Uncompressed Image (requires new scan)</button>
@@ -116,8 +116,11 @@
                     <div class="indicator_circle" id="mission_prediction_circle">
                         <div class="indicator_text" id="mission_prediction_text"></div>
                     </div>
-
                 </div>
+            </div>
+
+            <div id="screenshot" style="position: absolute; top: 0px; left: 0px; display: none;">
+                <img src='icons/camera.png'/>
             </div>
 
             <div id="bounded_prediction_canvas">
@@ -200,9 +203,9 @@
                     <tr>
                         <th></th>
                         <th>Original
-                        </td>
+                        </th>
                         <th>New
-                        </td>
+                        </th>
                     </tr>
                     <tr>
                         <td class="soho_title">Total Distance</td>
@@ -242,6 +245,7 @@
                         </datalist>
                     </div>
                 </div>
+            </div>
         </div>
 
         <div id="scan_view">
@@ -354,10 +358,6 @@
 							background-color: rgba(0,0,0,0.3);">
     </div>
 
-    <div id="screenshot" style="position: absolute; top: 0px; left: 0px; display: none;">
-        <img src='icons/camera.png'/>
-    </div>
-
     <!-- time goes to button -->
     <div id="game_info" style="margin: 2px;">
         <div id="game_id" class="game_info_item"></div>
@@ -367,11 +367,6 @@
             <input id="explored_overlay_toggle" type="checkbox">Explored Overlay</input><br>
             <input id="hazard_overlay_toggle" type="checkbox">Hazard Overlay</input><br>
 
-            <!-- I think the region paths are now redundant? -WH
-            <input id="region_path_toggle" type="checkbox">Show Region Paths</input><br>-->
-
-            <!-- By wrapping each button/slider in a named div, they provide an opt-in specification of UI
-                 options. In future more UI can be specified this way if desired -WH-->
             <div id="uncertainties_wrapper_div" class="edit_buttons_sub" style="display:none">
                 <input id="uncertainties_toggle" type="checkbox">Show Uncertainty Radius</input><br>
             </div>

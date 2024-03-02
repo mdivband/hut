@@ -18,6 +18,9 @@ var MapHazardController = {
         $('#explored_overlay_toggle').change(function () {
             MapHazardController.setHeatmapVisibility(-1, $(this).is(":checked"));
         });
+        $('#lens_extras_set').change(function () {
+            MapHazardController.setHeatmapVisibility(-1, $(this).is(":checked"));
+        });
         $('#hazard_overlay_toggle').change(function () {
             MapHazardController.setHeatmapVisibility(0, $(this).is(":checked"));
             MapHazardController.setHeatmapVisibility(1, $(this).is(":checked"));

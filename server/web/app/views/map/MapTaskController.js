@@ -1,4 +1,5 @@
 var MapTaskController = {
+    overrideVisible: true,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapTaskController.method() without
@@ -25,6 +26,7 @@ var MapTaskController = {
         this.onPatrolTaskRightClick = _.bind(this.onPatrolTaskRightClick, context);
         this.openTaskEditWindow = _.bind(this.openTaskEditWindow, context);
         this.processRegionTaskChange = _.bind(this.processRegionTaskChange, context);
+        this.updateTaskVisibility = _.bind(this.updateTaskVisibility, context)
         this.addDeepScanTask = _.bind(this.addDeepScanTask, context);
         this.addShallowScanTask = _.bind(this.addShallowScanTask, context);
         this.updateAllTaskIcons = _.bind(this.updateAllTaskIcons, context);
@@ -42,17 +44,29 @@ var MapTaskController = {
         this.state.tasks.on("remove", function (task) {
             MapTaskController.onTaskRemove(task);
         });
-
         this.state.completedTasks.on("add", function (task) {
             MapTaskController.onTaskCompleted(task);
         });
+
+    },
+    updateTaskVisibility: function (setting) {
+        MapTaskController.overrideVisible = setting;
+        self = this;
+        try{
+            this.state.tasks.each(function (task) {
+                var taskMarker = self.$el.gmap("get", "markers")[task.getId()];
+                taskMarker.setOptions({visible: setting})
+            });
+        } catch (e) {
+            alert(e);
+        }
     },
     heatmapTaskUpdateGeneric: function (task) {
         MapTaskHeatmapController.removeTaskMarkerForTask(task)
         MapTaskHeatmapController.drawTaskMaps();
     },
     onTaskAdd: function (task) {
-        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
             this.$el.gmap("addMarker", {
                 bounds: false,
@@ -65,7 +79,8 @@ var MapTaskController = {
                 labelClass: "labels",
                 labelStyle: {opacity: 1.0},
                 raiseOnDrag: false,
-                zIndex: 3
+                zIndex: 3,
+                visible: MapTaskController.overrideVisible,
             });
             var marker = this.$el.gmap("get", "markers")[task.getId()];
             MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
@@ -211,7 +226,7 @@ var MapTaskController = {
         }
     },
     onTaskChange: function (task) {
-        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
         } else {
             var marker = this.$el.gmap("get", "markers")[task.getId()];
@@ -223,7 +238,7 @@ var MapTaskController = {
     onTaskRemove: function (task) {
         // TODO on remove, make heatmap markers clear
         MapTaskHeatmapController.updateFor(task);
-        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             MapAgentHeatmapController.removeAgentMarkerForAgentWithTask(task)
             MapAgentController.heatmapAgentUpdateGeneric();
             MapTaskController.heatmapTaskUpdateGeneric();
@@ -258,7 +273,7 @@ var MapTaskController = {
     },
     onTaskCompleted: function (task) {
         MapTaskHeatmapController.updateFor(task);
-        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             MapTaskController.heatmapTaskUpdateGeneric(task);
             MapAgentController.heatmapAgentUpdateGeneric(true);
         } else {
@@ -357,7 +372,7 @@ var MapTaskController = {
             MapTaskController.clearAll();
         }
 
-        if (this.state.getDynamicUIFeatures().length > 0 && this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             console.log("redrawing task maps")
             MapTaskController.heatmapTaskUpdateGeneric();
         } else {

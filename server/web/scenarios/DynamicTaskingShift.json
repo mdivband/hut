@@ -6,16 +6,18 @@
     "uncertainties": false,
     "workloadSlider": false
   },
-  "taskSpawnTrack": [
-    {
-      "spawnTime": 0,
-      "spawnRate": 15
-    },
-    {
-      "spawnTime": 30,
-      "spawnRate": 45
-    }
-  ],
+  "missionController": {
+    "taskSpawnTrack": [
+      {
+        "spawnTime": 0,
+        "spawnRate": 15
+      },
+      {
+        "spawnTime": 30,
+        "spawnRate": 45
+      }
+    ]
+  },
   "spawnRadius": 1200,
   "timeLimitSeconds": 60,
   "nextScenarioFile": "DynamicTaskingShiftHeatmap.json",

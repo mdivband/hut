@@ -123,7 +123,7 @@ public class State {
         successChance = 100.00;
         allocationUndoAvailable = false;
         allocationRedoAvailable = false;
-        dynamicUIFeatures = new ArrayList<>();
+        dynamicUIFeatures = new ArrayList<>(5);
         workloadLevel = 3;
 
         reset();

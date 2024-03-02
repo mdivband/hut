@@ -42,7 +42,7 @@ public class Simulator {
     private final ConnectionController connectionController;
     private final ScoreController scoreController;
 
-    private final MissionController missionController;
+    private MissionController missionController = null;
     private final HazardController hazardController;
     private final Allocator allocator;
     //private final Modeller modeller;
@@ -52,8 +52,9 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double tickRate = 5;
-    private static final double gameSpeed = 5;
+    private static final double highTickRate = 5;  // We are updating the sim 5 times per second
+    private static final double lowTickRate = 1;  // Certain functions can be checked less often (once per second)
+    private static final double gameSpeed = 5;  // We are running at 5x real speed
     private final Random random;
 
     private Thread mainLoopThread;
@@ -70,7 +71,6 @@ public class Simulator {
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
-        missionController = new MissionController(this);
         //modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
@@ -162,14 +162,14 @@ public class Simulator {
     }
 
     private void mainLoop() {
-        final double waitTime = (int) (1000/(tickRate)); //When gameSpeed is 1, should be 200ms.
-        int effCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
+        final double waitTime = (int) (1000/(highTickRate)); //When gameSpeed is 1, should be 200ms.
+        int lowTickCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-            state.incrementTime(1 / tickRate);
+            state.incrementTime(1 / highTickRate);
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
-            if (state.getTime() >= state.getTimeLimit()) {
+            if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
                 /*
                 System.out.println("agents = " + state.getAgents());
@@ -198,10 +198,12 @@ public class Simulator {
             }
 
             // Decide if we should spawn a new task
-            effCounter++;
-            if (effCounter == 5) {
-                missionController.spawnIfRequired(state.getTime());
-                effCounter = 0;
+            lowTickCounter++;
+            if (lowTickCounter == lowTickRate * highTickRate) {
+                if (missionController != null) {
+                    missionController.spawnIfRequired(state.getTime());
+                }
+                lowTickCounter = 0;
             }
 
 
@@ -449,7 +451,9 @@ public class Simulator {
         taskController.resetTaskNumbers();
         scoreController.reset();
         modelCaller.reset();
-        missionController.reset();
+        if (missionController != null) {
+            missionController.reset();
+        }
         //modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
@@ -808,20 +812,27 @@ public class Simulator {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
             }
 
-            if(GsonUtils.hasKey(obj,"spawnRadius")) {
-                this.missionController.setSpawnRadius((GsonUtils.getValue(obj, "spawnRadius")));
-            }
+            if(GsonUtils.hasKey(obj,"missionController")) {
+                Object missionController = GsonUtils.getValue(obj, "missionController");
+                this.missionController = new MissionController(this);
 
-            List<Object> spawnPairs = GsonUtils.getValue(obj, "taskSpawnTrack");
-            if (spawnPairs != null) {
-                for (Object spawnPair : spawnPairs) {
-                    Integer spawnTime = ((Double) GsonUtils.getValue(spawnPair, "spawnTime")).intValue();
-                    Integer spawnRate = ((Double) GsonUtils.getValue(spawnPair, "spawnRate")).intValue();
-
-                    this.missionController.addPair(spawnTime, spawnRate);
+                if(GsonUtils.hasKey(missionController,"spawnRadius")) {
+                    this.missionController.setSpawnRadius((GsonUtils.getValue(missionController, "spawnRadius")));
                 }
-                this.missionController.orderPairs();
+
+                List<Object> spawnPairs = GsonUtils.getValue(missionController, "taskSpawnTrack");
+                if (spawnPairs != null) {
+                    for (Object spawnPair : spawnPairs) {
+                        Integer spawnTime = ((Double) GsonUtils.getValue(spawnPair, "spawnTime")).intValue();
+                        Integer spawnRate = ((Double) GsonUtils.getValue(spawnPair, "spawnRate")).intValue();
+
+                        this.missionController.addPair(spawnTime, spawnRate);
+                    }
+                    this.missionController.orderPairs();
+                }
+
             }
+
 
             this.state.setGameSpeed((int) gameSpeed);
 
@@ -926,7 +937,7 @@ public class Simulator {
     }
 
     public double getTickRate() {
-        return tickRate;
+        return highTickRate;
     }
 
     public ScoreController getScoreController() {
@@ -938,6 +949,6 @@ public class Simulator {
     }
 
     public double getStepScale() {
-        return gameSpeed / tickRate;
+        return gameSpeed / highTickRate;
     }
 }

@@ -27,6 +27,8 @@ var MapAgentController = {
         this.updateAgentMarkerVisibility = _.bind(this.updateAgentMarkerVisibility, context);
         this.updateAllAgentMarkerIcons = _.bind(this.updateAllAgentMarkerIcons, context);
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
+        this.updateAgentVisibility = _.bind(this.updateAgentVisibility, context);
+        this.updateBatteryVisibility = _.bind(this.updateBatteryVisibility, context);
         this.forceRedrawMaps = _.bind(this.forceRedrawMaps, context);
     },
     /**
@@ -54,6 +56,33 @@ var MapAgentController = {
             else
                 MapAgentController.onAgentReconnect(agent);
         });
+
+        /*
+        $("#lens_agent").on('click', function () {
+            MapAgentController.state.agents.each(function (agent) {
+                var agentMarker = self.$el.gmap("get", "markers")[agent.getId()];
+                agentMarker.setOptions({visible: suppressedLenses.agent});
+            });
+        });
+
+        $("#lens_target").on('click', function () {
+            MapController.toggleTargetLens()
+        });
+        $("#lens_hazard").on('click', function () {
+            MapController.toggleHazardLens()
+        });
+        $("#lens_allocation").on('click', function () {
+            MapController.toggleAllocationLens()
+        });
+        $("#lens_task").on('click', function () {
+            MapController.toggleTaskLens()
+        });
+        $("#lens_battery").on('click', function () {
+            MapController.toggleBatteryLens()
+        });
+
+         */
+
         this.state.agents.on("change:visible", function (agent) {
             MapAgentController.updateAgentMarkerVisibility(agent)
         });
@@ -75,7 +104,7 @@ var MapAgentController = {
     },
     onAgentAdd: function (agent) {
         console.log("Agent add")
-        if (this.state.getDynamicUIFeatures().length > 0 && this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             MapAgentController.heatmapAgentUpdateGeneric(true);
         } else {
             console.log('Agent added ' + agent.getId());
@@ -144,7 +173,7 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerIcon(agent);
         this.updateTable();
         MapTargetController.checkForReveal(agent);
-        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             MapAgentHeatmapController.updateAllAgentMarkers();
             MapAgentHeatmapController.adjustHeatmapLocation(agent);
         }
@@ -376,7 +405,7 @@ var MapAgentController = {
             MapAgentHeatmapController.clearAll();
             self.clearAllocationRendering()
         }
-        if (this.state.getDynamicUIFeatures().length > 0 && self.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        if (MapController.isHeatmapMode()) {
             console.log("redrawing agent maps")
             MapAgentController.forceRedrawMaps();
         } else {
@@ -399,6 +428,7 @@ var MapAgentController = {
             canvas.id = id;
             canvas.width = container.width();
             canvas.height = container.height() + 15;
+            canvas.style.display="none";  //  start with battery off
             container.append(canvas);
         }
 
@@ -415,5 +445,17 @@ var MapAgentController = {
         container.css({
             'overflow': 'visible'
         });
+    },
+    updateAgentVisibility: function (vis) {
+        // TODO Check this
+        this.agents.forEach((a) => {
+            a.setVisible(vis)
+        })
+    },
+    updateBatteryVisibility: function (vis) {
+        // TODO Make this work properly
+        this.agents.forEach((a) => {
+            a.drawAgentBattery(vis)
+        })
     }
 };

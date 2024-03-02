@@ -1,4 +1,5 @@
 var MapController = {
+    overrideVisible: true,
     predictionLength: 0,
     showUncertainties: false,
     showRanges: false,
@@ -35,6 +36,18 @@ var MapController = {
         this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
+        this.isHeatmapMode = _.bind(this.isHeatmapMode, context);
+        //Lenses
+        /*
+        this.toggleAgentLens = _.bind(this.toggleAgentLens, context);
+        this.toggleTargetLens = _.bind(this.toggleTargetLens, context);
+        this.toggleHazardLens = _.bind(this.toggleHazardLens, context);
+        this.toggleAllocationLens = _.bind(this.toggleAllocationLens, context);
+        this.toggleTaskLens = _.bind(this.toggleTaskLens, context);
+        this.toggleBatteryLens = _.bind(this.toggleBatteryLens, context);
+
+         */
+        this.updateAllocationVisibility = _.bind(this.updateAllocationVisibility, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
         this.toggleUncertainties = _.bind(this.toggleUncertainties, context);
         this.toggleRanges = _.bind(this.toggleRanges, context);
@@ -87,6 +100,9 @@ var MapController = {
         });
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
+        });
+        $('#lens_allocation_toggle').change(function () {
+            MapController.updateAllocationVisibility($(this).is(":checked"));
         });
         $("#add_agent").on('click', function () {
             MapController.onAddAgentClick()
@@ -273,6 +289,41 @@ var MapController = {
             }
         }
     },
+    updateAllocationVisibility: function (setting){
+        // An attempt to remove points of interest
+        /*
+        try {
+            var noPoi = [
+                {
+                    featureType: "poi",
+                    stylers: [
+                        {visibility: "off"}
+                    ]
+                }
+            ];
+
+            //this.$el.gmap.setOptions({styles: noPoi});
+            MapController.map.setOptions({styles: noPoi});
+        } catch (e) {
+            alert(e)
+        }
+         */
+        self = this;
+        try {
+            MapController.overrideVisible = setting;
+            this.state.agents.each(function (agent) {
+                var agentId = agent.getId();
+                var lineId = agentId + "main";
+
+                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[lineId];
+                if(polyline)
+                    polyline.setOptions({visible: setting})
+                //alert("updating: " + agentId);
+            });
+        } catch (e) {
+            alert(e);
+        }
+    },
     onScanModePressed: function () {
         if(this.state.getEditMode() !== 3)
             try {
@@ -283,6 +334,8 @@ var MapController = {
     },
     onTick: function () {
         var time = $.fromTime(this.state.getTime());
+        if (MapController.overrideVisible)
+            this.updateAllocationRendering();
         var limit = $.fromTime( this.state.getTimeLimit());
         var simTime = $.fromTime(this.state.getTime() * this.state.getGameSpeed());
         //var simTimeLimit = $.fromTime( this.state.getTimeLimit() * this.state.getGameSpeed());
@@ -582,4 +635,11 @@ var MapController = {
             }
         });
     },
+    isHeatmapMode() {
+        if (this.state.getDynamicUIFeatures() !== null && this.state.getDynamicUIFeatures().length > 0) {
+            return this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")
+        }
+        return false
+
+    }
 };
