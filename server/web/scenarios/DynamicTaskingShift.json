@@ -9,11 +9,11 @@
   "taskSpawnTrack": [
     {
       "spawnTime": 0,
-      "spawnRate": 10
+      "spawnRate": 15
     },
     {
-      "spawnTime": 45,
-      "spawnRate": 40
+      "spawnTime": 30,
+      "spawnRate": 45
     }
   ],
   "spawnRadius": 1200,

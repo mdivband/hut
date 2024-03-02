@@ -282,17 +282,12 @@ var MapController = {
             }
     },
     onTick: function () {
-        // TODO this is a temp feature and should be hardcoded
-        var tempTime = this.state.getTime();
-        var tempLimit = this.state.getTimeLimit();
-        var time = $.fromTime(tempTime / 6);
-        var limit = $.fromTime(tempLimit / 6);
-        /*
         var time = $.fromTime(this.state.getTime());
-        var limit = $.fromTime(this.state.getTimeLimit());
-        //$("#game_time").html("Time: " + time);
-         */
+        var limit = $.fromTime( this.state.getTimeLimit());
+        var simTime = $.fromTime(this.state.getTime() * this.state.getGameSpeed());
+        //var simTimeLimit = $.fromTime( this.state.getTimeLimit() * this.state.getGameSpeed());
         $("#game_time").html("Time: " + time + "/" + limit);
+        $("#sim_time").html("Sim Time: " + simTime);
         if (this.state.isInProgress()) {
             this.updateAllocationRendering();
         }

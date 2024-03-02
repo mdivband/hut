@@ -228,5 +228,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getWorkloadLevel: function () {
         return this.get("workloadLevel");
+    },
+    getGameSpeed: function () {
+        return this.get("gameSpeed");
     }
 });

@@ -19,7 +19,7 @@ public abstract class Agent extends MObject implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
 
     private static final long serialVersionUID = 5561040348988016571L;
-    static final float unitTurningAngle = 0.1F; //Radians
+    protected double unitTurningAngle = 0.1d; //Radians
     //static final float unitTimeBatteryConsumption = 0.00025F;
     static final float unitTimeBatteryConsumption = 0.000025F;
     private static final double EPS = 1e-5;
@@ -59,6 +59,7 @@ public abstract class Agent extends MObject implements Serializable {
         // DJI Phantom 4 Pro V2.0 S-Mode = 20.1168 m/s
         // DJI Mavic 3 C-Mode = 5 m/s
         speed = 12.0;
+        unitTurningAngle = (0.5d * Simulator.instance.getStepScale());
         heading = 0.0;
         battery = 1.0;
         altitude = 3.0;

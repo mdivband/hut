@@ -9,7 +9,7 @@
   "taskSpawnTrack": [
     {
       "spawnTime": 0,
-      "spawnRate": 40
+      "spawnRate": 30
     }
   ],
   "spawnRadius": 1200,

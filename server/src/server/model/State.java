@@ -39,8 +39,8 @@ public class State {
     private String modelStyle;
     private Boolean flockingEnabled;
     private double time;
-    private double timeLimit;
-    private long scenarioEndTime;
+    private Integer timeLimit;
+    //private Long scenarioEndTime;
     private int editMode;
     // editMode 1 = monitor
     //          2 = edit
@@ -106,6 +106,7 @@ public class State {
     private final List<String> deepScannedIds = new ArrayList<>(16);
     private final List<String> pendingIds = new ArrayList<>(16);
     private Integer workloadLevel;
+    private Integer gameSpeed;
 
     public State() {
         agents = new ArrayList<>();
@@ -132,7 +133,7 @@ public class State {
         // Define defaults
         time = 0;
         timeLimit = 0;    // 0 means no time limit
-        scenarioEndTime = 0; // 0 means no time limit
+        //scenarioEndTime = 0; // 0 means no time limit
         editMode = 2;//1;
         inProgress = false;
         allocationMethod = "maxsum";
@@ -180,7 +181,7 @@ public class State {
     public void resetNext() {
         hasPassthrough = false;
         nextFileName = "";
-        scenarioEndTime = 0; // 0 means no time limit
+        //scenarioEndTime = 0; // 0 means no time limit
         timeLimit = 0;    // 0 means no time limit
     }
 
@@ -280,6 +281,7 @@ public class State {
         setTime(this.time + increment);
     }
 
+    /*
     public synchronized double getTimeLimit() {
         return timeLimit;
     }
@@ -303,6 +305,7 @@ public class State {
             this.scenarioEndTime = 0;
         } else {
             this.scenarioEndTime = System.currentTimeMillis() + (long)(this.timeLimit * 1000);
+
         }
     }
 
@@ -312,6 +315,19 @@ public class State {
         } else {
             this.scenarioEndTime = System.currentTimeMillis() + (long) (timeLimit * 1000);
         }
+    }
+
+     */
+
+    /** The exising method uses real seconds. In some situations this may be useful but for most purposes sim ticks
+     * would be better -WH
+     */
+    public synchronized void setSimTimeLimit(Integer secondsToEnd) {
+        this.timeLimit = secondsToEnd;
+    }
+
+    public Integer getTimeLimit() {
+        return timeLimit;
     }
 
     public synchronized int getEditMode() {
@@ -823,6 +839,14 @@ public class State {
 
     public void setWorkloadLevel(Integer workloadLevel) {
         this.workloadLevel = workloadLevel;
+    }
+
+    public Integer getGameSpeed() {
+        return gameSpeed;
+    }
+
+    public void setGameSpeed(Integer gameSpeed) {
+        this.gameSpeed = gameSpeed;
     }
 
     private class HazardHit {

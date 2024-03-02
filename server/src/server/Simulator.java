@@ -52,6 +52,7 @@ public class Simulator {
 
     public static Simulator instance;
 
+    private static final double tickRate = 5;
     private static final double gameSpeed = 5;
     private final Random random;
 
@@ -131,7 +132,7 @@ public class Simulator {
     }
 
     public void startSimulation() {
-        state.setScenarioEndTime();
+        //state.setScenarioEndTime();
         //Heart beat all virtual agents to prevent time out when user is reading the description.
         for(Agent agent : this.state.getAgents())
             if(agent.isSimulated())
@@ -161,13 +162,14 @@ public class Simulator {
     }
 
     private void mainLoop() {
-        final double waitTime = (int) (1000/(gameSpeed * 5)); //When gameSpeed is 1, should be 200ms.
-        int effCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addtion
+        final double waitTime = (int) (1000/(tickRate)); //When gameSpeed is 1, should be 200ms.
+        int effCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
         int sleepTime;
         do {
             long startTime = System.currentTimeMillis();
-            state.incrementTime(0.2);
-            if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+            state.incrementTime(1 / tickRate);
+            //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+            if (state.getTime() >= state.getTimeLimit()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
                 /*
                 System.out.println("agents = " + state.getAgents());
@@ -446,6 +448,7 @@ public class Simulator {
         taskController.resetTaskNumbers();
         scoreController.reset();
         modelCaller.reset();
+        missionController.reset();
         //modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
 
         LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
@@ -588,7 +591,8 @@ public class Simulator {
             if(GsonUtils.hasKey(obj,"timeLimitSeconds")){
                 Object timeLimitSeconds = GsonUtils.getValue(obj, "timeLimitSeconds");
                 if(timeLimitSeconds.getClass() == Double.class) {
-                    state.incrementTimeLimit((Double)timeLimitSeconds);
+                    //state.incrementTimeLimit((Double)timeLimitSeconds);
+                    state.setSimTimeLimit(((Double) timeLimitSeconds).intValue());
                 } else {
                     LOGGER.warning("Expected double value for timeLimitSeconds in scenario file. Received: '" +
                             timeLimitSeconds + "'. Time limit not changed.");
@@ -597,7 +601,8 @@ public class Simulator {
             if(GsonUtils.hasKey(obj,"timeLimitMinutes")){
                 Object timeLimitMinutes = GsonUtils.getValue(obj, "timeLimitMinutes");
                 if(timeLimitMinutes.getClass() == Double.class) {
-                    state.incrementTimeLimit((Double)timeLimitMinutes * 60);
+                    //state.incrementTimeLimit((Double)timeLimitMinutes * 60);
+                    state.setSimTimeLimit(((Double) timeLimitMinutes).intValue() * 60);
                 } else {
                     LOGGER.warning("Expected double value for timeLimitMinutes in scenario file. Received: '" +
                             timeLimitMinutes + "'. Time limit not changed.");
@@ -817,6 +822,8 @@ public class Simulator {
                 this.missionController.orderPairs();
             }
 
+            this.state.setGameSpeed((int) gameSpeed);
+
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -917,8 +924,8 @@ public class Simulator {
         return random;
     }
 
-    public double getGameSpeed() {
-        return gameSpeed;
+    public double getTickRate() {
+        return tickRate;
     }
 
     public ScoreController getScoreController() {
@@ -927,5 +934,9 @@ public class Simulator {
 
     public MissionController getMissionController() {
         return missionController;
+    }
+
+    public double getStepScale() {
+        return gameSpeed / tickRate;
     }
 }
