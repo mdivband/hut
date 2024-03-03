@@ -111,11 +111,11 @@ var simulator = {
         // setup accordion for jquery ui
         $("#accordion_smallview").accordion({
             collapsible: true,
-            active: false
+            active: 0
         });
         $("#accordion_agent_schedule_m").accordion({
             collapsible: true,
-            //active: false
+            active: true
         });
         $("#accordion_score").accordion({
             collapsible: true
@@ -125,11 +125,11 @@ var simulator = {
         });
         $("#accordion_sotp_m").accordion({
             collapsible: true,
-            active: false
+            active: true
         });
         $("#accordion_otherlayer_m").accordion({
             collapsible: true,
-            active: false
+            active: true
         });
         $("#accordion_agent_schedule_e").accordion({
             collapsible: true,

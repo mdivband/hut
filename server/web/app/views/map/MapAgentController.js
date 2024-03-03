@@ -390,7 +390,6 @@ var MapAgentController = {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         marker.setMap(self.map)
         marker.setVisible(agent.isVisible());
-        console.log("set " + agent.getId() + " is now " + agent.isVisible())
     },
     updateAllAgentMarkerIcons: function (newChange) {
         var self = this;

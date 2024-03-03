@@ -1,8 +1,6 @@
 var MapController = {
     overrideVisible: true,
     predictionLength: 0,
-    showUncertainties: false,
-    showRanges: false,
     uncertaintyRadius: 10,
     communicationRange: 100,
     /**
@@ -29,31 +27,22 @@ var MapController = {
         this.onMapMarkerComplete = _.bind(this.onMapMarkerComplete, context);
         this.onMapPolylineComplete = _.bind(this.onMapPolylineComplete, context);
         this.onMapRectangleComplete = _.bind(this.onMapRectangleComplete, context);
-        this.onZoomChange = _.bind(this.onZoomChange, context);
         this.onTempAllocationChange = _.bind(this.onTempAllocationChange, context);
         this.onUndoRedoAvailableChange = _.bind(this.onUndoRedoAvailableChange, context);
+        this.updateUIFeatures = _.bind(this.updateUIFeatures, context);
         this.onCancelAllocationClick = _.bind(this.onCancelAllocationClick, context);
         this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
         this.isHeatmapMode = _.bind(this.isHeatmapMode, context);
-        //Lenses
-        /*
-        this.toggleAgentLens = _.bind(this.toggleAgentLens, context);
-        this.toggleTargetLens = _.bind(this.toggleTargetLens, context);
-        this.toggleHazardLens = _.bind(this.toggleHazardLens, context);
-        this.toggleAllocationLens = _.bind(this.toggleAllocationLens, context);
-        this.toggleTaskLens = _.bind(this.toggleTaskLens, context);
-        this.toggleBatteryLens = _.bind(this.toggleBatteryLens, context);
-
-         */
         this.updateAllocationVisibility = _.bind(this.updateAllocationVisibility, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
-        this.toggleUncertainties = _.bind(this.toggleUncertainties, context);
-        this.toggleRanges = _.bind(this.toggleRanges, context);
         this.pushImage = _.bind(this.pushImage, context);
         this.getCurrentImage = _.bind(this.getCurrentImage, context);
         this.clearReviewImage = _.bind(this.clearReviewImage, context);
+        this.isToggleableUIOption = _.bind(this.isToggleableUIOption, context);
+        this.isEnabledUIOption = _.bind(this.isEnabledUIOption, context);
+        this.toggleUIOption = _.bind(this.toggleUIOption, context);
 
     },
     /**
@@ -101,9 +90,6 @@ var MapController = {
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
-        $('#lens_allocation_toggle').change(function () {
-            MapController.updateAllocationVisibility($(this).is(":checked"));
-        });
         $("#add_agent").on('click', function () {
             MapController.onAddAgentClick()
         });
@@ -136,10 +122,10 @@ var MapController = {
             MapTaskController.updateAllTaskIcons(true);
         });
         $('#uncertainties_toggle').change(function () {
-            MapController.toggleUncertainties( $(this).is(":checked"));
+            MapController.toggleUIOption('uncertainties', $(this).is(":checked"))
         });
         $('#ranges_toggle').change(function () {
-            MapController.toggleRanges( $(this).is(":checked"));
+            MapController.toggleUIOption('ranges', $(this).is(":checked"))
         });
         $('#exit_button').on('click', function () {
             var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
@@ -182,6 +168,9 @@ var MapController = {
         this.state.on("change:editMode", function () {
             MapController.swapMode(self.state.getEditMode(), false);
         });
+        this.state.on("change:uiOptions", function () {
+            MapController.updateUIFeatures();
+        });
 
         //Map listeners
         google.maps.event.addListener(this.map, "click", function (event) {
@@ -199,25 +188,9 @@ var MapController = {
         google.maps.event.addListener(this.drawing, "rectanglecomplete", function (rectangle) {
             MapController.onMapRectangleComplete(rectangle);
         });
-        google.maps.event.addListener(this.map, "zoom_changed", function () {
-            MapController.onZoomChange();
-        });
-    },
-    onZoomChange: function () {
-        zoomLevel = this.map.getZoom();
-        console.log("Zoom is now: " + zoomLevel)
-
-        //MapAgentController.updateAllAgentMarkerIcons()
-        //MapTaskController.updateAllTaskIcons()
     },
     showPredictedPaths: function (setting) {
-        MapController.predictionLength = setting;
-    },
-    toggleUncertainties: function (setting) {
-        MapController.showUncertainties = setting;
-    },
-    toggleRanges: function (setting) {
-        MapController.showRanges = setting;
+        MapController.toggleUIOption('predictions', setting)
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");
@@ -350,12 +323,12 @@ var MapController = {
         } else {
             this.clearPredictions();
         }
-        if (MapController.showUncertainties) {
+        if (MapController.isEnabledUIOption('uncertainties')) {
             this.drawUncertainties(MapController.uncertaintyRadius);
         } else {
             this.clearUncertainties();
         }
-        if (MapController.showRanges) {
+        if (MapController.isEnabledUIOption('ranges')) {
             this.drawRanges(MapController.communicationRange);
         } else {
             this.clearRanges();
@@ -366,6 +339,8 @@ var MapController = {
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
+
+        this.views.camera.miniUpdate();
     },
     onMapLeftClick: function (event) {
         if (this.views.clickedAgent != null)
@@ -442,44 +417,50 @@ var MapController = {
         $("#allocation_undo").prop('disabled', !this.state.isAllocationUndoAvailable());
         $("#allocation_redo").prop('disabled', !this.state.isAllocationRedoAvailable());
     },
-    /**
-     * Swaps the UI mode (typically monitor/task view)
-     * I have added a check for UI options specified in the scenario file -WH
-     * @param modeFlag
-     * @param sendUpdate
-     */
-    swapMode: function (modeFlag, sendUpdate) {
-        // modeflag 1 = monitor
-        //          2 = edit
-        //          3 = images
-        self = this;
-        this.state.getUiOptions().forEach(function (option) {
-            if (option === "predictions") {
-                $("#prediction_wrapper_div").show();
-            } else if (option === "uncertainties") {
-                $("#uncertainties_wrapper_div").show();
-            } else if (option === "ranges") {
-                $("#ranges_wrapper_div").show();
+    updateUIFeatures: function () {
+        const arrayOfPairs = [
+            ['monitor', ['monitor_wrapper']],
+            ['editmode', ['editmode_wrapper']],
+            ['scans', ['scan_button_group']],
+            ['explored', ['explored_wrapper_div'], "explored_overlay_toggle"],
+            ['hazard', ['hazard_wrapper_div'], "hazard_overlay_toggle"],
+            ['predictions', ['prediction_wrapper_div']],
+            ['uncertainties', ['uncertainties_wrapper_div'], "uncertainties_toggle"],
+            ['ranges', ['ranges_wrapper_div'], "ranges_toggle"],
+            ['workloadSlider', ['wk_sld_wrapper']],
+            ['review_panel', ['review_panel', 'image_review', 'scan_button_group']]
+        ];
+
+        arrayOfPairs.forEach((pair) => {
+            if (Array.isArray(pair[1])) {
+                pair[1].forEach((p) => {
+                    if (MapController.isToggleableUIOption(pair[0])) {
+                        $("#" + p).show()
+                    } else {
+                        $("#" + p).hide();
+                    }
+                });
+            } else {
+                const p = pair[1];
+                if (MapController.isToggleableUIOption(pair[0])) {
+                    $("#" + p).show()
+                } else {
+                    $("#" + p).hide();
+                }
             }
+
+            if (MapController.isToggleableUIOption(pair[0]) && pair.length > 2) {
+                // means we have a box to check
+                $("#" + pair[2]).prop("checked", MapController.isEnabledUIOption(pair[0]))
+            }
+
         });
-        MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
-        MapController.communicationRange = this.state.getCommunicationRange();
 
-        if (this.state.getShowReviewPanel()) {
-            $("#review_panel").show();
-            $("#image_review").show();
-            $("#scan_button_group").show()
-        } else {
-            $("#review_panel").hide();
-            $("#image_review").hide();
-            $("#scan_button_group").hide()
-        }
+        MapHazardController.setHeatmapVisibility(-1, MapController.isEnabledUIOption("explored"));
+        MapHazardController.setHeatmapVisibility(0, MapController.isEnabledUIOption("hazard"));
+        MapHazardController.setHeatmapVisibility(1, MapController.isEnabledUIOption("hazard"));
+        console.log("Made UI changes in exp to " + MapController.isEnabledUIOption("explored"));
 
-        if (this.state.getUiOptions().includes("workloadSlider")) {
-            $("#wk_sld_wrapper").show();
-        } else {
-            $("#wk_sld_wrapper").hide();
-        }
 
         // Boxes to be shown or not as per modes
         if (this.state.getModelStyle() === "off") {
@@ -500,6 +481,51 @@ var MapController = {
             });
             $("#addRemAgentButton").show()
         }
+
+        /*
+        this.state.getUiOptions().forEach(function (option) {
+            if (option === "predictions") {
+                $("#prediction_wrapper_div").show();
+            } else if (option === "uncertainties") {
+                $("#uncertainties_wrapper_div").show();
+            } else if (option === "ranges") {
+                $("#ranges_wrapper_div").show();
+            }
+        });
+
+        if (this.state.getShowReviewPanel()) {
+            $("#review_panel").show();
+            $("#image_review").show();
+            $("#scan_button_group").show()
+        } else {
+            $("#review_panel").hide();
+            $("#image_review").hide();
+            $("#scan_button_group").hide()
+        }
+
+        //if (this.state.getUiOptions().includes("workloadSlider")) {
+        if (MapController.isToggleableUIOption("workloadSlider")) {
+            $("#wk_sld_wrapper").show();
+        } else {
+            $("#wk_sld_wrapper").hide();
+        }
+
+
+        */
+        MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
+        MapController.communicationRange = this.state.getCommunicationRange();
+    },
+    /**
+     * Swaps the UI mode (typically monitor/task view)
+     * I have added a check for UI options specified in the scenario file -WH
+     * @param modeFlag
+     * @param sendUpdate
+     */
+    swapMode: function (modeFlag, sendUpdate) {
+        // modeflag 1 = monitor
+        //          2 = edit
+        //          3 = images
+        self = this;
 
         if(modeFlag === 2) {  // edit
             $("#monitor_accordions").hide();
@@ -635,11 +661,35 @@ var MapController = {
             }
         });
     },
-    isHeatmapMode() {
+    isHeatmapMode: function () {
         if (this.state.getDynamicUIFeatures() !== null && this.state.getDynamicUIFeatures().length > 0) {
             return this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")
         }
         return false
+    },
+    isToggleableUIOption: function (featureName) {
+        if (this.state.getUiOptions().hasOwnProperty(featureName)) {
+            // Return the value associated with the key
+            return this.state.getUiOptions()[featureName][1];
+        }
+        return false;
+    },
+    isEnabledUIOption: function (featureName) {
+        if (this.state.getUiOptions().hasOwnProperty(featureName)) {
+            // Return the value associated with the key
+            return this.state.getUiOptions()[featureName][0];
+        }
+        return false;
+    },
+    toggleUIOption: function (featureName, setting) {
+        $.post("ui/toggle", {
+            name: featureName,
+            status: setting.toString(),
+        });
 
-    }
+
+
+        //this.state.getUiOptions()[name][0] = setting
+        //console.log(name + " is " + this.state.getUiOptions()[name][0])
+    },
 };

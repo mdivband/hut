@@ -115,6 +115,7 @@ public class ConnectionController extends AbstractController {
             RestHandlerFactory.registerRestHandler(new VisualizerHandler("/visualizer", this.simulator));
             RestHandlerFactory.registerRestHandler(new ReviewHandler("/review", this.simulator));
             RestHandlerFactory.registerRestHandler(new PresetHandler("/preset", this.simulator));
+            RestHandlerFactory.registerRestHandler(new UIHandler("/ui", this.simulator));
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -76,7 +76,7 @@ public class State {
 
     private HazardHitCollection hazardHits;
 
-    private ArrayList<String> uiOptions = new ArrayList<>();
+    private HashMap<String, boolean[]> uiOptions = new HashMap<>();
     private Map<String, Double> varianceOptions = new HashMap<>();
     private Map<String, Double> noiseOptions = new HashMap<>();
     private double uncertaintyRadius = 0;
@@ -471,9 +471,18 @@ public class State {
      * Adds the given option to the ui settings
      * @param option String enumerated option
      */
-    public void addUIOption(String option) {
-        uiOptions.add(option);
+    public void addUIOption(String option, boolean[] uIPair) {
+        uiOptions.put(option, uIPair);
     }
+
+    public void updateUIOption(String name, boolean status) throws IllegalArgumentException {
+        if (uiOptions.containsKey(name)) {
+            uiOptions.put(name, new boolean[]{status, uiOptions.get(name)[1]});
+        } else {
+            throw new IllegalArgumentException("UI option with name " + name + " is not in currently in the UI map");
+        }
+    }
+
 
     /**
      * Setter for the uncertainty radius of agents
@@ -848,6 +857,7 @@ public class State {
     public void setGameSpeed(Integer gameSpeed) {
         this.gameSpeed = gameSpeed;
     }
+
 
     private class HazardHit {
         private Coordinate location;

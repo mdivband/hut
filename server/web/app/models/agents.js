@@ -3,6 +3,7 @@ _.provide("App.Collections.Agents");
 
 App.Models.Agent = App.Models.MObject.extend({
     defaults: {
+        mode: "simulated",
         allocatedTaskId: null,
         altitude: 3,
         battery: 0,
@@ -29,6 +30,12 @@ App.Models.Agent = App.Models.MObject.extend({
     },
     getAllocatedTaskId: function () {
         return this.get('allocatedTaskId');
+    },
+    getMode: function () {
+        if (this.get('mode') !== null) {
+            return this.get('mode');
+        }
+        return "standard"
     },
     getTimeInAir: function () {
         return this.get("timeInAir");

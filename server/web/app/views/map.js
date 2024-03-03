@@ -141,7 +141,7 @@ App.Views.Map = Backbone.View.extend({
         var self = this;
 
         setTimeout(function () {
-            self.views.clickedAgent = "agent-1";
+            self.views.clickedAgent = "UAV-1";
             /* provenence document submit */
             if (self.state.getProvDoc() == null) {
                 ps.initProv(api, 'uav_silver_commander', self.state.getGameId());

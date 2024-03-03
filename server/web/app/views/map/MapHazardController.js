@@ -16,14 +16,13 @@ var MapHazardController = {
     },
     bindEvents: function () {
         $('#explored_overlay_toggle').change(function () {
-            MapHazardController.setHeatmapVisibility(-1, $(this).is(":checked"));
-        });
-        $('#lens_extras_set').change(function () {
-            MapHazardController.setHeatmapVisibility(-1, $(this).is(":checked"));
+            MapController.toggleUIOption("explored", $(this).is(":checked"))
+            //MapHazardController.setHeatmapVisibility(-1, $(this).is(":checked"));
         });
         $('#hazard_overlay_toggle').change(function () {
-            MapHazardController.setHeatmapVisibility(0, $(this).is(":checked"));
-            MapHazardController.setHeatmapVisibility(1, $(this).is(":checked"));
+            MapController.toggleUIOption("hazard", $(this).is(":checked"))
+            //MapHazardController.setHeatmapVisibility(0, $(this).is(":checked"));
+            //MapHazardController.setHeatmapVisibility(1, $(this).is(":checked"));
         });
 
         //Add empty heat map - used to give consistent background colour when multiple heatmaps are active.

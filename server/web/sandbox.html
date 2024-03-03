@@ -52,11 +52,15 @@
         <!--Added by Y -->
         <!-- view mode change buttons -->
         <form>
-            <div id="view_mode" class="fixed-top" style="display: none">
-                <input type="radio" id="monitor" name="radio" value="monitor"><label
-                    for="monitor">Monitor</label>
-                <input type="radio" id="editmode" name="radio" value="editmode"><label
-                    for="editmode">Task Edit</label>
+            <div id="view_mode" class="fixed-top">
+                <div class="form-group" id="monitor_wrapper">
+                    <input type="radio" id="monitor" style="display: none" name="radio" value="monitor" ><label
+                        for="monitor">Monitor</label>
+                </div>
+                <div class="form-group" id="editmode_wrapper">
+                    <input type="radio" id="editmode" name="radio" value="editmode"><label
+                        for="editmode">Task Edit</label>
+                </div>
                 <div class="form-group" id="scan_button_group">
                     <input type="radio" id="scanmode" name="radio" value="scanmode"><label for="scanmode">View Scans</label>
                 </div>
@@ -65,7 +69,7 @@
         <!-- END Y -->
         <!-- camera and detail -->
         <div id="monitor_accordions">
-            <div id="accordion_smallview" style="display: none">
+            <div id="accordion_smallview">
                 <h3>Monitor view</h3>
                 <div class="canvas_small">
                     <div id="canvas_small_info">
@@ -364,9 +368,12 @@
         <div id="game_time" class="game_info_item">Time: 00:00:00</div>
         <div id="sim_time" class="game_info_item">Sim Time: 00:00:00</div>
         <div class="game_info_item", style="text-align: left;">
-            <input id="explored_overlay_toggle" type="checkbox">Explored Overlay</input><br>
-            <input id="hazard_overlay_toggle" type="checkbox">Hazard Overlay</input><br>
-
+            <div id="explored_wrapper_div" class="edit_buttons_sub" style="display:none">
+                <input id="explored_overlay_toggle" type="checkbox">Explored Overlay</input><br>
+            </div>
+            <div id="hazard_wrapper_div" class="edit_buttons_sub" style="display:none">
+                <input id="hazard_overlay_toggle" type="checkbox">Hazard Overlay</input><br>
+            </div>
             <div id="uncertainties_wrapper_div" class="edit_buttons_sub" style="display:none">
                 <input id="uncertainties_toggle" type="checkbox">Show Uncertainty Radius</input><br>
             </div>
@@ -385,9 +392,9 @@
         <div id="edit_buttons_sub" style="margin-bottom: 30px">
             <div id="pan_mode" class="map_sub_button"></div>
             <div id="add_waypoint_task_mode" class="map_sub_button"></div>
-            <!---<div id="add_monitor_task_mode" class="map_sub_button"></div>
+            <div id="add_monitor_task_mode" class="map_sub_button"></div>
             <div id="add_patrol_task_mode" class="map_sub_button"></div>
-            <div id="add_region_task_mode" class="map_sub_button"></div>--->
+            <div id="add_region_task_mode" class="map_sub_button"></div>
         </div>
 
         <div id="sandbox_buttons_sub" class="edit_buttons_sub">

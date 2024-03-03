@@ -2,13 +2,13 @@ _.provide("App.Views.Camera");
 
 var targetMarkers = [];
 
-App.Views.CameraGMap = Backbone.View.extend({ 
+App.Views.CameraGMap = Backbone.View.extend({
 	initialize: function(options) {
 		this.mapOptions = {
                 tilt: 45,
                 heading: 90,
                 draggable: false,
-                scrollwheel: false, 
+                scrollwheel: false,
                 disableDoubleClickZoom: true,
 				zoom: 19,
 				scaleControl: false,
@@ -29,13 +29,12 @@ App.Views.CameraGMap = Backbone.View.extend({
 		this.render();
 		this.camera_mjpeg();
 
-		// TODO this doesn't update per-step
 		this.bind("update", this.update);
 		this.bind("refresh", this.refresh);
 	},
 	render: function() {
 		var self = this;
-		
+
 		this.mapDiv = document.createElement("div");
 		this.mapDiv.style.position = 'relative';
 		this.mapDiv.style.height = '100%';
@@ -43,50 +42,54 @@ App.Views.CameraGMap = Backbone.View.extend({
 		// here
 		this.$mapDiv = $(this.mapDiv);
 		this.$el.append(this.mapDiv);
-		
+
 		this.$mapDiv.gmap(this.mapOptions);
 		this.map = this.$mapDiv.gmap("get", "map");
-		
+
 		google.maps.event.addListenerOnce(this.map, 'idle', function(){
 		});
 
 		this.$el.append($("#cross"));
-		this.$el.append($("#screenshot")); 
+		this.$el.append($("#screenshot"));
 		$("#screenshot").click(function() { // bronze screen to take screenshot
 			var center = self.map.getCenter();
-			var zoom = self.map.getZoom(); 
+			var zoom = self.map.getZoom();
 
 			var width = $("#camera_canvas").width();
 			var height = $("#camera_canvas").height();
-			
+
 			window.open("https://maps.googleapis.com/maps/api/staticmap?" +
-					"sensor=false&maptype=satellite&format=jpg&scale=1&" + 
-					"center=" + center.lat() + "," + center.lng() + "&" + 
+					"sensor=false&maptype=satellite&format=jpg&scale=1&" +
+					"center=" + center.lat() + "," + center.lng() + "&" +
 					"zoom=" + zoom + "&size=" + width + "x" + height);
 		});
-		
+
 		$("#camerainfo").draggable();
 		this.$el.append($("#camerainfo"));
-		
+
 		google.maps.event.addListener(this.map, 'bounds_changed', function() {
 			var bounds = self.map.getBounds();
-			self.views.submap.trigger("camera:bounds", 
-					bounds.getSouthWest(), 
+			self.views.submap.trigger("camera:bounds",
+					bounds.getSouthWest(),
 					bounds.getNorthEast());
-			
-			self.views.map.trigger("camera:bounds", 
-					bounds.getSouthWest(), 
+
+			self.views.map.trigger("camera:bounds",
+					bounds.getSouthWest(),
 					bounds.getNorthEast());
-			
+
+
 			var center = self.map.getCenter();
 			var zoom = self.map.getZoom();
-			$("#camerainfo").html("<font color='white'>" + 
-					" Lat: " + center.lat().toFixed(6) + 
-					" Lng: " + center.lng().toFixed(6) + 
+			$("#camerainfo").html("<font color='white'>" +
+					" Lat: " + center.lat().toFixed(6) +
+					" Lng: " + center.lng().toFixed(6) +
 					" Zoom: " + zoom +
 					"</font>");
 		});
-		
+
+
+
+
 		// google.maps.event.addListener(this.map, 'zoom_changed', function() {
 		// 	var zoom = self.map.getZoom();
 		// 	if (self.views.clickedAgent) {
@@ -97,7 +100,7 @@ App.Views.CameraGMap = Backbone.View.extend({
         google.maps.event.addListener(this.map, 'dblclick', function() {
             window.open("/camera.html?id=" + self.views.clickedAgent);
         });
-		
+
 		this.$mapDiv.gmap("refresh");
 
 		window.setTimeout(function(){ self.add_target(self.map); },800);
@@ -128,7 +131,7 @@ App.Views.CameraGMap = Backbone.View.extend({
 
 			this.$mapDiv.gmap("refresh");
 		}
-		
+
 		var game_id = this.state.getGameId();
 		if (game_id && game_id != this.game_id) {
 			this.game_id = game_id;
@@ -155,7 +158,7 @@ App.Views.CameraGMap = Backbone.View.extend({
 		for (var i = 0; i < targetMarkers.length; i++) {
 			if (targetMarkers[i] != null) {
 				var available = false;
-				
+
 				this.state.attributes.targets.forEach(function(target) {
 					if (targetMarkers[i].id == target.id) {
 						available = true;
@@ -173,20 +176,20 @@ App.Views.CameraGMap = Backbone.View.extend({
 	getIcon: function(num){
 			switch (num) {
                         case -1:
-                            return "icons/redquestion5.png"; 
+                            return "icons/redquestion5.png";
                         case 0:
-                            return "icons/water_small.png"; 
+                            return "icons/water_small.png";
                         case 1:
-                            return "icons/infra_small.png"; 
+                            return "icons/infra_small.png";
                         case 2:
-                            return "icons/medical_small.png"; 
+                            return "icons/medical_small.png";
                         case 3:
-                            return "icons/crime_small.png"; 
+                            return "icons/crime_small.png";
                         case 4:
-                            return "icons/invalid_small.png";   
-                    }		
+                            return "icons/invalid_small.png";
+                    }
 	},
-	refresh: function() { // change map or satellite 
+	refresh: function() { // change map or satellite
 		if ($("#camera_canvas").is(":visible")) {
 			$("#camerainfo").show();
 			$("#screenshot").show();
@@ -202,7 +205,7 @@ App.Views.CameraGMap = Backbone.View.extend({
 		this.imageDiv.style.height = "100%";
 		this.imageDiv.style.width = "100%";
 		this.$imageDiv = $(this.imageDiv);
-		
+
 		var self = this;
 		this.$imageDiv.click(function() {
 			self.update();
@@ -210,6 +213,12 @@ App.Views.CameraGMap = Backbone.View.extend({
 
 		this.$imageDiv.hide();
 		this.$el.append(this.imageDiv);
+	},
+	miniUpdate: function () {
+		if (this.views.clickedAgent) {
+			this.views.camera.trigger("update");
+			this.views.control.trigger("update:agent", this.views.clickedAgent);
+		}
 	},
 	camera_url: function(host) {
 		host = host || "127.0.0.1";
@@ -226,7 +235,7 @@ App.Views.CameraGMap = Backbone.View.extend({
 	            }
 
 	            //console.log(data);
-	            var size = target_size; 
+	            var size = target_size;
 	            _.each(data.tasks, function(val) {
 	                var icon = new google.maps.MarkerImage(
 	                    "http://holt.mrl.nott.ac.uk:49992/img/task_icon" + (val.type+1) + ".png",
@@ -277,6 +286,7 @@ App.Views.CameraGMap = Backbone.View.extend({
 	            });
 	        });
     	}
+
 });
 
 App.Views.Camera = App.Views.CameraGMap;

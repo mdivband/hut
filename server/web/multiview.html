@@ -181,7 +181,7 @@
 
         var label = new MapLabel({
             map: null,
-            text: "agent-1",
+            text: "UAV-1",
             position: null,
             fontSize: 14
         });
@@ -318,7 +318,7 @@
                     link: null
                 });
 
-                if (data.agents[i].id == "agent-1") {
+                if (data.agents[i].id == "UAV-1") {
                    outer_div.addClass("selected");
                 }
 
@@ -364,7 +364,7 @@
                 id: "main",
                 div: main,
                 map: create_map("main"),
-                link: "agent-1"
+                link: "UAV-1"
             });
 
             for (var i = 0; i < data.targets.length; i++) {

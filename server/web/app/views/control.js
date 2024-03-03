@@ -16,10 +16,9 @@ App.Views.Control = Backbone.View.extend({
 		this.bind("update:tasks", this.update_tasks);
 	},
 	update_agent: function(model) {
-		if (model) {
-			this.agent = model;
+		if (model && model instanceof App.Models.Agent) {
 			var id = model.getId();
-			
+
 			if (!model.isSimulated()) {
 				this.setup_ardrone(model);
 			}
@@ -28,7 +27,7 @@ App.Views.Control = Backbone.View.extend({
 			
 			$("#canvas_small_info_agentid").text(id);
 			
-			$("#canvas_small_info_speed_val").text(this.agent.getSpeed());	
+			$("#canvas_small_info_speed_val").text(model.getSpeed());
 
 			if(model.getMode() == "teleop"){
 				$("#canvas_small_info_mode_val").text("TeleOpe").css('color', 'MediumTurquoise');				
@@ -70,11 +69,11 @@ App.Views.Control = Backbone.View.extend({
 			// 		}
 			// 	}
 			// });
-
-			if(allocation_text == null) {
-				allocation_text = "<p>No Allocation </p>";
-			}
-			$("#canvas_small_info_tasks").append(allocation_text);
+			//
+			// if(allocation_text == null) {
+			// 	allocation_text = "<p>No Allocation </p>";
+			// }
+			// $("#canvas_small_info_tasks").append(allocation_text);
 			
 
 

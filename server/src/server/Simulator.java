@@ -11,6 +11,7 @@ import tool.GsonUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
@@ -411,8 +412,8 @@ public class Simulator {
     }
 
     public void changeView(int modeFlag) {
-        System.out.println("TEMP FORCECHANGE: mode forced to task edit");
-        modeFlag = 2;
+        //System.out.println("TEMP FORCECHANGE: mode forced to task edit");
+        //modeFlag = 2;
         LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
         if (modeFlag == 2) {
             //agentController.stopAllAgents();
@@ -665,19 +666,13 @@ public class Simulator {
                 }
             }
 
-            Object uiJson = GsonUtils.getValue(obj, "extendedUIOptions");
+            List<Object> uiJson = GsonUtils.getValue(obj, "uIOptions");
             if (uiJson != null) {
-                if (GsonUtils.getValue(uiJson, "predictions") != null && (boolean) GsonUtils.getValue(uiJson, "predictions")) {
-                    state.addUIOption("predictions");
-                }
-                if (GsonUtils.getValue(uiJson, "ranges") != null && (boolean) GsonUtils.getValue(uiJson, "ranges")) {
-                    state.addUIOption("ranges");
-                }
-                if (GsonUtils.getValue(uiJson, "uncertainties") != null && (boolean) GsonUtils.getValue(uiJson, "uncertainties")) {
-                    state.addUIOption("uncertainties");
-                }
-                if (GsonUtils.getValue(uiJson, "workloadSlider") != null && (boolean) GsonUtils.getValue(uiJson, "workloadSlider")) {
-                    state.addUIOption("workloadSlider");
+                for (Object uIOption : uiJson) {
+                    String name = GsonUtils.getValue(uIOption, "name");
+                    boolean[] uIPair = new boolean[]{GsonUtils.getValue(uIOption, "default"),
+                            GsonUtils.getValue(uIOption, "toggleable")};
+                    state.addUIOption(name, uIPair);
                 }
 
             }
