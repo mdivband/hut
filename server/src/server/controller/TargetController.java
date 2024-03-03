@@ -5,11 +5,9 @@ import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
 import server.model.target.HumanTarget;
 import server.model.target.Target;
-import server.model.task.Task;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.FileHandler;
 
 /**
  * Controller for targets that the user must find
@@ -76,7 +74,10 @@ public class TargetController extends AbstractController {
             LOGGER.warning("Attempted to remove missing target " + id);
             return false;
         }
+
         simulator.getState().remove(target);
+        simulator.incrementCompletedTargets();
+
         LOGGER.info(String.format("%s; DELTRG; Deleted target (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, target.getCoordinate().getLatitude(), target.getCoordinate().getLongitude()));
         return true;
     }

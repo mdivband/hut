@@ -23,7 +23,7 @@ public class ImageController extends AbstractController {
 
     private final List<String> deepScannedTargets = new ArrayList<>(16);
     private final List<String> shallowScannedTargets = new ArrayList<>(16);
-    private final Map<String, Boolean> decisions = new HashMap<>(16);
+    private final Map<String, Integer> decisions = new HashMap<>(16);
     private HashMap<Double, ScheduledImage> scheduledImages = new HashMap<>(16);
 
 
@@ -141,11 +141,51 @@ public class ImageController extends AbstractController {
 
     }
 
+    public void classifyWithPrio(String ref, int prio) {
+        //System.out.println("BACKEND: " + ref + " getting prioriy: " + prio);
+
+        Map<String, String> map = simulator.getState().getStoredImages();
+        String id = map
+                .entrySet()
+                .stream()
+                .filter(entry -> ref.equals(entry.getValue()))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .get();
+
+        // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
+        decisions.put(id, prio);
+
+        // TODO use this to add a new "ground only" target to the list. This may mean removing the extra markers in frontend
+
+        boolean isDeep = deepScannedTargets.contains(id);
+        boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
+
+        deepScannedTargets.remove(id);
+        shallowScannedTargets.remove(id);
+        map.remove(id);
+
+        simulator.getState().addToPendingMap(id, simulator.getState().getTarget(id).getCoordinate());
+
+        // Foreach loop automatically handles the null case (no tasks found) by not entering
+        for (Task t : simulator.getTaskController().getAllTasksAt(simulator.getState().getTarget(id).getCoordinate())) {
+            t.complete();
+        }
+
+        simulator.getTaskController().createGroundTask(simulator.getState().getTarget(id).getCoordinate(), prio);
+
+        simulator.getTargetController().deleteTarget(id);
+
+
+
+
+    }
+
     /**
      * Called when an image is classified. Handles the addition of the record of this image and removes its target
-     * @param ref File reference
-     * @param status Whether it was classified P or N
+
      */
+    /*
     public void classify(String ref, boolean status) {
         try {
             Map<String, String> map = simulator.getState().getStoredImages();
@@ -179,7 +219,9 @@ public class ImageController extends AbstractController {
 
     }
 
-    public Map<String, Boolean> getDecisions() {
+     */
+
+    public Map<String, Integer> getDecisions() {
         return decisions;
     }
 

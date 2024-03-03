@@ -10,6 +10,7 @@ var MapImageController = {
         this.bindEvents = _.bind(this.bindEvents, context);
         this.showImage = _.bind(this.showImage, context);
         this.classify = _.bind(this.classify, context);
+        this.classifyWithPrio = _.bind(this.classifyWithPrio, context);
         this.referDeep = _.bind(this.referDeep, context);
         this.getCurrentImageId = _.bind(this.getCurrentImageId, context);
         this.triggerImage = _.bind(this.triggerImage, context);
@@ -23,6 +24,17 @@ var MapImageController = {
         $("#rev_real").on('click', function () {
             MapImageController.classify(true);
         });
+
+        $("#rev_high").on('click', function () {
+            MapImageController.classifyWithPrio( 3);
+        });
+        $("#rev_med").on('click', function () {
+            MapImageController.classifyWithPrio( 2);
+        });
+        $("#rev_low").on('click', function () {
+            MapImageController.classifyWithPrio( 1);
+        });
+
         $("#rev_false").on('click', function () {
             MapImageController.classify(false);
         });
@@ -73,6 +85,29 @@ var MapImageController = {
     },
     getCurrentImageId: function () {
         return this.views.review.currentImageName;
+    },
+    classifyWithPrio: function (prio) {
+        var self = this;
+        try {
+            var img = MapController.getCurrentImage();
+            var tgtId = this.views.review.currentImageName;
+            if (!MapTargetController.classifiedIds.includes(tgtId)) {
+                MapTargetController.classifiedIds.push(tgtId);
+                $.post("/review/classify", {
+                    ref: img,
+                    priority: prio,
+                });
+            }
+            var marker = self.$el.gmap("get", "markers")[tgtId];
+            if (marker) {
+                var position = marker.getPosition();
+                MapTargetController.clearReviewedTarget(marker);
+                MapTargetController.placeEmptyTargetMarkerByPrio(position, tgtId, prio);
+
+            }
+        } catch (e) {
+            alert("class : " + e)
+        }
     },
     classify: function (status) {
         var self = this;

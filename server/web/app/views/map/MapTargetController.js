@@ -22,6 +22,7 @@ var MapTargetController = {
         this.openScanWindow = _.bind(this.openScanWindow, context);
         this.clearReviewedTarget = _.bind(this.clearReviewedTarget, context);
         this.placeEmptyTargetMarker = _.bind(this.placeEmptyTargetMarker, context);
+        this.placeEmptyTargetMarkerByPrio = _.bind(this.placeEmptyTargetMarkerByPrio, context);
         this.checkIcon = _.bind(this.checkIcon, context);
     },
     bindEvents: function () {
@@ -282,5 +283,43 @@ var MapTargetController = {
         } catch (e) {
             alert("Placing empty marker error " + e);
         }
+    },
+    placeEmptyTargetMarkerByPrio: function (position, targetId, prio) {
+        try {
+            var icon;
+            var label;
+            if (prio === 3) {
+                icon = this.icons.TargetDeepScan;
+                label = "HIGH PRIO"
+            } else if (prio === 2) {
+                icon = this.icons.TargetDeepScan;
+                label = "MEDIUM PRIO"
+            } else if (prio === 1) {
+                icon = this.icons.TargetDeepScan;
+                label = "LOW PRIO"
+            }
+
+            var thisId = targetId + "_done";
+            console.log('EmptyMarker added ' + thisId);
+            this.$el.gmap("addMarker", {
+                bounds: false, //Centre in map if real agent
+                marker: MarkerWithLabel,
+                draggable: false,
+                labelContent: label,
+                labelAnchor: new google.maps.Point(50, -18),
+                labelClass: "labels",
+                labelStyle: {opacity: 0.6},
+                id: thisId,
+                position: position,
+                zIndex: 1,
+                opacity: 0.6,
+            });
+
+            var marker = this.$el.gmap("get", "markers")[thisId];
+            marker.setIcon(icon.Image);
+        } catch (e) {
+            alert(e);
+        }
+
     }
 };

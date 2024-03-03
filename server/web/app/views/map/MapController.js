@@ -335,6 +335,7 @@ var MapController = {
         }
 
         this.drawMarkers();
+        this.clearHandledTargetMarkers();
 
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);

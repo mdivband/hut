@@ -29,6 +29,9 @@ public class AgentProgrammed extends Agent {
         this.programmerHandler = new ProgrammerHandler(this);
         this.sensor = sensor;
         type = "programmed";
+        speed = 4.0;
+        heading = 90.0;
+        altitude = 0;
     }
 
     public AgentProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
@@ -38,6 +41,9 @@ public class AgentProgrammed extends Agent {
         this.taskController = taskController;
         this.programmerHandler = new ProgrammerHandler(this);
         type = "programmed";
+        speed = 4.0;
+        heading = 90.0;
+        altitude = 0;
     }
 
     /***
@@ -128,14 +134,11 @@ public class AgentProgrammed extends Agent {
             }
         }
 
-        try {
-            if (isFinalDestinationReached() && !isStopped()) {
-                stop();
-                programmerHandler.completeTask();
+        if (programmerHandler.isGoingHome()) {
+            if (getCoordinate().getDistance(getHubLocation()) < 10) {
+                programmerHandler.stopGoingHome();
             }
-        } catch (Exception e) {
-            programmerHandler.cancel();
-            route.clear();
+        } else if (isFinalDestinationReached() && !isStopped()) {
             stop();
         }
     }
@@ -404,5 +407,9 @@ public class AgentProgrammed extends Agent {
 
     public void setCommunicationRange(double communicationRange) {
         programmerHandler.setCommunicationRange(communicationRange);
+    }
+
+    public void addTaskFromBacked(GroundTask groundTask) {
+        programmerHandler.addTask(groundTask);
     }
 }

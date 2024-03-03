@@ -45,10 +45,11 @@ App.Models.State  = Backbone.Model.extend({
         missionBoundedSuccessOverChance: 100.00,
         missionBoundedSuccessUnderChance: 100.00,
         scoreInfo: {},
+        handledTargets: {},
         modelStyle: "off",
         loggingById: false,
         dynamicUIFeatures: [["none"], ["none"], ["none"], ["none"], ["none"]],
-        workloadLevel: 3,
+        workloadLevel: 3
     },
     url: function () {
         return "state.json?" + _.time();
@@ -203,6 +204,9 @@ App.Models.State  = Backbone.Model.extend({
     },
     getStoredImages: function () {
         return this.get("storedImages")
+    },
+    getHandledTargets: function () {
+        return this.get("handledTargets")
     },
     isLoggingById: function () {
         return this.get("loggingById")
