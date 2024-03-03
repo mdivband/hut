@@ -352,23 +352,34 @@ var MapAgentController = {
     updateAgentMarkerIcon: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         var icon;
-        if (agent.getId() === this.views.clickedAgent)
+        if (agent.getId() === this.views.clickedAgent && agent.getType() !== "groundAgent")
             icon = this.icons.UAVSelected;
         else {
+            console.log(agent.getId() + " -> " + agent.getType())
             if(agent.getType() === "hub") {
+                console.log(agent.getId() + " -> " + 1)
                 icon = this.icons.FLAG;
                 marker.setOptions({clickable: false, draggable: false})
             } else if (agent.getType() === "ghost") {
+                console.log(agent.getId() + " -> " + 2)
                 icon = this.icons.UAVTimedOut;
                 marker.setOptions({clickable: false, draggable: false})
-            } else if(agent.getManuallyControlled() || agent.getType() === "leader") {
-                icon = this.icons.TargetDismissed;
+            } else if (agent.getManuallyControlled()) {
+                icon = this.icons.UAVSelected;
+                marker.setOptions({clickable: false, draggable: false})
+            } else if (agent.getType() === "groundAgent") {
+                console.log(agent.getId() + " -> " + 3)
+                icon = this.icons.TruckMarker;
             } else if (agent.getType() === "withpack") {
+                console.log(agent.getId() + " -> " + 4)
                 icon = this.icons.UAVWithPack;
             } else if(agent.isTimedOut()) {
+                console.log(agent.getId() + " -> " + 5)
                 icon = this.icons.UAVTimedOut;
-            } else
+            } else {
+                console.log(agent.getId() + " -> " + 6)
                 icon = this.icons.UAV;
+            }
 
         }
         marker.setIcon(icon.Image);

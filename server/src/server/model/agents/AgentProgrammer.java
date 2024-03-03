@@ -41,7 +41,7 @@ public class AgentProgrammer {
         } else {
             a.setLeader(true);
             returner = true;
-            a.setVisual("leader");
+            a.setVisual("groundAgent");
         }
 
 

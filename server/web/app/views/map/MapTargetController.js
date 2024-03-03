@@ -203,7 +203,7 @@ var MapTargetController = {
     },
     checkForReveal: function (agent) {
         // Only check for this reveal if it's not a programmed agent (it shouldn't report yet)
-        if (agent.getType() !== "programmed" && agent.getType() !== "leader") {
+        if (agent.getType() !== "programmed" && agent.getType() !== "groundAgent") {
             this.state.targets.each(function (target) {
                 if (!target.isVisible()) {
                     var dist = google.maps.geometry.spherical.computeDistanceBetween(agent.getPosition(), target.getPosition());

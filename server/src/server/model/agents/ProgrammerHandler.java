@@ -918,6 +918,9 @@ public class ProgrammerHandler implements Serializable {
      * @return tasks
      */
     public HashMap<List<Coordinate>, List<String>> getTasks() {
+        tasks.forEach((k, v) -> {
+            System.out.println(k + " -> " + v);
+        });
         return tasks;
     }
 

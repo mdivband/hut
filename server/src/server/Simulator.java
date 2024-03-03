@@ -254,6 +254,9 @@ public class Simulator {
                                     } else if (getTaskController().checkForFreeTasks()) {
                                         av.stopGoingHome();
                                         getAllocator().dynamicAssign(av);
+                                        if (av.getAllocatedTaskId() != null && av.getTask().getType() == 6) {
+                                            av.setType("withpack");
+                                        }
                                         Simulator.instance.getScoreController().incrementCompletedTask();
                                         // In-runtime allocation model
                                         //double successChance = modeller.calculateAll(agent);
@@ -277,30 +280,24 @@ public class Simulator {
                     });
 
                 } else {
-                    // Step agents
-                    //checkAgentsForTimeout();
+                    checkAgentsForTimeout();
 
-                    //Hub hub = state.getHub();
-                    //if (hub instanceof AgentHub ah) {
-                    //    ah.step(state.isFlockingEnabled());
-                    //} else if (hub instanceof AgentHubProgrammed ahp) {
-                    //    ahp.step(state.isFlockingEnabled());
-                    //}
-                    // ELSE no hub
-
-                    synchronized (state.getAgents()) {
-                        for (Agent agent : state.getAgents()) {
-                            agent.setType(agent.getTask() != null ? "withpack" : "standard");
-                            agent.step(getState().isFlockingEnabled());
-                        }
+                    Hub hub = state.getHub();
+                    if (hub instanceof AgentHub ah) {
+                        ah.step(state.isFlockingEnabled());
+                    } else if (hub instanceof AgentHubProgrammed ahp) {
+                        ahp.step(state.isFlockingEnabled());
                     }
+                    // ELSE no hub
+                    state.getAgents().forEach(a -> a.step(state.isFlockingEnabled()));
                 }
 
-                //if (state.isCommunicationConstrained()) {
-                //    state.updateAgentVisibility();
-                //    state.updateGhosts();
-                //    state.moveGhosts();
-                //}
+                if (state.isCommunicationConstrained()) {
+                    state.updateAgentVisibility();
+                    state.updateGhosts();
+                    state.moveGhosts();
+                }
+
                 // Step tasks - requires completed tasks array to avoid concurrent modification.
                 List<Task> completedTasks = new ArrayList<>();
                 synchronized (state.getTasks()) {
@@ -314,11 +311,7 @@ public class Simulator {
                 }
 
                 //synchronized (Simulator.instance.getState().getCompletedTasks()) {
-                    for (Task task : completedTasks) {
-                        task.getAgents().forEach(a -> a.setType("standard"));
-                        task.complete();
-                    }
-
+                    completedTasks.stream().filter(task -> task.getType() == 6).forEach(task -> task.getAgents().forEach(a -> a.setType("standard")));
                     //if (!completedTasks.isEmpty()) {
                         //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
     

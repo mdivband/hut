@@ -114,6 +114,7 @@ App.Views.Map = Backbone.View.extend({
             TargetDeepScan: $.loadIcon("icons/rectangle_red.png", "icons/man.shadow.png", 30, 30),
             TargetShallowScan: $.loadIcon("icons/rectangle_green.png", "icons/man.shadow.png", 30, 30),
             TargetDismissed: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
+            TruckMarker: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
             TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
 
 
