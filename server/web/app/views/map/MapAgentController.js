@@ -373,7 +373,7 @@ var MapAgentController = {
                     delete marker;
                 }
             });
-            MapAgentHeatmapController.clearAll();
+            //MapAgentHeatmapController.clearAll();
             self.clearAllocationRendering()
         }
         if (this.state.getDynamicUIFeatures().length > 0 && self.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {

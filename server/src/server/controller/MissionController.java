@@ -35,6 +35,7 @@ public class MissionController extends AbstractController {
         }
 
         if (lastSpawn + (60 / (taskSpawnRate / batchSize)) < time) {
+            List<Task> tasksOutsideThisBatch = new ArrayList<>(simulator.getState().getTasks());
             List<Task> tasksInThisBatch = new ArrayList<>((int) (batchSize + batchRand));
             lastSpawn = time;
             boolean acceptableSpawn = false;
@@ -45,7 +46,7 @@ public class MissionController extends AbstractController {
                 //System.out.println("Spawning; r = " + r + ", th = " + theta);
                 //Coordinate newPos = simulator.getState().getGameCentre().getCoordinate(r, theta);
                 newPos = simulator.getState().getGameCentre().getCoordinateElliptical(r, theta, 1.5, 1);
-                if (isAcceptable(newPos)) {
+                if (isAcceptable(newPos, 1, tasksOutsideThisBatch)) {
                     acceptableSpawn = true;
                 }
             }
@@ -60,7 +61,7 @@ public class MissionController extends AbstractController {
                     //System.out.println("Spawning; r = " + r + ", th = " + theta);
                     //Coordinate newPos = simulator.getState().getGameCentre().getCoordinate(r, theta);
                     relPos = relPos.getCoordinateElliptical(r, theta, 1.5, 1);
-                    if (isAcceptable(relPos, 1, tasksInThisBatch)) {  // May need to exclude
+                    if (isAcceptable(relPos, 1, tasksOutsideThisBatch) && isAcceptable(relPos, 0.3,  tasksInThisBatch)) {  // May need to exclude
                         acceptableSpawn = true;
                     }
                 }
@@ -82,14 +83,9 @@ public class MissionController extends AbstractController {
         spawnPairs.sort(Comparator.comparing(a -> a[0]));
     }
 
-    private boolean isAcceptable(Coordinate position) {
-        return isAcceptable(position, 1d, new ArrayList<>());
-
-    }
-
-    private boolean isAcceptable(Coordinate position, double scale, List<Task> toExclude) {
+    private boolean isAcceptable(Coordinate position, double scale, List<Task> tasks) {
         // Immediately return false if any condition is not met
-        return simulator.getTaskController().getAllTasksAt(position, scale * 300, toExclude).isEmpty() &&
+        return simulator.getTaskController().getAllTasksAt(position,  scale * 300, tasks).isEmpty() &&
                 (simulator.getAgentController().getAgentAt(position, scale * 400) == null);
 
         //simulator.getTargetController().getTargetAt(position, scale * 200) == null
@@ -100,7 +96,7 @@ public class MissionController extends AbstractController {
         lastSpawn = -10000000;
         spawnRadius = 0;
         batchSize = 3;
-        batchRadius = 200;
+        batchRadius = 75;
         spawnPairs = new ArrayList<>();  // NOTE: Has to be reinstantiated instead of using .clear() as may be null
     }
 }

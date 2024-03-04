@@ -38,7 +38,7 @@ var MapAgentHeatmapController = {
     drawAgentMaps: function (reset) {
         //console.log("========================================")
         if (reset) {
-            MapAgentHeatmapController.clearAll();
+            //MapAgentHeatmapController.clearAll();
         }
 
         if (!reset && (MapAgentHeatmapController.running || MapAgentHeatmapController.arraysEqual(this.state.agents, MapAgentHeatmapController.addedGroups.flat(1)))) {
@@ -246,13 +246,13 @@ var MapAgentHeatmapController = {
 
                 MapAgentHeatmapController.addedGroups = groups
 
-                console.log("Groups after heatmap bit: " + groups.length)
-                groups.forEach((group) => {
-                   console.log(" g: ")
-                   group.forEach((g) => {
-                       console.log("    " + g.getId() + "     (" + g.getAgentTeam() + ")")
-                   });
-                });
+                // console.log("Groups after heatmap bit: " + groups.length)
+                // groups.forEach((group) => {
+                //    console.log(" g: ")
+                //    group.forEach((g) => {
+                //        console.log("    " + g.getId() + "     (" + g.getAgentTeam() + ")")
+                //    });
+                // });
                 // console.log("AddedGroups after heatmap bit: " + MapAgentHeatmapController.addedGroups.length)
                 // MapAgentHeatmapController.addedGroups.forEach((group) => {
                 //     console.log(" g: ")
@@ -317,7 +317,6 @@ var MapAgentHeatmapController = {
                 if (g !== null) {
                     //console.log("drawing from " + groupId + " to " + taskGroupId)
                     MapAgentHeatmapController.drawHeatmapAllocation(mainLineId, "green", groupId, taskGroupId);
-                    console.log("HERE:")
                     for (let agentIndex = 0; agentIndex < MapAgentHeatmapController.addedGroups[i].length; agentIndex++){
                         MapAgentHeatmapController.drawSubAllocation(MapAgentHeatmapController.addedGroups[i][agentIndex],
                             MapAgentHeatmapController.addedGroups[i][agentIndex].getAllocatedTaskId())
@@ -335,6 +334,7 @@ var MapAgentHeatmapController = {
         }
     },
     drawSubAllocation: function (agent, taskId) {
+        console.log("SubAlloc: " + agent.getId() + " -> " + taskId)
         // AGENT
 
         var subMarker = this.$el.gmap("get", "markers")["sub_"+agent.getId()];
@@ -375,6 +375,7 @@ var MapAgentHeatmapController = {
             }
 
         }
+
 
 
 
