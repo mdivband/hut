@@ -429,7 +429,9 @@ var MapController = {
             ['uncertainties', ['uncertainties_wrapper_div'], "uncertainties_toggle"],
             ['ranges', ['ranges_wrapper_div'], "ranges_toggle"],
             ['workloadSlider', ['wk_sld_wrapper']],
-            ['review_panel', ['review_panel', 'image_review', 'scan_button_group']]
+            ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
+            ['scanButtons', ['scan_buttons']],
+            ['triageButtons', ['triage_buttons']]
         ];
 
         arrayOfPairs.forEach((pair) => {
@@ -585,11 +587,7 @@ var MapController = {
             this.state.pushMode(modeFlag);
     },
     pushImage: function (id, iRef, update) {
-        try {
-            this.views.review.displayImage(id, iRef, update);
-        } catch (e) {
-            alert("PI: " + e)
-        }
+        this.views.review.displayImage(id, iRef, update);
     },
     getCurrentImage: function () {
         return this.views.review.currentImageRef;

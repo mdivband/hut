@@ -119,8 +119,7 @@ public class TargetController extends AbstractController {
      * @return
      */
     public Target getTargetAt(Coordinate c) {
-        getTargetAt(c, 5);
-        return null;
+        return getTargetAt(c, 5);
     }
 
     /**

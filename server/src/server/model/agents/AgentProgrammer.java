@@ -6,7 +6,9 @@ import server.model.target.AdjustableTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -41,7 +43,7 @@ public class AgentProgrammer {
         } else {
             a.setLeader(true);
             returner = true;
-            a.setVisual("groundAgent");
+            //a.setVisual("groundAgent");
         }
 
 
@@ -72,14 +74,25 @@ public class AgentProgrammer {
      * Called at every time step (currently 200ms)
      */
     public void step(){
+        // TODO they still stop after completing their first task. This needs to be fixed.
+
+        //System.out.println(a.getId() + " -> " + a.getCurrentTask() + " stopped " + a.isStopped() + " going home " + a.isGoingHome() + " #tasks " + a.getTasks().size() + " completed " + a.getCompletedTasks().size() + " returner " + returner);
+
+
         if (a.isGoingHome()) {
             a.followRoute();
         } else if (a.getTasks().size() == 0 && a.getCompletedTasks().size() == 0) {
+            // Here we have the problem that tasks is always emtpy.
             // WAIT; Only begin executing if we have tasks added now (so they don't fly off at the start)
+            // if outide commuincation range of the hub, go home
+
         } else {
             if (a.isStopped()) {
                 if (a.getTasks().size() > 0) {
-                    List<Coordinate> task = a.getHighestPriorityNearestTask();//a.getNearestEmptyTask();
+                    // For usecase
+                    List<Coordinate> task = a.getHighestPriorityNearestTask();
+                    // For res study
+                    //List<Coordinate> task = a.getNearestEmptyTask();
 
                     if (task != null) {
                         a.setTask(task);
@@ -105,14 +118,31 @@ public class AgentProgrammer {
     }
 
     public void onComplete(Coordinate c) {
-        double prio = Simulator.instance.getTaskController().getAllTasksAt(c).get(0).getPriority();
-        LOGGER.info(String.format("%s; APCMP; Ground agent completed pickup at (x, y, priority); %s; %s; %s",
-                Simulator.instance.getState().getTime(), c.getLatitude(), c.getLongitude(), prio));
+        List<Task> tasksHere = Simulator.instance.getTaskController().getAllTasksAt(c);
+        tasksHere.forEach(t -> {
+            double prio = t.getPriority();
+            LOGGER.info(String.format("%s; APCMP; Programmed agent completed task (x, y, priority); %s; %s; %s",
+                    Simulator.instance.getState().getTime(), c.getLatitude(), c.getLongitude(), prio));
 
-        String id = Simulator.instance.getState().getPendingMap().get(c);
-        Simulator.instance.getState().addToHandledTargets(id);
+            // For usecase study
+            String id = Simulator.instance.getState().getPendingMap().get(c);
+            Simulator.instance.getState().addToHandledTargets(id);
 
-        a.goHome();
+            a.goHome();
+        });
+
+
+    }
+
+    /** To override the default homing condition, you can create your own
+     * You can also create you own override to the goHome condition depending on the route you want the agent to take
+     * This method, though, allows you to define when the agent has reached home (e.g. in comm range, in contact, etc)
+     * */
+    public boolean getHomingCondition() {
+        // For res study
+        //return (a.getPosition().getDistance(a.getHome()) < (a.getCommunicationRange() * 0.75));
+        // For usecase
+        return (a.getPosition().getDistance(a.getHome()) < 5);
     }
 
     private void pingLeaders() {

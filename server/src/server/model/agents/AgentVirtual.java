@@ -3,6 +3,7 @@ package server.model.agents;
 import server.Simulator;
 import server.model.Coordinate;
 import server.model.Sensor;
+import server.model.task.DeepScanTask;
 import server.model.task.Task;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class AgentVirtual extends Agent {
 
     @Override
     public void step(Boolean flockingEnabled) {
+        //System.out.println(getId() + " (stp=" + isStopped() + ") -> route = " + getRoute());
         if (goingHome) {
             moveTowardsDestination();
             for (Agent a : sensor.senseNeighbours(this, 10.0)) {
@@ -48,6 +50,22 @@ public class AgentVirtual extends Agent {
                 }
             }
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getState().calculateRandomValueFor("batteryPerStep")) : 0;
+        } else if (getTask() instanceof DeepScanTask) {
+            //if (route.size() > 0) {
+                if (isFinalDestinationReached()) {
+                    setAllocatedTaskId("");
+                    setRoute(new ArrayList<>());
+                    setTempRoute(new ArrayList<>());
+                    stop();
+                    //setWorking(false);
+
+                } else if (isCurrentDestinationReached() && this.route.size() > 1) {
+                    this.route.remove(0);
+                } else if (this.route.size() > 0){
+                    moveTowardsDestination();
+                }
+            //}
+
         } else if (alive) {
             super.step(flockingEnabled);
             this.battery = this.battery > 0 ? this.battery - (unitTimeBatteryConsumption + batteryVariance + Simulator.instance.getState().calculateRandomValueFor("batteryPerStep")) : 0;
@@ -56,6 +74,15 @@ public class AgentVirtual extends Agent {
         //Simulate things that would be done by a real drone
         if (!isTimedOut())
             heartbeat();
+    }
+
+    public boolean isFinalDestinationReached() {
+        synchronized (route) {
+            if (route.size() == 1) {
+                return super.isFinalDestinationReached();
+            }
+        }
+        return false;
     }
 
     @Override

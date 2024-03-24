@@ -136,11 +136,15 @@ public class AgentProgrammed extends Agent {
         }
 
         if (programmerHandler.isGoingHome()) {
-            if (getCoordinate().getDistance(getHubLocation()) < 10) {
+            // This calls a defined homing condition from the programmer. Allows us to define wierd behaviours like
+            //  going straight to the hub, or just to communication range etc. -WH
+            if (programmerHandler.getHomingCondition()) {
                 programmerHandler.stopGoingHome();
             }
+
         } else if (isFinalDestinationReached() && !isStopped()) {
             stop();
+            programmerHandler.completeTask();
         }
     }
 

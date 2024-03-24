@@ -67,28 +67,15 @@ public abstract class Task extends MObject implements Serializable {
     abstract boolean perform();
 
     public void complete() {
-
-
-        System.out.println("All Agents:");
-        Simulator.instance.getState().getAgents().forEach(a -> {
-            System.out.println(a.getId() + " -> " + a.getAgentTeam());
-        });
-
-
-
-
-
-
-
-
-        Agent a = agents.get(0);
-        if (a instanceof AgentVirtual av) {
-            Task t = av.getNextTaskFromQueue();
-            if (t != null) {
-                Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
-                Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
-            } else {
-                a.stop();
+        for (Agent a : agents) {
+            if (a instanceof AgentVirtual av) {
+                Task t = av.getNextTaskFromQueue();
+                if (t != null) {
+                    Simulator.instance.getAllocator().putInTempAllocation(a.getId(), t.getId(), false);
+                    Simulator.instance.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
+                } else {
+                    a.stop();
+                }
             }
         }
         Simulator.instance.getTaskController().deleteTask(this.getId(), true);

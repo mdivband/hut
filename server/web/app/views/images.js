@@ -50,6 +50,11 @@ App.Views.Images = Backbone.View.extend({
         this.updatePendingList();
         var self = this;
         try {
+            // print an alert message for each stored image
+            console.log("=============================")
+            for (var key in this.state.getStoredImages()) {
+                console.log("Key: " + key + " value: " + this.state.getStoredImages()[key]);
+            }
             var knownImages = self.state.getStoredImages();
             var deepIds = self.state.getDeepScannedIds();
             this.state.targets.each(function (target) {

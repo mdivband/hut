@@ -485,6 +485,10 @@ public class State {
         }
     }
 
+    public boolean UIOptionIsAvailable(String name) {
+        return uiOptions.containsKey(name) && uiOptions.get(name)[0];
+    }
+
 
     /**
      * Setter for the uncertainty radius of agents
@@ -789,6 +793,7 @@ public class State {
 
     public void addToStoredImages(String id, String filename, boolean isDeep) {
         storedImages.put(id, filename);
+        System.out.println("Adding image " + filename + " to stored images");
         if (isDeep) {
             deepScannedIds.add(id);
         }

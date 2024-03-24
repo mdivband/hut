@@ -1,11 +1,14 @@
 package server.model.task;
 
+import org.checkerframework.checker.units.qual.C;
 import server.Simulator;
 import server.controller.TaskController;
 import server.model.agents.Agent;
 import server.model.Coordinate;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Objects;
 
 /**
  * Task to perform a deep (high resolution) scan of a target
@@ -39,6 +42,7 @@ public class DeepScanTask extends Task {
 
         crds.add(Simulator.instance.getState().getHubLocation());
         agent.setTempRoute(crds);
+        agent.setRoute(crds);
     }
 
     /**
@@ -49,12 +53,20 @@ public class DeepScanTask extends Task {
         if (status == STATUS_TODO) {
             boolean hasAnyAgentArrived = false;
             for (Agent agent : getAgents()) {
-                if (agent.isFinalDestinationReached() && agent.getRoute().size() < 2) {
-                    agent.setWorking(true);
-                    hasAnyAgentArrived = true;
-                } else if (agent.getCoordinate().getDistance(targetToScan) < 3 && !scannedAgents.contains(agent)) {
-                    // Arrived at this one
-                    scannedAgents.add(agent);
+                // TODO This still typically throws an error based on UI not accepting the route (probably empty).
+                //  I'm not sure if they are being stopped properly. Either the agent or the task does not finish
+                //  properly.
+
+                try {
+                    if (agent.isFinalDestinationReached() && agent.getRoute().size() < 2) {
+                        agent.setWorking(true);
+                        hasAnyAgentArrived = true;
+                    } else if (agent.getCoordinate().getDistance(targetToScan) < 3 && !scannedAgents.contains(agent)) {
+                        // Arrived at this one
+                        scannedAgents.add(agent);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error in step of DeepScanTask: " + e.getMessage());
                 }
             }
 
@@ -65,16 +77,21 @@ public class DeepScanTask extends Task {
         }
 
         if (status == Task.STATUS_DOING) {
-            for (Agent agent : getAgents())
+            for (Agent agent : getAgents()) {
                 if (agent.isFinalDestinationReached()) {
                     agent.setWorking(true);
                 } else if (agent.isCurrentDestinationReached()) {
                     scannedAgents.add(agent);
+                } else {
+                    agent.step(false);
                 }
-            if(perform())
+            }
+            if(perform()) {
                 setStatus(Task.STATUS_DONE);
-            if(getAgents().isEmpty())
+            }
+            if(getAgents().isEmpty()) {
                 setStatus(Task.STATUS_TODO);
+            }
         }
 
         return status == Task.STATUS_DONE;

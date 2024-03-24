@@ -310,13 +310,13 @@ public class Simulator {
                     }
                 }
 
-                //synchronized (Simulator.instance.getState().getCompletedTasks()) {
+                synchronized (Simulator.instance.getState().getCompletedTasks()) {
                     completedTasks.stream().filter(task -> task.getType() == 6).forEach(task -> task.getAgents().forEach(a -> a.setType("standard")));
                     //if (!completedTasks.isEmpty()) {
                         //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
-    
+                        completedTasks.forEach(Task::complete);
                     //}
-                //}
+                }
 
                 //if (!modeller.isStarted()) {
                 //    modeller.start();
@@ -332,8 +332,9 @@ public class Simulator {
 
             // Check and trigger images that are scheduled
             //if (state.isShowReviewPanel()) {
-            //    imageController.checkForImages();
-            //}
+            if (state.UIOptionIsAvailable("reviewPanel")) {
+                imageController.checkForImages();
+            }
 
             long endTime = System.currentTimeMillis();
             sleepTime = (int) (waitTime - (endTime - startTime));

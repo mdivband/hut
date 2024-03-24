@@ -142,7 +142,7 @@ var MapImageController = {
 
             var newId = "[" + tgtId + "]";
             var existingMarker = self.$el.gmap("get", "markers")[newId];
-
+            console.log("Marker is: " + tgtId + " with marker at " + marker.getPosition());
             if (!existingMarker) {
                 marker.setOptions({labelContent: newId});
                 MapTaskController.addDeepScanTask(marker.getPosition());

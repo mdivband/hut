@@ -18,8 +18,8 @@ import java.util.logging.FileHandler;
  */
 public class ImageController extends AbstractController {
 
-    private final int SHALLOW_SCAN_TIME = 18;  // In-game seconds, so use 6*real-life seconds
-    private final int DEEP_SCAN_TIME = 18;
+    private final int SHALLOW_SCAN_TIME = 3;
+    private final int DEEP_SCAN_TIME = 3;
 
     private final List<String> deepScannedTargets = new ArrayList<>(16);
     private final List<String> shallowScannedTargets = new ArrayList<>(16);
@@ -51,7 +51,8 @@ public class ImageController extends AbstractController {
             }
         }
         if (!match) {
-            takeImage(simulator.getState().getTarget(id).getCoordinate(), false);
+            //takeImage(simulator.getState().getTarget(id).getCoordinate(), false);
+            takeImage(simulator.getState().getTarget(id), false);
         }
     }
 
@@ -62,6 +63,15 @@ public class ImageController extends AbstractController {
      */
     public void takeImage(Coordinate coordinate, boolean isDeep) {
         Target t = simulator.getTargetController().getTargetAt(coordinate);
+        takeImage(t, isDeep);
+    }
+
+    /**
+     * This finds the target, checks if it's a TP or FP, "takes an image", and stores it in the hashmap for inspection
+     * @param t
+     * @param isDeep
+     */
+    public void takeImage(Target t, boolean isDeep) {
         if (t instanceof AdjustableTarget at) {  // This also asserts that t is not null
             synchronized (simulator.getState().getStoredImages()) {
                 double timeToAdd;
@@ -92,6 +102,7 @@ public class ImageController extends AbstractController {
      * @param isDeep
      */
     private void addImage(String id, String fileName, boolean isDeep) {
+        System.out.println(" early Adding image " + fileName + " to stored images");
         if (isDeep && !deepScannedTargets.contains(id)) {
             deepScannedTargets.add(id);
             simulator.getState().addToStoredImages(id, fileName, true);
@@ -185,9 +196,9 @@ public class ImageController extends AbstractController {
      * Called when an image is classified. Handles the addition of the record of this image and removes its target
 
      */
-    /*
+
     public void classify(String ref, boolean status) {
-        try {
+        //try {
             Map<String, String> map = simulator.getState().getStoredImages();
             String id = map
                     .entrySet()
@@ -198,7 +209,8 @@ public class ImageController extends AbstractController {
                     .get();
 
             // id is the id of the target we want (the above line searches the Map by value, and assumes 1:1 mapping)
-            decisions.put(id, status);
+            // TODO this needs to work for both cases so let's say -1 = true and -2 = false
+            decisions.put(id, decisions.put(id, status ? -1 : -2));
 
             boolean isDeep = deepScannedTargets.contains(id);
             boolean isReal = ((AdjustableTarget) simulator.getState().getTarget(id)).isReal();
@@ -215,11 +227,11 @@ public class ImageController extends AbstractController {
 
             LOGGER.info(String.format("%s; CLIMG; Classifying target from deep/shallow scan as this, it is actually (id, isDeep, classifiedStatus, ActualStatus); %s; %s; %s; %s;", Simulator.instance.getState().getTime(), id, isDeep, status, isReal));
 
-        } catch (Exception ignored) {}
+        //} catch (Exception ignored) {}
 
     }
 
-     */
+
 
     public Map<String, Integer> getDecisions() {
         return decisions;

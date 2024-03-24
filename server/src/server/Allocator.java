@@ -20,7 +20,6 @@ import maxsum.EvaluationFunction;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Object that handles the allocation.
@@ -68,7 +67,7 @@ public class Allocator {
         for (Agent agent : agentsToAllocate) {
             if (agent.isManuallyControlled() || agent.isTimedOut() || (agent instanceof AgentHub) || (agent instanceof AgentProgrammed)) {
                 // Remove
-            } else if (agent.getTask() !=null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)) {
+            } else if (agent.getTask() != null && agent.getTask().getType() == Task.TASK_DEEP_SCAN && ((DeepScanTask) agent.getTask()).hasAgentScanned(agent)) {
                 // Remove, but reassign own task
                 agent.getTask().addAgent(agent);
                 agent.setWorking(true);
@@ -86,7 +85,9 @@ public class Allocator {
 
         String allocationStyle = simulator.getState().getAllocationStyle();
         // Remove and ignore deep scans that have been assigned
-        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN || task.getType() == Task.TASK_GROUND && ((DeepScanTask) task).isBeingWorked());
+
+        //tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_DEEP_SCAN || task.getType() == Task.TASK_GROUND && ((DeepScanTask) task).isBeingWorked());
+        tasksToAllocate.removeIf(task -> task.getType() == Task.TASK_GROUND && ((DeepScanTask) task).isBeingWorked());
 
         String allocationMethod = simulator.getState().getAllocationMethod();
 
@@ -716,6 +717,10 @@ public class Allocator {
             task.clearAgents();
         }
 
+        System.out.println("Running maxsum");
+        System.out.println(agents);
+        System.out.println(tasks);
+
         //Make sure the assignments won't be modified if the agent is working
         ArrayList<Agent> workingAgents = new ArrayList<>();
         for (Agent agent : agents) {
@@ -730,6 +735,7 @@ public class Allocator {
                     result.put(agent.getId(), agent.getTask().getId());
                     resultObjs.put(agent, agent.getTask());
                     if (agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
+                        System.out.println("Removing task " + agent.getTask().getId() + " from tasks");
                         tasks.remove(agent.getTask());
                     }
 
@@ -1097,25 +1103,26 @@ public class Allocator {
      * Dynamically makes the nearest agent do this task
      * @param t
      */
-    public void dynamicReassign(Task t) {
+    public void dynamicReassignForScan(Task t) {
         LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         if (isSaturated()) {
             Agent a = getClosestAgentTo(t);
-            a.getTask().clearAgents();
+            if (a.getTask() != null) {
+                a.getTask().clearAgents();
+            }
+            a.getAgentTeam().clear();
             a.setAllocatedTaskId(null);
-            //a.stop();
-            runAutoAllocation();
-            putInTempAllocation(a.getId(), t.getId());
-        } else {
-            runAutoAllocation();
+            a.setWorking(false);
+            a.stop();
         }
+        runAutoAllocation();
         confirmAllocation(simulator.getState().getTempAllocation());
     }
 
     /**
      * Basically just runs the allocator again
      */
-    public void dynamicReassign() {
+    public void dynamicReassignForScan() {
         LOGGER.info(String.format("%s; DYNRS; Dynamically reassigning agents to work scans;", Simulator.instance.getState().getTime()));
         runAutoAllocation();
         confirmAllocation(simulator.getState().getTempAllocation());

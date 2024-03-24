@@ -58,7 +58,7 @@ public class TaskController extends AbstractController {
 
             if (task instanceof DeepScanTask) {
                 task.setPriority(100);
-                simulator.getAllocator().dynamicReassign(task);
+                simulator.getAllocator().dynamicReassignForScan(task);
                 String trgId = simulator.getTargetController().getTargetAt(new Coordinate(lat, lng)).getId();
                 LOGGER.info(String.format("%s; DPSCN; Creating a deep scan task of id and for target (id, targetId); %s; %s", Simulator.instance.getState().getTime(), id, trgId));
 
@@ -163,7 +163,12 @@ public class TaskController extends AbstractController {
      */
     public void deleteTaskByCoords(Coordinate coord) {
         try {
-            findTaskByCoord(coord).setStatus(Task.STATUS_DONE);
+            Task t = findTaskByCoord(coord);
+            if (t.getType() == Task.TASK_DEEP_SCAN) {
+                deleteTask(findTaskByCoord(coord).getId(), true);
+            } else if (t.getType() == Task.TASK_GROUND) {
+                findTaskByCoord(coord).setStatus(Task.STATUS_DONE);
+            }
         } catch (Exception e){
             // For now we leave this. It's rare, but when deleting an already completed task this throws an error
             // It doesn't matter that we let this through, because it was already gone

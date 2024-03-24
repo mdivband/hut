@@ -389,26 +389,29 @@ public class ProgrammerHandler implements Serializable {
      * to the set of tasks that it will report as complete from now on
      */
     protected void completeTask(){
-        // A very important check here, otherwise return home tasks mess up the propagation of completed tasks and it
-        //  stops tasks being checked properly
-        Coordinate coords = calculateRepresentativeCoordinate(currentTask);
+        if (currentTask != null && !currentTask.isEmpty()) {
+            // A very important check here, otherwise return home tasks mess up the propagation of completed tasks and it
+            //  stops tasks being checked properly
+            Coordinate coords = calculateRepresentativeCoordinate(currentTask);
 
-        if (coords != null) {
-            tasks.remove(currentTask);
+            if (coords != null) {
+                tasks.remove(currentTask);
 
-            String sb = "COMPLETED" +
-                    ";" +
-                    coords.getLatitude() +
-                    "," +
-                    coords.getLongitude();
+                String sb = "COMPLETED" +
+                        ";" +
+                        coords.getLatitude() +
+                        "," +
+                        coords.getLongitude();
 
 
-            broadcast(sb, communicationRange);
+                broadcast(sb, communicationRange);
 
-            completedTasks.add(coords);
+                completedTasks.add(coords);
+            }
+
+            currentTask = new ArrayList<>();
+            agentProgrammer.onComplete(coords);
         }
-
-        agentProgrammer.onComplete(coords);
     }
 
     /**
@@ -600,7 +603,7 @@ public class ProgrammerHandler implements Serializable {
         List<Agent> neighbours = agent.senseNeighbours(radius);
         for (Agent n : neighbours) {
             if (n instanceof AgentHubProgrammed ahp) {
-                if (ahp.getCoordinate().getDistance(getPosition()) < 5) {
+                if (!Simulator.instance.getState().isCommunicationConstrained() || ahp.getCoordinate().getDistance(getPosition()) < radius) {
                     ahp.receiveMessage(message);
                 }
             } else if (n instanceof AgentProgrammed ap) {
@@ -918,9 +921,6 @@ public class ProgrammerHandler implements Serializable {
      * @return tasks
      */
     public HashMap<List<Coordinate>, List<String>> getTasks() {
-        tasks.forEach((k, v) -> {
-            System.out.println(k + " -> " + v);
-        });
         return tasks;
     }
 
@@ -972,15 +972,18 @@ public class ProgrammerHandler implements Serializable {
                 if (entry.getKey().size() == 1 && entry.getValue().isEmpty()) {
                     // It's a waypoint task with no agents assigned
                     // TODO this violates backend access but it's fine for this purpose:
-                    Task taskToCheck = Simulator.instance.getTaskController().getAllTasksAt(entry.getKey().get(0)).get(0);
-                    double prio = taskToCheck.getPriority();
+                    List<Task> tasks = Simulator.instance.getTaskController().getAllTasksAt(entry.getKey().get(0));
+                    if (!tasks.isEmpty()) {
+                        Task taskToCheck = tasks.get(0);
+                        double prio = taskToCheck.getPriority();
 
-                    if (prio == p) {
-                        // If at this prio, consider
-                        double dist = agent.getCoordinate().getDistance(entry.getKey().get(0));
-                        if (dist < shortestDist) {
-                            shortestDist = dist;
-                            bestTask = entry.getKey();
+                        if (prio == p) {
+                            // If at this prio, consider
+                            double dist = agent.getCoordinate().getDistance(entry.getKey().get(0));
+                            if (dist < shortestDist) {
+                                shortestDist = dist;
+                                bestTask = entry.getKey();
+                            }
                         }
                     }
                 }
@@ -1126,13 +1129,9 @@ public class ProgrammerHandler implements Serializable {
     protected void addTask(Task item) {
         List<Coordinate> thisTask;
         // Only identifying groundtasks for the programmed crew
-        if (item instanceof GroundTask gt) {
+       if (item instanceof GroundTask gt) {
             thisTask = Collections.singletonList(gt.getCoordinate());
-        } else {
-            return;
-        }
-        /*
-        if (item instanceof WaypointTask wt) {
+        } else if (item instanceof WaypointTask wt) {
             thisTask = Collections.singletonList(wt.getCoordinate());
         } else if (item instanceof VisitTask vt) {
             // TODO actually handle these right
@@ -1144,7 +1143,6 @@ public class ProgrammerHandler implements Serializable {
             return;
         }
 
-         */
         tasks.put(thisTask, new ArrayList<>());
     }
 
@@ -1278,6 +1276,10 @@ public class ProgrammerHandler implements Serializable {
         resume();
     }
 
+    public boolean getHomingCondition() {
+        return agentProgrammer.getHomingCondition();
+    }
+
     /**
      * Finds the nearest edge of the communication radius of the hub and goes a little way into the circle there
      * @return Coordinate to go to
@@ -1409,6 +1411,10 @@ public class ProgrammerHandler implements Serializable {
         this.communicationRange = (int) Math.round(communicationRange);
     }
 
+    public double getCommunicationRange() {
+        return this.communicationRange;
+    }
+
     /**
      * Checks whehter (as far as we know) any other agent has the same task as us
      * @return
@@ -1424,6 +1430,10 @@ public class ProgrammerHandler implements Serializable {
             // Task not found
             return false;
         }
+    }
+
+    public List<Coordinate> getCurrentTask() {
+        return currentTask;
     }
 
     /***

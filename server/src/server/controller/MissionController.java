@@ -49,6 +49,7 @@ public class MissionController extends AbstractController {
                     acceptableSpawn = true;
                 }
             }
+
             Task createdTask = simulator.getTaskController().createTask(0, newPos.getLatitude(), newPos.getLongitude());
             tasksInThisBatch.add(createdTask);
             Coordinate relPos = newPos.clone();

@@ -53,17 +53,21 @@ public class ReviewHandler extends RestHandler {
      */
     private void handleClassify(Request req, Response resp) throws IOException {
         Map<String, String> params = req.getParams();
-        List<String> expectedKeys = Arrays.asList("ref", "priority");
 
-        if (!checkParams(params, expectedKeys, resp))
-            return;
+        if (!params.containsKey("ref") || !(params.containsKey("priority") || params.containsKey("status"))) {
+            resp.send(400, "Missing parameter: either ref, priority or status");
+            return ;
+        }
 
         String ref = params.get("ref");
-        //boolean status = Boolean.parseBoolean(params.get("status"));
-        int prio = Integer.parseInt(params.get("priority"));
 
-        this.simulator.getImageController().classifyWithPrio(ref, prio);
-
+        if (params.containsKey("status")) {
+            boolean status = Boolean.parseBoolean(params.get("status"));
+            this.simulator.getImageController().classify(ref, status);
+        } else if (params.containsKey("priority")) {
+            int prio = Integer.parseInt(params.get("priority"));
+            this.simulator.getImageController().classifyWithPrio(ref, prio);
+        }
     }
 
     private void handleReportWorkload(Request req, Response resp) throws IOException {
