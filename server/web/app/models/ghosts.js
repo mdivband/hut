@@ -7,6 +7,7 @@ App.Models.Ghost = App.Models.MObject.extend({
         altitude: 3,
         battery: 0,
         heading: 0.0,
+        marker: "UAVTimedOut",
         manuallyControlled: false,
         route: null,
         tempRoute: null,
@@ -38,6 +39,9 @@ App.Models.Ghost = App.Models.MObject.extend({
     },
     getHeading: function () {
         return this.get("heading");
+    },
+    getMarker: function () {
+        return this.get("marker");
     },
     getBattery: function () {
         return this.get("battery");

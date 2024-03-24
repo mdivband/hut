@@ -18,7 +18,8 @@ public class AgentHubProgrammed extends AgentProgrammed implements Hub {
     private int scheduledRemovals = 0;
 
     public AgentHubProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
-        super(id, position, sensor, random, taskController);
+        super(id, position, sensor, random, taskController, "GenericAgentPolicy");
+        setMarker("FLAG");
         type = "hub";
         stop();
         visible = true;

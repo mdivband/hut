@@ -256,6 +256,7 @@ public class Simulator {
                                         getAllocator().dynamicAssign(av);
                                         if (av.getAllocatedTaskId() != null && av.getTask().getType() == 6) {
                                             av.setType("withpack");
+                                            av.setMarker("UAVWithPack");
                                         }
                                         Simulator.instance.getScoreController().incrementCompletedTask();
                                         // In-runtime allocation model
@@ -713,7 +714,11 @@ public class Simulator {
                     Agent agent;
                     if (programmed) {
                         // This means the agent is a programmed one, and the Hub is set up for this
-                        agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController);
+                        String policy = "GenericAgentPolicy";
+                        if (GsonUtils.hasKey(agentJSon, "policy")) {
+                            policy = GsonUtils.getValue(agentJSon, "policy");
+                        }
+                        agent = agentController.addProgrammedAgent(lat, lng, 0, random, taskController, policy);
                         containsProgrammed = true;
                     } else if (this.state.isCommunicationConstrained()) {
                         // This means the agent is a non-programmed one, but there is communication required for the network
@@ -726,6 +731,9 @@ public class Simulator {
                     Double battery = GsonUtils.getValue(agentJSon, "battery");
                     if(battery != null) {
                         agent.setBattery(battery);
+                    }
+                    if (GsonUtils.hasKey(agentJSon, "mkr")) {
+                        agent.setMarker(GsonUtils.getValue(agentJSon, "mkr"));
                     }
                 }
             }
@@ -741,7 +749,6 @@ public class Simulator {
                 } else {
                     agentController.addHubAgent(lat, lng);
                 }
-
                 state.setHubLocation(new Coordinate(lat, lng));
             }
 
@@ -829,7 +836,6 @@ public class Simulator {
                 }
 
             }
-
 
             this.state.setGameSpeed((int) gameSpeed);
 

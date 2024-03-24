@@ -355,6 +355,12 @@ var MapAgentController = {
         if (agent.getId() === this.views.clickedAgent && agent.getType() !== "groundAgent")
             icon = this.icons.UAVSelected;
         else {
+            icon = this.icons[agent.getMarker()];
+            console.log("Agent marker: " + agent.getMarker() + " icon: " + icon);
+
+            // This used to be a core part of the visualisation but now we define markers in the backend. Keep it
+            //  around in case something doesn't work as expected.
+            /*
             if(agent.getType() === "hub") {
                 icon = this.icons.FLAG;
                 marker.setOptions({clickable: false, draggable: false})
@@ -365,7 +371,7 @@ var MapAgentController = {
                 icon = this.icons.UAVSelected;
                 marker.setOptions({clickable: false, draggable: false})
             } else if (agent.getType() === "groundAgent") {
-                icon = this.icons.TruckMarker;
+                icon = this.icons.TruckMarker;`
             } else if (agent.getType() === "withpack") {
                 icon = this.icons.UAVWithPack;
             } else if(agent.isTimedOut()) {
@@ -373,6 +379,8 @@ var MapAgentController = {
             } else {
                 icon = this.icons.UAV;
             }
+
+             */
 
         }
         marker.setIcon(icon.Image);

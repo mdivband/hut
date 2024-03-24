@@ -190,7 +190,8 @@ var MapController = {
         });
     },
     showPredictedPaths: function (setting) {
-        MapController.toggleUIOption('predictions', setting)
+        //MapController.toggleUIOption('predictions', setting)
+        MapController.predictionLength = setting;
     },
     onRunAutoAllocationClick: function () {
         $.post("/allocation/auto-allocate");

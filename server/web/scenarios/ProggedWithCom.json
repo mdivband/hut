@@ -1,11 +1,43 @@
 {
   "gameId": "PROGRAMMED & NOT CONSTRAINED",
   "gameDescription": "For testing defaults",
-  "extendedUIOptions": {
-    "predictions": true,
-    "uncertainties": true,
-    "ranges": true
-  },
+  "uIOptions": [
+    {
+      "name": "monitor",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "editmode",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "scans",
+      "default": false,
+      "toggleable": false
+    },
+    {
+      "name": "explored",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "hazard",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "predictions",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "uncertainties",
+      "default": true,
+      "toggleable": true
+    }
+  ],
   "hub": {
     "lat": 50.928955248687274,
     "lng": -1.40882186832185

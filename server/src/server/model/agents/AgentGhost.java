@@ -11,7 +11,7 @@ import java.util.List;
  * This is the representation of where the Hub believes agents to be. It will not be interactive
  * @author William Hunt
  */
-public class AgentGhost extends Agent{
+public class AgentGhost extends Agent {
     private boolean goingHome = false;
     private boolean atHome = false;
     private boolean leader;
@@ -39,6 +39,7 @@ public class AgentGhost extends Agent{
             hubLocation = ac.getHubLocation();
             communicationRange = ac.getSenseRange();
         }
+        setMarker("UAVTimedOut");
         type = "ghost";
     }
 

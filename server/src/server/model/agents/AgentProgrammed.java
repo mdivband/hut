@@ -25,9 +25,9 @@ public class AgentProgrammed extends Agent {
     protected transient TaskController taskController;
     protected transient ProgrammerHandler programmerHandler;
 
-    public AgentProgrammed(String id, Coordinate position, Sensor sensor) {
+    public AgentProgrammed(String id, Coordinate position, Sensor sensor, String policyType) {
         super(id, position, true);
-        this.programmerHandler = new ProgrammerHandler(this);
+        this.programmerHandler = new ProgrammerHandler(this, policyType);
         this.sensor = sensor;
         type = "programmed";
         speed = 4.0;
@@ -35,12 +35,12 @@ public class AgentProgrammed extends Agent {
         altitude = 0;
     }
 
-    public AgentProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController) {
+    public AgentProgrammed(String id, Coordinate position, Sensor sensor, Random random, TaskController taskController, String policyType) {
         super(id, position, true);
         this.random = random;
         this.sensor = sensor;
         this.taskController = taskController;
-        this.programmerHandler = new ProgrammerHandler(this);
+        this.programmerHandler = new ProgrammerHandler(this, policyType);
         type = "programmed";
         speed = 4.0;
         heading = 90.0;

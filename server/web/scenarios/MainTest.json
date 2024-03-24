@@ -2,16 +2,36 @@
   "gameId": "Main Test",
   "gameDescription": "A large fire has been reported in the North of the Southampton Common.\nYou have been provided with three UAVs and must assist emergency services by locating the fire and pinpointing the location of people in the vicinity.",
   "uIOptions": [
-      {
-        "name": "predictions",
-        "default": false,
-        "toggleable": true
-      },
-      {
-        "name": "uncertainties",
-        "default": true,
-        "toggleable": false
-      }
+    {
+      "name": "monitor",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "editmode",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "explored",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "hazard",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "predictions",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "uncertainties",
+      "default": true,
+      "toggleable": true
+    }
   ],
   "flockingEnabled" : true,
   "loggingById": true,

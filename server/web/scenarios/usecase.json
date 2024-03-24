@@ -68,12 +68,14 @@
     {
       "lat": 50.92880002299894,
       "lng": -1.410,
-      "programmed": true
+      "programmed": true,
+      "policy": "UseCasePolicy"
     },
     {
       "lat": 50.92880002299894,
       "lng": -1.411,
-      "programmed": true
+      "programmed": true,
+      "policy": "UseCasePolicy"
     }
   ],
   "hazards": [

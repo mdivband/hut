@@ -28,6 +28,7 @@ public abstract class Agent extends MObject implements Serializable {
     protected double altitude;
     protected double battery;
     protected double heading;
+    private String marker;
     private boolean manuallyControlled = false;
     protected final List<Coordinate> route;
     private final List<Coordinate> tempRoute;
@@ -470,5 +471,9 @@ public abstract class Agent extends MObject implements Serializable {
                 ", working=" + working +
                 ", stopped=" + stopped +
                 '}';
+    }
+
+    public void setMarker(String mkr) {
+        this.marker = mkr;
     }
 }

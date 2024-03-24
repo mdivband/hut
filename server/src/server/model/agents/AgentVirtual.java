@@ -42,6 +42,7 @@ public class AgentVirtual extends Agent {
                 if (a instanceof Hub) {
                     goingHome = false;
                     setType("withpack");
+                    setMarker("UAVWithPack");
                     if (getRoute().size() <= 0) {
                         System.out.println(this);
                         stop();

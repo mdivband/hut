@@ -2,6 +2,8 @@ package server.model.agents;
 
 import server.Simulator;
 import server.model.Coordinate;
+import server.model.agents.policies.GenericAgentPolicy;
+import server.model.agents.policies.UseCasePolicy;
 import server.model.target.Target;
 import server.model.task.*;
 import tool.GsonUtils;
@@ -21,8 +23,8 @@ public class ProgrammerHandler implements Serializable {
     private static final int AGENT_TIMEOUT = 6; // (6x200ms = every 1.2 second) ~= 1 real-life seconds
     private static final int pingTimeout = 3; // (6x200ms = every 1.2 second) ~= 1 real-life seconds
 
-    protected transient AgentProgrammed agent;
-    private final transient AgentProgrammer agentProgrammer;  // Link to the user's code
+    public transient AgentProgrammed agent;
+    private transient AgentProgrammer agentProgrammer;  // Link to the user's code
     private int communicationRange = 250; // The max (and default) radius used for sensing neighbours etc
 
     private HashMap<String, Position> neighbours;  // Stores the known other agents (including non-neighbours)
@@ -42,13 +44,22 @@ public class ProgrammerHandler implements Serializable {
      * Constructor. Connects the agent to the programmer s.t. this class behaves akin to an MVC controller
      * @param connectedAgent The agent that this handler controls
      */
-    public ProgrammerHandler(AgentProgrammed connectedAgent){
+    public ProgrammerHandler(AgentProgrammed connectedAgent, String policyType){
         this.agent = connectedAgent;
         neighbours = new HashMap<>();
         tasks = new HashMap<>();
         completedTasks = new ArrayList<>();
         foundTargets = new ArrayList<>();
-        agentProgrammer = new AgentProgrammer(this);
+       switch (policyType) {
+           case "GenericAgentPolicy":
+               agentProgrammer = new GenericAgentPolicy(this);
+               break;
+            case "UseCasePolicy":
+                agentProgrammer = new UseCasePolicy(this);
+                break;
+        }
+
+
     }
 
     /***
@@ -128,7 +139,7 @@ public class ProgrammerHandler implements Serializable {
      * Getter for the attached agent's coordinate
      * @return Coordinate for this agent's position
      */
-    protected Coordinate getPosition(){
+    public Coordinate getPosition(){
         return agent.getCoordinate();
     }
 
@@ -181,7 +192,7 @@ public class ProgrammerHandler implements Serializable {
      * Returns the ID of this agent
      * @return ID
      */
-    protected String getId(){
+    public String getId(){
         return agent.getNetworkId();
     }
 
@@ -196,7 +207,7 @@ public class ProgrammerHandler implements Serializable {
     /***
      * Default move command; assumes distance to move is 1 unit
      */
-    protected void moveAlongHeading() {
+    public void moveAlongHeading() {
         // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
         // We also check if we are closer than 1 move step; in which case
         // double distToMove = Math.min(agent.getSpeed() / Simulator.instance.getGameSpeed(), agent.getCoordinate().getDistance(getCurrentDestination()));
@@ -207,21 +218,21 @@ public class ProgrammerHandler implements Serializable {
     /***
      * Stop the agent
      */
-    protected void stop() {
+    public void stop() {
         agent.stop();
     }
 
     /***
      * Resumes the agent
      */
-    protected void resume(){
+    public void resume(){
         agent.resume();
     }
 
     /**
      * Cancels the current task this agent is doing
      */
-    protected void cancel(){
+    public void cancel(){
         if (!currentTask.isEmpty()) {
             tasks.get(currentTask).remove(getId());
         }
@@ -232,7 +243,7 @@ public class ProgrammerHandler implements Serializable {
      * Checks whether the agent is currently stopped when following a route
      * @return stopped
      */
-    protected boolean isStopped(){
+    public boolean isStopped(){
         return agent.isStopped();
     }
 
@@ -1173,7 +1184,7 @@ public class ProgrammerHandler implements Serializable {
     /**
      * Uses the pre-existing flocking algorithm based on attraction and repulsion
      */
-    protected void flockWithAttractionRepulsion(double senseRadius, double tooCloseRadius){
+    public void flockWithAttractionRepulsion(double senseRadius, double tooCloseRadius){
         agent.adjustFlockingHeading(senseRadius, tooCloseRadius);
     }
 
@@ -1203,7 +1214,7 @@ public class ProgrammerHandler implements Serializable {
      * Checks whether any neighbours are moving. This is the easiest way to stop them flying off at the start
      * @return Whether any neighbours are moving
      */
-    protected boolean checkForNeighbourMovement(){
+    public boolean checkForNeighbourMovement(){
         for (var entry : neighbours.entrySet()) {
             if (!entry.getValue().isStopped()){
                 return true;

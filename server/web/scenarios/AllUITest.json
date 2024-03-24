@@ -30,7 +30,7 @@
       {
         "name": "predictions",
         "default": true,
-        "toggleable": false
+        "toggleable": true
       },
       {
         "name": "uncertainties",
@@ -64,37 +64,44 @@
   "agents": [
     {
       "lat": 50.92880002299894,
-      "lng": -1.4094788872327502
+      "lng": -1.4094788872327502,
+      "mkr": "UAV"
     },
     {
       "lat": 50.929378522204615,
       "lng": -1.4078189690011413,
-      "battery": 1.0
+      "battery": 1.0,
+      "mkr": "UAV"
     },
     {
       "lat": 50.9318636656946,
       "lng": -1.4065928983124234,
-      "battery": 0.75
+      "battery": 0.75,
+      "mkr": "UAV"
     },
     {
       "lat": 50.92780002299894,
       "lng": -1.4094788872327502,
-      "battery": 0.75
+      "battery": 0.75,
+      "mkr": "UAV"
     },
     {
       "lat": 50.930378522204615,
       "lng": -1.4078189690011413,
-      "battery": 0.75
+      "battery": 0.75,
+      "mkr": "UAV"
     },
     {
       "lat": 50.92775213234095,
       "lng": -1.4071363295995343,
-      "battery": 1
+      "battery": 1,
+      "mkr": "UAV"
     },
     {
       "lat": 50.92875295435936,
       "lng": -1.4060849036656964,
-      "battery": 0.75
+      "battery": 0.75,
+      "mkr": "UAV"
     },
     {
       "lat": 50.93007833416138,

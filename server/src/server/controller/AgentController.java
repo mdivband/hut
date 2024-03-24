@@ -53,16 +53,16 @@ public class AgentController extends AbstractController {
         return agent;
     }
 
-    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController) {
-        AgentProgrammed agent = new AgentProgrammed("UGV-"+uniqueAgentNumber++, new Coordinate(lat, lng), sensor, random, taskController);
+    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, Random random, TaskController taskController, String policy) {
+        AgentProgrammed agent = new AgentProgrammed("UGV-"+uniqueAgentNumber++, new Coordinate(lat, lng), sensor, random, taskController, policy);
         agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         agent.setHeading(heading);
         simulator.getState().add(agent);
         return agent;
     }
 
-    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading) {
-        AgentProgrammed agent = new AgentProgrammed("UGV-"+uniqueAgentNumber++, new Coordinate(lat, lng), sensor, simulator.getRandom(), simulator.getTaskController());
+    public synchronized Agent addProgrammedAgent(double lat, double lng, double heading, String policy) {
+        AgentProgrammed agent = new AgentProgrammed("UGV-"+uniqueAgentNumber++, new Coordinate(lat, lng), sensor, simulator.getRandom(), simulator.getTaskController(), policy);
         agent.setCommunicationRange(simulator.getState().getCommunicationRange());
         agent.setHeading(heading);
         simulator.getState().add(agent);
@@ -266,7 +266,7 @@ public class AgentController extends AbstractController {
                 Agent agent;
                 if (hasProgrammed) {
                     synchronized (simulator.getState().getAgents()) {
-                        agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0);
+                        agent = simulator.getAgentController().addProgrammedAgent(simulator.getState().getHubLocation().getLatitude(), simulator.getState().getHubLocation().getLongitude(), 0, "GenericAgentPolicy");
                     }
                 } else {
                     int counter = 10;
