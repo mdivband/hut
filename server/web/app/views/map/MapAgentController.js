@@ -117,7 +117,7 @@ var MapAgentController = {
                 labelContent: id,
                 labelAnchor: new google.maps.Point(22, -18),
                 labelClass: "labels",
-                labelStyle: {opacity: 1.0},
+                labelStyle: {opacity: 0.0},
                 id: id,
                 position: agent.getPosition(),
                 heading: agent.getHeading(),

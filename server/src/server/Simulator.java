@@ -11,7 +11,6 @@ import tool.GsonUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
@@ -50,12 +49,13 @@ public class Simulator {
     private final ModelCaller modelCaller;
 
     private final ImageController imageController;
+    private final EpisodeController episodeController;
 
     public static Simulator instance;
 
-    private static final double highTickRate = 5;  // We are updating the sim 5 times per second
+    private static final double highTickRate = 10;  // We are updating the sim 5 times per second
     private static final double lowTickRate = 1;  // Certain functions can be checked less often (once per second)
-    private static final double gameSpeed = 5;  // We are running at 5x real speed
+    private static final double gameSpeed = 25;  // We are running at 5x real speed
     private final Random random;
 
     private Thread mainLoopThread;
@@ -78,6 +78,7 @@ public class Simulator {
         random = new Random();
 
         imageController = new ImageController(this);
+        episodeController = new EpisodeController();
 
         //queueManager.initDroneDataConsumer();
     }
@@ -171,6 +172,9 @@ public class Simulator {
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
+
+
+
             if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
                 /*
@@ -197,7 +201,58 @@ public class Simulator {
                 //passthrough();
 
 
+            } else if (!episodeController.hasStarted() || state.getTime() >= episodeController.getEpisodeTimeLimit()) {
+                episodeController.incrementEpisode();
+                // TODO reenable softreset but just make it clear agents and targets. And maybe time?
+                this.softReset();
+                Coordinate c = episodeController.getAgentCoord();
+                Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                heroAgent.setMarker(new String[]{"UAV", "UAVManual", "UAVWithPack", "UAVSelected", "UAVTimedOut"}[random.nextInt(5)]);
+                int numAgents = episodeController.getNumAgents();
+
+                // Now we place each agent
+                for (int i = 1; i < numAgents; i++) {
+                    // Select a random existing agent
+                    List<Agent> agentList = new ArrayList<>(state.getAgents());
+                    Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
+
+                    // Calculate new coordinates 50m away from the existing agent
+                    double angle = 2 * Math.PI * random.nextDouble(); // Random angle in radians
+                    double offset = 250d / 111139d; // Convert 50m to degrees
+                    double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(angle);
+                    double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(angle) / Math.cos(existingAgentCoord.getLatitude());
+
+                    Coordinate newCoord = new Coordinate(newLat, newLng);
+
+                    // Check if the new coordinates are at least 50m away from all other agents
+                    boolean valid = true;
+                    for (Agent otherAgent : state.getAgents()) {
+                        if (otherAgent.getCoordinate().getDistance(newCoord) < offset) {
+                            valid = false;
+                            break;
+                        }
+                    }
+
+                    // If the new coordinates are valid, spawn the new agent there
+                    if (valid) {
+                        Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
+                        agent.setMarker(new String[]{"UAV", "UAVManual", "UAVWithPack", "UAVSelected", "UAVTimedOut"}[random.nextInt(5)]);
+                    } else {
+                        // If not, decrement the counter to retry with a new random angle
+                        i--;
+                    }
+                }
+
+                // We have now added all agents. Let's do tasks
+                Task task = taskController.createTask(0, episodeController.getTargetCoord().getLatitude(), episodeController.getTargetCoord().getLongitude());
+
+                allocator.putInTempAllocation(heroAgent.getId(), task.getId());
+                //allocator.runAutoAllocation();
+                allocator.confirmAllocation(state.getTempAllocation());
+                changeView(1);
+
             }
+
 
             // Decide if we should spawn a new task
             lowTickCounter++;
@@ -462,6 +517,10 @@ public class Simulator {
         imageController.reset();
     }
 
+    public void softReset() {
+        state.softReset();
+    }
+
     public void resetLogging(String userName) {
         try {
             String fileName = userName + "-" + state.getGameId() + ".log";
@@ -677,6 +736,18 @@ public class Simulator {
                 }
 
             }
+
+            List<Object> episodesJson = GsonUtils.getValue(obj, "episodes");
+            if (uiJson != null) {
+                for (Object episodeOption : episodesJson) {
+                    double episodeLength = GsonUtils.getValue(episodeOption, "episodeLength");
+                    String agentPos = GsonUtils.getValue(episodeOption, "agentPos");
+                    String targetPos = GsonUtils.getValue(episodeOption, "targetPos");
+                    double numAgents = GsonUtils.getValue(episodeOption, "numAgents:");
+                    this.episodeController.addEpisode((int) episodeLength, agentPos, targetPos, (int) numAgents);
+                }
+            }
+
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));

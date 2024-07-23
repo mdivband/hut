@@ -1,5 +1,5 @@
 var MapTaskController = {
-    overrideVisible: true,
+    overrideVisible: false,  // TODO remember this is overridden
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapTaskController.method() without
@@ -80,7 +80,7 @@ var MapTaskController = {
                 labelStyle: {opacity: 1.0},
                 raiseOnDrag: false,
                 zIndex: 3,
-                visible: MapTaskController.overrideVisible,
+                visible: false//MapTaskController.overrideVisible,
             });
             var marker = this.$el.gmap("get", "markers")[task.getId()];
             MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
@@ -112,7 +112,8 @@ var MapTaskController = {
                     labelClass: "labels",
                     labelStyle: {opacity: 1.0},
                     raiseOnDrag: false,
-                    zIndex: 3
+                    zIndex: 3,
+                    visible: false
                 });
                 var marker = this.$el.gmap("get", "markers")[task.getId()];
                 MapTaskController.updateTaskRendering(task.getId(), this.MarkerColourEnum.RED);
@@ -407,7 +408,8 @@ var MapTaskController = {
             });
             MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
             var marker = this.$el.gmap("get", "markers")[taskId];
-            marker.setVisible(MapAgentController.isManuallyAllocating);
+            // TODO overridden
+            marker.setVisible(false);//MapAgentController.isManuallyAllocating);
         }
         else if(task.getType() === this.state.tasks.TASK_REGION) {
             var polyline = this.$el.gmap("get", "overlays > Polyline", [])[taskId];
@@ -429,7 +431,7 @@ var MapTaskController = {
             });
             MapTaskController.updateTaskMarkerIcon(taskId, colourOptions);
             var marker = this.$el.gmap("get", "markers")[taskId];
-            marker.setVisible(MapAgentController.isManuallyAllocating);
+            marker.setVisible(false);//MapAgentController.isManuallyAllocating);
         }
     },
     /**

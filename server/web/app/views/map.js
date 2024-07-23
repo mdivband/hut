@@ -61,11 +61,20 @@ App.Views.Map = Backbone.View.extend({
         ];
 
         this.mapOptions = {
-            zoom: 15,
+            zoom: 14,
             //center: new google.maps.LatLng(50.939025, -1.461583),
             center: new google.maps.LatLng(50.939025, -1.521583),
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            styles: myStyles,
+            mapTypeId: google.maps.MapTypeId.SATELLITE,
+            styles: [
+                {
+                    featureType: "all",
+                    elementType: "labels",
+                    stylers: [
+                        { visibility: "off" }
+                    ]
+                }
+            ],
+            //styles: myStyles,
             zoomControl: true,
             zoomControlOptions: {
                 position: google.maps.ControlPosition.RIGHT_BOTTOM,
@@ -640,6 +649,10 @@ App.Views.Map = Backbone.View.extend({
         });
     },
     updateAllocationRendering: function () {
+        return; // TODO this is disabled for now
+        alert("ret not working")
+
+
         // TODO fix (restore) the allocation renderings here
         if (MapController.isHeatmapMode()) {
             MapTaskController.heatmapTaskUpdateGeneric();

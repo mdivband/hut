@@ -147,14 +147,14 @@ public class AgentVirtual extends Agent {
         double yAttract = 0.0;
         double targetHeading = Math.toRadians(this.heading);
 
-        List<Agent> neighbours = this.sensor.senseNeighbours(this, 250.0);
+        List<Agent> neighbours = this.sensor.senseNeighbours(this, 999999999.0);
 
         if (neighbours.size() > 0) {
 
             for (Agent neighbour : neighbours) {
                 double multiplier = 1;
                 if (neighbour.getTask() != null) {
-                    multiplier = 100;
+                    multiplier = 1; // Give more weight to the leader
                 }
                 else {
                     multiplier = 1;
@@ -167,7 +167,7 @@ public class AgentVirtual extends Agent {
             xAlign = xSum/magnitude;
             yAlign = ySum/magnitude;
 
-            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 100.0);
+            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 200.0);
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
             if (tooCloseNeighbours.size() > 0) {
@@ -194,6 +194,7 @@ public class AgentVirtual extends Agent {
             xSum = 0.0;
             ySum = 0.0;
 
+            /*
             for(Agent neighbour : notTooClose) {
                 double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
                 double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
@@ -208,13 +209,98 @@ public class AgentVirtual extends Agent {
                 yAttract = ySum/magnitude;
             }
 
+             */
             targetHeading = Math.atan2(
                     yAlign + 0.5 * yAttract + yRepulse,
                     xAlign + 0.5 * xAttract + xRepulse
             );
+
+            //Now a random offset to the heading between -10 and 10 degrees
+            targetHeading += Math.toRadians((Math.random() * 30) - 15);
         }
         adjustHeading(targetHeading);
         return true;
+
+
+//        double xSum = 0.0;
+//        double ySum = 0.0;
+//        double magnitude = 0.0;
+//        double xAlign = 0.0;
+//        double yAlign = 0.0;
+//        double xRepulse = 0.0;
+//        double yRepulse = 0.0;
+//        double xAttract = 0.0;
+//        double yAttract = 0.0;
+//        double targetHeading = Math.toRadians(this.heading);
+//
+//        List<Agent> neighbours = this.sensor.senseNeighbours(this, 250.0);
+//
+//        if (neighbours.size() > 0) {
+//
+//            for (Agent neighbour : neighbours) {
+//                double multiplier = 1;
+//                if (neighbour.getTask() != null) {
+//                    multiplier = 100;
+//                }
+//                else {
+//                    multiplier = 1;
+//                }
+//                double neighbourHeading = Math.toRadians(neighbour.getHeading());
+//                xSum += Math.cos(neighbourHeading) * multiplier;
+//                ySum += Math.sin(neighbourHeading) * multiplier;
+//            }
+//            magnitude = Math.sqrt(xSum * xSum + ySum * ySum);
+//            xAlign = xSum/magnitude;
+//            yAlign = ySum/magnitude;
+//
+//            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 100.0);
+//            List<Agent> notTooClose = new ArrayList<>(neighbours);
+//
+//            if (tooCloseNeighbours.size() > 0) {
+//                notTooClose.removeAll(tooCloseNeighbours);
+//
+//                xSum = 0.0;
+//                ySum = 0.0;
+//
+//                for(Agent neighbour : tooCloseNeighbours) {
+//                    double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
+//                    double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
+//                    double lat2 = Math.toRadians(neighbour.getCoordinate().getLatitude());
+//                    double lng2 = Math.toRadians(neighbour.getCoordinate().getLongitude());
+//                    double dLng = (lng2 - lng1);
+//                    ySum -= Math.sin(dLng) * Math.cos(lat2);
+//                    xSum -= Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+//                            * Math.cos(lat2) * Math.cos(dLng);
+//                    magnitude = Math.sqrt(xSum * xSum + ySum * ySum);
+//                    xRepulse = xSum/magnitude;
+//                    yRepulse = ySum/magnitude;
+//                }
+//            }
+//
+//            xSum = 0.0;
+//            ySum = 0.0;
+//
+//            for(Agent neighbour : notTooClose) {
+//                double lat1 = Math.toRadians(this.getCoordinate().getLatitude());
+//                double lng1 = Math.toRadians(this.getCoordinate().getLongitude());
+//                double lat2 = Math.toRadians(neighbour.getCoordinate().getLatitude());
+//                double lng2 = Math.toRadians(neighbour.getCoordinate().getLongitude());
+//                double dLng = (lng2 - lng1);
+//                ySum += Math.sin(dLng) * Math.cos(lat2);
+//                xSum += Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+//                        * Math.cos(lat2) * Math.cos(dLng);
+//                magnitude = Math.sqrt(xSum * xSum + ySum * ySum);
+//                xAttract = xSum/magnitude;
+//                yAttract = ySum/magnitude;
+//            }
+//
+//            targetHeading = Math.atan2(
+//                    yAlign + 0.5 * yAttract + yRepulse,
+//                    xAlign + 0.5 * xAttract + xRepulse
+//            );
+//        }
+//        adjustHeading(targetHeading);
+//        return true;
     }
 
     /**

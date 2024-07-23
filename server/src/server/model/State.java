@@ -177,6 +177,31 @@ public class State {
 
     }
 
+    public void softReset() {
+        time = 0;
+        //inProgress = false;
+        scoreInfo.clear();
+
+        agents.clear();
+        ghosts.clear();
+        tasks.clear();
+        completedTasks.clear();
+        targets.clear();
+        hazards.clear();
+        allocation.clear();
+        tempAllocation.clear();
+        hazardHits.clear();
+        uiOptions.clear();
+        varianceOptions.clear();
+        noiseOptions.clear();
+
+        storedImages.clear();
+        uiOptions.clear();
+        dynamicUIFeatures.clear();
+        hazardHits.init();
+
+    }
+
     /**
      * Resets all the values for if we pass through to another scenario after this one
      */
