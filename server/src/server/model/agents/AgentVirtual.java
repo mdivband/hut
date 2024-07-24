@@ -154,7 +154,7 @@ public class AgentVirtual extends Agent {
             for (Agent neighbour : neighbours) {
                 double multiplier = 1;
                 if (neighbour.getTask() != null) {
-                    multiplier = 1; // Give more weight to the leader
+                    multiplier = 10; // Give more weight to the leader
                 }
                 else {
                     multiplier = 1;

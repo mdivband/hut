@@ -207,7 +207,7 @@ public class Simulator {
                 this.softReset();
                 Coordinate c = episodeController.getAgentCoord();
                 Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
-                heroAgent.setMarker(new String[]{"UAV", "UAVManual", "UAVWithPack", "UAVSelected", "UAVTimedOut"}[random.nextInt(5)]);
+                heroAgent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
                 int numAgents = episodeController.getNumAgents();
 
                 // Now we place each agent
@@ -236,7 +236,7 @@ public class Simulator {
                     // If the new coordinates are valid, spawn the new agent there
                     if (valid) {
                         Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
-                        agent.setMarker(new String[]{"UAV", "UAVManual", "UAVWithPack", "UAVSelected", "UAVTimedOut"}[random.nextInt(5)]);
+                        agent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
                     } else {
                         // If not, decrement the counter to retry with a new random angle
                         i--;
@@ -743,7 +743,8 @@ public class Simulator {
                     double episodeLength = GsonUtils.getValue(episodeOption, "episodeLength");
                     String agentPos = GsonUtils.getValue(episodeOption, "agentPos");
                     String targetPos = GsonUtils.getValue(episodeOption, "targetPos");
-                    double numAgents = GsonUtils.getValue(episodeOption, "numAgents:");
+                    double numAgents = GsonUtils.getValue(episodeOption, "numAgents");
+                    // TODO get nbackmatch here and use it
                     this.episodeController.addEpisode((int) episodeLength, agentPos, targetPos, (int) numAgents);
                 }
             }

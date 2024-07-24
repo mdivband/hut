@@ -36,66 +36,73 @@
   "episodes": [
     {
       "episodeLength": 5,
-      "agentPos": "BL",
+      "agentPos": "T",
       "targetPos": "TR",
-      "numAgents:": 5
+      "numAgents": 8,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "agentPos": "BR",
+      "targetPos": "TR",
+      "numAgents": 8,
+      "nBackMatch": false
     },
     {
       "episodeLength": 5,
       "agentPos": "TR",
-      "targetPos": "B",
-      "numAgents:": 3
+      "targetPos": "BR",
+      "numAgents": 5,
+      "nBackMatch": false
     },
-    {
-      "episodeLength": 5,
-      "agentPos": "BL",
-      "targetPos": "R",
-      "numAgents:": 5
-    },
-
-    {
-      "episodeLength": 5,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents:": 1
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "T",
-      "targetPos": "B",
-      "numAgents:": 2
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents:": 1
-    },
-
-
     {
       "episodeLength": 5,
       "agentPos": "TL",
-      "targetPos": "TR",
-      "numAgents:": 8
+      "targetPos": "BR",
+      "numAgents": 7,
+      "nBackMatch": false
     },
     {
       "episodeLength": 5,
       "agentPos": "TR",
-      "targetPos": "BL",
-      "numAgents:": 10
+      "targetPos": "BR",
+      "numAgents": 8,
+      "nBackMatch": true
     },
     {
       "episodeLength": 5,
-      "agentPos": "B",
+      "agentPos": "TR",
+      "targetPos": "L",
+      "numAgents": 9,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "agentPos": "TR",
+      "targetPos": "BR",
+      "numAgents": 4,
+      "nBackMatch": true
+    },
+    {
+      "episodeLength": 5,
+      "agentPos": "BL",
+      "targetPos": "BR",
+      "numAgents": 8,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "agentPos": "L",
       "targetPos": "T",
-      "numAgents:": 4
+      "numAgents": 3,
+      "nBackMatch": false
     },
     {
       "episodeLength": 5,
-      "agentPos": "TR",
-      "targetPos": "BL",
-      "numAgents:": 10
+      "agentPos": "R",
+      "targetPos": "B",
+      "numAgents": 4,
+      "nBackMatch": false
     }
   ],
   "flockingEnabled" : true,
