@@ -34,6 +34,9 @@ public class ReviewHandler extends RestHandler {
             case "/report/workload":
                 handleReportWorkload(req, resp);
                 break;
+            case "/nback/click":
+                handleNBackClick(req, resp);
+                break;
             default:
                 throw new UnregisteredPathException("No method for handling POST request on " + req.getPath());
         }
@@ -80,8 +83,21 @@ public class ReviewHandler extends RestHandler {
 
         // TODO possibly make another controller for all of this
         this.simulator.getState().setWorkloadLevel(level);
+    }
+
+    private void handleNBackClick(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = List.of("status");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+
+        boolean status = Boolean.parseBoolean(params.get("status"));  // Should always be true anyway in current config
+
+        simulator.getEpisodeController().click(status);
 
     }
+
+
 
 
 }

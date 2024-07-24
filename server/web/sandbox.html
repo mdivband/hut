@@ -76,7 +76,7 @@
         <!-- END Y -->
         <!-- camera and detail -->
         <div id="monitor_accordions">
-            <div id="accordion_smallview">
+            <div id="accordion_smallview" style="display: none">
                 <h3>Monitor view</h3>
                 <div class="canvas_small">
                     <div id="canvas_small_info">
@@ -169,6 +169,14 @@
             <div id="addRemAgentButton" style="text-align: center;" class="edit_accordion">
                 <button class="edit_mode_buttons" id="add_agent">Add Agent</button>
                 <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
+            </div>
+
+            <div id="nBackPanel" style="text-align: center;" class="edit_accordion">
+                <!-- First we have some text explaining the N-Back task -->
+                <p style="text-align: left; margin-left: 10px; margin-right: 10px;">
+                    [May need to update] Click the button if the current agent's location is the same as the location of the agent N steps back.
+                </p>
+                <button class="edit_mode_buttons" id="nBackButton">Repeated N steps ago</button>
             </div>
 
         </div> <!-- end of monitor accordions-->

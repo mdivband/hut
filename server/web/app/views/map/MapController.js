@@ -37,6 +37,7 @@ var MapController = {
         this.isHeatmapMode = _.bind(this.isHeatmapMode, context);
         this.updateAllocationVisibility = _.bind(this.updateAllocationVisibility, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
+        this.NBackReset = _.bind(this.NBackReset, context);
         this.pushImage = _.bind(this.pushImage, context);
         this.getCurrentImage = _.bind(this.getCurrentImage, context);
         this.clearReviewImage = _.bind(this.clearReviewImage, context);
@@ -96,6 +97,10 @@ var MapController = {
         $("#remove_agent").on('click', function () {
             MapController.onRemoveAgentClick()
         });
+        $("#nBackButton").on('click', function () {
+            MapController.onNBackClick()
+        });
+
         this.state.on("change:scoreInfo", function () {
             self.updateScorePanel();
         });
@@ -232,6 +237,16 @@ var MapController = {
     },
     onRemoveAgentClick: function () {
         $.post("/agents/hubdespawn");
+    },
+    onNBackClick: function () {
+        // Swap the style of the button to the greyed style in the css
+        $("#nBackButton").text("Match Selected");
+        $("#nBackButton").prop('disabled', true);
+
+        // TODO trigger this button back to normal on new episode
+        $.post("/review/nback/click", {
+            status: true
+        });
     },
     onViewModePressed: function (viewModeValue) {
         if (viewModeValue === "monitor")
@@ -432,7 +447,8 @@ var MapController = {
             ['workloadSlider', ['wk_sld_wrapper']],
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
-            ['triageButtons', ['triage_buttons']]
+            ['triageButtons', ['triage_buttons']],
+            ['nBackPanel', ['nback_panel']],
         ];
 
         arrayOfPairs.forEach((pair) => {
@@ -586,6 +602,10 @@ var MapController = {
         MapAgentController.updateAllAgentMarkerIcons(true)
         if(sendUpdate)
             this.state.pushMode(modeFlag);
+    },
+    NBackReset: function () {
+        $("#nBackButton").prop('disabled', false);
+        $("#nBackButton").text("Repeated N steps ago");
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);

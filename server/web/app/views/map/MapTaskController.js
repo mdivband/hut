@@ -225,6 +225,7 @@ var MapTaskController = {
                 });
             }
         }
+        MapController.NBackReset();
     },
     onTaskChange: function (task) {
         if (MapController.isHeatmapMode()) {

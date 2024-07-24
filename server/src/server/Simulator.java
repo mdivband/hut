@@ -201,7 +201,7 @@ public class Simulator {
                 //passthrough();
 
 
-            } else if (!episodeController.hasStarted() || state.getTime() >= episodeController.getEpisodeTimeLimit()) {
+            } else if (episodeController.hasEpisodes() && (!episodeController.hasStarted() || state.getTime() >= episodeController.getEpisodeTimeLimit())) {
                 episodeController.incrementEpisode();
                 // TODO reenable softreset but just make it clear agents and targets. And maybe time?
                 this.softReset();
@@ -738,14 +738,14 @@ public class Simulator {
             }
 
             List<Object> episodesJson = GsonUtils.getValue(obj, "episodes");
-            if (uiJson != null) {
+            if (episodesJson != null) {
                 for (Object episodeOption : episodesJson) {
                     double episodeLength = GsonUtils.getValue(episodeOption, "episodeLength");
                     String agentPos = GsonUtils.getValue(episodeOption, "agentPos");
                     String targetPos = GsonUtils.getValue(episodeOption, "targetPos");
                     double numAgents = GsonUtils.getValue(episodeOption, "numAgents");
-                    // TODO get nbackmatch here and use it
-                    this.episodeController.addEpisode((int) episodeLength, agentPos, targetPos, (int) numAgents);
+                    boolean isNBackMatch = GsonUtils.getValue(episodeOption, "nBackMatch");
+                    this.episodeController.addEpisode((int) episodeLength, agentPos, targetPos, (int) numAgents, isNBackMatch);
                 }
             }
 
@@ -1023,6 +1023,10 @@ public class Simulator {
         return missionController;
     }
 
+    public EpisodeController getEpisodeController() {
+        return episodeController;
+    }
+
     public double getStepScale() {
         return gameSpeed / highTickRate;
     }
@@ -1030,4 +1034,5 @@ public class Simulator {
     public void incrementCompletedTargets() {
         completedTargets++;
     }
+
 }
