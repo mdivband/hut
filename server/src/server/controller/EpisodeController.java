@@ -16,8 +16,8 @@ public class EpisodeController {
         episodes = new ArrayList<>();
     }
 
-    public void addEpisode(int episodeLength, String agentPos, String targetPos, int numAgents, boolean isNBackMatch) {
-        episodes.add(new Episode(episodeLength, agentPos, targetPos, numAgents, isNBackMatch));
+    public void addEpisode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch) {
+        episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, isNBackMatch));
     }
 
     public void incrementEpisode() {
@@ -93,17 +93,23 @@ public class EpisodeController {
         return !episodes.isEmpty();
     }
 
+    public double getEpisodeCooldownLimit() {
+        return currentEpisode.getEpisodeCooldown();
+    }
+
 
     private class Episode {
         private int episodeLength;
+        private int episodeCooldown;
         private String agentPos;
         private String targetPos;
         private int numAgents;
         private double episodeTimeLimit;
         private boolean isNBackMatch;
 
-        public Episode(int episodeLength, String agentPos, String targetPos, int numAgents, boolean isNBackMatch) {
+        public Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch) {
             this.episodeLength = episodeLength;
+            this.episodeCooldown = episodeCooldown;
             this.agentPos = agentPos;
             this.targetPos = targetPos;
             this.numAgents = numAgents;
@@ -132,6 +138,10 @@ public class EpisodeController {
 
         public void setEpisodeTimeLimit(double timeLimit) {
             episodeTimeLimit = timeLimit;
+        }
+
+        public double getEpisodeCooldown() {
+            return episodeCooldown;
         }
 
         public boolean isNBackMatch() {

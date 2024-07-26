@@ -9,16 +9,17 @@ public class NBackGenerator {
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR", "T", "B", "L", "R"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
-    private int numEpisodes = -1;
-    private int episodeLength = -1;
-    private int minAgents = -1;
-    private int maxAgents = -1;
-    private double matchProbability = -1.0;
-    private int nValue = -1;
-    private MatchType matchType = MatchType.NOT_DEFINED;
+    private int numEpisodes = 10;
+    private int episodeLength = 5;
+    private int episodeCooldown = 3;
+    private int minAgents = 3;
+    private int maxAgents = 10;
+    private double matchProbability = 0.2;
+    private int nValue = 2;
+    private MatchType matchType = MatchType.NUMBER;//MatchType.NOT_DEFINED;
 
     public enum MatchType {
-        AGENTS,
+        NUMBER,
         POSITIONS,
         BOTH,
         NOT_DEFINED
@@ -29,9 +30,10 @@ public class NBackGenerator {
         this.random = new Random();
     }
 
-    private void configure(int numEpisodes, int length, int minAgents, int maxAgents, double matchProbability, int nValue, MatchType matchType) {
+    private void configure(int numEpisodes, int length, int cooldown, int minAgents, int maxAgents, double matchProbability, int nValue, MatchType matchType) {
         this.numEpisodes = numEpisodes;
         this.episodeLength = length;
+        this.episodeCooldown = cooldown;
         this.minAgents = minAgents;
         this.maxAgents = maxAgents;
         this.matchProbability = matchProbability;
@@ -50,7 +52,15 @@ public class NBackGenerator {
             if (i >= nValue && random.nextDouble() < matchProbability) {
                 Episode previousEpisode = episodes.get(i - nValue);
                 switch (matchType) {
-                    case AGENTS -> numAgents = previousEpisode.numAgents();
+                    case NUMBER -> {
+                        numAgents = previousEpisode.numAgents();
+
+                        agentPos = getRandomPosition();
+                        targetPos = getRandomPosition();
+                        while (agentPos.equals(targetPos)) {
+                            targetPos = getRandomPosition();
+                        }
+                    }
                     case POSITIONS -> {
                         agentPos = previousEpisode.agentPos();
                         targetPos = previousEpisode.targetPos();
@@ -64,7 +74,7 @@ public class NBackGenerator {
                 nBackMatch = true;
             } else {
                 // If it's not a match, ensure this episode does not match the one nValue steps back based on the match type
-                Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, "", "", -1, false);
+                Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, -1, "", "", -1, false);
                 do {
                     agentPos = getRandomPosition();
                     targetPos = getRandomPosition();
@@ -76,11 +86,11 @@ public class NBackGenerator {
                 } while (
                         (matchType == MatchType.BOTH && agentPos.equals(previousEpisode.agentPos()) && targetPos.equals(previousEpisode.targetPos()) && numAgents == previousEpisode.numAgents()) ||
                                 (matchType == MatchType.POSITIONS && agentPos.equals(previousEpisode.agentPos()) && targetPos.equals(previousEpisode.targetPos())) ||
-                                (matchType == MatchType.AGENTS && numAgents == previousEpisode.numAgents())
+                                (matchType == MatchType.NUMBER && numAgents == previousEpisode.numAgents())
                 );
             }
 
-            episodes.add(new Episode(episodeLength, agentPos, targetPos, numAgents, nBackMatch));
+            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch));
         }
     }
 
@@ -112,6 +122,13 @@ public class NBackGenerator {
             length = scanner.nextInt();
         }
 
+        // DO the same as others for episodeCooldown
+        int cooldown = nBackGenerator.episodeCooldown;
+        if (cooldown == -1) {
+            System.out.println("Enter the cooldown time between each episode:");
+            cooldown = scanner.nextInt();
+        }
+
         int minAgents = nBackGenerator.minAgents;
         if (minAgents == -1) {
             System.out.println("Enter the minimum number of agents:");
@@ -130,7 +147,7 @@ public class NBackGenerator {
             matchProbability = scanner.nextDouble();
         }
 
-        int nValue = nBackGenerator.maxAgents;
+        int nValue = nBackGenerator.nValue;
         if (nValue == -1) {
             System.out.println("Enter the value for n (match distance):");
             nValue = scanner.nextInt();
@@ -144,7 +161,7 @@ public class NBackGenerator {
              matchType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchType.values()[matchTypeOrdinal];
         }
 
-        nBackGenerator.configure(numEpisodes, length, minAgents, maxAgents, matchProbability, nValue, matchType);
+        nBackGenerator.configure(numEpisodes, length, cooldown, minAgents, maxAgents, matchProbability, nValue, matchType);
         nBackGenerator.generateEpisodes();
         System.out.println("\"episodes\": [");
         for (int i = 0; i < nBackGenerator.getEpisodes().size(); i++) {
@@ -161,11 +178,12 @@ public class NBackGenerator {
 
 }
 
-record Episode(int episodeLength, String agentPos, String targetPos, int numAgents, boolean nBackMatch) {
+record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean nBackMatch) {
     @Override
     public String toString() {
         return "{\n"
                 + "\t\"episodeLength\": " + episodeLength + ",\n"
+                + "\t\"episodeCooldown\": " + episodeCooldown + ",\n"
                 + "\t\"agentPos\": \"" + agentPos + "\",\n"
                 + "\t\"targetPos\": \"" + targetPos + "\",\n"
                 + "\t\"numAgents\": " + numAgents + ",\n"

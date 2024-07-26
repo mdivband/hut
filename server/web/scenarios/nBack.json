@@ -41,73 +41,83 @@
   "episodes": [
     {
       "episodeLength": 5,
+      "episodeCooldown": 3,
       "agentPos": "T",
-      "targetPos": "TR",
-      "numAgents": 8,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "BR",
-      "targetPos": "TR",
-      "numAgents": 8,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "TR",
-      "targetPos": "BR",
-      "numAgents": 5,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "TL",
-      "targetPos": "BR",
-      "numAgents": 7,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "TR",
-      "targetPos": "BR",
-      "numAgents": 8,
-      "nBackMatch": true
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "TR",
-      "targetPos": "L",
+      "targetPos": "R",
       "numAgents": 9,
       "nBackMatch": false
     },
     {
       "episodeLength": 5,
-      "agentPos": "TR",
-      "targetPos": "BR",
+      "episodeCooldown": 3,
+      "agentPos": "B",
+      "targetPos": "L",
+      "numAgents": 6,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "L",
+      "targetPos": "TR",
       "numAgents": 4,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "B",
+      "targetPos": "L",
+      "numAgents": 6,
       "nBackMatch": true
     },
     {
       "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "T",
+      "targetPos": "TR",
+      "numAgents": 5,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "B",
+      "targetPos": "BL",
+      "numAgents": 7,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "TR",
+      "targetPos": "BL",
+      "numAgents": 5,
+      "nBackMatch": true
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
       "agentPos": "BL",
-      "targetPos": "BR",
+      "targetPos": "B",
+      "numAgents": 9,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "TR",
+      "targetPos": "TL",
       "numAgents": 8,
       "nBackMatch": false
     },
     {
       "episodeLength": 5,
-      "agentPos": "L",
-      "targetPos": "T",
-      "numAgents": 3,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "agentPos": "R",
-      "targetPos": "B",
-      "numAgents": 4,
-      "nBackMatch": false
+      "episodeCooldown": 3,
+      "agentPos": "null",
+      "targetPos": "null",
+      "numAgents": 9,
+      "nBackMatch": true
     }
   ],
   "flockingEnabled" : true,

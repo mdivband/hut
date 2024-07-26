@@ -168,6 +168,9 @@ public class Simulator {
         final double waitTime = (int) (1000/(highTickRate)); //When gameSpeed is 1, should be 200ms.
         int lowTickCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
         int sleepTime;
+
+        double triggerTime = -1d;
+        changeView(-1);
         do {
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
@@ -201,56 +204,68 @@ public class Simulator {
                 //passthrough();
 
 
-            } else if (episodeController.hasEpisodes() && (!episodeController.hasStarted() || state.getTime() >= episodeController.getEpisodeTimeLimit())) {
-                episodeController.incrementEpisode();
-                // TODO reenable softreset but just make it clear agents and targets. And maybe time?
-                this.softReset();
-                Coordinate c = episodeController.getAgentCoord();
-                Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
-                heroAgent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
-                int numAgents = episodeController.getNumAgents();
+            }
 
-                // Now we place each agent
-                for (int i = 1; i < numAgents; i++) {
-                    // Select a random existing agent
-                    List<Agent> agentList = new ArrayList<>(state.getAgents());
-                    Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
+            if (state.getTime() >= triggerTime) {
+                if (episodeController.hasStarted() && state.getEditMode() == 1) {
+                    // We have finished this episode, let's go to cooldown
+                    System.out.println("We have finished this episode, let's go to cooldown");
+                    changeView(-1);
+                    triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
+                } else if(!episodeController.hasStarted() || state.getEditMode() == -1) {
+                    // We are currently on cooldown, switch
+                    System.out.println("We are currently on cooldown, switch");
+                    changeView(1);
+                    episodeController.incrementEpisode();
 
-                    // Calculate new coordinates 50m away from the existing agent
-                    double angle = 2 * Math.PI * random.nextDouble(); // Random angle in radians
-                    double offset = 250d / 111139d; // Convert 50m to degrees
-                    double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(angle);
-                    double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(angle) / Math.cos(existingAgentCoord.getLatitude());
+                    // TODO reenable softreset but just make it clear agents and targets. And maybe time?
+                    this.softReset();
+                    Coordinate c = episodeController.getAgentCoord();
+                    Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                    heroAgent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
+                    int numAgents = episodeController.getNumAgents();
 
-                    Coordinate newCoord = new Coordinate(newLat, newLng);
+                    // Now we place each agent
+                    for (int i = 1; i < numAgents; i++) {
+                        // Select a random existing agent
+                        List<Agent> agentList = new ArrayList<>(state.getAgents());
+                        Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
 
-                    // Check if the new coordinates are at least 50m away from all other agents
-                    boolean valid = true;
-                    for (Agent otherAgent : state.getAgents()) {
-                        if (otherAgent.getCoordinate().getDistance(newCoord) < offset) {
-                            valid = false;
-                            break;
+                        // Calculate new coordinates 50m away from the existing agent
+                        double angle = 2 * Math.PI * random.nextDouble(); // Random angle in radians
+                        double offset = 250d / 111139d; // Convert 50m to degrees
+                        double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(angle);
+                        double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(angle) / Math.cos(existingAgentCoord.getLatitude());
+
+                        Coordinate newCoord = new Coordinate(newLat, newLng);
+
+                        // Check if the new coordinates are at least 50m away from all other agents
+                        boolean valid = true;
+                        for (Agent otherAgent : state.getAgents()) {
+                            if (otherAgent.getCoordinate().getDistance(newCoord) < offset) {
+                                valid = false;
+                                break;
+                            }
+                        }
+
+                        // If the new coordinates are valid, spawn the new agent there
+                        if (valid) {
+                            Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
+                            agent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
+                        } else {
+                            // If not, decrement the counter to retry with a new random angle
+                            i--;
                         }
                     }
 
-                    // If the new coordinates are valid, spawn the new agent there
-                    if (valid) {
-                        Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
-                        agent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
-                    } else {
-                        // If not, decrement the counter to retry with a new random angle
-                        i--;
-                    }
+                    // We have now added all agents. Let's do tasks
+                    Task task = taskController.createTask(0, episodeController.getTargetCoord().getLatitude(), episodeController.getTargetCoord().getLongitude());
+
+                    allocator.putInTempAllocation(heroAgent.getId(), task.getId());
+                    //allocator.runAutoAllocation();
+                    allocator.confirmAllocation(state.getTempAllocation());
+                    triggerTime = state.getTime() + episodeController.getEpisodeTimeLimit();
                 }
-
-                // We have now added all agents. Let's do tasks
-                Task task = taskController.createTask(0, episodeController.getTargetCoord().getLatitude(), episodeController.getTargetCoord().getLongitude());
-
-                allocator.putInTempAllocation(heroAgent.getId(), task.getId());
-                //allocator.runAutoAllocation();
-                allocator.confirmAllocation(state.getTempAllocation());
-                changeView(1);
-
             }
 
 
@@ -486,6 +501,8 @@ public class Simulator {
             }
 
              */
+        } else if (modeFlag == -1){
+            state.setEditMode(-1);
         }
     }
 
@@ -741,11 +758,12 @@ public class Simulator {
             if (episodesJson != null) {
                 for (Object episodeOption : episodesJson) {
                     double episodeLength = GsonUtils.getValue(episodeOption, "episodeLength");
+                    double episodeCooldown = GsonUtils.getValue(episodeOption, "episodeCooldown");
                     String agentPos = GsonUtils.getValue(episodeOption, "agentPos");
                     String targetPos = GsonUtils.getValue(episodeOption, "targetPos");
                     double numAgents = GsonUtils.getValue(episodeOption, "numAgents");
                     boolean isNBackMatch = GsonUtils.getValue(episodeOption, "nBackMatch");
-                    this.episodeController.addEpisode((int) episodeLength, agentPos, targetPos, (int) numAgents, isNBackMatch);
+                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, agentPos, targetPos, (int) numAgents, isNBackMatch);
                 }
             }
 

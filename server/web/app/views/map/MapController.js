@@ -546,8 +546,11 @@ var MapController = {
         //          2 = edit
         //          3 = images
         self = this;
-
-        if(modeFlag === 2) {  // edit
+        if (modeFlag === -1) {
+            <!-- Show overlay -->
+            document.getElementById('overlay').style.display = 'block';
+        } else if(modeFlag === 2) {  // edit
+            document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();
             $("#edit_buttons_sub").show();
@@ -564,6 +567,7 @@ var MapController = {
             $('#editmode').prop("checked", true);
             $('#monitor').prop("checked", false);
         } else if (modeFlag === 1) { // monitor
+            document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").show();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();
@@ -578,6 +582,7 @@ var MapController = {
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", true);
         } else {  // scans
+            document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();
