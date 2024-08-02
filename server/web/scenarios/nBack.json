@@ -43,22 +43,46 @@
       "episodeLength": 5,
       "episodeCooldown": 3,
       "agentPos": "T",
-      "targetPos": "R",
-      "numAgents": 9,
+      "targetPos": "B",
+      "numAgents": 10,
       "nBackMatch": false
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "B",
+      "agentPos": "TL",
       "targetPos": "L",
+      "numAgents": 10,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "T",
+      "targetPos": "B",
+      "numAgents": 10,
+      "nBackMatch": true
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "BL",
+      "targetPos": "R",
+      "numAgents": 5,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "BR",
+      "targetPos": "T",
       "numAgents": 6,
       "nBackMatch": false
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "L",
+      "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 4,
       "nBackMatch": false
@@ -66,57 +90,33 @@
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "B",
-      "targetPos": "L",
-      "numAgents": 6,
-      "nBackMatch": true
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "T",
-      "targetPos": "TR",
-      "numAgents": 5,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "B",
-      "targetPos": "BL",
-      "numAgents": 7,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
       "agentPos": "TR",
-      "targetPos": "BL",
-      "numAgents": 5,
-      "nBackMatch": true
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "BL",
       "targetPos": "B",
-      "numAgents": 9,
-      "nBackMatch": false
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "TR",
-      "targetPos": "TL",
       "numAgents": 8,
       "nBackMatch": false
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "null",
-      "targetPos": "null",
-      "numAgents": 9,
+      "agentPos": "T",
+      "targetPos": "L",
+      "numAgents": 7,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "BL",
+      "targetPos": "TL",
+      "numAgents": 10,
+      "nBackMatch": false
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "T",
+      "targetPos": "L",
+      "numAgents": 7,
       "nBackMatch": true
     }
   ],

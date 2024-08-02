@@ -209,16 +209,13 @@ public class Simulator {
             if (state.getTime() >= triggerTime) {
                 if (episodeController.hasStarted() && state.getEditMode() == 1) {
                     // We have finished this episode, let's go to cooldown
-                    System.out.println("We have finished this episode, let's go to cooldown");
                     changeView(-1);
                     triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
                 } else if(!episodeController.hasStarted() || state.getEditMode() == -1) {
                     // We are currently on cooldown, switch
-                    System.out.println("We are currently on cooldown, switch");
                     changeView(1);
                     episodeController.incrementEpisode();
 
-                    // TODO reenable softreset but just make it clear agents and targets. And maybe time?
                     this.softReset();
                     Coordinate c = episodeController.getAgentCoord();
                     Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);

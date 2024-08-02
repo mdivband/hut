@@ -9,14 +9,14 @@ public class NBackGenerator {
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR", "T", "B", "L", "R"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
-    private int numEpisodes = 10;
-    private int episodeLength = 5;
-    private int episodeCooldown = 3;
-    private int minAgents = 3;
-    private int maxAgents = 10;
-    private double matchProbability = 0.2;
-    private int nValue = 2;
-    private MatchType matchType = MatchType.NUMBER;//MatchType.NOT_DEFINED;
+    private int numEpisodes = -1;//10;
+    private int episodeLength = -1;//5;
+    private int episodeCooldown = -1;//3;
+    private int minAgents = -1;//3;
+    private int maxAgents = -1;//10;
+    private double matchProbability = -1;//0.2;
+    private int nValue = -1;//2;
+    private MatchType matchType = MatchType.NOT_DEFINED;
 
     public enum MatchType {
         NUMBER,
