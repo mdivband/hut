@@ -5,6 +5,7 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.State;
 
+import java.awt.image.CropImageFilter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -19,17 +20,20 @@ public class EpisodeController {
         episodes = new ArrayList<>();
     }
 
-    public void addEpisode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode) {
-        episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, isNBackMatch, episodeCode));
+    public void addEpisode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
+        episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, isNBackMatch, episodeCode, markers));
     }
 
     public void incrementEpisode() {
+        if (currentEpisode != null) {
+            wipeMarkers(currentEpisode.markers);
+        }
         currentEpisode = episodes.remove(0);
         currentEpisode.setEpisodeTimeLimit(currentEpisode.getEpisodeLength());//Simulator.instance.getState().getTime() + currentEpisode.getEpisodeLength());
         currentEpisodeStartTime = Simulator.instance.getState().getTime();
         LOGGER.info(String.format("%s; NEWEP; New episode showing, code is (code); %s", Simulator.instance.getState().getTime(), currentEpisode.getEpisodeCode()));
         lslLogger.logEventMarker(currentEpisode.getEpisodeCode());
-
+        addMarkers(currentEpisode.markers);
     }
 
     public int getNumAgents() {
@@ -94,6 +98,22 @@ public class EpisodeController {
         lslLogger.logEventMarker("REST");
     }
 
+    private void wipeMarkers(ArrayList<String> markers) {
+        System.out.println("Wiping markers");
+        for (String marker : markers) {
+            System.out.println("Removing marker: " + marker);
+            Simulator.instance.getState().removeMarker(marker);
+        }
+    }
+
+    private void addMarkers(ArrayList<String> markers) {
+        System.out.println("Adding markers");
+        for (String marker : markers) {
+            System.out.println("Adding marker: " + marker);
+            Simulator.instance.getState().addMarker(marker);
+        }
+    }
+
     private class Episode {
         private int episodeLength;
         private int episodeCooldown;
@@ -103,8 +123,9 @@ public class EpisodeController {
         private double episodeTimeLimit;
         private boolean isNBackMatch;
         private String episodeCode;
+        private ArrayList<String> markers;
 
-        public Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode) {
+        public Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
             this.episodeLength = episodeLength;
             this.episodeCooldown = episodeCooldown;
             this.agentPos = agentPos;
@@ -112,6 +133,7 @@ public class EpisodeController {
             this.numAgents = numAgents;
             this.isNBackMatch = isNBackMatch;
             this.episodeCode = episodeCode;
+            this.markers = markers;
         }
 
         public int getEpisodeLength() {

@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+
+/** Automatically generates n-back episodes.
+ * Note that the result isn't guaranteed to be good so check it.
+ */
 public class NBackGenerator {
     private List<Episode> episodes;
     private Random random;

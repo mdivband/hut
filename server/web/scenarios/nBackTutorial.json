@@ -1,0 +1,206 @@
+{
+  "gameId": "N-Back Tutorial",
+  "gameDescription": "N-Back Tutorial",
+  "uIOptions": [
+    {
+      "name": "monitor",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "editmode",
+      "default": false,
+      "toggleable": false
+    },
+    {
+      "name": "explored",
+      "default": false,
+      "toggleable": false
+    },
+    {
+      "name": "hazard",
+      "default": false,
+      "toggleable": false
+    },
+    {
+      "name": "predictions",
+      "default": false,
+      "toggleable": false
+    },
+    {
+      "name": "uncertainties",
+      "default": false,
+      "toggleable": false
+    },
+    {
+        "name": "nBackPanel",
+        "default": true,
+        "toggleable": false
+    }
+  ],
+  "episodes": [
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "BL",
+      "targetPos": "R",
+      "numAgents": 5,
+      "nBackMatch": false,
+      "episodeCode": "EPeblr",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.92911290233203,
+          "centreLng": -1.4127561898636043,
+          "radius": 120
+        },
+        {
+          "shape": "circle",
+          "centreLat": 50.932669902090424,
+          "centreLng": -1.4092862824849561,
+          "radius": 150
+        }
+      ]
+    },
+    {
+      "episodeLength": 20,
+      "episodeCooldown": 10,
+      "agentPos": "R",
+      "targetPos": "BR",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "EPfrbr"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "T",
+      "targetPos": "TL",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "EPfttl"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "TL",
+      "targetPos": "BL",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "EPftlbl"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "BL",
+      "targetPos": "L",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "EPgbll"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "TR",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "EPftrr"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "TR",
+      "targetPos": "BR",
+      "numAgents": 3,
+      "nBackMatch": false,
+      "episodeCode": "EPctrbr"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "B",
+      "targetPos": "BL",
+      "numAgents": 3,
+      "nBackMatch": false,
+      "episodeCode": "EPcbbl"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "R",
+      "targetPos": "BL",
+      "numAgents": 4,
+      "nBackMatch": false,
+      "episodeCode": "EPdrbl"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "BL",
+      "targetPos": "TR",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "EPjbltr"
+    }
+  ],
+  "flockingEnabled" : true,
+  "loggingById": true,
+  "gameCentre": {
+    "lat": 50.943033788203586,
+    "lng": -1.4305110955547788
+  },
+  "allocationMethod": "maxsum",
+  "allocationStyle": "manual",
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.4094788872327502
+    },
+    {
+      "lat": 50.929378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 1.0
+    },
+    {
+      "lat": 50.9318636656946,
+      "lng": -1.4065928983124234,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92780002299894,
+      "lng": -1.4094788872327502,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.930378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92775213234095,
+      "lng": -1.4071363295995343,
+      "battery": 1
+    },
+    {
+      "lat": 50.92875295435936,
+      "lng": -1.4060849036656964,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.93007833416138,
+      "lng": -1.4094108428441632,
+      "battery": 1
+    },
+    {
+      "lat": 50.92948327035036,
+      "lng": -1.4108914222203839,
+      "battery": 1
+    },
+    {
+      "lat": 50.92826607066169,
+      "lng": -1.4111489142858136,
+      "battery": 1
+    }
+  ]
+}

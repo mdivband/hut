@@ -53,7 +53,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double highTickRate = 10;  // We are updating the sim 5 times per second
+    private static final double highTickRate = 10;  // We are updating the sim 10 times per second
     private static final double lowTickRate = 1;  // Certain functions can be checked less often (once per second)
     private static final double gameSpeed = 25;  // We are running at 5x real speed
     private final Random random;
@@ -755,15 +755,28 @@ public class Simulator {
 
             List<Object> episodesJson = GsonUtils.getValue(obj, "episodes");
             if (episodesJson != null) {
-                for (Object episodeOption : episodesJson) {
-                    double episodeLength = GsonUtils.getValue(episodeOption, "episodeLength");
-                    double episodeCooldown = GsonUtils.getValue(episodeOption, "episodeCooldown");
-                    String agentPos = GsonUtils.getValue(episodeOption, "agentPos");
-                    String targetPos = GsonUtils.getValue(episodeOption, "targetPos");
-                    double numAgents = GsonUtils.getValue(episodeOption, "numAgents");
-                    boolean isNBackMatch = GsonUtils.getValue(episodeOption, "nBackMatch");
-                    String episodeCode = GsonUtils.getValue(episodeOption, "episodeCode");
-                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, agentPos, targetPos, (int) numAgents, isNBackMatch, episodeCode);
+                for (Object episode : episodesJson) {
+                    double episodeLength = GsonUtils.getValue(episode, "episodeLength");
+                    double episodeCooldown = GsonUtils.getValue(episode, "episodeCooldown");
+                    String agentPos = GsonUtils.getValue(episode, "agentPos");
+                    String targetPos = GsonUtils.getValue(episode, "targetPos");
+                    double numAgents = GsonUtils.getValue(episode, "numAgents");
+                    boolean isNBackMatch = GsonUtils.getValue(episode, "nBackMatch");
+                    String episodeCode = GsonUtils.getValue(episode, "episodeCode");
+                    List<Object> markers = GsonUtils.getValue(episode, "markers");
+                    ArrayList<String> markerList = new ArrayList<>();
+                    if (markers != null) {
+                        for (Object markerJson : markers) {
+                            String shape = GsonUtils.getValue(markerJson, "shape");
+                            Double cLat = GsonUtils.getValue(markerJson, "centreLat");
+                            Double cLng = GsonUtils.getValue(markerJson, "centreLng");
+                            Double radius = GsonUtils.getValue(markerJson, "radius");
+
+                            markerList.add(shape+","+cLat+","+cLng+","+radius);
+
+                        }
+                    }
+                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, agentPos, targetPos, (int) numAgents, isNBackMatch, episodeCode, markerList);
                 }
             }
 

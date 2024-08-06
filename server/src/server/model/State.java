@@ -841,6 +841,14 @@ public class State {
         return markers;
     }
 
+    public void addMarker(String marker) {
+        markers.add(marker);
+    }
+
+    public void removeMarker(String marker) {
+        markers.remove(marker);
+    }
+
     public List<String> getPendingIds() {
         return pendingIds;
     }

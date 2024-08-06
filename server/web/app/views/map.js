@@ -401,45 +401,67 @@ App.Views.Map = Backbone.View.extend({
             }
         });
     },
+    /** Clears all persistent markers
+     *
+     */
+    clearMarkers: function () {
+        self = this;
+        var markers = this.state.getMarkers()
+        var mapMarkers = self.$el.gmap("get", "markers", []);
+        for (var markerId in mapMarkers) {
+            if (markerId.startsWith("MK-") && !markers.some(marker => marker.id === mapMarkers[markerId].id)) {
+                // This marker is on the map but not in our list, so remove it
+                var marker = self.$el.gmap("get", "markers", [])[markerId];
+                console.log("Removing marker: " + markerId)
+                marker.setMap(null);
+            }
+        }
+
+        var circles = self.$el.gmap("get", "overlays > Circle", []);
+        for (var circleId in circles) {
+            if (circleId.startsWith("MK-") && !markers.some(marker => marker.id === circles[circleId].id)) {
+                // This marker is on the map but not in our list, so remove it
+                var circle = self.$el.gmap("get", "overlays > Circle", [])[circleId];
+                circle.setMap(null);
+            }
+        }
+    },
     /**
      * Draws persistent markers on the map for reference
      */
     drawMarkers: function () {
-        try {
-            var markers = this.state.getMarkers();
-            var self = this;
-            for (var i = 0; i < markers.length; i++) {
-                var thisMarker = markers[i];
-                var splitString = thisMarker.split(",")
-                if (splitString[0] === "circle") {
-                    var latX = splitString[1];
-                    var latY = splitString[2];
-                    var rad = splitString[3];
-                    var thisId = "circle" + latX + "," + latY + ", " + rad;
-                    var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[thisId];
+        this.clearMarkers()
+        var markers = this.state.getMarkers();
+        var self = this;
+        for (var i = 0; i < markers.length; i++) {
+            var thisMarker = markers[i];
+            var splitString = thisMarker.split(",")
+            if (splitString[0] === "circle") {
+                var latX = splitString[1];
+                var latY = splitString[2];
+                var rad = splitString[3];
+                var thisId = "MK-circle" + latX + "," + latY + ", " + rad;
+                var currentCircle = self.$el.gmap("get", "overlays > Circle", [])[thisId];
 
-                    if (!currentCircle) {
-                        self.$el.gmap("addShape", "Circle", {
-                            id: thisId,
-                            strokeColor: "#FF0000",
-                            strokeOpacity: 0.8,
-                            strokeWeight: 2,
-                            label: "Search here!",
-                            center: new google.maps.LatLng(latX, latY),
-                            radius: parseFloat(rad),
-                            visible: true
-                        });
-                    }
+                if (!currentCircle) {
+                    self.$el.gmap("addShape", "Circle", {
+                        id: thisId,
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        label: "Search here!",
+                        center: new google.maps.LatLng(latX, latY),
+                        radius: parseFloat(rad),
+                        visible: true
+                    });
                 }
-
             }
-        } catch (e) {
-            alert("Marker drawing error: " + e);
+
         }
 
-        // Clumsy, just add manually if using shapes for now. infutue should be done in the same way as above
+        // Clumsy, just add manually if using shapes for now. in future should be done in the same way as above
         if (this.state.getMarkers().length > 0) {
-            var marker = self.$el.gmap("get", "markers", [])["testMk1"];
+            var marker = self.$el.gmap("get", "markers", [])["MK-testMk1"];
             if (!marker) {
                 this.$el.gmap("addMarker", {
                     bounds: false,
@@ -449,13 +471,13 @@ App.Views.Map = Backbone.View.extend({
                     labelClass: "labels",
                     labelStyle: {opacity: 1.0},
                     label: "There are casualties in this area!",
-                    id: "testMk1",
+                    id: "MK-testMk1",
                     position: new google.maps.LatLng(50.93007510846366, -1.412749970031315),
                     zIndex: 3,
                     visible: true
                 });
             }
-            var marker = self.$el.gmap("get", "markers", [])["testMk2"];
+            var marker = self.$el.gmap("get", "markers", [])["MK-testMk2"];
             if (!marker) {
                 this.$el.gmap("addMarker", {
                     bounds: false,
@@ -463,7 +485,7 @@ App.Views.Map = Backbone.View.extend({
                     clickable: false,
                     label: "There are casualties in this area!",
                     labelAnchor: new google.maps.Point(50, -18),
-                    id: "testMk2",
+                    id: "MK-testMk2",
                     position: new google.maps.LatLng(50.93394037299629, -1.409213465112904),
                     zIndex: 3
                 });

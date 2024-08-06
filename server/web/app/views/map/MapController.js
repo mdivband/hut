@@ -176,6 +176,10 @@ var MapController = {
         this.state.on("change:uiOptions", function () {
             MapController.updateUIFeatures();
         });
+        this.state.on("change:markers", function () {
+            self.drawMarkers();
+        });
+
 
         //Map listeners
         google.maps.event.addListener(this.map, "click", function (event) {
@@ -350,7 +354,7 @@ var MapController = {
             this.clearRanges();
         }
 
-        this.drawMarkers();
+        //this.drawMarkers();
         this.clearHandledTargetMarkers();
 
         MapHazardController.updateHeatmap(-1);
