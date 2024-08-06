@@ -18,29 +18,10 @@ public class OxysoftConnection {
         }
     }
 
-    public void sendEventMarker(String condition) {
-        String marker = "";
-        switch (condition) {
-            case "A":
-                marker = "a";
-                break;
-            case "B":
-                marker = "b";
-                break;
-            case "C":
-                marker = "c";
-                break;
-            case "rest":
-                marker = "R";
-                break;
-            default:
-                System.out.println("Unknown condition: " + condition);
-                return;
-        }
-
-        if (!marker.isEmpty()) {
-            outlet.push_sample(new String[]{marker});
-            System.out.println("Event marker '" + marker + "' for condition '" + condition + "' sent.");
+    public void sendEventMarker(String conditionCode) {
+        if (!conditionCode.isEmpty()) {
+            outlet.push_sample(new String[]{conditionCode});
+            System.out.println("LSL-Log: Event marker '" + conditionCode + "' sent.");
         }
     }
 
@@ -58,16 +39,21 @@ public class OxysoftConnection {
     public static void main(String[] args) {
         OxysoftConnection oxysoftConnection = new OxysoftConnection();
 
-        oxysoftConnection.sendEventMarker("A");
-        // Your existing code for condition A
+        // Example episode. This is EPsiode with (f=5) agents, from top to to-left
+        oxysoftConnection.sendEventMarker("EPfttl");
 
-        oxysoftConnection.sendEventMarker("B");
-        // Your existing code for condition B
+        // Example episode. This is EPsiode with (e=4) agents, from bottom-left to right
+        oxysoftConnection.sendEventMarker("EPeblr");
 
-        oxysoftConnection.sendEventMarker("C");
-        // Your existing code for condition C
 
-        oxysoftConnection.sendEventMarker("rest");
+
+        // Example click. This means a CLick event that is not an NBack match (False), and so the user was not successful (False)
+        oxysoftConnection.sendEventMarker("CLFF");
+
+        // Example click. This means a CLick event that was an NBack match (True), and so the user was successful (True)
+        oxysoftConnection.sendEventMarker("CLTT");
+
+        oxysoftConnection.sendEventMarker("REST");
         // Your existing code for rest period
 
         // Clean up resources

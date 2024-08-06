@@ -178,8 +178,9 @@ public class Simulator {
 
 
 
-            if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit()) {
+            if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit() || (state.getTime() >= triggerTime && episodeController.hasStarted() && !episodeController.hasEpisodes())) {
                 System.out.println("DONE BY TIME: " + state.getTime());
+                episodeController.closeLogger();
                 /*
                 System.out.println("agents = " + state.getAgents());
                 int numFailed = 0;
@@ -210,6 +211,7 @@ public class Simulator {
                 if (episodeController.hasStarted() && state.getEditMode() == 1) {
                     // We have finished this episode, let's go to cooldown
                     changeView(-1);
+                    episodeController.logRest();
                     triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
                 } else if(!episodeController.hasStarted() || state.getEditMode() == -1) {
                     // We are currently on cooldown, switch
@@ -219,7 +221,7 @@ public class Simulator {
                     this.softReset();
                     Coordinate c = episodeController.getAgentCoord();
                     Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
-                    heroAgent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
+                    //heroAgent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
                     int numAgents = episodeController.getNumAgents();
 
                     // Now we place each agent
@@ -248,7 +250,7 @@ public class Simulator {
                         // If the new coordinates are valid, spawn the new agent there
                         if (valid) {
                             Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
-                            agent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
+                            //agent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
                         } else {
                             // If not, decrement the counter to retry with a new random angle
                             i--;
@@ -760,7 +762,8 @@ public class Simulator {
                     String targetPos = GsonUtils.getValue(episodeOption, "targetPos");
                     double numAgents = GsonUtils.getValue(episodeOption, "numAgents");
                     boolean isNBackMatch = GsonUtils.getValue(episodeOption, "nBackMatch");
-                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, agentPos, targetPos, (int) numAgents, isNBackMatch);
+                    String episodeCode = GsonUtils.getValue(episodeOption, "episodeCode");
+                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, agentPos, targetPos, (int) numAgents, isNBackMatch, episodeCode);
                 }
             }
 

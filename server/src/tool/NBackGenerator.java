@@ -9,14 +9,14 @@ public class NBackGenerator {
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR", "T", "B", "L", "R"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
-    private int numEpisodes = -1;//10;
-    private int episodeLength = -1;//5;
-    private int episodeCooldown = -1;//3;
-    private int minAgents = -1;//3;
-    private int maxAgents = -1;//10;
-    private double matchProbability = -1;//0.2;
-    private int nValue = -1;//2;
-    private MatchType matchType = MatchType.NOT_DEFINED;
+    private int numEpisodes = 10;
+    private int episodeLength = 5;
+    private int episodeCooldown = 3;
+    private int minAgents = 3;
+    private int maxAgents = 10;
+    private double matchProbability = 0.2;
+    private int nValue = 2;
+    private MatchType matchType = MatchType.BOTH;
 
     public enum MatchType {
         NUMBER,
@@ -74,7 +74,7 @@ public class NBackGenerator {
                 nBackMatch = true;
             } else {
                 // If it's not a match, ensure this episode does not match the one nValue steps back based on the match type
-                Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, -1, "", "", -1, false);
+                Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, -1, "", "", -1, false, "NONE");
                 do {
                     agentPos = getRandomPosition();
                     targetPos = getRandomPosition();
@@ -90,7 +90,12 @@ public class NBackGenerator {
                 );
             }
 
-            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch));
+            // TODO Generate an episode code. This will use lowercase characters to index numbers (1=a, 2=b, ...), and will be of the form: EPcbltrt to inducate EPisode with 3 (c) agents going from bottom-left to top-right, and whether it is a match or not is true
+            // Generate the episode code
+            char agentChar = (char) ('a' + numAgents - 1);
+            String episodeCode = "EP" + agentChar + agentPos.toLowerCase() + targetPos.toLowerCase();// + (nBackMatch ? "t" : "f");
+
+            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch, episodeCode));
         }
     }
 
@@ -178,7 +183,7 @@ public class NBackGenerator {
 
 }
 
-record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean nBackMatch) {
+record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean nBackMatch, String episodeCode) {
     @Override
     public String toString() {
         return "{\n"
@@ -187,7 +192,8 @@ record Episode(int episodeLength, int episodeCooldown, String agentPos, String t
                 + "\t\"agentPos\": \"" + agentPos + "\",\n"
                 + "\t\"targetPos\": \"" + targetPos + "\",\n"
                 + "\t\"numAgents\": " + numAgents + ",\n"
-                + "\t\"nBackMatch\": " + nBackMatch + "\n"
+                + "\t\"nBackMatch\": " + nBackMatch + ",\n"
+                + "\t\"episodeCode\": \"" + episodeCode + "\"\n"
                 + "}";
     }
 }

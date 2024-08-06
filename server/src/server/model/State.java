@@ -178,7 +178,7 @@ public class State {
     }
 
     public void softReset() {
-        time = 0;
+        //time = 0;
         //inProgress = false;
         scoreInfo.clear();
 

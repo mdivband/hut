@@ -5,5 +5,18 @@ package lsl;
  * the main simulator needs never handle the details of the connection.
  */
 public class LSLLogger {
+    private final OxysoftConnection oxysoftConnection;
+
+    public LSLLogger() {
+        oxysoftConnection = new OxysoftConnection();
+    }
+
+    public void logEventMarker(String condition) {
+        oxysoftConnection.sendEventMarker(condition);
+    }
+
+    public void close() {
+        oxysoftConnection.close();
+    }
 
 }
