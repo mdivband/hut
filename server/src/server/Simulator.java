@@ -768,11 +768,17 @@ public class Simulator {
                     if (markers != null) {
                         for (Object markerJson : markers) {
                             String shape = GsonUtils.getValue(markerJson, "shape");
-                            Double cLat = GsonUtils.getValue(markerJson, "centreLat");
-                            Double cLng = GsonUtils.getValue(markerJson, "centreLng");
-                            Double radius = GsonUtils.getValue(markerJson, "radius");
-
-                            markerList.add(shape+","+cLat+","+cLng+","+radius);
+                            if (Objects.equals(shape, "circle")) {
+                                Double cLat = GsonUtils.getValue(markerJson, "centreLat");
+                                Double cLng = GsonUtils.getValue(markerJson, "centreLng");
+                                Double radius = GsonUtils.getValue(markerJson, "radius");
+                                markerList.add(shape + "," + cLat + "," + cLng + "," + radius);
+                            } else if (Objects.equals(shape, "textMarker")) {
+                                Double lat = GsonUtils.getValue(markerJson, "lat");
+                                Double lng = GsonUtils.getValue(markerJson, "lng");
+                                String text = GsonUtils.getValue(markerJson, "text");
+                                markerList.add(shape + "," + lat + "," + lng + "," + text);
+                            }
 
                         }
                     }

@@ -455,41 +455,30 @@ App.Views.Map = Backbone.View.extend({
                         visible: true
                     });
                 }
+            } else if (splitString[0] === "textMarker") {
+                var x = splitString[1];
+                var y = splitString[2];
+                var text = splitString[3];
+                var thisId = "MK-txtmk" + latX + "," + latY + ", " + rad;
+
+                var marker = self.$el.gmap("get", "markers", [])[thisId];
+                if (!marker) {
+                    this.$el.gmap("addMarker", {
+                        bounds: false,
+                        draggable: false,
+                        clickable: false,
+                        labelContent: text,
+                        labelClass: "labels",
+                        labelStyle: {opacity: 1.0},
+                        label: text,
+                        id: thisId,
+                        position: new google.maps.LatLng(x, y),
+                        zIndex: 3,
+                        visible: true
+                    });
+                }
             }
 
-        }
-
-        // Clumsy, just add manually if using shapes for now. in future should be done in the same way as above
-        if (this.state.getMarkers().length > 0) {
-            var marker = self.$el.gmap("get", "markers", [])["MK-testMk1"];
-            if (!marker) {
-                this.$el.gmap("addMarker", {
-                    bounds: false,
-                    draggable: false,
-                    clickable: false,
-                    labelContent: "search here",
-                    labelClass: "labels",
-                    labelStyle: {opacity: 1.0},
-                    label: "There are casualties in this area!",
-                    id: "MK-testMk1",
-                    position: new google.maps.LatLng(50.93007510846366, -1.412749970031315),
-                    zIndex: 3,
-                    visible: true
-                });
-            }
-            var marker = self.$el.gmap("get", "markers", [])["MK-testMk2"];
-            if (!marker) {
-                this.$el.gmap("addMarker", {
-                    bounds: false,
-                    draggable: false,
-                    clickable: false,
-                    label: "There are casualties in this area!",
-                    labelAnchor: new google.maps.Point(50, -18),
-                    id: "MK-testMk2",
-                    position: new google.maps.LatLng(50.93394037299629, -1.409213465112904),
-                    zIndex: 3
-                });
-            }
         }
     },
     clearHandledTargetMarkers: function () {

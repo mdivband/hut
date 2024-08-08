@@ -59,6 +59,12 @@
           "centreLat": 50.932669902090424,
           "centreLng": -1.4092862824849561,
           "radius": 150
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.93007510846366,
+          "lng": -1.412749970031315,
+          "text": "This is a test sentence that was imported from the scenario"
         }
       ]
     },
