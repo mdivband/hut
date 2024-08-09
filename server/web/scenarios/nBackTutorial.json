@@ -40,8 +40,8 @@
   ],
   "episodes": [
     {
-      "episodeLength": 5,
-      "episodeCooldown": 5,
+      "episodeLength": 10,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "R",
       "numAgents": 5,
@@ -50,50 +50,86 @@
       "markers": [
         {
           "shape": "circle",
-          "centreLat": 50.92911290233203,
-          "centreLng": -1.4127561898636043,
-          "radius": 120
-        },
-        {
-          "shape": "circle",
-          "centreLat": 50.932669902090424,
-          "centreLng": -1.4092862824849561,
-          "radius": 150
+          "centreLat": 50.928033788203586,
+          "centreLng": -1.4805110955547788,
+          "radius": 1500
         },
         {
           "shape": "textMarker",
-          "lat": 50.93007510846366,
-          "lng": -1.412749970031315,
-          "text": "This is a test sentence that was imported from the scenario"
+          "lat": 50.928033788203586,
+          "lng": -1.4805110955547788,
+          "text": "There are 5 agents moving from\nthe Bottom-Left to the Centre-Right"
         }
       ]
     },
     {
-      "episodeLength": 20,
-      "episodeCooldown": 10,
-      "agentPos": "R",
-      "targetPos": "BR",
-      "numAgents": 6,
-      "nBackMatch": false,
-      "episodeCode": "EPfrbr"
-    },
-    {
-      "episodeLength": 5,
+      "episodeLength": 10,
       "episodeCooldown": 3,
-      "agentPos": "T",
+      "agentPos": "TR",
       "targetPos": "TL",
       "numAgents": 6,
       "nBackMatch": false,
-      "episodeCode": "EPfttl"
+      "episodeCode": "EPfrbr",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.958033788203586,
+          "centreLng": -1.3805110955547788,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.958033788203586,
+          "lng": -1.3805110955547788,
+          "text": "Now there are 6 agents moving from\nthe Top-Right to the Top-Left"
+        }
+      ]
     },
     {
-      "episodeLength": 5,
+      "episodeLength": 10,
       "episodeCooldown": 3,
-      "agentPos": "TL",
-      "targetPos": "BL",
+      "agentPos": "B",
+      "targetPos": "TR",
       "numAgents": 6,
       "nBackMatch": false,
-      "episodeCode": "EPftlbl"
+      "episodeCode": "EPfttl",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.928033788203586,
+          "centreLng": -1.4305110955547788,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.928033788203586,
+          "lng": -1.4305110955547788,
+          "text": "There are 6 agents moving from\nthe Centre-Bottom to the Top-Right"
+        }
+      ]
+    },
+    {
+      "episodeLength": 10,
+      "episodeCooldown": 3,
+      "agentPos": "TR",
+      "targetPos": "TL",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "EPfrbr",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.958033788203586,
+          "centreLng": -1.3805110955547788,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.958033788203586,
+          "lng": -1.3805110955547788,
+          "text": "Now there are 6 agents moving from\nthe Top-Right to the Top-Left.\nThis is the same as the condition 2 steps ago!\n Click now!"
+        }
+      ]
     },
     {
       "episodeLength": 5,
@@ -102,7 +138,21 @@
       "targetPos": "L",
       "numAgents": 7,
       "nBackMatch": false,
-      "episodeCode": "EPgbll"
+      "episodeCode": "EPgbll",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.92803378820356,
+          "centreLng": -1.48051109555479,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.928033788203586,
+          "lng": -1.4805110955547788,
+          "text": "There are 7 agents moving from\nthe Bottom-Left to the Centre-Left"
+        }
+      ]
     },
     {
       "episodeLength": 5,
@@ -111,7 +161,21 @@
       "targetPos": "R",
       "numAgents": 6,
       "nBackMatch": false,
-      "episodeCode": "EPftrr"
+      "episodeCode": "EPftrr",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.958033788203586,
+          "centreLng": -1.3805110955547788,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.958033788203586,
+          "lng": -1.3805110955547788,
+          "text": "There are 6 agents moving from\nthe Top-Right to the Centre-Right"
+        }
+      ]
     },
     {
       "episodeLength": 5,
@@ -120,7 +184,21 @@
       "targetPos": "BR",
       "numAgents": 3,
       "nBackMatch": false,
-      "episodeCode": "EPctrbr"
+      "episodeCode": "EPctrbr",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.958033788203586,
+          "centreLng": -1.3805110955547788,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.958033788203586,
+          "lng": -1.3805110955547788,
+          "text": "There are 3 agents moving from\nthe Top-Right to the Bottom-Right"
+        }
+      ]
     },
     {
       "episodeLength": 5,
@@ -129,27 +207,49 @@
       "targetPos": "BL",
       "numAgents": 3,
       "nBackMatch": false,
-      "episodeCode": "EPcbbl"
+      "episodeCode": "EPcbbl",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.928033788203586,
+          "centreLng": -1.4305110955547788,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.928033788203586,
+          "lng": -1.4305110955547788,
+          "text": "There are 3 agents moving from\nthe Centre-Bottom to the Bottom-Left"
+        }
+      ]
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "R",
-      "targetPos": "BL",
-      "numAgents": 4,
-      "nBackMatch": false,
-      "episodeCode": "EPdrbl"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "BL",
-      "targetPos": "TR",
-      "numAgents": 10,
-      "nBackMatch": false,
-      "episodeCode": "EPjbltr"
+      "agentPos": "TR",
+      "targetPos": "BR",
+      "numAgents": 3,
+      "nBackMatch": true,
+      "episodeCode": "EPctrbr",
+      "markers": [
+        {
+          "shape": "circle",
+          "centreLat": 50.958033788203586,
+          "centreLng": -1.3805110955547788,
+          "radius": 1500
+        },
+        {
+          "shape": "textMarker",
+          "lat": 50.958033788203586,
+          "lng": -1.3805110955547788,
+          "text": "There are 3 agents moving from\nthe Top-Right to the Bottom-Right\nThis is the same as the condition 2 steps ago!\n Click now!"
+        }
+      ]
     }
   ],
+
+
+
   "flockingEnabled" : true,
   "loggingById": true,
   "gameCentre": {

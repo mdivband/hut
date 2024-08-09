@@ -459,7 +459,7 @@ App.Views.Map = Backbone.View.extend({
                 var x = splitString[1];
                 var y = splitString[2];
                 var text = splitString[3];
-                var thisId = "MK-txtmk" + latX + "," + latY + ", " + rad;
+                var thisId = "MK-txtmk" + x + "," + y + ", " + text;
 
                 var marker = self.$el.gmap("get", "markers", [])[thisId];
                 if (!marker) {
@@ -467,16 +467,36 @@ App.Views.Map = Backbone.View.extend({
                         bounds: false,
                         draggable: false,
                         clickable: false,
-                        labelContent: text,
-                        labelClass: "labels",
-                        labelStyle: {opacity: 1.0},
-                        label: text,
+                        label: {
+                            text: text,  // Use the original text with `\n` for line breaks
+                            color: 'black',
+                            fontSize: "32px",
+                            fontFamily: "Roboto, sans-serif",
+                            className: "custom-label"  // Apply custom CSS class
+                        },
                         id: thisId,
                         position: new google.maps.LatLng(x, y),
                         zIndex: 3,
                         visible: true
                     });
                 }
+
+                // This stlying lets us add a border and do multilines. ChatGPT did it for me but it seems reliable -WH
+                const style = document.createElement('style');
+                style.innerHTML = `
+                .custom-label {
+                    white-space: pre-wrap;  /* Allows \n to create new lines */
+                    font-weight: bold;
+                    text-shadow: 
+                        -1px -1px 0 white,  
+                        1px -1px 0 white,  
+                        -1px 1px 0 white,  
+                        1px 1px 0 white;
+
+            `;
+                document.head.appendChild(style);
+
+
             }
 
         }
