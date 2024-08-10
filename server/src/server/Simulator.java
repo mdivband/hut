@@ -778,6 +778,12 @@ public class Simulator {
                                 Double lng = GsonUtils.getValue(markerJson, "lng");
                                 String text = GsonUtils.getValue(markerJson, "text");
                                 markerList.add(shape + "," + lat + "," + lng + "," + text);
+                            } else if (Objects.equals(shape, "banner")) {
+                                String colourBg = GsonUtils.getValue(markerJson, "colorBg");
+                                String colourTxt = GsonUtils.getValue(markerJson, "colourTxt");
+                                String text = GsonUtils.getValue(markerJson, "text");
+                                markerList.add(shape + "," + colourBg + "," + colourTxt + "," + text);
+
                             }
 
                         }

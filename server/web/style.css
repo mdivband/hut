@@ -1077,6 +1077,43 @@ ul.list li:hover {
 	background-position:5% center;
 }
 
+
+
+.banner-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%; /* Make it span the full width of the map panel */
+	z-index: 1000; /* Ensure it stays above other elements */
+}
+
+.banner {
+	width: 100%;
+	background-color: #ffcc00;
+	color: #000;
+	text-align: center;
+	padding: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	position: relative;
+	animation: slideDown 0.5s ease-out;
+}
+
+.close-banner {
+	background: none;
+	border: none;
+	font-size: 20px;
+	position: absolute;
+	top: 10px;
+	right: 15px;
+	cursor: pointer;
+}
+
+.banner + .banner {
+	margin-top: 5px;
+}
+
+
+
 img[src="http://maps.gstatic.com/mapfiles/api-3/images/google_white2.png"], a[href^="http://maps.google.com/maps"] {
     display:none !important;
 }

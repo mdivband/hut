@@ -426,11 +426,56 @@ App.Views.Map = Backbone.View.extend({
             }
         }
     },
+    createBanner: function(message, backgroundColor = '#ffcc00', textColor = '#000') {
+        var banner = document.createElement('div');
+        banner.className = 'banner';
+        banner.style.backgroundColor = backgroundColor;
+        banner.style.color = textColor;
+
+        var bannerMessage = document.createElement('span');
+        bannerMessage.textContent = message;
+
+        // var closeButton = document.createElement('button');
+        // closeButton.className = 'close-banner';
+        // closeButton.innerHTML = '&times;';
+        // closeButton.addEventListener('click', function() {
+        //     banner.remove();
+        // });
+
+        banner.appendChild(bannerMessage);
+        // banner.appendChild(closeButton);
+
+        document.getElementById('bannerContainer').appendChild(banner);
+    },
+    clearBanners: function () {
+        var self = this;
+        var markers = this.state.getMarkers(); // Get the current markers
+        var banners = document.querySelectorAll('#bannerContainer .banner'); // Get all the banners in the container
+
+        // Loop through each banner
+        banners.forEach(function(banner) {
+            var bannerMessage = banner.querySelector('span').textContent;
+
+            // Check if any marker corresponds to this banner
+            var correspondingMarkerExists = markers.some(function(marker) {
+                var splitString = marker.split(",");
+                return splitString[0] === "banner" && splitString[3] === bannerMessage;
+            });
+
+            // If no corresponding marker exists, remove the banner
+            if (!correspondingMarkerExists) {
+                console.log("Removing banner: " + bannerMessage);
+                banner.remove();
+            }
+        });
+    },
+
     /**
      * Draws persistent markers on the map for reference
      */
     drawMarkers: function () {
         this.clearMarkers()
+        this.clearBanners()
         var markers = this.state.getMarkers();
         var self = this;
         for (var i = 0; i < markers.length; i++) {
@@ -479,26 +524,27 @@ App.Views.Map = Backbone.View.extend({
                         zIndex: 3,
                         visible: true
                     });
+
+                    // This stlying lets us add a border and do multilines. ChatGPT did it for me but it seems reliable -WH
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                    .custom-label {
+                        white-space: pre-wrap;  /* Allows \n to create new lines */
+                        font-weight: bold;
+                        text-shadow: 
+                            -1px -1px 0 white,  
+                            1px -1px 0 white,  
+                            -1px 1px 0 white,  
+                            1px 1px 0 white;
+                    `;
+                    document.head.appendChild(style);
                 }
-
-                // This stlying lets us add a border and do multilines. ChatGPT did it for me but it seems reliable -WH
-                const style = document.createElement('style');
-                style.innerHTML = `
-                .custom-label {
-                    white-space: pre-wrap;  /* Allows \n to create new lines */
-                    font-weight: bold;
-                    text-shadow: 
-                        -1px -1px 0 white,  
-                        1px -1px 0 white,  
-                        -1px 1px 0 white,  
-                        1px 1px 0 white;
-
-            `;
-                document.head.appendChild(style);
-
-
+            } else if (splitString[0] === "banner") {
+                var colourBg = splitString[1]
+                var colourTxt = splitString[2]
+                var text = splitString [3]
+                self.createBanner(text, colourBg, colourTxt)
             }
-
         }
     },
     clearHandledTargetMarkers: function () {
