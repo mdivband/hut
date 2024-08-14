@@ -1098,8 +1098,9 @@ public class LSL {
         System.setProperty("jna.debug_load", "true");
         System.setProperty("jna.debug_load.jna", "true");
         if (Platform.isWindows()) {
-            // TODO make this an argument imported from a higher level
-            inst = (dll) Native.loadLibrary(("C:\\Local\\TAS\\HutSim\\GIT_LOCAL_ROOT\\hut\\server\\libs\\lsl\\lsl.dll"), dll.class);
+            String basePath = System.getProperty("user.dir");
+            String dllPath = basePath + "\\libs\\lsl\\lsl.dll";
+            inst = (dll) Native.loadLibrary((dllPath), dll.class);
         }
     }
 }
