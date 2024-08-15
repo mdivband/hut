@@ -97,8 +97,11 @@ var MapController = {
         $("#remove_agent").on('click', function () {
             MapController.onRemoveAgentClick()
         });
-        $("#nBackButton").on('click', function () {
-            MapController.onNBackClick()
+        $("#nBackMatch").on('click', function () {
+            MapController.onNBackMatchClick()
+        });
+        $("#nBackNoMatch").on('click', function () {
+            MapController.onNBackNoMatchClick()
         });
 
         this.state.on("change:scoreInfo", function () {
@@ -242,14 +245,26 @@ var MapController = {
     onRemoveAgentClick: function () {
         $.post("/agents/hubdespawn");
     },
-    onNBackClick: function () {
-        // Swap the style of the button to the greyed style in the css
-        $("#nBackButton").text("Match Selected");
-        $("#nBackButton").prop('disabled', true);
+    onNBackMatchClick: function () {
+        $("#nBackMatch").text("Match Selected");
+        $("#nBackMatch").prop('disabled', true);
 
-        // TODO trigger this button back to normal on new episode
+        $("#nBackNoMatch").text("-");
+        $("#nBackNoMatch").prop('disabled', true);
+
         $.post("/review/nback/click", {
             status: true
+        });
+    },
+    onNBackNoMatchClick: function () {
+        $("#nBackNoMatch").text("-");
+        $("#nBackNoMatch").prop('disabled', true);
+
+        $("#nBackMatch").text("No Match Selected");
+        $("#nBackMatch").prop('disabled', true);
+
+        $.post("/review/nback/click", {
+            status: false
         });
     },
     onViewModePressed: function (viewModeValue) {
@@ -613,8 +628,11 @@ var MapController = {
             this.state.pushMode(modeFlag);
     },
     NBackReset: function () {
-        $("#nBackButton").prop('disabled', false);
-        $("#nBackButton").text("Repeated N steps ago");
+        $("#nBackMatch").prop('disabled', false);
+        $("#nBackMatch").text("Match");
+
+        $("#nBackNoMatch").prop('disabled', false);
+        $("#nBackNoMatch").text("No Match");
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);

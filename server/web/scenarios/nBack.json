@@ -33,104 +33,104 @@
       "toggleable": false
     },
     {
-        "name": "nBackPanel",
-        "default": true,
-        "toggleable": false
+      "name": "nBackPanel",
+      "default": true,
+      "toggleable": false
     }
   ],
   "episodes": [
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "BL",
+      "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 5,
+      "numAgents": 7,
       "nBackMatch": false,
-      "episodeCode": "EPeblr"
+      "episodeCode": "g"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "R",
-      "targetPos": "BR",
-      "numAgents": 6,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 3,
       "nBackMatch": false,
-      "episodeCode": "EPfrbr"
+      "episodeCode": "c"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
       "agentPos": "T",
-      "targetPos": "TL",
-      "numAgents": 6,
-      "nBackMatch": false,
-      "episodeCode": "EPfttl"
+      "targetPos": "B",
+      "numAgents": 10,
+      "nBackMatch": true,
+      "episodeCode": "j"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "TL",
-      "targetPos": "BL",
-      "numAgents": 6,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 3,
       "nBackMatch": false,
-      "episodeCode": "EPftlbl"
+      "episodeCode": "c"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
       "agentPos": "BL",
-      "targetPos": "L",
-      "numAgents": 7,
-      "nBackMatch": false,
-      "episodeCode": "EPgbll"
+      "targetPos": "TL",
+      "numAgents": 3,
+      "nBackMatch": true,
+      "episodeCode": "c"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "TR",
+      "agentPos": "L",
       "targetPos": "R",
       "numAgents": 6,
       "nBackMatch": false,
-      "episodeCode": "EPftrr"
+      "episodeCode": "f"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "TR",
-      "targetPos": "BR",
-      "numAgents": 3,
-      "nBackMatch": false,
-      "episodeCode": "EPctrbr"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "B",
-      "targetPos": "BL",
-      "numAgents": 3,
-      "nBackMatch": false,
-      "episodeCode": "EPcbbl"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "R",
-      "targetPos": "BL",
+      "agentPos": "L",
+      "targetPos": "R",
       "numAgents": 4,
       "nBackMatch": false,
-      "episodeCode": "EPdrbl"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "BL",
-      "targetPos": "TR",
-      "numAgents": 10,
-      "nBackMatch": false,
-      "episodeCode": "EPjbltr"
+      "episodeCode": "d"
     }
   ],
-  "flockingEnabled" : true,
+  "flockingEnabled": true,
   "loggingById": true,
   "gameCentre": {
     "lat": 50.943033788203586,
@@ -159,14 +159,14 @@
       "battery": 0.75
     },
     {
-      "lat": 50.930378522204615,
+      "lat": 50.93037852220461,
       "lng": -1.4078189690011413,
       "battery": 0.75
     },
     {
       "lat": 50.92775213234095,
       "lng": -1.4071363295995343,
-      "battery": 1
+      "battery": 1.0
     },
     {
       "lat": 50.92875295435936,
@@ -176,17 +176,17 @@
     {
       "lat": 50.93007833416138,
       "lng": -1.4094108428441632,
-      "battery": 1
+      "battery": 1.0
     },
     {
       "lat": 50.92948327035036,
       "lng": -1.4108914222203839,
-      "battery": 1
+      "battery": 1.0
     },
     {
       "lat": 50.92826607066169,
       "lng": -1.4111489142858136,
-      "battery": 1
+      "battery": 1.0
     }
   ]
 }

@@ -207,13 +207,17 @@ public class Simulator {
 
             }
 
-            if (state.getTime() >= triggerTime) {
+            if (triggerTime == -1d) {
+                // This assumes that the cooldown of the first episode is the same as the cooldown of the rest, and is
+                // therefore the amount we want for the initial cooldown
+                triggerTime = state.getTime() + episodeController.peekNextEpisodeCooldown();
+            } else if (state.getTime() >= triggerTime) {
                 if (episodeController.hasStarted() && state.getEditMode() == 1) {
                     // We have finished this episode, let's go to cooldown
                     changeView(-1);
                     episodeController.logRest();
                     triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
-                } else if(!episodeController.hasStarted() || state.getEditMode() == -1) {
+                } else if(state.getEditMode() == -1) {
                     // We are currently on cooldown, switch
                     changeView(1);
                     episodeController.incrementEpisode();

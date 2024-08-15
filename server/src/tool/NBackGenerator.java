@@ -1,9 +1,14 @@
 package tool;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
+
+import java.io.File;
 
 /** Automatically generates n-back episodes.
  * Note that the result isn't guaranteed to be good so check it.
@@ -20,21 +25,27 @@ public class NBackGenerator {
     private int maxAgents = 10;
     private double matchProbability = 0.2;
     private int nValue = 2;
-    private MatchType matchType = MatchType.BOTH;
+    private MatchCode diffType = MatchCode.NUMBER;
+    private MatchCode matchType = MatchCode.NUMBER;
 
-    public enum MatchType {
+    public enum MatchCode {
         NUMBER,
         POSITIONS,
         BOTH,
         NOT_DEFINED
     }
 
+    private static final int DEFAULT_NUM = 5;
+    private static final String DEFAULT_START_POSITION = "L";
+    private static final String DEFAULT_END_POSITION = "R";
+
+
     public NBackGenerator() {
         this.episodes = new ArrayList<>();
         this.random = new Random();
     }
 
-    private void configure(int numEpisodes, int length, int cooldown, int minAgents, int maxAgents, double matchProbability, int nValue, MatchType matchType) {
+    private void configure(int numEpisodes, int length, int cooldown, int minAgents, int maxAgents, double matchProbability, int nValue, MatchCode diffType, MatchCode matchType) {
         this.numEpisodes = numEpisodes;
         this.episodeLength = length;
         this.episodeCooldown = cooldown;
@@ -42,6 +53,7 @@ public class NBackGenerator {
         this.maxAgents = maxAgents;
         this.matchProbability = matchProbability;
         this.nValue = nValue;
+        this.diffType = diffType;
         this.matchType = matchType;
     }
 
@@ -80,24 +92,24 @@ public class NBackGenerator {
                 // If it's not a match, ensure this episode does not match the one nValue steps back based on the match type
                 Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, -1, "", "", -1, false, "NONE");
                 do {
-                    agentPos = getRandomPosition();
-                    targetPos = getRandomPosition();
-                    numAgents = getRandomNumAgents();
+                    numAgents = (diffType == MatchCode.NUMBER) ? getRandomNumAgents() : DEFAULT_NUM;
+                    agentPos = (diffType == MatchCode.POSITIONS) ? getRandomPosition() : DEFAULT_START_POSITION;
+                    targetPos = (diffType == MatchCode.POSITIONS) ? getRandomPosition() : DEFAULT_END_POSITION;
                     // Ensure agent and target positions are not the same
                     while (agentPos.equals(targetPos)) {
                         targetPos = getRandomPosition();
                     }
                 } while (
-                        (matchType == MatchType.BOTH && agentPos.equals(previousEpisode.agentPos()) && targetPos.equals(previousEpisode.targetPos()) && numAgents == previousEpisode.numAgents()) ||
-                                (matchType == MatchType.POSITIONS && agentPos.equals(previousEpisode.agentPos()) && targetPos.equals(previousEpisode.targetPos())) ||
-                                (matchType == MatchType.NUMBER && numAgents == previousEpisode.numAgents())
+                        (matchType == MatchCode.BOTH && agentPos.equals(previousEpisode.agentPos()) && targetPos.equals(previousEpisode.targetPos()) && numAgents == previousEpisode.numAgents()) ||
+                                (matchType == MatchCode.POSITIONS && agentPos.equals(previousEpisode.agentPos()) && targetPos.equals(previousEpisode.targetPos())) ||
+                                (matchType == MatchCode.NUMBER && numAgents == previousEpisode.numAgents())
                 );
             }
 
-            // TODO Generate an episode code. This will use lowercase characters to index numbers (1=a, 2=b, ...), and will be of the form: EPcbltrt to inducate EPisode with 3 (c) agents going from bottom-left to top-right, and whether it is a match or not is true
-            // Generate the episode code
+
             char agentChar = (char) ('a' + numAgents - 1);
-            String episodeCode = "EP" + agentChar + agentPos.toLowerCase() + targetPos.toLowerCase();// + (nBackMatch ? "t" : "f");
+            //String episodeCode = "EP" + agentChar + agentPos.toLowerCase() + targetPos.toLowerCase();// + (nBackMatch ? "t" : "f");_
+            String episodeCode = String.valueOf(agentChar);
 
             episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch, episodeCode));
         }
@@ -163,14 +175,22 @@ public class NBackGenerator {
         }
 
         // If match type is not defined, prompt the user to enter it
-        MatchType matchType = nBackGenerator.matchType;
-        if (nBackGenerator.matchType == MatchType.NOT_DEFINED) {
-            System.out.println("Enter the match type (1 - only numAgents, 2 - only positions, 3 - both):");
+        MatchCode diffType = nBackGenerator.matchType;
+        if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
+            System.out.println("Enter the difference type (1 - only numAgents changes between episodes, 2 - only positions, 3 - both):");
             int matchTypeOrdinal = scanner.nextInt();
-             matchType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchType.values()[matchTypeOrdinal];
+            diffType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
         }
 
-        nBackGenerator.configure(numEpisodes, length, cooldown, minAgents, maxAgents, matchProbability, nValue, matchType);
+        // If match type is not defined, prompt the user to enter it
+        MatchCode matchType = nBackGenerator.matchType;
+        if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
+            System.out.println("Enter the match type (1 - only numAgents matching constitutes a matching condition, 2 - only positions, 3 - both):");
+            int matchTypeOrdinal = scanner.nextInt();
+            matchType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
+        }
+
+        nBackGenerator.configure(numEpisodes, length, cooldown, minAgents, maxAgents, matchProbability, nValue, diffType, matchType);
         nBackGenerator.generateEpisodes();
         System.out.println("\"episodes\": [");
         for (int i = 0; i < nBackGenerator.getEpisodes().size(); i++) {
@@ -183,9 +203,86 @@ public class NBackGenerator {
             }
         }
         System.out.println("]");
+
+        // Now it lists the json files in server/web/scenarios, and prompts the user to select one by entering the number (they will be listed 1: scenario1.json, 2: scenario2.json, etc.)
+        List<String> jsonFiles = new ArrayList<>();
+        File directory = new File("server/web/scenarios");
+
+        if (directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile() && file.getName().endsWith(".json")) {
+                        jsonFiles.add(file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+
+        // Now list then for the user with numbers
+        for (int i = 0; i < jsonFiles.size(); i++) {
+            System.out.println((i + 1) + ": " + jsonFiles.get(i));
+        }
+
+        System.out.println("Would you like to update one of the files with the generated episodes? ([Y]/n)");
+        // Read the user's input
+        String userInput = scanner.nextLine().trim();
+
+        // Default to 'y' if the user presses Enter
+        if (userInput.isEmpty()) {
+            userInput = "y";
+        }
+
+        // Check the user's choice
+        if (userInput.equalsIgnoreCase("y")) {
+            // Now prompt the user to enter the number of the file they want to view
+            System.out.println("Enter the number of the file you want to view:");
+            int fileNumber = scanner.nextInt();
+            String selectedFileName = jsonFiles.get(fileNumber - 1);
+            System.out.println("You selected: " + selectedFileName);
+
+            try {
+                nBackGenerator.injectJsonFile(selectedFileName, nBackGenerator.getEpisodes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            System.out.println("Exiting...");
+        }
+
+    }
+
+
+    public void injectJsonFile(String selectedFileName, List<Episode> episodes) throws IOException {
+        GsonUtils.create();
+
+        System.out.println("Reading JSON from file: " + selectedFileName);
+        String jsonContent = GsonUtils.readFile(selectedFileName);
+
+        Object jsonObj = GsonUtils.fromJson(jsonContent);
+
+        // Step 6: Replace the "episodes" entry
+        if (GsonUtils.hasKey(jsonObj, "episodes")) {
+            ((Map<String, Object>) jsonObj).put("episodes", episodes);
+        } else {
+            System.out.println("'episodes' key not found in the JSON file.");
+            throw new IOException("Key not found");
+        }
+
+        String modifiedJson = GsonUtils.toJson(jsonObj);
+
+        // Step 8: Save the modified JSON back to the same file
+        System.out.println("Saving modified JSON back to file: " + selectedFileName);
+        try (FileWriter fileWriter = new FileWriter(selectedFileName)) {
+            fileWriter.write(modifiedJson);
+        }
+
+        System.out.println("JSON file updated successfully.");
     }
 
 }
+
 
 record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean nBackMatch, String episodeCode) {
     @Override
