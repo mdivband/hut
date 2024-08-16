@@ -23,7 +23,7 @@ public class NBackGenerator {
     private int episodeCooldown = 3;
     private int minAgents = 3;
     private int maxAgents = 10;
-    private double matchProbability = 0.2;
+    private double matchProbability = 0.4;
     private int nValue = 2;
     private MatchCode diffType = MatchCode.NUMBER;
     private MatchCode matchType = MatchCode.NUMBER;
@@ -59,9 +59,9 @@ public class NBackGenerator {
 
     public void generateEpisodes() {
         for (int i = 0; i < numEpisodes; i++) {
-            String agentPos = null;
-            String targetPos = null;
-            int numAgents = getRandomNumAgents();
+            String agentPos;
+            String targetPos;
+            int numAgents;
             boolean nBackMatch = false;
 
             // Apply n-back condition based on the user-defined probability
@@ -71,13 +71,14 @@ public class NBackGenerator {
                     case NUMBER -> {
                         numAgents = previousEpisode.numAgents();
 
-                        agentPos = getRandomPosition();
-                        targetPos = getRandomPosition();
+                        agentPos = (diffType == MatchCode.POSITIONS) ? getRandomPosition() : DEFAULT_START_POSITION;
+                        targetPos = (diffType == MatchCode.POSITIONS) ? getRandomPosition() : DEFAULT_END_POSITION;
                         while (agentPos.equals(targetPos)) {
                             targetPos = getRandomPosition();
                         }
                     }
                     case POSITIONS -> {
+                        numAgents = (diffType == MatchCode.NUMBER) ? getRandomNumAgents() : DEFAULT_NUM;
                         agentPos = previousEpisode.agentPos();
                         targetPos = previousEpisode.targetPos();
                     }

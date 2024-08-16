@@ -44,54 +44,27 @@
       "episodeCooldown": 3,
       "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 7,
+      "numAgents": 9,
       "nBackMatch": false,
-      "episodeCode": "g"
+      "episodeCode": "i"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
       "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 3,
+      "numAgents": 5,
       "nBackMatch": false,
-      "episodeCode": "c"
+      "episodeCode": "e"
     },
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
       "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 10,
-      "nBackMatch": false,
-      "episodeCode": "j"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 8,
-      "nBackMatch": false,
-      "episodeCode": "h"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "T",
-      "targetPos": "B",
-      "numAgents": 10,
+      "numAgents": 9,
       "nBackMatch": true,
-      "episodeCode": "j"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 3,
-      "nBackMatch": false,
-      "episodeCode": "c"
+      "episodeCode": "i"
     },
     {
       "episodeLength": 5,
@@ -105,11 +78,29 @@
     {
       "episodeLength": 5,
       "episodeCooldown": 3,
-      "agentPos": "BL",
-      "targetPos": "TL",
-      "numAgents": 3,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
       "nBackMatch": true,
+      "episodeCode": "i"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 3,
+      "nBackMatch": false,
       "episodeCode": "c"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 4,
+      "nBackMatch": false,
+      "episodeCode": "d"
     },
     {
       "episodeLength": 5,
@@ -125,9 +116,18 @@
       "episodeCooldown": 3,
       "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 4,
+      "numAgents": 6,
       "nBackMatch": false,
-      "episodeCode": "d"
+      "episodeCode": "f"
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 3,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 3,
+      "nBackMatch": false,
+      "episodeCode": "c"
     }
   ],
   "flockingEnabled": true,
