@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -29,7 +30,7 @@ public class Simulator {
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
-    private final Logger LOGGER = Logger.getLogger(Simulator.class.getName());
+    private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
 
 
     private final State state;
@@ -543,7 +544,12 @@ public class Simulator {
 
     public void resetLogging(String userName) {
         try {
-            String fileName = userName + "-" + state.getGameId() + ".log";
+//            for (Handler handler : LOGGER.getHandlers()) {
+//                LOGGER.removeHandler(handler);
+//                handler.close();
+//            }
+
+            String fileName = "logs/" + userName + "-" + state.getGameId() + ".log";
             FileHandler fileHandler = new FileHandler(fileName);
             LogManager.getLogManager().reset();
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
