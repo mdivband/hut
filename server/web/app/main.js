@@ -121,7 +121,7 @@ var simulator = {
             collapsible: true
         });
         $("#accordion_slider").accordion({
-            collapsible: true
+            collapsible: false
         });
         $("#accordion_sotp_m").accordion({
             collapsible: true,

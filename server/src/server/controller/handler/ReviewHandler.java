@@ -81,7 +81,6 @@ public class ReviewHandler extends RestHandler {
 
         Integer level = Integer.valueOf(params.get("level"));
 
-        // TODO possibly make another controller for all of this
         this.simulator.getState().setWorkloadLevel(level);
     }
 

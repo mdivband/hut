@@ -28,7 +28,7 @@ public class State {
 
     public static final int GAME_TYPE_SANDBOX = 0;
     public static final int GAME_TYPE_SCENARIO = 1;
-    private final static transient Logger LOGGER = Logger.getLogger(Allocator.class.getName());
+    private final static Logger LOGGER = Logger.getLogger(State.class.getName());
     private boolean inProgress;
 
     private String gameId;
@@ -166,7 +166,6 @@ public class State {
         allocation.clear();
         tempAllocation.clear();
         hazardHits.clear();
-        uiOptions.clear();
         varianceOptions.clear();
         noiseOptions.clear();
 
@@ -191,13 +190,10 @@ public class State {
         allocation.clear();
         tempAllocation.clear();
         hazardHits.clear();
-        uiOptions.clear();
         varianceOptions.clear();
         noiseOptions.clear();
 
         storedImages.clear();
-        uiOptions.clear();
-        dynamicUIFeatures.clear();
         hazardHits.init();
 
     }
@@ -899,6 +895,7 @@ public class State {
     }
 
     public void setWorkloadLevel(Integer workloadLevel) {
+        LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s ", getTime(), workloadLevel));
         this.workloadLevel = workloadLevel;
     }
 

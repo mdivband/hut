@@ -13,29 +13,14 @@
       "toggleable": false
     },
     {
-      "name": "explored",
-      "default": false,
-      "toggleable": false
-    },
-    {
-      "name": "hazard",
-      "default": false,
-      "toggleable": false
-    },
-    {
-      "name": "predictions",
-      "default": false,
-      "toggleable": false
-    },
-    {
-      "name": "uncertainties",
-      "default": false,
-      "toggleable": false
-    },
-    {
       "name": "nBackPanel",
       "default": true,
       "toggleable": false
+    },
+    {
+      "name": "workloadSlider",
+      "default": true,
+      "toggleable": true
     }
   ],
   "episodes": [

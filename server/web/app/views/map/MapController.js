@@ -121,11 +121,10 @@ var MapController = {
             }
         });
         $('#workload_slider').on('change', function() {
-            self.state.workloadLevel = $(this).val();
             $.post("/review/report/workload", {
-                level: self.state.getWorkloadLevel()
+                level: $(this).val()
             });
-            //console.log("level = " + MapController.workloadLevel)
+            self.state.workloadLevel = $(this).val();
             MapAgentController.updateAllAgentMarkerIcons(true);
             MapTaskController.updateAllTaskIcons(true);
         });
@@ -470,20 +469,32 @@ var MapController = {
             ['nBackPanel', ['nback_panel']],
         ];
 
+        console.log("======START======")
+        // print each ui option
+        for (const [key, value] of Object.entries(this.state.getUiOptions())) {
+            console.log(key, value);
+        }
+
+        console.log("======END======")
+
         arrayOfPairs.forEach((pair) => {
             if (Array.isArray(pair[1])) {
                 pair[1].forEach((p) => {
                     if (MapController.isToggleableUIOption(pair[0])) {
+                        console.log("Showing " + p);
                         $("#" + p).show()
                     } else {
+                        console.log("Hiding " + p);
                         $("#" + p).hide();
                     }
                 });
             } else {
                 const p = pair[1];
                 if (MapController.isToggleableUIOption(pair[0])) {
+                    console.log("Showing " + p);
                     $("#" + p).show()
                 } else {
+                    console.log("Hiding " + p);
                     $("#" + p).hide();
                 }
             }
