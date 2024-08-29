@@ -1,14 +1,9 @@
 package tool;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-
-import java.io.File;
 
 /** Automatically generates n-back episodes.
  * Note that the result isn't guaranteed to be good so check it.
@@ -16,15 +11,15 @@ import java.io.File;
 public class NBackGenerator {
     private List<Episode> episodes;
     private Random random;
-    private static final String[] POSITIONS = {"BL", "TL", "TR", "BR", "T", "B", "L", "R"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
+    private static final String[] POSITIONS = {"BL", "TL", "TR", "BR"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
-    private int numEpisodes = 10;
+    private int numEpisodes = 60;
     private int episodeLength = 5;
     private int episodeCooldown = 5;
     private int reviewPeriod = 5; // New field for review period
-    private int minAgents = 3;
+    private int minAgents = 6;
     private int maxAgents = 10;
-    private double matchProbability = 0.4;
+    private double matchProbability = 0.2;
     private int nValue = 2;
     private MatchCode diffType = MatchCode.NUMBER;
     private MatchCode matchType = MatchCode.NUMBER;
@@ -57,6 +52,89 @@ public class NBackGenerator {
         this.nValue = nValue;
         this.diffType = diffType;
         this.matchType = matchType;
+    }
+
+    public void generateEpisodesBalanced() {
+        // TODO the new algorithm doesn't properly support position variation at present
+
+        // Num conditions is the number of possible permutations based on what is changeable. e.g. poss num agents x poss positions
+        int numConditions;
+        List<String[]> positionCombinations = new ArrayList<>();
+        if (matchType == MatchCode.NUMBER) {
+            numConditions = maxAgents - minAgents + 1;
+        } else if (matchType == MatchCode.POSITIONS) {
+            // Generate all possible combinations of start and end positions
+            for (String startPos : POSITIONS) {
+                for (String endPos : POSITIONS) {
+                    if (!startPos.equals(endPos)) { // Avoid the same start and end position
+                        positionCombinations.add(new String[]{startPos, endPos});
+                    }
+                }
+            }
+            numConditions = positionCombinations.size();
+        } else {
+            // Generate all possible combinations of agent numbers and start-end positions
+            for (int agents = minAgents; agents <= maxAgents; agents++) {
+                for (String startPos : POSITIONS) {
+                    for (String endPos : POSITIONS) {
+                        if (!startPos.equals(endPos)) { // Avoid the same start and end position
+                            positionCombinations.add(new String[]{String.valueOf(agents), startPos, endPos});
+                        }
+                    }
+                }
+            }
+            numConditions = positionCombinations.size();
+        }
+        List<Integer> conditions = newNback.generateNBackConditions(numEpisodes, numConditions, matchProbability);
+        System.out.println(conditions);
+        System.out.println();
+
+        conditions.forEach(c -> {
+            // Reverse the mapping from earlier
+            int numAgents;
+            String agentPos;
+            String targetPos;
+
+            if (diffType == MatchCode.NUMBER) {
+                numAgents = c + minAgents - 1;
+                agentPos = DEFAULT_START_POSITION;
+                targetPos = DEFAULT_END_POSITION;
+            } else if (diffType == MatchCode.POSITIONS) {
+                // Mapping the condition index back to start and end positions
+                String[] positions = positionCombinations.get(c - 1);
+                agentPos = positions[0];
+                targetPos = positions[1];
+                numAgents = DEFAULT_NUM;
+            } else {
+                // Mapping the condition index back to the combination of agents and positions
+                int positionIndex = c % positionCombinations.size();
+                numAgents = Integer.parseInt(positionCombinations.get(positionIndex)[0]);
+                String[] positions = {positionCombinations.get(positionIndex)[1], positionCombinations.get(positionIndex)[2]};
+                agentPos = positions[0];
+                targetPos = positions[1];
+            }
+
+            System.out.println("Num Agents: " + numAgents + ", Position: " + agentPos + ", Target: " + targetPos);
+
+            char agentChar = (char) ('a' + numAgents - 1);
+            String episodeCode = String.valueOf(agentChar);
+
+            boolean nBackMatch = false; // Initialize as false
+
+            // Check if there is a match with the episode nValue steps back
+            if (episodes.size() >= nValue) {
+                Episode nBackEpisode = episodes.get(episodes.size() - nValue);
+                switch (matchType) {
+                    case NUMBER -> nBackMatch = numAgents == nBackEpisode.numAgents();
+                    case POSITIONS ->
+                            nBackMatch = agentPos.equals(nBackEpisode.agentPos()) && targetPos.equals(nBackEpisode.targetPos());
+                    case BOTH ->
+                            nBackMatch = numAgents == nBackEpisode.numAgents() && agentPos.equals(nBackEpisode.agentPos()) && targetPos.equals(nBackEpisode.targetPos());
+                }
+            }
+
+            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch, episodeCode, reviewPeriod)); // Include reviewPeriod in Episode
+        });
     }
 
     public void generateEpisodes() {
@@ -115,6 +193,7 @@ public class NBackGenerator {
             episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch, episodeCode, reviewPeriod)); // Include reviewPeriod in Episode
         }
     }
+
 
     private String getRandomPosition() {
         return POSITIONS[random.nextInt(POSITIONS.length)];
@@ -195,7 +274,7 @@ public class NBackGenerator {
         }
 
         nBackGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, matchProbability, nValue, diffType, matchType);
-        nBackGenerator.generateEpisodes();
+        nBackGenerator.generateEpisodesBalanced();
         System.out.println("\"episodes\": [");
         for (int i = 0; i < nBackGenerator.getEpisodes().size(); i++) {
             Episode episode = nBackGenerator.getEpisodes().get(i);
@@ -255,7 +334,32 @@ public class NBackGenerator {
             System.out.println("Exiting...");
         }
 
+        scanner.close();
+
+        nBackGenerator.testNBack();
     }
+
+private void testNBack() {
+    // Run through the episodes and manually check if the n-back match is correct
+    for (int i = 0; i < episodes.size(); i++) {
+        Episode episode = episodes.get(i);
+        boolean isNBackMatch = false;
+
+        if (i >= nValue) {
+            Episode nBackEpisode = episodes.get(i - nValue);
+            switch (matchType) {
+                case NUMBER -> isNBackMatch = episode.numAgents() == nBackEpisode.numAgents();
+                case POSITIONS ->
+                        isNBackMatch = episode.agentPos().equals(nBackEpisode.agentPos()) && episode.targetPos().equals(nBackEpisode.targetPos());
+                case BOTH ->
+                        isNBackMatch = episode.numAgents() == nBackEpisode.numAgents() && episode.agentPos().equals(nBackEpisode.agentPos()) && episode.targetPos().equals(nBackEpisode.targetPos());
+            }
+        }
+
+        // Print out the result, comparing the manually checked value to the stored value
+        System.out.println("Episode " + (i + 1) + ": " + episode.numAgents() + ", Start Position: " + episode.agentPos() + ", End Position: " + episode.targetPos() + ", N-Back Match (Calculated): " + isNBackMatch + ", N-Back Match (Stored): " + episode.nBackMatch());
+    }
+}
 
 
     public void injectJsonFile(String selectedFileName, List<Episode> episodes) throws IOException {

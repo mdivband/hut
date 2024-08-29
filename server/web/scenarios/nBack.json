@@ -29,29 +29,9 @@
       "episodeCooldown": 5,
       "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 7,
+      "numAgents": 8,
       "nBackMatch": false,
-      "episodeCode": "g",
-      "reviewPeriod": 5
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 5,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 4,
-      "nBackMatch": false,
-      "episodeCode": "d",
-      "reviewPeriod": 5
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 5,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 3,
-      "nBackMatch": false,
-      "episodeCode": "c",
+      "episodeCode": "h",
       "reviewPeriod": 5
     },
     {
@@ -69,9 +49,99 @@
       "episodeCooldown": 5,
       "agentPos": "L",
       "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": true,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
       "numAgents": 7,
       "nBackMatch": false,
       "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": true,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
       "reviewPeriod": 5
     },
     {
@@ -82,6 +152,126 @@
       "numAgents": 9,
       "nBackMatch": true,
       "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": true,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": true,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": true,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
       "reviewPeriod": 5
     },
     {
@@ -109,9 +299,19 @@
       "episodeCooldown": 5,
       "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 10,
-      "nBackMatch": true,
-      "episodeCode": "j",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
       "reviewPeriod": 5
     },
     {
@@ -120,8 +320,308 @@
       "agentPos": "L",
       "targetPos": "R",
       "numAgents": 7,
-      "nBackMatch": true,
+      "nBackMatch": false,
       "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": true,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": true,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": true,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": false,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": true,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 6,
+      "nBackMatch": true,
+      "episodeCode": "f",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": false,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 8,
+      "nBackMatch": true,
+      "episodeCode": "h",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
       "reviewPeriod": 5
     }
   ],
