@@ -171,7 +171,7 @@ public class Simulator {
         int sleepTime;
 
         double triggerTime = -1d;
-        int mode = -1; // -1: cooldown, 0: review, 1: episode
+        // -9: Slider clicked, now trigger next, -2: review, -1: cooldown, 1: episode
         changeView(-1);
 
         do {
@@ -190,19 +190,20 @@ public class Simulator {
             if (triggerTime == -1d) {
                 // Set initial cooldown time
                 triggerTime = state.getTime() + episodeController.peekNextEpisodeCooldown();
+            } else if (state.getEditMode() == -2) {
+                // Do nothing, waiting for review to finish
+
             } else if (state.getTime() >= triggerTime) {
-                if (mode == 1) { // Episode just finished
+                if (state.getEditMode() == 1) { // Episode just finished
                     // Switch to review mode
                     changeView(-2);
-                    mode = 0;
-                    triggerTime = state.getTime() + episodeController.getReviewPeriodLimit();
-                } else if (mode == 0) { // Review just finished
+                    triggerTime = 0; //state.getTime() + episodeController.getReviewPeriodLimit();
+                } else if (state.getEditMode() == -9) { // Review just finished
                     // Switch to cooldown mode
                     changeView(-1);
                     episodeController.logRest();
-                    mode = -1;
                     triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
-                } else if (mode == -1) { // Cooldown just finished
+                } else if (state.getEditMode() == -1) { // Cooldown just finished
                     // Switch to next episode
                     changeView(1);
                     episodeController.incrementEpisode();
@@ -244,7 +245,6 @@ public class Simulator {
                     allocator.putInTempAllocation(heroAgent.getId(), task.getId());
                     allocator.confirmAllocation(state.getTempAllocation());
 
-                    mode = 1; // Switch to episode mode
                     triggerTime = state.getTime() + episodeController.getEpisodeTimeLimit();
                 }
             }
@@ -460,6 +460,11 @@ public class Simulator {
         }
     }
 
+    /**
+     * Important to note that we create a condition for each flag. This used to allow extra things to happen, but it
+     * remains this way to ensure care it taken over each mode change.
+     * @param modeFlag
+     */
     public void changeView(int modeFlag) {
         //System.out.println("TEMP FORCECHANGE: mode forced to task edit");
         //modeFlag = 2;
@@ -486,6 +491,8 @@ public class Simulator {
             state.setEditMode(-1);
         } else if (modeFlag == -2){
             state.setEditMode(-2);
+        } else if (modeFlag == -9){
+            state.setEditMode(-9);
         }
     }
 

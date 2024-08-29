@@ -576,12 +576,12 @@ var MapController = {
         //          2 = edit
         //          3 = images
         self = this;
-        if (modeFlag === -1) {
-            <!-- Show overlay -->
+        if (modeFlag === -1 || modeFlag === -9) {
+            // Show overlay
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'none';
         } else if (modeFlag === -2) {
-            <!-- Show overlay with slider -->
+            // Show overlay with slider
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'block';
         } else if(modeFlag === 2) {  // edit
@@ -616,7 +616,7 @@ var MapController = {
             $('#scanmode').prop("checked", false);
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", true);
-        } else {  // scans
+        } else if (modeFlag === 2) { // scans
             document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();
             $("#edit_contexts").hide();

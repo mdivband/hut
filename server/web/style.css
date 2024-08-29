@@ -255,6 +255,18 @@ ul.list li:hover {
 	padding: 5px;
 }
 
+#wk_sld_wrapper {
+	width: 700px;
+	margin: auto;
+	border: solid 10px black;
+	text-align: left;
+	padding: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	box-sizing: border-box;
+}
+
 #accordion_slider  table {
 	width: 100%;
 	table-layout: fixed;

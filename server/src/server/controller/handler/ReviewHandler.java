@@ -80,7 +80,7 @@ public class ReviewHandler extends RestHandler {
             return;
 
         Integer level = Integer.valueOf(params.get("level"));
-
+        this.simulator.changeView(-9);
         this.simulator.getState().setWorkloadLevel(level);
     }
 
