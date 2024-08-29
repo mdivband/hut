@@ -171,79 +171,59 @@ public class Simulator {
         int sleepTime;
 
         double triggerTime = -1d;
+        int mode = -1; // -1: cooldown, 0: review, 1: episode
         changeView(-1);
+
         do {
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
-            //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
 
+            if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit() ||
+                    (state.getTime() >= triggerTime && episodeController.hasStarted() && !episodeController.hasEpisodes())) {
 
-
-            if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit() || (state.getTime() >= triggerTime && episodeController.hasStarted() && !episodeController.hasEpisodes())) {
                 System.out.println("DONE BY TIME: " + state.getTime());
                 episodeController.closeLogger();
-                /*
-                System.out.println("agents = " + state.getAgents());
-                int numFailed = 0;
-                for (Agent a : state.getAgents()) {
-                    if (a instanceof AgentVirtual av) {
-                        if (!av.isAlive()) {
-                            numFailed++;
-                        }
-                    }
-                }
-                System.out.println("Num failed: " + numFailed);
-                modeller.outputResults();
-                 */
-                //state.setInProgress(false);
-                if (state.hasPassthrough()) {
-                    updateNextValues();
-                }
-                //this.reset();
                 this.reset(false);
-
                 break;
-                //passthrough();
-
-
             }
 
             if (triggerTime == -1d) {
-                // This assumes that the cooldown of the first episode is the same as the cooldown of the rest, and is
-                // therefore the amount we want for the initial cooldown
+                // Set initial cooldown time
                 triggerTime = state.getTime() + episodeController.peekNextEpisodeCooldown();
             } else if (state.getTime() >= triggerTime) {
-                if (episodeController.hasStarted() && state.getEditMode() == 1) {
-                    // We have finished this episode, let's go to cooldown
+                if (mode == 1) { // Episode just finished
+                    // Switch to review mode
+                    changeView(-2);
+                    mode = 0;
+                    triggerTime = state.getTime() + episodeController.getReviewPeriodLimit();
+                } else if (mode == 0) { // Review just finished
+                    // Switch to cooldown mode
                     changeView(-1);
                     episodeController.logRest();
+                    mode = -1;
                     triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
-                } else if(state.getEditMode() == -1) {
-                    // We are currently on cooldown, switch
+                } else if (mode == -1) { // Cooldown just finished
+                    // Switch to next episode
                     changeView(1);
                     episodeController.incrementEpisode();
-
                     this.softReset();
+
                     Coordinate c = episodeController.getAgentCoord();
                     Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
-                    //heroAgent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
                     int numAgents = episodeController.getNumAgents();
 
-                    // Now we place each agent
+                    // Place each agent
                     for (int i = 1; i < numAgents; i++) {
-                        // Select a random existing agent
                         List<Agent> agentList = new ArrayList<>(state.getAgents());
                         Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
 
-                        // Calculate new coordinates 50m away from the existing agent
-                        double angle = 2 * Math.PI * random.nextDouble(); // Random angle in radians
-                        double offset = 250d / 111139d; // Convert 50m to degrees
+                        double angle = 2 * Math.PI * random.nextDouble();
+                        double offset = 250d / 111139d; // 250 meters to degrees
                         double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(angle);
                         double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(angle) / Math.cos(existingAgentCoord.getLatitude());
 
                         Coordinate newCoord = new Coordinate(newLat, newLng);
 
-                        // Check if the new coordinates are at least 50m away from all other agents
                         boolean valid = true;
                         for (Agent otherAgent : state.getAgents()) {
                             if (otherAgent.getCoordinate().getDistance(newCoord) < offset) {
@@ -252,22 +232,19 @@ public class Simulator {
                             }
                         }
 
-                        // If the new coordinates are valid, spawn the new agent there
                         if (valid) {
                             Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
-                            //agent.setMarker(new String[]{"UAV", "UAVWithPack"}[random.nextInt(2)]);
                         } else {
-                            // If not, decrement the counter to retry with a new random angle
-                            i--;
+                            i--; // Retry if invalid
                         }
                     }
 
-                    // We have now added all agents. Let's do tasks
+                    // Add tasks and allocate
                     Task task = taskController.createTask(0, episodeController.getTargetCoord().getLatitude(), episodeController.getTargetCoord().getLongitude());
-
                     allocator.putInTempAllocation(heroAgent.getId(), task.getId());
-                    //allocator.runAutoAllocation();
                     allocator.confirmAllocation(state.getTempAllocation());
+
+                    mode = 1; // Switch to episode mode
                     triggerTime = state.getTime() + episodeController.getEpisodeTimeLimit();
                 }
             }
@@ -507,6 +484,8 @@ public class Simulator {
              */
         } else if (modeFlag == -1){
             state.setEditMode(-1);
+        } else if (modeFlag == -2){
+            state.setEditMode(-2);
         }
     }
 
@@ -768,6 +747,7 @@ public class Simulator {
                 for (Object episode : episodesJson) {
                     double episodeLength = GsonUtils.getValue(episode, "episodeLength");
                     double episodeCooldown = GsonUtils.getValue(episode, "episodeCooldown");
+                    double reviewPeriod = GsonUtils.getValue(episode, "reviewPeriod"); // Extract reviewPeriod from JSON
                     String agentPos = GsonUtils.getValue(episode, "agentPos");
                     String targetPos = GsonUtils.getValue(episode, "targetPos");
                     double numAgents = GsonUtils.getValue(episode, "numAgents");
@@ -793,14 +773,14 @@ public class Simulator {
                                 String colourTxt = GsonUtils.getValue(markerJson, "colourTxt");
                                 String text = GsonUtils.getValue(markerJson, "text");
                                 markerList.add(shape + "," + colourBg + "," + colourTxt + "," + text);
-
                             }
-
                         }
                     }
-                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, agentPos, targetPos, (int) numAgents, isNBackMatch, episodeCode, markerList);
+                    // Add the episode including reviewPeriod
+                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, (int) reviewPeriod, agentPos, targetPos, (int) numAgents, isNBackMatch, episodeCode, markerList);
                 }
             }
+
 
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {

@@ -26,93 +26,103 @@
   "episodes": [
     {
       "episodeLength": 5,
-      "episodeCooldown": 3,
+      "episodeCooldown": 5,
       "agentPos": "L",
       "targetPos": "R",
-      "numAgents": 9,
+      "numAgents": 7,
       "nBackMatch": false,
-      "episodeCode": "i"
+      "episodeCode": "g",
+      "reviewPeriod": 5
     },
     {
       "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 5,
-      "nBackMatch": false,
-      "episodeCode": "e"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 9,
-      "nBackMatch": true,
-      "episodeCode": "i"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 9,
-      "nBackMatch": false,
-      "episodeCode": "i"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 9,
-      "nBackMatch": true,
-      "episodeCode": "i"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 3,
-      "nBackMatch": false,
-      "episodeCode": "c"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
+      "episodeCooldown": 5,
       "agentPos": "L",
       "targetPos": "R",
       "numAgents": 4,
       "nBackMatch": false,
-      "episodeCode": "d"
+      "episodeCode": "d",
+      "reviewPeriod": 5
     },
     {
       "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 6,
-      "nBackMatch": false,
-      "episodeCode": "f"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
-      "agentPos": "L",
-      "targetPos": "R",
-      "numAgents": 6,
-      "nBackMatch": false,
-      "episodeCode": "f"
-    },
-    {
-      "episodeLength": 5,
-      "episodeCooldown": 3,
+      "episodeCooldown": 5,
       "agentPos": "L",
       "targetPos": "R",
       "numAgents": 3,
       "nBackMatch": false,
-      "episodeCode": "c"
+      "episodeCode": "c",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": false,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 9,
+      "nBackMatch": true,
+      "episodeCode": "i",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": false,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": false,
+      "episodeCode": "g",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 10,
+      "nBackMatch": true,
+      "episodeCode": "j",
+      "reviewPeriod": 5
+    },
+    {
+      "episodeLength": 5,
+      "episodeCooldown": 5,
+      "agentPos": "L",
+      "targetPos": "R",
+      "numAgents": 7,
+      "nBackMatch": true,
+      "episodeCode": "g",
+      "reviewPeriod": 5
     }
   ],
   "flockingEnabled": true,

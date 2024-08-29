@@ -5,7 +5,6 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.State;
 
-import java.awt.image.CropImageFilter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -20,8 +19,8 @@ public class EpisodeController {
         episodes = new ArrayList<>();
     }
 
-    public void addEpisode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
-        episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, isNBackMatch, episodeCode, markers));
+    public void addEpisode(int episodeLength, int episodeCooldown, int reviewPeriod, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
+        episodes.add(new Episode(episodeLength, episodeCooldown, reviewPeriod, agentPos, targetPos, numAgents, isNBackMatch, episodeCode, markers));
     }
 
     public void incrementEpisode() {
@@ -56,7 +55,6 @@ public class EpisodeController {
         return convertEpisodeCoord(currentEpisode.getTargetPos());
     }
 
-    // Method to return a tuple of lat, lng based on the agentPos (where "TL" is top left, etc)
     private Coordinate convertEpisodeCoord(String pos) {
         Coordinate centre = Simulator.instance.getState().getGameCentre();
         double latOffset = 0.015; // Adjust these values as needed
@@ -90,6 +88,10 @@ public class EpisodeController {
         return currentEpisode.getEpisodeCooldown();
     }
 
+    public double getReviewPeriodLimit() {
+        return currentEpisode.getReviewPeriod();
+    }
+
     public void closeLogger() {
         lslLogger.close();
     }
@@ -117,6 +119,7 @@ public class EpisodeController {
     private class Episode {
         private int episodeLength;
         private int episodeCooldown;
+        private int reviewPeriod; // New field for review period
         private String agentPos;
         private String targetPos;
         private int numAgents;
@@ -125,9 +128,10 @@ public class EpisodeController {
         private String episodeCode;
         private ArrayList<String> markers;
 
-        public Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
+        public Episode(int episodeLength, int episodeCooldown, int reviewPeriod, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
             this.episodeLength = episodeLength;
             this.episodeCooldown = episodeCooldown;
+            this.reviewPeriod = reviewPeriod; // Set reviewPeriod
             this.agentPos = agentPos;
             this.targetPos = targetPos;
             this.numAgents = numAgents;
@@ -164,6 +168,10 @@ public class EpisodeController {
             return episodeCooldown;
         }
 
+        public int getReviewPeriod() {
+            return reviewPeriod;
+        }
+
         public boolean isNBackMatch() {
             return isNBackMatch;
         }
@@ -173,5 +181,3 @@ public class EpisodeController {
         }
     }
 }
-
-

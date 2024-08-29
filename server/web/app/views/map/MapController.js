@@ -579,6 +579,11 @@ var MapController = {
         if (modeFlag === -1) {
             <!-- Show overlay -->
             document.getElementById('overlay').style.display = 'block';
+            document.getElementById('wk_sld_wrapper').style.display = 'none';
+        } else if (modeFlag === -2) {
+            <!-- Show overlay with slider -->
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('wk_sld_wrapper').style.display = 'block';
         } else if(modeFlag === 2) {  // edit
             document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();

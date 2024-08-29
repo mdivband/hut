@@ -20,7 +20,8 @@ public class NBackGenerator {
 
     private int numEpisodes = 10;
     private int episodeLength = 5;
-    private int episodeCooldown = 3;
+    private int episodeCooldown = 5;
+    private int reviewPeriod = 5; // New field for review period
     private int minAgents = 3;
     private int maxAgents = 10;
     private double matchProbability = 0.4;
@@ -45,10 +46,11 @@ public class NBackGenerator {
         this.random = new Random();
     }
 
-    private void configure(int numEpisodes, int length, int cooldown, int minAgents, int maxAgents, double matchProbability, int nValue, MatchCode diffType, MatchCode matchType) {
+    private void configure(int numEpisodes, int length, int cooldown, int reviewPeriod, int minAgents, int maxAgents, double matchProbability, int nValue, MatchCode diffType, MatchCode matchType) {
         this.numEpisodes = numEpisodes;
         this.episodeLength = length;
         this.episodeCooldown = cooldown;
+        this.reviewPeriod = reviewPeriod; // Set the review period
         this.minAgents = minAgents;
         this.maxAgents = maxAgents;
         this.matchProbability = matchProbability;
@@ -91,7 +93,7 @@ public class NBackGenerator {
                 nBackMatch = true;
             } else {
                 // If it's not a match, ensure this episode does not match the one nValue steps back based on the match type
-                Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, -1, "", "", -1, false, "NONE");
+                Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, -1, "", "", -1, false, "NONE", -1);
                 do {
                     numAgents = (diffType == MatchCode.NUMBER) ? getRandomNumAgents() : DEFAULT_NUM;
                     agentPos = (diffType == MatchCode.POSITIONS) ? getRandomPosition() : DEFAULT_START_POSITION;
@@ -107,12 +109,10 @@ public class NBackGenerator {
                 );
             }
 
-
             char agentChar = (char) ('a' + numAgents - 1);
-            //String episodeCode = "EP" + agentChar + agentPos.toLowerCase() + targetPos.toLowerCase();// + (nBackMatch ? "t" : "f");_
             String episodeCode = String.valueOf(agentChar);
 
-            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch, episodeCode));
+            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch, episodeCode, reviewPeriod)); // Include reviewPeriod in Episode
         }
     }
 
@@ -144,11 +144,16 @@ public class NBackGenerator {
             length = scanner.nextInt();
         }
 
-        // DO the same as others for episodeCooldown
         int cooldown = nBackGenerator.episodeCooldown;
         if (cooldown == -1) {
             System.out.println("Enter the cooldown time between each episode:");
             cooldown = scanner.nextInt();
+        }
+
+        int reviewPeriod = nBackGenerator.reviewPeriod;
+        if (reviewPeriod == -1) {
+            System.out.println("Enter the review period between each episode:");
+            reviewPeriod = scanner.nextInt();
         }
 
         int minAgents = nBackGenerator.minAgents;
@@ -175,7 +180,6 @@ public class NBackGenerator {
             nValue = scanner.nextInt();
         }
 
-        // If match type is not defined, prompt the user to enter it
         MatchCode diffType = nBackGenerator.matchType;
         if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
             System.out.println("Enter the difference type (1 - only numAgents changes between episodes, 2 - only positions, 3 - both):");
@@ -183,7 +187,6 @@ public class NBackGenerator {
             diffType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
         }
 
-        // If match type is not defined, prompt the user to enter it
         MatchCode matchType = nBackGenerator.matchType;
         if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
             System.out.println("Enter the match type (1 - only numAgents matching constitutes a matching condition, 2 - only positions, 3 - both):");
@@ -191,7 +194,7 @@ public class NBackGenerator {
             matchType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
         }
 
-        nBackGenerator.configure(numEpisodes, length, cooldown, minAgents, maxAgents, matchProbability, nValue, diffType, matchType);
+        nBackGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, matchProbability, nValue, diffType, matchType);
         nBackGenerator.generateEpisodes();
         System.out.println("\"episodes\": [");
         for (int i = 0; i < nBackGenerator.getEpisodes().size(); i++) {
@@ -263,7 +266,6 @@ public class NBackGenerator {
 
         Object jsonObj = GsonUtils.fromJson(jsonContent);
 
-        // Step 6: Replace the "episodes" entry
         if (GsonUtils.hasKey(jsonObj, "episodes")) {
             ((Map<String, Object>) jsonObj).put("episodes", episodes);
         } else {
@@ -273,7 +275,6 @@ public class NBackGenerator {
 
         String modifiedJson = GsonUtils.toJson(jsonObj);
 
-        // Step 8: Save the modified JSON back to the same file
         System.out.println("Saving modified JSON back to file: " + selectedFileName);
         try (FileWriter fileWriter = new FileWriter(selectedFileName)) {
             fileWriter.write(modifiedJson);
@@ -281,16 +282,16 @@ public class NBackGenerator {
 
         System.out.println("JSON file updated successfully.");
     }
-
 }
 
 
-record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean nBackMatch, String episodeCode) {
+record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean nBackMatch, String episodeCode, int reviewPeriod) {
     @Override
     public String toString() {
         return "{\n"
                 + "\t\"episodeLength\": " + episodeLength + ",\n"
                 + "\t\"episodeCooldown\": " + episodeCooldown + ",\n"
+                + "\t\"reviewPeriod\": " + reviewPeriod + ",\n" // Include reviewPeriod in JSON
                 + "\t\"agentPos\": \"" + agentPos + "\",\n"
                 + "\t\"targetPos\": \"" + targetPos + "\",\n"
                 + "\t\"numAgents\": " + numAgents + ",\n"
