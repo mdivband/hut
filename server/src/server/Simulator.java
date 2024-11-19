@@ -7,6 +7,7 @@ import server.model.target.AdjustableTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
+import tool.LogProcessor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -173,7 +174,6 @@ public class Simulator {
         double triggerTime = -1d;
         // -9: Slider clicked, now trigger next, -2: review, -1: cooldown, 1: episode
         changeView(-1);
-
         do {
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
@@ -182,7 +182,10 @@ public class Simulator {
                     (state.getTime() >= triggerTime && episodeController.hasStarted() && !episodeController.hasEpisodes())) {
 
                 System.out.println("DONE BY TIME: " + state.getTime());
+                System.out.println("NOTE: Currently there is a small bug where if the user didn't click for the final episode it is not logged.");
                 episodeController.closeLogger();
+                LogProcessor.processLogFile("logs/"+state.getUserName()+"-"+state.getGameId()+".log");
+                //LogProcessor.processLogFile(LOGGER.getName());
                 this.reset(false);
                 break;
             }
@@ -200,8 +203,8 @@ public class Simulator {
                     triggerTime = 0; //state.getTime() + episodeController.getReviewPeriodLimit();
                 } else if (state.getEditMode() == -9) { // Review just finished
                     // Switch to cooldown mode
-                    changeView(-1);
                     episodeController.logRest();
+                    changeView(-1);
                     triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
                 } else if (state.getEditMode() == -1) { // Cooldown just finished
                     // Switch to next episode
