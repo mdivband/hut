@@ -29,7 +29,7 @@ public class Simulator {
 
     private final static String SERVER_CONFIG_FILE = "/config/serverConfig.json";
     private final static String SCENARIO_DIR_PATH = "/scenarios/";
-    private final Logger LOGGER = Logger.getLogger(Simulator.class.getName());
+    private Logger LOGGER = Logger.getLogger(Simulator.class.getName());
 
 
     private final State state;
@@ -458,7 +458,7 @@ public class Simulator {
 
     public void resetLogging(String userName) {
         try {
-            String fileName = userName + "-" + state.getGameId() + ".log";
+            String fileName = "logs/" + userName + "-" + state.getGameId() + ".log";
             FileHandler fileHandler = new FileHandler(fileName);
             LogManager.getLogManager().reset();
             LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));

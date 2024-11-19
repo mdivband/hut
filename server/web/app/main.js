@@ -269,18 +269,17 @@ var simulator = {
                         self.initialisedState = true;
                         MapController.swapMode(self.state.getEditMode(), false);
 
-                        /*
+
                         if (self.state.getUserName() === "" && self.state.isLoggingById()) {
-                            // TODO get their name, also log it in backend
                             var name = null;
                             while (name == null || name === "") {
-                                name = prompt("Please enter your prolific ID", "");
+                                name = prompt("Please enter your participant ID", "");
                             }
                             $.post("/mode/scenario/registerUser", {
                                 userName: name
                             });
                         }
-                         */
+
 
                         if (self.state.attributes.prov_doc == null) {
                             var api = new $.provStoreApi({
