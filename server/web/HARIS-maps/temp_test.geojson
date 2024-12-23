@@ -1,0 +1,59 @@
+{
+  "type": "FeatureCollection",
+  "name": "temp_test",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "+91+134",
+      "properties": {
+        "id": "+91+134",
+        "count": 1000,
+        "label": 1000,
+        "fill": "red",
+        "stroke": "black",
+        "stroke-width": 2,
+        "fill-opacity": 0.6,
+        "info": "This is a region that has moderately high risk due to this thing and also that thing. It is likely that a fire will break out due to X and Y"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-1.4022614302689052, 50.93579450994937],
+            [-1.410157853608749, 50.93406360683613],
+            [-1.4030768218094325, 50.93287357357484],
+            [-1.4022614302689052, 50.93579450994937]
+          ]
+        ]
+      }
+    },
+    {
+       "type": "Feature",
+       "id": "+00+111",
+       "properties": {
+         "id": "+00+111",
+         "count": 1000,
+         "label": 1000,
+         "fill": "orange",
+         "stroke": "black",
+         "stroke-width": 2,
+         "fill-opacity": 0.9,
+         "info": "This region is moderate likelihood, but due to this thing and also that thing, it would be highly dangerous so this should be prioritised"
+       },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-1.4141918959671473, 50.92064692326752],
+            [-1.4113165679031825, 50.92156673882606],
+            [-1.4111449065262294, 50.924813001335586],
+            [-1.4131619277054286, 50.927923790360936],
+            [-1.4155651869827723, 50.92759919600951],
+            [-1.4141060652786708, 50.92494825735795],
+            [-1.4141918959671473, 50.92064692326752]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -158,6 +158,83 @@ App.Views.Map = Backbone.View.extend({
 
         this.map = this.$el.gmap("get", "map");
 
+        console.log("====================================================");
+
+// Path to your GeoJSON file
+        const geoJsonUrl = "/HARIS-maps/temp_test.geojson";
+
+// Fetch the GeoJSON file and add it to the map
+        fetch(geoJsonUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(geoJsonData => {
+                console.log("GeoJSON data loaded successfully:", geoJsonData);
+
+                // Add GeoJSON to the map
+                self.map.data.addGeoJson(geoJsonData);
+
+                // Apply styles dynamically from the GeoJSON properties
+                self.map.data.setStyle(feature => {
+                    return {
+                        fillColor: feature.getProperty('fill') || "blue", // Default to blue if not specified
+                        strokeColor: feature.getProperty('stroke') || "black",
+                        strokeWeight: feature.getProperty('stroke-width') || 1,
+                        fillOpacity: feature.getProperty('fill-opacity') || 0.5
+                    };
+                });
+
+                // Create an InfoWindow
+                const infoWindow = new google.maps.InfoWindow();
+
+// Add a click event listener to the data layer
+                self.map.data.addListener("click", (event) => {
+                    // Get the feature properties
+                    const feature = event.feature;
+                    const id = feature.getProperty("id");
+                    const count = feature.getProperty("count");
+                    const label = feature.getProperty("label");
+                    const info = feature.getProperty("info");
+                    const center = event.latLng; // Get the clicked location
+
+                    // Create a unique container ID for the embedded map
+                    const mapContainerId = `popup-map-${id}`;
+
+                    // Build the content for the InfoWindow
+                    const content = `
+      <div>
+        <h3>Region ${id}</h3>
+        <p><strong>Count:</strong> ${count}</p>
+        <p><strong>Label:</strong> ${label}</p>
+        <p>${info}</p>
+        <div id="${mapContainerId}" style="width: 300px; height: 200px; margin-top: 10px;"></div>
+      </div>
+    `;
+
+                    // Set the content and position of the InfoWindow
+                    infoWindow.setContent(content);
+                    infoWindow.setPosition(center); // Use the clicked location
+                    infoWindow.open(self.map);
+
+                    // Wait for the InfoWindow DOM to be ready, then render the embedded map
+                    google.maps.event.addListenerOnce(infoWindow, "domready", () => {
+                            const miniMap = new google.maps.Map(document.getElementById(mapContainerId), {
+                                center: center,
+                                zoom: 16,
+                                mapTypeId: google.maps.MapTypeId.SATELLITE,
+                                disableDefaultUI: true, // Optional: Disable controls for simplicity
+                                draggable: false,
+                            });
+                    });
+                });
+            });
+        console.log("====================================================");
+
+
+
         this.tooltip = new LatLngTooltip({map: this.map});
 
         this.bind("refresh", function () {

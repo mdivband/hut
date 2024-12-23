@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="temp_test" id="temp_test">
+	<SimpleField name="id" type="string"></SimpleField>
+	<SimpleField name="count" type="int"></SimpleField>
+	<SimpleField name="label" type="int"></SimpleField>
+</Schema>
+<Folder><name>temp_test</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>1</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#temp_test">
+		<SimpleData name="id">+91+134</SimpleData>
+		<SimpleData name="count">1000</SimpleData>
+		<SimpleData name="label">1000</SimpleData>
+	</SchemaData></ExtendedData>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>50.92880002299894,-1.4094788872327502 50.929378522204615,-1.4078189690011413 50.9318636656946,-1.4065928983124234</coordinates></LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>
+</Folder>
+</Document></kml>
