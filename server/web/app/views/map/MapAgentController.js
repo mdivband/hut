@@ -356,7 +356,7 @@ var MapAgentController = {
             icon = this.icons.UAVSelected;
         else {
             icon = this.icons[agent.getMarker()];
-            console.log("Agent marker: " + agent.getMarker() + " icon: " + icon);
+            //console.log("Agent marker: " + agent.getMarker() + " icon: " + icon);
 
             // This used to be a core part of the visualisation but now we define markers in the backend. Keep it
             //  around in case something doesn't work as expected.

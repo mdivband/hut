@@ -187,50 +187,189 @@ App.Views.Map = Backbone.View.extend({
                     };
                 });
 
-                // Create an InfoWindow
-                const infoWindow = new google.maps.InfoWindow();
+                    // Create an InfoWindow
+                    const infoWindow = new google.maps.InfoWindow();
 
 // Add a click event listener to the data layer
-                self.map.data.addListener("click", (event) => {
-                    // Get the feature properties
-                    const feature = event.feature;
-                    const id = feature.getProperty("id");
-                    const count = feature.getProperty("count");
-                    const label = feature.getProperty("label");
-                    const info = feature.getProperty("info");
-                    const center = event.latLng; // Get the clicked location
+                    self.map.data.addListener("click", (event) => {
+                        // Get the feature properties
+                        const feature = event.feature;
+                        const id = feature.getProperty("id");
+                        const count = feature.getProperty("count");
+                        const label = feature.getProperty("label");
+                        const info = feature.getProperty("info");
 
-                    // Create a unique container ID for the embedded map
-                    const mapContainerId = `popup-map-${id}`;
+                        // Create a unique container ID for the embedded map
+                        const mapContainerId = `popup-map-${id}`;
 
-                    // Build the content for the InfoWindow
-                    const content = `
-      <div>
-        <h3>Region ${id}</h3>
-        <p><strong>Count:</strong> ${count}</p>
-        <p><strong>Label:</strong> ${label}</p>
-        <p>${info}</p>
-        <div id="${mapContainerId}" style="width: 300px; height: 200px; margin-top: 10px;"></div>
-      </div>
-    `;
+                        // Build the content for the InfoWindow
+                        const content = `
+  <div id="infoWindowContainer" style="margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-start;">
+    <div id="textContent" style="margin: 0 10px; flex: 1; min-width: 150px; text-align: left;">
+      <h3 style="margin: 0;">Region ${id}</h3>
+      <p style="margin: 5px 0;"><strong>Count:</strong> ${count}</p>
+      <p style="margin: 5px 0;"><strong>Label:</strong> ${label}</p>
+      <p style="margin: 5px 0;">${info}</p>
+    </div>
+    <div id="${mapContainerId}" 
+         style="flex: 1; min-width: 200px; height: 200px; border: 1px solid #ccc; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);">
+    </div>
+  </div>
+`;
 
-                    // Set the content and position of the InfoWindow
-                    infoWindow.setContent(content);
-                    infoWindow.setPosition(center); // Use the clicked location
-                    infoWindow.open(self.map);
+// Set the content and position of the InfoWindow
+                        infoWindow.setContent(content);
+                        infoWindow.setPosition(event.latLng); // Use the clicked location
+                        infoWindow.open(self.map);
 
-                    // Wait for the InfoWindow DOM to be ready, then render the embedded map
-                    google.maps.event.addListenerOnce(infoWindow, "domready", () => {
-                            const miniMap = new google.maps.Map(document.getElementById(mapContainerId), {
-                                center: center,
-                                zoom: 16,
-                                mapTypeId: google.maps.MapTypeId.SATELLITE,
-                                disableDefaultUI: true, // Optional: Disable controls for simplicity
-                                draggable: false,
+// Dynamic Layout Adjustment
+                        google.maps.event.addListenerOnce(infoWindow, "domready", () => {
+                            const container = document.getElementById("infoWindowContainer");
+                            const mapContainer = document.getElementById(mapContainerId);
+                            const textContent = document.getElementById("textContent");
+
+                            // Get the available width of the InfoWindow
+                            const totalWidth = container.offsetWidth;
+
+                            // Calculate ideal widths
+                            const mapWidth = mapContainer.offsetWidth;
+                            const textWidth = textContent.offsetWidth;
+
+                            // Adjust layout dynamically to balance the widths
+                            if (mapWidth + textWidth > totalWidth) {
+                                // Stack vertically if total exceeds container width
+                                container.style.flexDirection = "column";
+                                textContent.style.width = "100%";
+                                mapContainer.style.width = "100%";
+                                mapContainer.style.marginTop = "10px";
+                            } else {
+                                // Keep side-by-side for landscape layout
+                                container.style.flexDirection = "row";
+                                mapContainer.style.width = `${totalWidth / 2}px`;
+                                textContent.style.width = `${totalWidth / 2}px`;
+                                mapContainer.style.marginTop = "0";
+                            }
+                        });
+
+
+
+
+// Custom CSS and dynamic layout adjustment
+                        google.maps.event.addListenerOnce(infoWindow, "domready", () => {
+                            const container = document.getElementById("infoWindowContainer");
+                            const mapContainer = document.getElementById(mapContainerId);
+
+                            // Calculate aspect ratio
+                            const aspectRatio = mapContainer.offsetWidth / mapContainer.offsetHeight;
+
+                            // Adjust layout dynamically
+                            if (aspectRatio > 1) {
+                                // Landscape: Place image to the right
+                                container.style.flexDirection = "row";
+                                container.style.alignItems = "flex-start"; // Align top of text and image
+                                mapContainer.style.margin = "0 10px"; // Add space between text and image
+                            } else {
+                                // Portrait or square: Default to placing the image below
+                                container.style.flexDirection = "column";
+                                mapContainer.style.margin = "10px auto";
+                            }
+                        });
+
+                        google.maps.event.addListenerOnce(infoWindow, "domready", () => {
+                            const miniMapContainer = document.getElementById(mapContainerId);
+
+                            // Compute bounds of the polygon
+                            const bounds = new google.maps.LatLngBounds();
+                            const paths = [];
+                            const geometry = feature.getGeometry();
+
+                            const TOLERANCE_LAT = 0.0005; // Adjust as needed (approx. 50 meters depending on location)
+                            const TOLERANCE_LNG = 0.0005; // Adjust as needed (approx. 50 meters depending on location)
+
+                            geometry.forEachLatLng((latLng) => {
+                                // Expand bounds by adding tolerance
+                                const expandedSW = new google.maps.LatLng(
+                                    latLng.lat() - TOLERANCE_LAT,
+                                    latLng.lng() - TOLERANCE_LNG
+                                );
+                                const expandedNE = new google.maps.LatLng(
+                                    latLng.lat() + TOLERANCE_LAT,
+                                    latLng.lng() + TOLERANCE_LNG
+                                );
+
+                                bounds.extend(expandedSW);
+                                bounds.extend(expandedNE);
+
+                                paths.push(latLng); // Original path coordinates
                             });
+
+
+                            // Create the embedded map with bounds restriction
+                            const miniMap = new google.maps.Map(miniMapContainer, {
+                                mapTypeId: google.maps.MapTypeId.SATELLITE,
+                                disableDefaultUI: true,
+                                restriction: {
+                                    latLngBounds: bounds, // Restrict dragging to these bounds
+                                    strictBounds: false, // Set to true if you want to completely prevent moving outside
+                                },
+                            });
+
+                            // Fit the map to the polygon bounds
+                            miniMap.fitBounds(bounds);
+
+                            // Adjust the zoom to the maximum level that keeps the polygon in view
+                            google.maps.event.addListenerOnce(miniMap, "idle", () => {
+                                let zoom = miniMap.getZoom();
+
+                                while (zoom < 22) { // Maximum Google Maps zoom level
+                                    miniMap.setZoom(zoom + 1);
+
+                                    const mapBounds = miniMap.getBounds();
+                                    if (!mapBounds.contains(bounds.getNorthEast()) || !mapBounds.contains(bounds.getSouthWest())) {
+                                        miniMap.setZoom(zoom); // Revert to the previous zoom level
+                                        break;
+                                    }
+                                    zoom++;
+                                }
+                            });
+
+                            // Highlight the polygon on the mini map
+                            new google.maps.Polygon({
+                                paths: paths,
+                                strokeColor: "#FF0000",
+                                strokeOpacity: 0.8,
+                                strokeWeight: 4,
+                                fillColor: "#FF0000",
+                                fillOpacity: 0.0,
+                                map: miniMap,
+                            });
+                        });
+
+
+
+
+
+
+
+                        // Masking: Add a transparent rectangle over the entire map, then clip to the polygon
+                            const overlayView = new google.maps.OverlayView();
+                            overlayView.onAdd = function () {
+                                const overlayLayer = document.createElement("div");
+                                overlayLayer.style.position = "absolute";
+                                overlayLayer.style.background = "rgba(255, 255, 255, 0.5)"; // Semi-transparent mask
+                                overlayLayer.style.clipPath = `polygon(${paths
+                                    .map((latLng) => {
+                                        const point = this.getProjection().fromLatLngToDivPixel(latLng);
+                                        return `${point.x}px ${point.y}px`;
+                                    })
+                                    .join(", ")})`;
+
+                                this.getPanes().overlayLayer.appendChild(overlayLayer);
+                            };
+                            overlayView.setMap(miniMap);
+                        });
                     });
-                });
-            });
+
         console.log("====================================================");
 
 
