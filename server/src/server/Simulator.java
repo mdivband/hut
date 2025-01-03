@@ -7,6 +7,7 @@ import server.model.target.AdjustableTarget;
 import server.model.target.Target;
 import server.model.task.Task;
 import tool.GsonUtils;
+import tool.LogProcessor;
 
 import java.io.File;
 import java.io.FileInputStream;
