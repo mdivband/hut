@@ -28,6 +28,7 @@ var MapAgentController = {
         this.updateAllAgentMarkerIcons = _.bind(this.updateAllAgentMarkerIcons, context);
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
         this.forceRedrawMaps = _.bind(this.forceRedrawMaps, context);
+        this.moveAllHeatmaps = _.bind(this.moveAllHeatmaps, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -65,13 +66,13 @@ var MapAgentController = {
         });
     },
     heatmapAgentUpdateGeneric: function (reset) {
-        MapAgentHeatmapController.drawAgentMaps(reset);
+        MapAgentHeatmapController.drawAgentMaps();
     },
     forceRedrawMaps: function () {
-        this.state.agents.forEach((a) => {
-            MapAgentHeatmapController.drawAgentMaps(false);
-            MapAgentHeatmapController.adjustHeatmapLocation(a)
-        })
+        MapAgentHeatmapController.drawAgentMaps();
+    },
+    moveAllHeatmaps: function () {
+        MapAgentHeatmapController.moveAllMaps();
     },
     onAgentAdd: function (agent) {
         console.log("Agent add")
@@ -144,10 +145,9 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerIcon(agent);
         this.updateTable();
         MapTargetController.checkForReveal(agent);
-        if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
-            MapAgentHeatmapController.updateAllAgentMarkers();
-            MapAgentHeatmapController.adjustHeatmapLocation(agent);
-        }
+        // if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+        //     MapAgentHeatmapController.adjustHeatmapLocation(agent);
+        // }
     },
     onGhostChange: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];

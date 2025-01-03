@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * This is the core code for the mainloop and loading of the simulator
@@ -846,6 +847,48 @@ public class Simulator {
             }
 
             this.state.setGameSpeed((int) gameSpeed);
+
+            // This is the clustering code
+            // TODO move this to the proper controller or whatever.
+
+            int M = 4;
+            Collection<Agent> agents = this.state.getAgents();
+            // Copy of the agents list to track ungrouped agents
+            List<Agent> ungroupedAgents = new ArrayList<>(agents);
+            List<Set<String>> clusters = new ArrayList<>();
+
+            // Process each agent to form groups
+            while (!ungroupedAgents.isEmpty()) {
+                Agent agent = ungroupedAgents.remove(0);
+
+                // Find nearest agents to form a group
+                List<Agent> group = ungroupedAgents.stream()
+                        .sorted(Comparator.comparingDouble(a -> agent.getCoordinate().getDistance(a.getCoordinate())))
+                        .limit(M - 1) // -1 to include the agent itself
+                        .collect(Collectors.toList());
+
+                // Include the current agent in the group
+                group.add(agent);
+
+                // Create a cluster for this group
+                Set<String> cluster = group.stream().map(Agent::getId).collect(Collectors.toSet());
+                clusters.add(cluster);
+
+                // Remove grouped agents from the ungrouped list
+                ungroupedAgents.removeAll(group);
+            }
+
+            // Assign teams based on clusters
+            for (Set<String> cluster : clusters) {
+                for (Agent agent : agents) {
+                    if (cluster.contains(agent.getId())) {
+                        agent.setAgentTeam(new ArrayList<>(cluster));
+                    }
+                }
+            }
+
+            agents.forEach(a -> System.out.println(a.getId() + " -> " + a.getAgentTeam()));
+
 
             return true;
         } catch (IOException e) {

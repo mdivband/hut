@@ -309,6 +309,7 @@ var MapController = {
         }
 
         this.drawMarkers();
+        MapAgentHeatmapController.moveAllMaps();
 
         MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);

@@ -1,6 +1,6 @@
 ## DJI Hut Server - Documentation
 ### University of Southampton
-##### Last Updated: 04/11/21, William Hunt
+##### Last Updated: 03/01/25, William Hunt
 ------
 The DJI Hut Server is a client-server application that is used for coordinating a fleet of drones. The organisation and planning is handled by a browser application, and the commands are relayed through to the drones through a mobile aplication (see the [Android app repository][1]).
 
