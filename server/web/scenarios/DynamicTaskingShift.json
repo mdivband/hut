@@ -17,7 +17,7 @@
     }
   ],
   "spawnRadius": 1200,
-  "timeLimitSeconds": 60,
+  "timeLimitSeconds": 15,
   "nextScenarioFile": "DynamicTaskingShiftHeatmap.json",
   "dynamicUIFeatures": {
     "1": [

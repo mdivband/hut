@@ -38,6 +38,17 @@ body.ready {
 	}
 }
 
+#overlay {
+	background-color: black;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 9999;
+	display: none;
+}
+
 .ui-button .ui-button-text {
 	-moz-user-select: none;
 	-webkit-user-select: none;
@@ -242,6 +253,18 @@ ul.list li:hover {
 	text-align: center;
 	border-spacing: 0px;
 	padding: 5px;
+}
+
+#wk_sld_wrapper {
+	width: 700px;
+	margin: auto;
+	border: solid 10px black;
+	text-align: left;
+	padding: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	box-sizing: border-box;
 }
 
 #accordion_slider  table {

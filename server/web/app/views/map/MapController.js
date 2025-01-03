@@ -448,7 +448,20 @@ var MapController = {
             $("#addRemAgentButton").show()
         }
 
-        if(modeFlag === 2) {  // edit
+
+        MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
+        MapController.communicationRange = this.state.getCommunicationRange();
+
+        if (modeFlag === -1 || modeFlag === -9) {
+            // Show overlay
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('wk_sld_wrapper').style.display = 'none';
+        } else if (modeFlag === -2) {
+            // Show overlay with slider
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('wk_sld_wrapper').style.display = 'block';
+        } else if(modeFlag === 2) {  // edit
+            document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();
             $("#edit_contexts").show();
             $("#edit_buttons_sub").show();
@@ -478,7 +491,8 @@ var MapController = {
             $('#scanmode').prop("checked", false);
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", true);
-        } else {  // scans
+        } else if (modeFlag === 2) { // scans
+            document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();

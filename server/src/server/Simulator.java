@@ -166,37 +166,46 @@ public class Simulator {
         final double waitTime = (int) (1000/(tickRate)); //When gameSpeed is 1, should be 200ms.
         int effCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
         int sleepTime;
+
+        // -9: Slider clicked, now trigger next, -2: review, -1: cooldown, 1: episode
+        changeView(2);
+
         do {
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / tickRate);
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
-            if (state.getTime() >= state.getTimeLimit()) {
-                System.out.println("DONE BY TIME: " + state.getTime());
-                /*
-                System.out.println("agents = " + state.getAgents());
-                int numFailed = 0;
-                for (Agent a : state.getAgents()) {
-                    if (a instanceof AgentVirtual av) {
-                        if (!av.isAlive()) {
-                            numFailed++;
-                        }
-                    }
-                }
-                System.out.println("Num failed: " + numFailed);
-                modeller.outputResults();
-                 */
-                //state.setInProgress(false);
-                if (state.hasPassthrough()) {
-                    updateNextValues();
-                }
-                //this.reset();
-                this.reset(false);
+//            if (state.getTime() >= state.getTimeLimit()) {
+//                System.out.println("DONE BY TIME: " + state.getTime());
+//                this.reset(false);
+//                break;
+//            }
 
-                break;
-                //passthrough();
-
-
+            if (state.getEditMode() == -2) {
+                // Do nothing, waiting for review to finish
             }
+
+            if (state.getTime() >= state.getTimeLimit()) {
+                if (state.getEditMode() == 2) { // Episode just finished
+                    // Switch to review mode
+                    System.out.println("EpFinish -1; Changing to -2");
+                    changeView(-2);
+                } else if (state.getEditMode() == -9) { // Review just finished
+                    // Switch to next episode
+                    System.out.println("Next ep -9; Triggering Passthrough or reset");
+                    this.reset();
+                }
+            }
+
+            //state.setInProgress(false);
+//            if (state.hasPassthrough()) {
+//                updateNextValues();
+//            }
+            //this.reset();
+            //this.reset(false);
+
+            //break;
+            //passthrough();
+
 
             // Decide if we should spawn a new task
             effCounter++;
@@ -409,10 +418,16 @@ public class Simulator {
         }
     }
 
+    /**
+     * Important to note that we create a condition for each flag. This used to allow extra things to happen, but it
+     * remains this way to ensure care it taken over each mode change.
+     * @param modeFlag
+     */
     public void changeView(int modeFlag) {
-        System.out.println("TEMP FORCECHANGE: mode forced to task edit");
-        modeFlag = 2;
+        //System.out.println("TEMP FORCECHANGE: mode forced to task edit");
+        //modeFlag = 2;
         LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
+
         if (modeFlag == 2) {
             //agentController.stopAllAgents();
             //agentController.updateAgentsTempRoutes();
@@ -428,6 +443,12 @@ public class Simulator {
             for(Agent agent : state.getAgents()) {
                 agent.resume();
             }
+        } else if (modeFlag == -1){
+            state.setEditMode(-1);
+        } else if (modeFlag == -2){
+            state.setEditMode(-2);
+        } else if (modeFlag == -9){
+            state.setEditMode(-9);
         }
     }
 
