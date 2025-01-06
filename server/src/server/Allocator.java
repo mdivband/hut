@@ -96,6 +96,7 @@ public class Allocator {
         } else {
             switch (allocationMethod) {
                 case "maxsum" -> allocation = compute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
+                case "maxsumsaturated" -> allocation = computeSaturated(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
                 case "maxsumwithoverspill" -> allocation = computeWithRandomOverspil(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
                 case "random" -> allocation = randomCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
                 case "bestfirst" -> allocation = bestFirstCompute(agentsToAllocate, tasksToAllocate, simulator.getState().getEditMode() == 2);
@@ -561,6 +562,18 @@ public class Allocator {
         return null;
     }
 
+    protected Map<String, String> computeSaturated(List<Agent> agents, List<Task> tasks, boolean editMode) {
+            if (!agents.isEmpty() && !tasks.isEmpty()) {
+                Map<String, String> result = runMaxSumSaturated(agents, tasks);
+                //if (!editMode) oldresult = result;
+                oldresult = result;
+                return result;
+            }
+        return null;
+    }
+
+
+
     /**
      * Tries to also reassign them to random if they aren't assigned. NOT functional at present
      * @param agents
@@ -706,6 +719,87 @@ public class Allocator {
         return null;
     }
 
+    protected Map<String, String> runMaxSumSaturated(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {
+        Map<String, String> result = new HashMap<>();
+        HashMap<Agent, Task> resultObjs = new HashMap<>();
+
+        // Clear all agents from tasks initially
+        for (Task task : tasks) {
+            task.clearAgents();
+        }
+
+        System.out.println("Running maxsum (saturated mode).");
+        System.out.println("Agents: " + agents);
+        System.out.println("Tasks: " + tasks);
+
+        // Step 1: Calculate task path lengths and normalize weights
+        Map<Task, Double> taskWeights = new HashMap<>();
+        double totalPathLength = 0.0;
+
+        for (Task task : tasks) {
+            double pathLength;
+
+            if (task instanceof PatrolTask patrolTask) {
+                pathLength = patrolTask.calcualteRouteLength();
+            } else if (task instanceof RegionTask regionTask) {
+                pathLength = regionTask.calcualteRouteLength();
+            } else {
+                pathLength = task.getCoordinate().getDistance(simulator.getState().getHubLocation());
+            }
+
+            taskWeights.put(task, pathLength);
+            totalPathLength += pathLength;
+        }
+
+        // Normalize weights
+        for (Map.Entry<Task, Double> entry : taskWeights.entrySet()) {
+            double normalizedWeight = entry.getValue() / totalPathLength;
+            taskWeights.put(entry.getKey(), normalizedWeight);
+        }
+
+        // Step 2: Guarantee at least one agent per task
+        List<Agent> unassignedAgents = new ArrayList<>(agents);
+        Map<Task, Integer> agentsNeeded = new HashMap<>();
+
+        for (Task task : tasks) {
+            if (!unassignedAgents.isEmpty()) {
+                Agent agent = unassignedAgents.remove(0);
+                task.addAgent(agent);
+                result.put(agent.getId(), task.getId());
+                agentsNeeded.put(task, 1); // At least one agent assigned
+            } else {
+                agentsNeeded.put(task, 0); // No agents left
+            }
+        }
+
+        // Step 3: Assign remaining agents proportionally
+        while (!unassignedAgents.isEmpty()) {
+            Agent agent = unassignedAgents.remove(0);
+
+            // Find the task with the greatest unfulfilled need
+            Task bestTask = null;
+            double maxPriority = -1;
+
+            for (Task task : tasks) {
+                int currentAgents = task.getAgents().size();
+                int proportionalAgents = (int) Math.ceil(taskWeights.get(task) * agents.size());
+                double priority = proportionalAgents - currentAgents;
+
+                if (priority > maxPriority) {
+                    maxPriority = priority;
+                    bestTask = task;
+                }
+            }
+
+            // Assign the agent to the selected task
+            if (bestTask != null) {
+                bestTask.addAgent(agent);
+                result.put(agent.getId(), bestTask.getId());
+            }
+        }
+
+        return result;
+    }
 
 
     protected Map<String, String> runMaxSum(List<Agent> agents, List<Task> tasks) throws IndexOutOfBoundsException {

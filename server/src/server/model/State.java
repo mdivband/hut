@@ -37,6 +37,7 @@ public class State {
     private String allocationMethod;
     private String allocationStyle;
     private String modelStyle;
+    private Integer taskGroupSize;
     private Boolean flockingEnabled;
     private double time;
     private Integer timeLimit;
@@ -394,6 +395,14 @@ public class State {
 
     public void setModelStyle(String modelStyle) {
         this.modelStyle = modelStyle;
+    }
+
+    public synchronized void setTaskGroupSize(Integer taskGroupSize) {
+        this.taskGroupSize = taskGroupSize;
+    }
+
+    public Integer getTaskGroupSize() {
+        return this.taskGroupSize;
     }
 
     public synchronized void setFlockingEnabled(Boolean flockingEnabled) {

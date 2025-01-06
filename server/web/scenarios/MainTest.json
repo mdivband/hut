@@ -33,14 +33,15 @@
       "toggleable": true
     }
   ],
-  "flockingEnabled" : true,
+  "flockingEnabled" : false,
   "loggingById": true,
   "gameCentre": {
     "lat": 50.929378522204615,
     "lng": -1.4080147702592285
   },
-  "allocationMethod": "maxsum",
+  "allocationMethod": "maxsumsaturated",
   "allocationStyle": "manual",
+  "taskGroupSize": 100,
   "agents": [
     {
       "lat": 50.92880002299894,
@@ -65,7 +66,9 @@
       "lat": 50.930378522204615,
       "lng": -1.4078189690011413,
       "battery": 0.75
-    },
+    }
+  ],
+  "CommentedOut": [
     {
       "lat": 50.92775213234095,
       "lng": -1.4071363295995343,

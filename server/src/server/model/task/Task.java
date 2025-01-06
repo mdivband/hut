@@ -216,6 +216,8 @@ public abstract class Task extends MObject implements Serializable {
         return this.type;
     }
 
+
+
     public JsonObject serialize(JsonSerializationContext context) {
         JsonObject jsonObj = new JsonObject();
 
