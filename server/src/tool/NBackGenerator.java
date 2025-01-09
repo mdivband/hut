@@ -208,135 +208,171 @@ public class NBackGenerator {
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        try {
+            Scanner scanner = new Scanner(System.in);
 
-        NBackGenerator nBackGenerator = new NBackGenerator();
-        int numEpisodes = nBackGenerator.numEpisodes;
-        if (numEpisodes == -1) {
-            System.out.println("Enter the number of episodes to generate:");
-            numEpisodes = scanner.nextInt();
-        }
-
-        int length = nBackGenerator.episodeLength;
-        if (length == -1) {
-            System.out.println("Enter the length of each episode:");
-            length = scanner.nextInt();
-        }
-
-        int cooldown = nBackGenerator.episodeCooldown;
-        if (cooldown == -1) {
-            System.out.println("Enter the cooldown time between each episode:");
-            cooldown = scanner.nextInt();
-        }
-
-        int reviewPeriod = nBackGenerator.reviewPeriod;
-        if (reviewPeriod == -1) {
-            System.out.println("Enter the review period between each episode:");
-            reviewPeriod = scanner.nextInt();
-        }
-
-        int minAgents = nBackGenerator.minAgents;
-        if (minAgents == -1) {
-            System.out.println("Enter the minimum number of agents:");
-            minAgents = scanner.nextInt();
-        }
-
-        int maxAgents = nBackGenerator.maxAgents;
-        if (maxAgents == -1) {
-            System.out.println("Enter the maximum number of agents:");
-            maxAgents = scanner.nextInt();
-        }
-
-        double matchProbability = nBackGenerator.matchProbability;
-        if (matchProbability == -1.0) {
-            System.out.println("Enter the probability of an n-back match:");
-            matchProbability = scanner.nextDouble();
-        }
-
-        int nValue = nBackGenerator.nValue;
-        if (nValue == -1) {
-            System.out.println("Enter the value for n (match distance):");
-            nValue = scanner.nextInt();
-        }
-
-        MatchCode diffType = nBackGenerator.matchType;
-        if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
-            System.out.println("Enter the difference type (1 - only numAgents changes between episodes, 2 - only positions, 3 - both):");
-            int matchTypeOrdinal = scanner.nextInt();
-            diffType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
-        }
-
-        MatchCode matchType = nBackGenerator.matchType;
-        if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
-            System.out.println("Enter the match type (1 - only numAgents matching constitutes a matching condition, 2 - only positions, 3 - both):");
-            int matchTypeOrdinal = scanner.nextInt();
-            matchType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
-        }
-
-        nBackGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, matchProbability, nValue, diffType, matchType);
-        nBackGenerator.generateEpisodesBalanced();
-        System.out.println("\"episodes\": [");
-        for (int i = 0; i < nBackGenerator.getEpisodes().size(); i++) {
-            Episode episode = nBackGenerator.getEpisodes().get(i);
-            System.out.print(episode);
-            if (i < nBackGenerator.getEpisodes().size() - 1) {
-                System.out.println(",");
-            } else {
-                System.out.println();
+            NBackGenerator nBackGenerator = new NBackGenerator();
+            int numEpisodes = nBackGenerator.numEpisodes;
+            if (numEpisodes == -1) {
+                System.out.println("Enter the number of episodes to generate:");
+                numEpisodes = scanner.nextInt();
             }
-        }
-        System.out.println("]");
 
-        // Now it lists the json files in server/web/scenarios, and prompts the user to select one by entering the number (they will be listed 1: scenario1.json, 2: scenario2.json, etc.)
-        List<String> jsonFiles = new ArrayList<>();
-        File directory = new File("server/web/scenarios");
+            int length = nBackGenerator.episodeLength;
+            if (length == -1) {
+                System.out.println("Enter the length of each episode:");
+                length = scanner.nextInt();
+            }
 
-        if (directory.isDirectory()) {
-            File[] files = directory.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile() && file.getName().endsWith(".json")) {
-                        jsonFiles.add(file.getAbsolutePath());
-                    }
+            int cooldown = nBackGenerator.episodeCooldown;
+            if (cooldown == -1) {
+                System.out.println("Enter the cooldown time between each episode:");
+                cooldown = scanner.nextInt();
+            }
+
+            int reviewPeriod = nBackGenerator.reviewPeriod;
+            if (reviewPeriod == -1) {
+                System.out.println("Enter the review period between each episode:");
+                reviewPeriod = scanner.nextInt();
+            }
+
+            int minAgents = nBackGenerator.minAgents;
+            if (minAgents == -1) {
+                System.out.println("Enter the minimum number of agents:");
+                minAgents = scanner.nextInt();
+            }
+
+            int maxAgents = nBackGenerator.maxAgents;
+            if (maxAgents == -1) {
+                System.out.println("Enter the maximum number of agents:");
+                maxAgents = scanner.nextInt();
+            }
+
+            double matchProbability = nBackGenerator.matchProbability;
+            if (matchProbability == -1.0) {
+                System.out.println("Enter the probability of an n-back match:");
+                matchProbability = scanner.nextDouble();
+            }
+
+            int nValue = nBackGenerator.nValue;
+            if (nValue == -1) {
+                System.out.println("Enter the value for n (match distance):");
+                nValue = scanner.nextInt();
+            }
+
+            MatchCode diffType = nBackGenerator.matchType;
+            if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
+                System.out.println("Enter the difference type (1 - only numAgents changes between episodes, 2 - only positions, 3 - both):");
+                int matchTypeOrdinal = scanner.nextInt();
+                diffType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
+            }
+
+            MatchCode matchType = nBackGenerator.matchType;
+            if (nBackGenerator.matchType == MatchCode.NOT_DEFINED) {
+                System.out.println("Enter the match type (1 - only numAgents matching constitutes a matching condition, 2 - only positions, 3 - both):");
+                int matchTypeOrdinal = scanner.nextInt();
+                matchType = (matchTypeOrdinal == -1) ? nBackGenerator.matchType : MatchCode.values()[matchTypeOrdinal];
+            }
+
+            nBackGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, matchProbability, nValue, diffType, matchType);
+            nBackGenerator.generateEpisodesBalanced();
+            System.out.println("\"episodes\": [");
+            for (int i = 0; i < nBackGenerator.getEpisodes().size(); i++) {
+                Episode episode = nBackGenerator.getEpisodes().get(i);
+                System.out.print(episode);
+                if (i < nBackGenerator.getEpisodes().size() - 1) {
+                    System.out.println(",");
+                } else {
+                    System.out.println();
                 }
             }
-        }
+            System.out.println("]");
 
-        // Now list then for the user with numbers
-        for (int i = 0; i < jsonFiles.size(); i++) {
-            System.out.println((i + 1) + ": " + jsonFiles.get(i));
-        }
+            List<String> jsonFiles = new ArrayList<>();
+            File directory = new File("server/web/scenarios");
 
-        System.out.println("Would you like to update one of the files with the generated episodes? ([Y]/n)");
-        // Read the user's input
-        String userInput = scanner.nextLine().trim();
+            if (!directory.exists() || !directory.isDirectory() || directory.listFiles() == null || directory.listFiles().length == 0) {
+                System.out.println("Directory is missing, empty, or invalid. Attempting to locate it dynamically...");
+                Thread.sleep(1000);
+                for (int i = 0; i < 3; i++) {
+                    System.out.print(".");
+                    Thread.sleep(500); // Pause for 500 milliseconds
+                }
+                System.out.println(); // Move to the next line
 
-        // Default to 'y' if the user presses Enter
-        if (userInput.isEmpty()) {
-            userInput = "y";
-        }
+                System.out.println("[Pausing for dramatic effect]");
+                Thread.sleep(1000);
 
-        // Check the user's choice
-        if (userInput.equalsIgnoreCase("y")) {
-            // Now prompt the user to enter the number of the file they want to view
-            System.out.println("Enter the number of the file you want to view:");
-            int fileNumber = scanner.nextInt();
-            String selectedFileName = jsonFiles.get(fileNumber - 1);
-            System.out.println("You selected: " + selectedFileName);
+                for (int i = 0; i < 3; i++) {
+                    System.out.print(".");
+                    Thread.sleep(500); // Pause for 500 milliseconds
+                }
+                System.out.println(); // Move to the next line
 
-            try {
-                nBackGenerator.injectJsonFile(selectedFileName, nBackGenerator.getEpisodes());
-            } catch (IOException e) {
-                e.printStackTrace();
+                directory = FolderLocator.findScenariosFolder(new File(System.getProperty("user.dir")));
             }
 
-        } else {
-            System.out.println("Exiting...");
+            if (directory != null && directory.isDirectory()) {
+
+                File[] files = directory.listFiles();
+                if (files != null && files.length > 0) {
+                    System.out.println("Found!");
+                    for (File file : files) {
+                        if (file.isFile() && file.getName().endsWith(".json")) {
+                            jsonFiles.add(file.getAbsolutePath());
+                        }
+                    }
+
+                    if (!jsonFiles.isEmpty()) {
+                        System.out.println("JSON files found:");
+                        for (int i = 0; i < jsonFiles.size(); i++) {
+                            System.out.println((i + 1) + ": " + jsonFiles.get(i));
+                        }
+                    } else {
+                        System.out.println("No JSON files found in the directory: " + directory.getAbsolutePath());
+                    }
+                } else {
+                    System.out.println("The directory is empty: " + directory.getAbsolutePath());
+                }
+            } else {
+                System.out.println("Unable to locate the scenarios folder.");
+            }
+
+            Thread.sleep(1000);
+
+            System.out.println("Would you like to update one of the files with the generated episodes? ([Y]/n)");
+            // Read the user's input
+            String userInput = scanner.nextLine().trim();
+
+            // Default to 'y' if the user presses Enter
+            if (userInput.isEmpty()) {
+                userInput = "y";
+            }
+
+            // Check the user's choice
+            if (userInput.equalsIgnoreCase("y")) {
+                // Now prompt the user to enter the number of the file they want to view
+                System.out.println("Enter the number of the file you want to view:");
+                int fileNumber = scanner.nextInt();
+                String selectedFileName = jsonFiles.get(fileNumber - 1);
+                System.out.println("You selected: " + selectedFileName);
+
+                try {
+                    nBackGenerator.injectJsonFile(selectedFileName, nBackGenerator.getEpisodes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+                System.out.println("Exiting...");
+            }
+
+            scanner.close();
+
+            nBackGenerator.testNBack();
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted during time sleep");
         }
-
-        scanner.close();
-
-        nBackGenerator.testNBack();
     }
 
 private void testNBack() {
