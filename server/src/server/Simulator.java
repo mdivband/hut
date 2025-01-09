@@ -851,7 +851,7 @@ public class Simulator {
             // This is the clustering code
             // TODO move this to the proper controller or whatever.
 
-            int M = 4;
+            int M = 3;
             Collection<Agent> agents = this.state.getAgents();
             // Copy of the agents list to track ungrouped agents
             List<Agent> ungroupedAgents = new ArrayList<>(agents);

@@ -16,6 +16,7 @@ var MapAgentHeatmapController = {
         this.clearAllHeatmaps = _.bind(this.clearAllHeatmaps, context);
         this.removeAgentMarkerFor = _.bind(this.removeAgentMarkerFor, context);
         this.removeAgentMarkerForAgentWithTask = _.bind(this.removeAgentMarkerForAgentWithTask, context);
+        this.addTeamMarker = _.bind(this.addTeamMarker, context);
     },
 
     /**
@@ -24,12 +25,7 @@ var MapAgentHeatmapController = {
     bindEvents: function () {
 
     },
-    /**
-     * Draw heatmaps grouped by agent teams, and add markers for each team.
-     */
-    /**
-     * Draw heatmaps grouped by agent teams, and add markers for each team.
-     */
+
     drawAgentMaps: function () {
         // Clear existing heatmaps and markers
         MapAgentHeatmapController.clearAllHeatmaps();
@@ -43,7 +39,7 @@ var MapAgentHeatmapController = {
                 ? agent.getAgentTeam().join(",")
                 : agent.getAgentTeam().toString();
 
-            if (!teams[teamKey]) {
+            if (!Array.isArray(teams[teamKey])) {
                 teams[teamKey] = [];
             }
             teams[teamKey].push(agent);
@@ -52,6 +48,7 @@ var MapAgentHeatmapController = {
         MapAgentHeatmapController.teamAgentData = teams; // Save agent positions for dynamic updates
 
         // Create heatmaps and markers for each team
+        let groupCounter = 1; // Start a counter for group indices
         Object.entries(teams).forEach(([team, teamAgents]) => {
             // Combine all agents in the team into a single heatmap
             const heatmapData = new google.maps.MVCArray(
@@ -71,10 +68,11 @@ var MapAgentHeatmapController = {
             heatmap.setMap(this.map);
             MapAgentHeatmapController.teamHeatmaps[team] = heatmap;
 
-            // Add marker for this team
-            MapAgentHeatmapController.addTeamMarker(team, teamAgents);
+            // Add marker for this team with a numeric group index
+            MapAgentHeatmapController.addTeamMarker(teamAgents, groupCounter);
+            groupCounter++; // Increment the group counter
 
-            console.log("HM done for team: ", team)
+            console.log("HM done for team: ", team);
         });
     },
 
@@ -86,13 +84,17 @@ var MapAgentHeatmapController = {
         // Update positions for each team
         const teams = {};
         this.state.agents.forEach(agent => {
-            const team = agent.getAgentTeam();
-            if (!teams[team]) {
-                teams[team] = [];
+            const teamKey = Array.isArray(agent.getAgentTeam())
+                ? agent.getAgentTeam().join(",")
+                : agent.getAgentTeam().toString();
+
+            if (!Array.isArray(teams[teamKey])) {
+                teams[teamKey] = [];
             }
-            teams[team].push(agent);
+            teams[teamKey].push(agent);
         });
 
+        let groupCounter = 1; // Start a counter for group indices
         Object.entries(MapAgentHeatmapController.teamHeatmaps).forEach(([team, heatmap]) => {
             if (teams[team]) {
                 // Update heatmap data with new positions
@@ -105,9 +107,9 @@ var MapAgentHeatmapController = {
 
                 heatmap.setData(heatmapData);
 
-                // Update marker position for the team
-                // TODO make sire this just moves it; nothing complex
-                MapAgentHeatmapController.addTeamMarker(team, teams[team]);
+                // Update marker position for the team with a numeric group index
+                MapAgentHeatmapController.addTeamMarker(teams[team], groupCounter);
+                groupCounter++; // Increment the group counter
             }
         });
 
@@ -115,12 +117,13 @@ var MapAgentHeatmapController = {
         MapAgentHeatmapController.teamAgentData = teams;
     },
 
-    /**
-     * Add a marker for a team based on its agents.
-     * @param team - Team identifier
-     * @param teamAgents - Array of agents in the team
-     */
     addTeamMarker: function (group, index) {
+        // Validate that `group` is an array
+        if (!Array.isArray(group)) {
+            console.error("Invalid group passed to addTeamMarker. Expected array, got:", group);
+            return;
+        }
+
         // Calculate the center of the group's agents
         let latSum = 0, lngSum = 0;
         group.forEach(agent => {
@@ -128,36 +131,39 @@ var MapAgentHeatmapController = {
             latSum += position.lat();
             lngSum += position.lng();
         });
-        const newPos = _.position(latSum / group.length, lngSum / group.length);
+        const centerLat = latSum / group.length;
+        const centerLng = lngSum / group.length;
+        const newPos = new google.maps.LatLng(centerLat, centerLng);
 
-        // Check if the marker already exists
-        const markerId = "AgentGroup-" + index;
-        let marker = this.$el.gmap("get", "markers")[markerId];
+        // Generate marker label (e.g., "Group-3")
+        const markerLabel = `Group-${index}`;
+        const markerId = `AgentGroup-${index}`;
+
+        let marker = MapAgentHeatmapController.teamMarkers[markerId];
         if (marker) {
             // Update existing marker's position and label
             marker.setPosition(newPos);
             marker.setOptions({
-                labelContent: `[${index}] ${group.length} Agents`,
+                labelContent: markerLabel,
             });
         } else {
-            // Add a new marker
+            // Add a new marker using MarkerWithLabel
             this.$el.gmap("addMarker", {
                 bounds: false,
-                draggable: true,
-                id: markerId,
-                centrePos: newPos,
-                position: newPos,
                 marker: MarkerWithLabel,
-                labelContent: `[${index}] ${group.length} Agents`,
-                labelAnchor: new google.maps.Point(25, 65),
+                draggable: true,
+                labelContent: markerLabel,
+                labelAnchor:  new google.maps.Point(25, 65),
                 labelClass: "labels",
                 labelStyle: { opacity: 1.0 },
+                id: markerId,
+                position: newPos,
                 raiseOnDrag: false,
                 zIndex: 3,
             });
 
             marker = this.$el.gmap("get", "markers")[markerId];
-            MapAgentHeatmapController.agentMarkers.push(marker);
+            MapAgentHeatmapController.teamMarkers[markerId] = marker;
 
             // Add drag event listeners
             $(marker).drag(() => {
@@ -165,13 +171,20 @@ var MapAgentHeatmapController = {
             }).dragend(() => {
                 MapAgentHeatmapController.onAgentMarkerDragEnd(marker);
             });
-
-            // Update the task rendering for the marker
-            MapAgentHeatmapController.updateTaskRendering(markerId, this.MarkerColourEnum.GREEN);
         }
+
+        // Update the marker's icon using the existing updateTaskMarkerIcon method
+        MapTaskController.updateTaskMarkerIcon(markerId, {
+            h: 180, // Example hue adjustment
+            s: 1,   // Saturation
+            l: 1,   // Brightness
+        });
 
         // Set the marker on the map
         marker.setMap(this.map);
+
+        // Debugging: Log marker and label positions
+        console.log(`Marker for Group-${index} centered at:`, newPos);
     },
 
     removeAgentMarkerFor: function (index) {
