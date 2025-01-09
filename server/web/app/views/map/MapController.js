@@ -120,13 +120,23 @@ var MapController = {
                 MapController.showPredictedPaths($(this).val());
             }
         });
-        $('#workload_slider').on('change', function() {
-            $.post("/review/report/workload", {
-                level: $(this).val()
-            });
-            self.state.workloadLevel = $(this).val();
-            MapAgentController.updateAllAgentMarkerIcons(true);
-            MapTaskController.updateAllTaskIcons(true);
+        let isDragging = false;
+
+        $('#workload_slider').on('mousedown', function() {
+            isDragging = true;
+        });
+
+        $('#workload_slider').on('mouseup', function() {
+            if (isDragging) {
+                $.post("/review/report/workload", {
+                    level: $(this).val()
+                });
+                self.state.workloadLevel = $(this).val();
+                MapAgentController.updateAllAgentMarkerIcons(true);
+                MapTaskController.updateAllTaskIcons(true);
+
+                isDragging = false; // Reset the flag
+            }
         });
         $('#uncertainties_toggle').change(function () {
             MapController.toggleUIOption('uncertainties', $(this).is(":checked"))
