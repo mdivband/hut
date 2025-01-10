@@ -21,8 +21,11 @@ public class MissionController extends AbstractController {
         super(simulator, ScoreController.class.getName());
     }
 
+    // Add a class-level counter for task groups
+    private int taskGroupCounter = 0;
+
     public void spawnIfRequired(double time) {
-        // Weird interaction around the timescale. For now I'm using a manual hacky workaround
+        // Update task spawn rate based on time
         if (spawnPairs != null && spawnPairs.get(0)[0] <= time) {
             taskSpawnRate = spawnPairs.get(0)[1];
             System.out.println("Updating to " + taskSpawnRate);
@@ -31,45 +34,51 @@ public class MissionController extends AbstractController {
             } else {
                 spawnPairs = null;
             }
-
         }
 
+        // Spawn tasks if it's time
         if (lastSpawn + (60 / (taskSpawnRate / batchSize)) < time) {
             List<Task> tasksOutsideThisBatch = new ArrayList<>(simulator.getState().getTasks());
             List<Task> tasksInThisBatch = new ArrayList<>((int) (batchSize + batchRand));
             lastSpawn = time;
+
             boolean acceptableSpawn = false;
             Coordinate newPos = null;
+
+            // Increment the task group counter
+            int currentTaskGroup = taskGroupCounter++;
+
+            // Generate the first task in the batch
             while (!acceptableSpawn) {
                 double theta = simulator.getRandom().nextDouble(2 * Math.PI);
                 double r = simulator.getRandom().nextDouble(spawnRadius);
-                //System.out.println("Spawning; r = " + r + ", th = " + theta);
-                //Coordinate newPos = simulator.getState().getGameCentre().getCoordinate(r, theta);
                 newPos = simulator.getState().getGameCentre().getCoordinateElliptical(r, theta, 1.5, 1);
                 if (isAcceptable(newPos, 1, tasksOutsideThisBatch)) {
                     acceptableSpawn = true;
                 }
             }
-            Task createdTask = simulator.getTaskController().createTask(0, newPos.getLatitude(), newPos.getLongitude());
+
+            Task createdTask = simulator.getTaskController().createTask(0, newPos.getLatitude(), newPos.getLongitude(), currentTaskGroup);
             tasksInThisBatch.add(createdTask);
+
+            // Generate additional tasks in the batch
             Coordinate relPos = newPos.clone();
-            for (int i=1; i<(batchSize + simulator.getRandom().nextInt(0, batchRand + 1)); i++) {
+            for (int i = 1; i < (batchSize + simulator.getRandom().nextInt(0, batchRand + 1)); i++) {
                 acceptableSpawn = false;
                 while (!acceptableSpawn) {
                     double theta = simulator.getRandom().nextDouble(2 * Math.PI);
                     double r = simulator.getRandom().nextDouble(batchRadius);
-                    //System.out.println("Spawning; r = " + r + ", th = " + theta);
-                    //Coordinate newPos = simulator.getState().getGameCentre().getCoordinate(r, theta);
                     relPos = relPos.getCoordinateElliptical(r, theta, 1.5, 1);
-                    if (isAcceptable(relPos, 1, tasksOutsideThisBatch) && isAcceptable(relPos, 0.3,  tasksInThisBatch)) {  // May need to exclude
+                    if (isAcceptable(relPos, 1, tasksOutsideThisBatch) && isAcceptable(relPos, 0.3, tasksInThisBatch)) {
                         acceptableSpawn = true;
                     }
                 }
-                createdTask = simulator.getTaskController().createTask(0, relPos.getLatitude(), relPos.getLongitude());
+                createdTask = simulator.getTaskController().createTask(0, relPos.getLatitude(), relPos.getLongitude(), currentTaskGroup);
                 tasksInThisBatch.add(createdTask);
             }
         }
     }
+
 
     public void setSpawnRadius(double spawnRadius) {
         this.spawnRadius = spawnRadius;

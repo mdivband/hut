@@ -90,6 +90,8 @@ public class AllocationHandler extends RestHandler {
         Map<String, String> params = req.getParams();
         List<String> expectedKeys = Arrays.asList("agentIds", "taskIds");
 
+        System.out.println(params);
+
         if (!checkParams(params, expectedKeys, resp))
             return;
 

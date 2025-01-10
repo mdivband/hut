@@ -17,6 +17,12 @@ var MapAgentHeatmapController = {
         this.removeAgentMarkerFor = _.bind(this.removeAgentMarkerFor, context);
         this.removeAgentMarkerForAgentWithTask = _.bind(this.removeAgentMarkerForAgentWithTask, context);
         this.addTeamMarker = _.bind(this.addTeamMarker, context);
+        this.onHeatmapMarkerDrag = _.bind(this.onHeatmapMarkerDrag, context);
+        this.onHeatmapMarkerDragEnd = _.bind(this.onHeatmapMarkerDragEnd, context);
+        this.drawAllocation = _.bind(this.drawAllocation, context);
+        this.updateHeatmapAllocationRendering = _.bind(this.updateHeatmapAllocationRendering, context);
+        this.hidePolyline = _.bind(this.hidePolyline, context);
+        this.drawAllocationArrow = _.bind(this.drawAllocationArrow, context);
     },
 
     /**
@@ -74,6 +80,38 @@ var MapAgentHeatmapController = {
 
             console.log("HM done for team: ", team);
         });
+    },
+
+    drawAllocationArrow: function (agentId, taskId) {
+        const agentMarker = this.$el.gmap("get", "markers")[agentId];
+        const taskMarker = this.$el.gmap("get", "markers")[taskId];
+
+        if (agentMarker && taskMarker) {
+            const path = [agentMarker.getPosition(), taskMarker.getPosition()];
+
+            // Add or update polyline for the allocation
+            const allocationId = `${agentId}-${taskId}`;
+            const polyline = this.$el.gmap("get", "overlays > Polyline", [])[allocationId];
+            if (polyline) {
+                polyline.setOptions({ path });
+            } else {
+                this.$el.gmap("addShape", "Polyline", {
+                    id: allocationId,
+                    editable: false,
+                    path: path,
+                    icons: [{
+                        icon: {
+                            scale: 4,
+                            path: google.maps.SymbolPath.FORWARD_OPEN_ARROW
+                        },
+                        offset: '100%'
+                    }],
+                    strokeOpacity: 0.8,
+                    strokeColor: 'blue',
+                    strokeWeight: 3,
+                });
+            }
+        }
     },
 
 
@@ -146,14 +184,15 @@ var MapAgentHeatmapController = {
             marker.setOptions({
                 labelContent: markerLabel,
             });
+            marker.centrePos = newPos; // Update the calculated center
         } else {
             // Add a new marker using MarkerWithLabel
             this.$el.gmap("addMarker", {
                 bounds: false,
                 marker: MarkerWithLabel,
-                draggable: true,
+                draggable: true, // Allow dragging for allocation
                 labelContent: markerLabel,
-                labelAnchor:  new google.maps.Point(25, 65),
+                labelAnchor: new google.maps.Point(25, 65),
                 labelClass: "labels",
                 labelStyle: { opacity: 1.0 },
                 id: markerId,
@@ -163,28 +202,118 @@ var MapAgentHeatmapController = {
             });
 
             marker = this.$el.gmap("get", "markers")[markerId];
+            marker.centrePos = newPos; // Save the calculated center
             MapAgentHeatmapController.teamMarkers[markerId] = marker;
 
-            // Add drag event listeners
-            $(marker).drag(() => {
-                MapAgentHeatmapController.onAgentMarkerDrag(marker);
-            }).dragend(() => {
-                MapAgentHeatmapController.onAgentMarkerDragEnd(marker);
-            });
+            // Add drag event listeners for allocation
+            $(marker)
+                .drag(() => {
+                    MapAgentHeatmapController.onHeatmapMarkerDrag(marker, group);
+                })
+                .dragend(() => {
+                    MapAgentHeatmapController.onHeatmapMarkerDragEnd(marker, group);
+                });
         }
 
         // Update the marker's icon using the existing updateTaskMarkerIcon method
         MapTaskController.updateTaskMarkerIcon(markerId, {
-            h: 180, // Example hue adjustment
-            s: 1,   // Saturation
-            l: 1,   // Brightness
+            h: 180,
+            s: 1,
+            l: 1,
         });
 
         // Set the marker on the map
         marker.setMap(this.map);
+    },
 
-        // Debugging: Log marker and label positions
-        console.log(`Marker for Group-${index} centered at:`, newPos);
+    onHeatmapMarkerDrag: function (marker, group) {
+        if (!MapAgentHeatmapController.isManuallyAllocating) {
+            MapAgentHeatmapController.isManuallyAllocating = true;
+        }
+
+        // Ensure we have a valid starting position (marker should not move)
+        const groupPosition = marker.centrePos || marker.getPosition();
+
+        // Get the position of the cursor during drag
+        const cursorPosition = marker.getPosition();
+
+        // Reposition the marker back to its original position to prevent movement
+        marker.setPosition(groupPosition);
+
+        // Define the endpoint of the allocation arrow (cursor or task marker being hovered over)
+        const arrowEnd = MapAgentHeatmapController.groupIdToAllocateManually
+            ? this.$el.gmap("get", "markers")[MapAgentHeatmapController.groupIdToAllocateManually].getPosition()
+            : cursorPosition;
+
+        const path = [groupPosition, arrowEnd];
+
+        // Draw the allocation arrow
+        let polyline = this.$el.gmap("get", "overlays > Polyline", [])["manual_allocation"];
+        if (polyline) {
+            if (!polyline.getMap()) {
+                polyline.setMap(this.map);
+            }
+            polyline.setOptions({ path });
+        } else {
+            this.$el.gmap("addShape", "Polyline", {
+                id: "manual_allocation",
+                editable: false,
+                path,
+                icons: [
+                    {
+                        icon: {
+                            scale: 4,
+                            path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+                        },
+                        offset: "100%",
+                    },
+                ],
+                strokeOpacity: 0.8,
+                strokeColor: "blue",
+                strokeWeight: 5,
+                zIndex: 2,
+            });
+        }
+    },
+
+    onHeatmapMarkerDragEnd: function (marker, group) {
+        // No longer manually allocating
+        MapAgentHeatmapController.isManuallyAllocating = false;
+
+        // Reposition the marker back to its original position
+        const groupPosition = marker.centrePos || marker.getPosition();
+        marker.setPosition(groupPosition);
+
+        // Perform allocation if a task marker was hovered over
+        if (MapAgentHeatmapController.groupIdToAllocateManually) {
+            const agentsIdsToPass = group.map(agent => agent.getId());
+
+            // Resolve the hovered task marker to an actual task group index
+            const taskGroupId = MapAgentHeatmapController.groupIdToAllocateManually;
+            const taskGroupIndex = taskGroupId.startsWith("TaskGroup-")
+                ? parseInt(taskGroupId.split("-")[1], 10)
+                : null;
+
+            if (taskGroupIndex !== null && MapTaskHeatmapController.addedGroups[taskGroupIndex]) {
+                const taskIdsToPass = MapTaskHeatmapController.addedGroups[taskGroupIndex].map(task => task.getId());
+
+                // Post allocation data
+                $.post("/allocation/groupAllocate", {
+                    agentIds: agentsIdsToPass.toString(),
+                    taskIds: taskIdsToPass.toString(),
+                });
+            } else {
+                console.error("Failed to resolve task group for allocation.");
+            }
+        }
+
+        // Hide the allocation arrow
+        const polyline = this.$el.gmap("get", "overlays > Polyline", [])["manual_allocation"];
+        if (polyline) {
+            polyline.setMap(null);
+        }
+
+        MapAgentHeatmapController.groupIdToAllocateManually = null;
     },
 
     removeAgentMarkerFor: function (index) {
@@ -198,15 +327,41 @@ var MapAgentHeatmapController = {
     },
 
     removeAgentMarkerForAgentWithTask: function (task) {
+        // Validate that the addedGroups array exists and has elements
+        if (!MapAgentHeatmapController.addedGroups || MapAgentHeatmapController.addedGroups.length === 0) {
+            console.warn("No added groups to process.");
+            return;
+        }
+
+        // Iterate over all added groups
         for (let i = 0; i < MapAgentHeatmapController.addedGroups.length; i++) {
-            for (let j = 0; j < MapAgentHeatmapController.addedGroups[i].length; j++) {
-                if (MapAgentHeatmapController.addedGroups[i][j].getAllocatedTaskId() === task.getId()) {
+            const group = MapAgentHeatmapController.addedGroups[i];
+
+            // Ensure the group exists and is an array
+            if (!Array.isArray(group)) {
+                console.warn(`Group at index ${i} is not valid:`, group);
+                continue;
+            }
+
+            // Check if the task exists in the current group
+            for (let j = 0; j < group.length; j++) {
+                const agent = group[j];
+
+                // Ensure agent exists and validate task association
+                if (agent && agent.getAllocatedTaskId && agent.getAllocatedTaskId() === task.getId()) {
+                    console.log(`Removing marker for group ${i} due to task completion:`, task.getId());
+
+                    // Remove the agent's marker for this task
                     MapAgentHeatmapController.removeAgentMarkerFor(i);
+
+                    // Break the loop once the marker is removed
+                    return;
                 }
             }
         }
-    },
 
+        console.warn("Task not found in any group:", task.getId());
+    },
 
     /**
      * Remove all team markers.
@@ -253,4 +408,127 @@ var MapAgentHeatmapController = {
         MapAgentHeatmapController.teamHeatmaps = {};
         MapAgentHeatmapController.teamAgentData = {};
     },
+
+    drawAllocation: function (lineId, color, agentId, taskId) {
+        const agentMarker = this.$el.gmap("get", "markers")[`AgentGroup-${agentId}`];
+        const taskMarker = this.$el.gmap("get", "markers")[`TaskGroup-${taskId}`];
+
+        if (!agentMarker || !taskMarker) {
+            console.warn(`Markers not found for agent ${agentId} or task ${taskId}`);
+            return;
+        }
+
+        const path = [
+            agentMarker.getPosition(),
+            taskMarker.getPosition(),
+        ];
+
+        let polyline = this.$el.gmap("get", "overlays > Polyline", [])[lineId];
+
+        if (polyline) {
+            // Update existing arrow
+            polyline.setOptions({
+                path: path,
+                strokeColor: color,
+            });
+        } else {
+            // Create a new arrow
+            this.$el.gmap("addShape", "Polyline", {
+                id: lineId,
+                editable: false,
+                path: path,
+                icons: [{
+                    icon: {
+                        scale: 4,
+                        path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+                    },
+                    offset: '100%',
+                }],
+                strokeOpacity: 0.8,
+                strokeColor: color,
+                strokeWeight: 5,
+                zIndex: 2,
+            });
+        }
+    },
+
+    drawAllocationArrow: function (agentId, taskId) {
+        const agentMarker = this.$el.gmap("get", "markers")[agentId];
+        const taskMarker = this.$el.gmap("get", "markers")[taskId];
+
+        if (agentMarker && taskMarker) {
+            const path = [agentMarker.getPosition(), taskMarker.getPosition()];
+
+            // Add or update polyline for the allocation
+            const allocationId = `${agentId}-${taskId}`;
+            const polyline = this.$el.gmap("get", "overlays > Polyline", [])[allocationId];
+            if (polyline) {
+                polyline.setOptions({ path });
+            } else {
+                this.$el.gmap("addShape", "Polyline", {
+                    id: allocationId,
+                    editable: false,
+                    path: path,
+                    icons: [{
+                        icon: {
+                            scale: 4,
+                            path: google.maps.SymbolPath.FORWARD_OPEN_ARROW
+                        },
+                        offset: '100%'
+                    }],
+                    strokeOpacity: 0.8,
+                    strokeColor: 'blue',
+                    strokeWeight: 3,
+                });
+            }
+        }
+    },
+
+
+    updateHeatmapAllocationRendering: function () {
+        const self = this;
+        const mainAllocation = this.state.getAllocation();
+        const tempAllocation = this.state.getTempAllocation();
+        const droppedAllocation = this.state.getDroppedAllocation();
+
+        // Iterate over agents and update allocation arrows
+        this.state.agents.each(function (agent) {
+            const agentId = agent.getId();
+
+            // Main allocation
+            if (agentId in mainAllocation) {
+                const mainTaskId = mainAllocation[agentId];
+                MapAgentHeatmapController.drawAllocation(`${agentId}_main`, "green", agentId, mainTaskId);
+            } else {
+                MapAgentHeatmapController.hidePolyline(`${agentId}_main`);
+            }
+
+            // Temporary allocation
+            if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
+                const tempTaskId = tempAllocation[agentId];
+                MapAgentHeatmapController.drawAllocation(`${agentId}_temp`, "orange", agentId, tempTaskId);
+            } else {
+                MapAgentHeatmapController.hidePolyline(`${agentId}_temp`);
+            }
+
+            // Dropped allocation
+            if (self.state.getEditMode() === 2 && agentId in droppedAllocation) {
+                const droppedTaskId = droppedAllocation[agentId];
+                MapAgentHeatmapController.drawAllocation(`${agentId}_dropped`, "grey", agentId, droppedTaskId);
+            } else {
+                MapAgentHeatmapController.hidePolyline(`${agentId}_dropped`);
+            }
+        });
+    },
+
+    hidePolyline: function (lineId) {
+        const polyline = this.$el.gmap("get", "overlays > Polyline", [])[lineId];
+        if (polyline) {
+            polyline.setMap(null); // Remove from map
+            delete this.$el.gmap("get", "overlays > Polyline", [])[lineId]; // Delete from storage
+        }
+    },
+
+
+
 };

@@ -27,6 +27,57 @@ public class TaskController extends AbstractController {
         return "Task-" + uniqueTaskNumber++;
     }
 
+    /**
+     * This is clumsy but has to be a copy as otherwise group is wrong on frontend trigger
+     */
+    public synchronized Task createTask(int taskType, double lat, double lng, int taskGroup) {
+        synchronized (simulator.getState().getTasks()) {
+            String id = generateUID();
+            Task task;
+            switch (taskType) {
+                case Task.TASK_WAYPOINT:
+                    task = new WaypointTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_MONITOR:
+                    task = new MonitorTask(id, new Coordinate(lat, lng));
+                    break;
+                case Task.TASK_DEEP_SCAN:
+                    synchronized (simulator.getState().getTasks()) {
+                        task = new DeepScanTask(id, new Coordinate(lat, lng));
+                    }
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_DEEP_SCAN, lat, lng);
+                    break;
+                case Task.TASK_SHALLOW_SCAN:
+                    task = new ShallowScanTask(id, new Coordinate(lat, lng));
+                    simulator.getTargetController().adjustForTask(AdjustableTarget.ADJ_SHALLOW_SCAN, lat, lng);
+                    break;
+                case Task.TASK_VISIT:
+                    task = new VisitTask(id, new Coordinate(lat, lng));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unable to create task of type " + taskType);
+            }
+            task.setTaskGroup(taskGroup);
+
+            simulator.getState().add(task);
+
+            if (task instanceof DeepScanTask) {
+                task.setPriority(100);
+                simulator.getAllocator().dynamicReassign(task);
+                String trgId = simulator.getTargetController().getTargetAt(new Coordinate(lat, lng)).getId();
+                LOGGER.info(String.format("%s; DPSCN; Creating a deep scan task of id and for target (id, targetId); %s; %s", Simulator.instance.getState().getTime(), id, trgId));
+
+            }
+            for (Agent a : simulator.getState().getAgents()) {
+                if (!(a instanceof AgentHub) && a.getTask() != null) {
+                    a.resume();
+                }
+            }
+            LOGGER.info(String.format("%s; CRWP; Created new task (id, lat, lng); %s; %s; %s", Simulator.instance.getState().getTime(), id, lat, lng));
+            return task;
+        }
+    }
+
     public synchronized Task createTask(int taskType, double lat, double lng) {
         synchronized (simulator.getState().getTasks()) {
             String id = generateUID();

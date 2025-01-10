@@ -11,7 +11,8 @@ App.Models.Task = App.Models.MObject.extend({
 		//Patrol and region tasks only
 		points: null,
 		//Region task only
-		corners: null
+		corners: null,
+		taskGroup: null
 	},
 	destroy: function() {
         this.trigger('destroy', this, this.collection); //Remove from collection without posting DELETE request
@@ -33,6 +34,9 @@ App.Models.Task = App.Models.MObject.extend({
 	},
 	getCorners: function() {
 		return this.get('corners');
+	},
+	getTaskGroup: function () {
+		return this.get('taskGroup');
 	}
 });
 

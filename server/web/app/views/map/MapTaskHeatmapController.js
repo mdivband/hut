@@ -1,4 +1,7 @@
 var MapTaskHeatmapController = {
+    taskGroups: {},
+
+
     taskHeatmaps: [],
     addedGroups: [],
     taskMarkers: [],
@@ -19,6 +22,13 @@ var MapTaskHeatmapController = {
         this.updateFor = _.bind(this.updateFor, context);
         this.updateTaskRendering = _.bind(this.updateTaskRendering, context);
         this.clearAll = _.bind(this.clearAll, context);
+        this.onTaskMarkerDrag = _.bind(this.onTaskMarkerDrag, context);
+        this.onTaskMarkerDragEnd = _.bind(this.onTaskMarkerDragEnd, context);
+        this.getTaskGradient = _.bind(this.getTaskGradient, context);
+        this.calculateGroupCenter = _.bind(this.calculateGroupCenter, context);
+        this.onTaskMarkerMouseover = _.bind(this.onTaskMarkerMouseover, context);
+        this.onTaskMarkerMouseout = _.bind(this.onTaskMarkerMouseout, context);
+        this.groupTasks = _.bind(this.groupTasks, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -26,193 +36,113 @@ var MapTaskHeatmapController = {
     bindEvents: function () {
         
     },
+
     drawTaskMaps: function () {
-        //console.log("========================================")
-
-        //if (MapTaskHeatmapController.running || MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
-        //if(MapTaskHeatmapController.arraysEqual(this.state.tasks, MapTaskHeatmapController.addedGroups.flat(1))) {
-            // No need to redraw
-        //} else {
-        //MapTaskHeatmapController.running = true;
         if (!this.state.tasks.isEmpty()) {
-            let groups = [];
-            let grouping_dist = 250;
-            let tasks = []
-            this.state.tasks.forEach(function (t) {
-                tasks.push(t);
-            });
-
-            tasks.forEach((t) => {
-                //console.log("Considering " + t.getId())
-                if (!MapTaskHeatmapController.checkIfIn2DList(t, groups)) {
-                    //console.log("-pushed new list")
-                    // This is not in any group so should start a new one
-                    groups.push([t])
-                }
-
-                let new_group;
-                tasks.forEach((n) => {
-                    //console.log(t.getId() + " -> " + n.getId())
-                    //if (t !== n && !MapHeatmapController.checkIfIn2DList(n, groups) && Math.abs(tasks[n] - tasks[t]) <= grouping_dist) {
-                    if (t !== n && !MapTaskHeatmapController.checkIfIn2DList(n, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
-                        //console.log("-newAdd")
-                        groups.forEach((g) => {
-                            if (g.includes(t) && !g.includes(n)) {
-                                g.push(n)
-                            }
-                        });
-                    } else if (t !== n && !MapTaskHeatmapController.checkIfInGroupOf(n, t, groups) && google.maps.geometry.spherical.computeDistanceBetween(n.getPosition(), t.getPosition()) <= grouping_dist) {
-                        // t and n are within range of each other, and n and t are not in the same group
-                        //  n is in a group, t only might be.
-                        const new_group = [];
-                        let indexToReplace = null;
-                        let indexToRemove = null;
-                        groups.forEach((group) => {
-                            if (group.includes(t) || group.includes(n)) {
-                                if (indexToReplace === null) {
-                                    indexToReplace = groups.indexOf(group)
-                                } else if (indexToRemove === null) {
-                                    indexToRemove = groups.indexOf(group)
-                                }
-                                group.forEach((g) => {
-                                    new_group.push(g)
-                                    //groups.splice(groups.indexOf(group), 1)
-                                });
-                            }
-                        });
-
-                        if (!new_group.includes(n)) {
-                            new_group.push(n)
-                        }
-                        if (!new_group.includes(t)) {
-                            new_group.push(t)
-                        }
-                        //indicesToRemove.forEach((i) => {
-                        //    groups.splice(i, 1)
-                        //});
-                        // groups.push(new_group)
-
-                        if (indexToReplace !== null) {
-                            groups[indexToReplace] = new_group;
-                        }
-                        if (indexToRemove !== null) {
-                            groups[indexToRemove] = [];
-
-                        }
-
-                    }
-
-                });
-            });
-
-            for (let group_index = 0; group_index < groups.length; group_index++){
-                const group = groups[group_index];
-                if (group.length !== 0) {
-                    var added = false;
-                    MapTaskHeatmapController.addedGroups.forEach((addedGroup) => {
-                        if (MapTaskHeatmapController.arraysEqual(addedGroup, group)) {
-                            // This exact group is already here
-                            added = true;
-                        }
-                    });
-
-                    if (added) {
-                        // Already have this heatmap
-                    } else {
-                        var heatmapData = []
-                        group.forEach((g) => {
-                            heatmapData.push({
-                                location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                weight: 0.15
-                            });
-                        })
-
-
-                        // Remove the heatmap that contains these tasks (if any)
-
-                        //console.log("Pre markers:")
-
-
-                        var matchedMap = null;
-                        for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++) {
-                            for (const g of group) {
-                                if (MapTaskHeatmapController.addedGroups[i].includes(g)) {
-                                    //console.log("group: " + g.getId())
-                                    matchedMap = i;
-                                    break;
-                                }
-                            }
-
-                        }
-
-                        if (matchedMap !== null) {
-
-                            MapTaskHeatmapController.addedGroups[matchedMap].forEach((g) => {
-                                heatmapData.push({
-                                    location: new google.maps.LatLng(g.getPosition().lat(), g.getPosition().lng()),
-                                    weight: 0.15
-                                });
-                            });
-
-                            var heatmap = new google.maps.visualization.HeatmapLayer({
-                                data: heatmapData
-                            });
-
-                            //MapHeatmapController.addedGroups.splice(matchedMap, 1)
-                            MapTaskHeatmapController.addedGroups[matchedMap] = group;
-
-                            MapTaskHeatmapController.taskHeatmaps[matchedMap].setMap(null);
-                            delete MapTaskHeatmapController.taskHeatmaps[matchedMap];
-                            MapTaskHeatmapController.taskHeatmaps[matchedMap] = heatmap;
-                        } else {
-                            // Otherwise the index is the end of the list
-
-                            var heatmap = new google.maps.visualization.HeatmapLayer({
-                                data: heatmapData
-                            });
-
-                            matchedMap = MapTaskHeatmapController.addedGroups.length;
-                            MapTaskHeatmapController.addedGroups.push(group);
-                            MapTaskHeatmapController.taskHeatmaps.push(heatmap);
-                        }
-
-                        //MapTaskHeatmapController.addTaskMarkerFor(group, matchedMap);
-
-                        heatmap.setOptions({radius: 150, zIndex: -1})
-                        heatmap.setMap(this.map);
-                    }
+            const groups = MapTaskHeatmapController.groupTasks(); // Ensure this groups tasks correctly
+            groups.forEach((group, index) => {
+                if (group.length > 0) {
+                    console.log(`Creating TaskGroup with index: ${index}, group size: ${group.length}`);
+                    MapTaskHeatmapController.addTaskMarkerFor(group, index);
                 } else {
-                    // This is an empty group so we should remove its heatmap and task marker
-                    //alert("removing " + group_index)
-                    MapTaskHeatmapController.taskHeatmaps[group_index] = [];
-                    MapTaskHeatmapController.addedGroups[group_index] = [];
-
-                    // TODO doesn't add marker immediately
-
+                    console.warn(`Skipped empty group at index: ${index}`);
                 }
-            }
-
-            //MapTaskHeatmapController.addedGroups = groups
-
-            //console.log("Groups after heatmap bit: " + groups.length)
-            //groups.forEach((group) => {
-            //    console.log(" g: ")
-            //    group.forEach((g) => {
-            //        console.log("    " + g.getId())
-            //    });
-            //});
-            //console.log("AddedGroups after heatmap bit: " + MapTaskHeatmapController.addedGroups.length)
-            //MapTaskHeatmapController.addedGroups.forEach((group) => {
-            //    console.log(" g: ")
-            //    group.forEach((g) => {
-            //        console.log("    " + g.getId())
-            //    });
-            //});
+            });
         }
-        MapTaskHeatmapController.updateAllTaskMarkers();
-        //MapTaskHeatmapController.running = false;
-
     },
+
+    groupTasks: function () {
+        const groups = [];
+        const groupingDist = 250; // Adjust as needed
+        const tasks = [];
+
+        this.state.tasks.forEach((task) => {
+            tasks.push(task);
+        });
+
+        tasks.forEach((task) => {
+            let addedToGroup = false;
+
+            groups.forEach((group) => {
+                group.forEach((existingTask) => {
+                    const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                        existingTask.getPosition(),
+                        task.getPosition()
+                    );
+                    if (distance <= groupingDist) {
+                        group.push(task);
+                        addedToGroup = true;
+                        return;
+                    }
+                });
+                if (addedToGroup) return;
+            });
+
+            if (!addedToGroup) {
+                groups.push([task]);
+            }
+        });
+
+        return groups;
+    },
+
+
+    addTaskMarkerFor: function (group, index) {
+        if (!group || group.length === 0) {
+            console.error("Attempted to create marker for an empty or invalid group.");
+            return;
+        }
+
+        const markerId = `TaskGroup-${index}`;
+        console.log(`Creating marker with ID: ${markerId}`);
+
+        // Calculate the center of the group for marker placement
+        const newPos = MapTaskHeatmapController.calculateGroupCenter(group);
+
+        // Add marker
+        this.$el.gmap("addMarker", {
+            bounds: false,
+            draggable: false,
+            id: markerId,
+            position: new google.maps.LatLng(newPos.lat, newPos.lng),
+            marker: MarkerWithLabel,
+            labelContent: `[${index}] ${group.length} Tasks`,
+            labelAnchor: new google.maps.Point(25, 65),
+            labelClass: "labels",
+            labelStyle: { opacity: 1.0 },
+            raiseOnDrag: false,
+            zIndex: 3
+        });
+
+        const marker = this.$el.gmap("get", "markers")[markerId];
+        if (!marker) {
+            console.error(`Failed to create marker for TaskGroup-${index}`);
+            return;
+        }
+
+        $(marker).mouseover(() => this.onTaskMarkerMouseover(marker));
+        $(marker).mouseout(() => this.onTaskMarkerMouseout(marker));
+        MapTaskHeatmapController.taskMarkers[index] = marker;
+
+        marker.setMap(this.map);
+    },
+
+
+    getTaskGradient: function (taskGroup) {
+        const defaultGradient = [
+            "rgba(0, 255, 0, 0)",   // Transparent green
+            "rgba(0, 255, 0, 1)",   // Bright green
+            "rgba(127, 255, 0, 1)", // Lime green
+            "rgba(255, 255, 0, 1)", // Yellow
+            "rgba(255, 127, 0, 1)", // Orange
+            "rgba(255, 0, 0, 1)"    // Red
+        ];
+
+        // You can customize the gradient per taskGroup here if needed
+        return defaultGradient;
+    },
+
+
     updateAllTaskMarkers: function () {
         for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
             if (MapTaskHeatmapController.addedGroups[i].length === 0) {
@@ -224,6 +154,7 @@ var MapTaskHeatmapController = {
             }
         }
     },
+
     updateFor: function (task) {
         // TODO remove this marker's group. The whole map is then refreshed above
         for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
@@ -239,57 +170,45 @@ var MapTaskHeatmapController = {
 
         }
     },
-    addTaskMarkerFor: function (group, index) {
-        //console.log("Group size " + group.length + " index = " + index)
-        // 1. Find centre of coords
-        var latSum = 0;
-        var lngSum = 0;
-        group.forEach((g) => {
-            latSum += g.getPosition().lat();
-            lngSum += g.getPosition().lng();
+
+    calculateGroupCenter: function (group) {
+        let latSum = 0, lngSum = 0;
+        group.forEach(task => {
+            latSum += task.getPosition().lat();
+            lngSum += task.getPosition().lng();
         });
-        var newPos = _.position(latSum / group.length, lngSum / group.length);
-        // TODO this (after adjusting/creating marker)? this.views.control.trigger("update:agents");
-        // Check if we already have it
-        var marker = this.$el.gmap("get", "markers")["TaskGroup-"+index];
-        if (marker) {
-            marker.setPosition(newPos);
-            marker.setOptions({labelContent: "[" + index + "] " + group.length + " Tasks"});
-            //marker.setOptions({labelContent: group.length + " Tasks"});
-        } else {
-
-
-            // 2. Add a new marker with label "X tasks" and related to this group
-            this.$el.gmap("addMarker", {
-                bounds: false,
-                draggable: false,
-                id: "TaskGroup-" + index,
-                position: newPos,
-                centrePos: newPos,
-                marker: MarkerWithLabel,
-                labelContent: "[" + index + "] " + group.length + " Tasks",
-                //labelContent: group.length + " Tasks",
-                labelAnchor: new google.maps.Point(25, 65),
-                labelClass: "labels",
-                labelStyle: {opacity: 1.0},
-                raiseOnDrag: false,
-                zIndex: 3
-            });
-            marker = this.$el.gmap("get", "markers")["TaskGroup-" + index];
-
-            // TODO what is this???
-            //MapTaskController.updateTaskRendering("TaskGroup-" + index, this.MarkerColourEnum.RED);
-
-            $(marker).mouseover(function () {
-                MapTaskHeatmapController.onTaskMarkerMouseover(marker);
-            }).mouseout(function () {
-                MapTaskHeatmapController.onTaskMarkerMouseout(marker);
-            });
-            MapTaskHeatmapController.updateTaskRendering("TaskGroup-" + index, this.MarkerColourEnum.BLUE)
-
-        }
-        marker.setMap(this.map)
+        return {
+            lat: latSum / group.length,
+            lng: lngSum / group.length
+        };
     },
+
+    onTaskMarkerDrag: function (marker, group) {
+        const cursorPosition = marker.getPosition();
+        const groupTasks = this.taskGroups[group];
+
+        // Update the allocation rendering with a polyline
+        const path = groupTasks.map(task => ({
+            lat: task.getPosition().lat(),
+            lng: task.getPosition().lng(),
+        }));
+        path.push(cursorPosition);
+
+        this.drawAllocation(`TaskAllocation-${group}`, "blue", path);
+    },
+
+    onTaskMarkerDragEnd: function (marker, group) {
+        const groupTasks = this.taskGroups[group];
+        const taskIds = groupTasks.map(task => task.getId());
+
+        $.post("/allocation/groupAllocate", {
+            taskIds: taskIds.toString(),
+        });
+
+        this.hidePolyline(`TaskAllocation-${group}`);
+    },
+
+
     removeTaskMarkerFor: function (index) {
         var marker = this.$el.gmap("get", "markers")["TaskGroup-"+index];
         if (marker) {
@@ -298,6 +217,7 @@ var MapTaskHeatmapController = {
             delete marker;
         }
     },
+
     removeTaskMarkerForTask: function (task) {
         for (let i = 0; i < MapTaskHeatmapController.addedGroups.length; i++){
             if (MapTaskHeatmapController.addedGroups[i].includes(task)) {
@@ -305,6 +225,7 @@ var MapTaskHeatmapController = {
             }
         }
     },
+
     checkIfIn2DList: function (itemToCheck, lists) {
         let result = false;
         lists.forEach((list) => {
@@ -350,20 +271,19 @@ var MapTaskHeatmapController = {
         }
         return true;
     },
+
     onTaskMarkerMouseover: function (marker) {
-        // TODO update this to a list of tasks
-        //If in manual allocation mode, update the task id that will be manually allocated
-        //console.log("mouseover")
-        if(MapAgentHeatmapController.isManuallyAllocating) {
-            MapAgentHeatmapController.groupIdToAllocateManually = marker.id;
-            //console.log("here")
-            //this.updateAllocationRendering();
-        }
+        console.log("Mouseover on marker:", marker.id);
+        // Highlight task marker or trigger any specific functionality
+        marker.setOptions({ zIndex: 999 });
     },
+
     onTaskMarkerMouseout: function (marker) {
-        MapAgentHeatmapController.groupIdToAllocateManually = null;
-        //this.updateAllocationRendering();
+        console.log("Mouseout from marker:", marker.id);
+        // Reset task marker or remove highlight
+        marker.setOptions({ zIndex: 3 });
     },
+
     updateTaskRendering: function (taskId, colourOptions) {
         var marker = this.$el.gmap("get", "markers")[taskId];
         var icon = this.icons.MarkerMonitor;

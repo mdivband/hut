@@ -47,6 +47,7 @@ public abstract class Task extends MObject implements Serializable {
     // Not on client but used on server
     protected transient int status;
     protected transient double startTime;
+    private int taskGroup;
 
     public Task(String id, int type, Coordinate coordinate) {
         super(id, coordinate);
@@ -225,6 +226,10 @@ public abstract class Task extends MObject implements Serializable {
 
     public int getType() {
         return this.type;
+    }
+
+    public void setTaskGroup(int taskGroup) {
+        this.taskGroup = taskGroup;
     }
 
     public JsonObject serialize(JsonSerializationContext context) {

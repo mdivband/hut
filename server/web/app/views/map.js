@@ -163,7 +163,11 @@ App.Views.Map = Backbone.View.extend({
         try {
             self.clearUncertainties();
             self.clearPredictions();
-            MapTargetController.classifiedIds.clear();
+            if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
+                return
+            } else {
+                MapTargetController.classifiedIds.clear();
+            }
             MapImageController.reset();
             var markers = self.$el.gmap("get", "markers");
             for (var key in markers) {
@@ -597,7 +601,7 @@ App.Views.Map = Backbone.View.extend({
         // TODO fix (restore) the allocation renderings here
         if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
             MapTaskController.heatmapTaskUpdateGeneric();
-            //MapAgentHeatmapController.updateHeatmapAllocationRendering()
+            MapAgentHeatmapController.updateHeatmapAllocationRendering()
         } else {
             var self = this;
             var mainAllocation = this.state.getAllocation();
