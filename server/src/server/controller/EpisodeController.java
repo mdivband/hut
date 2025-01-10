@@ -5,6 +5,7 @@ import server.Simulator;
 import server.model.Coordinate;
 import server.model.State;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -13,7 +14,7 @@ public class EpisodeController {
     private final LSLLogger lslLogger = new LSLLogger();
     private final ArrayList<Episode> episodes;
     private Episode currentEpisode = null; // Important to start null; we ensure mainloop has to define time limit first
-    private Double currentEpisodeStartTime = null;
+    private Long currentEpisodeStartTime = null;
     private boolean userHasClicked = false;
 
     public EpisodeController() {
@@ -30,7 +31,7 @@ public class EpisodeController {
         }
         currentEpisode = episodes.remove(0);
         currentEpisode.setEpisodeTimeLimit(currentEpisode.getEpisodeLength());//Simulator.instance.getState().getTime() + currentEpisode.getEpisodeLength());
-        currentEpisodeStartTime = Simulator.instance.getState().getTime();
+        currentEpisodeStartTime = System.currentTimeMillis(); //Simulator.instance.getState().getTime();
         LOGGER.info(String.format("%s; NEWEP; New episode showing, code is (code); %s", Simulator.instance.getState().getTime(), currentEpisode.getEpisodeCode()));
         lslLogger.logEventMarker(currentEpisode.getEpisodeCode());
         addMarkers(currentEpisode.markers);
@@ -75,7 +76,7 @@ public class EpisodeController {
 
     public void click(boolean status) {
         boolean success = (status == currentEpisode.isNBackMatch);
-        double reactionTime = Simulator.instance.getState().getTime() - currentEpisodeStartTime;
+        double reactionTime = System.currentTimeMillis() - currentEpisodeStartTime;  //Simulator.instance.getState().getTime() - currentEpisodeStartTime;
         String clickString = (currentEpisode.isNBackMatch ? "T" : "F") + (success ? "T" : "F");
         LOGGER.info(String.format("%s; NBCLK; NBack clicked. Episode is/is not a match and so the user was with reaction time so the clickstring for oxysoft is (match, usrclicked, success, numAgents, reactiontime, clickstring); %s; %s; %s; %s; %s; %s", Simulator.instance.getState().getTime(), currentEpisode.isNBackMatch, status, (status == currentEpisode.isNBackMatch), getNumAgents(), reactionTime, clickString));
         lslLogger.logEventMarker("CL"+clickString);  // TODO check if we should send Correct/Incorrect or nBackTrue/nBackFalse
