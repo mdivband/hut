@@ -17,8 +17,8 @@ var MapAgentHeatmapController = {
         this.removeAgentMarkerFor = _.bind(this.removeAgentMarkerFor, context);
         this.removeAgentMarkerForAgentWithTask = _.bind(this.removeAgentMarkerForAgentWithTask, context);
         this.addTeamMarker = _.bind(this.addTeamMarker, context);
-        this.onHeatmapMarkerDrag = _.bind(this.onHeatmapMarkerDrag, context);
-        this.onHeatmapMarkerDragEnd = _.bind(this.onHeatmapMarkerDragEnd, context);
+        this.onAgentMarkerDrag = _.bind(this.onAgentMarkerDrag, context);
+        this.onAgentMarkerDragEnd = _.bind(this.onAgentMarkerDragEnd, context);
         this.drawAllocation = _.bind(this.drawAllocation, context);
         this.updateHeatmapAllocationRendering = _.bind(this.updateHeatmapAllocationRendering, context);
         this.hidePolyline = _.bind(this.hidePolyline, context);
@@ -156,13 +156,11 @@ var MapAgentHeatmapController = {
     },
 
     addTeamMarker: function (group, index) {
-        // Validate that `group` is an array
         if (!Array.isArray(group)) {
             console.error("Invalid group passed to addTeamMarker. Expected array, got:", group);
             return;
         }
 
-        // Calculate the center of the group's agents
         let latSum = 0, lngSum = 0;
         group.forEach(agent => {
             const position = agent.getPosition();
@@ -173,138 +171,115 @@ var MapAgentHeatmapController = {
         const centerLng = lngSum / group.length;
         const newPos = new google.maps.LatLng(centerLat, centerLng);
 
-        // Generate marker label (e.g., "Group-3")
-        const markerLabel = `Group-${index}`;
         const markerId = `AgentGroup-${index}`;
-
         let marker = MapAgentHeatmapController.teamMarkers[markerId];
+
         if (marker) {
-            // Update existing marker's position and label
             marker.setPosition(newPos);
-            marker.setOptions({
-                labelContent: markerLabel,
-            });
-            marker.centrePos = newPos; // Update the calculated center
         } else {
-            // Add a new marker using MarkerWithLabel
             this.$el.gmap("addMarker", {
                 bounds: false,
                 marker: MarkerWithLabel,
-                draggable: true, // Allow dragging for allocation
-                labelContent: markerLabel,
+                draggable: true,
+                id: markerId,
+                position: newPos,
+                labelContent: `Group-${index}`,
                 labelAnchor: new google.maps.Point(25, 65),
                 labelClass: "labels",
                 labelStyle: { opacity: 1.0 },
-                id: markerId,
-                position: newPos,
-                raiseOnDrag: false,
                 zIndex: 3,
             });
 
             marker = this.$el.gmap("get", "markers")[markerId];
-            marker.centrePos = newPos; // Save the calculated center
+            marker.centrePos = newPos;
             MapAgentHeatmapController.teamMarkers[markerId] = marker;
 
-            // Add drag event listeners for allocation
-            $(marker)
-                .drag(() => {
-                    MapAgentHeatmapController.onHeatmapMarkerDrag(marker, group);
-                })
-                .dragend(() => {
-                    MapAgentHeatmapController.onHeatmapMarkerDragEnd(marker, group);
-                });
+            // Add drag event listeners
+            google.maps.event.addListener(marker, "drag", () => {
+                MapAgentHeatmapController.onAgentMarkerDrag(marker, group);
+            });
+            google.maps.event.addListener(marker, "dragend", () => {
+                MapAgentHeatmapController.onAgentMarkerDragEnd(marker, group);
+            });
         }
 
-        // Update the marker's icon using the existing updateTaskMarkerIcon method
-        MapTaskController.updateTaskMarkerIcon(markerId, {
-            h: 180,
-            s: 1,
-            l: 1,
-        });
-
-        // Set the marker on the map
         marker.setMap(this.map);
     },
 
-    onHeatmapMarkerDrag: function (marker, group) {
+
+    onAgentMarkerDrag: function (marker, group) {
         if (!MapAgentHeatmapController.isManuallyAllocating) {
             MapAgentHeatmapController.isManuallyAllocating = true;
         }
 
-        // Ensure we have a valid starting position (marker should not move)
         const groupPosition = marker.centrePos || marker.getPosition();
-
-        // Get the position of the cursor during drag
         const cursorPosition = marker.getPosition();
+        marker.setPosition(groupPosition); // Prevent movement
 
-        // Reposition the marker back to its original position to prevent movement
-        marker.setPosition(groupPosition);
-
-        // Define the endpoint of the allocation arrow (cursor or task marker being hovered over)
         const arrowEnd = MapAgentHeatmapController.groupIdToAllocateManually
             ? this.$el.gmap("get", "markers")[MapAgentHeatmapController.groupIdToAllocateManually].getPosition()
             : cursorPosition;
 
         const path = [groupPosition, arrowEnd];
-
-        // Draw the allocation arrow
         let polyline = this.$el.gmap("get", "overlays > Polyline", [])["manual_allocation"];
+
         if (polyline) {
-            if (!polyline.getMap()) {
-                polyline.setMap(this.map);
-            }
-            polyline.setOptions({ path });
+            polyline.setPath(path);
         } else {
             this.$el.gmap("addShape", "Polyline", {
                 id: "manual_allocation",
                 editable: false,
                 path,
-                icons: [
-                    {
-                        icon: {
-                            scale: 4,
-                            path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
-                        },
-                        offset: "100%",
-                    },
-                ],
-                strokeOpacity: 0.8,
                 strokeColor: "blue",
-                strokeWeight: 5,
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
                 zIndex: 2,
             });
         }
     },
 
-    onHeatmapMarkerDragEnd: function (marker, group) {
-        // No longer manually allocating
+    onAgentMarkerDragEnd: function (marker, group) {
         MapAgentHeatmapController.isManuallyAllocating = false;
 
-        // Reposition the marker back to its original position
         const groupPosition = marker.centrePos || marker.getPosition();
         marker.setPosition(groupPosition);
 
-        // Perform allocation if a task marker was hovered over
         if (MapAgentHeatmapController.groupIdToAllocateManually) {
             const agentsIdsToPass = group.map(agent => agent.getId());
-
-            // Resolve the hovered task marker to an actual task group index
             const taskGroupId = MapAgentHeatmapController.groupIdToAllocateManually;
+
+            console.log(`Agent IDs: ${agentsIdsToPass}`);
+            console.log(`Hovered Task Group ID: ${taskGroupId}`);
+
             const taskGroupIndex = taskGroupId.startsWith("TaskGroup-")
                 ? parseInt(taskGroupId.split("-")[1], 10)
                 : null;
 
-            if (taskGroupIndex !== null && MapTaskHeatmapController.addedGroups[taskGroupIndex]) {
-                const taskIdsToPass = MapTaskHeatmapController.addedGroups[taskGroupIndex].map(task => task.getId());
+            console.log(`Resolved Task Group Index: ${taskGroupIndex}`);
 
-                // Post allocation data
-                $.post("/allocation/groupAllocate", {
-                    agentIds: agentsIdsToPass.toString(),
-                    taskIds: taskIdsToPass.toString(),
-                });
+            if (taskGroupIndex !== null) {
+                const taskGroup = MapTaskHeatmapController.addedGroups[taskGroupIndex];
+                if (taskGroup) {
+                    const taskIdsToPass = taskGroup.map(task => task.getId());
+                    console.log(`Task IDs to Allocate: ${taskIdsToPass}`);
+
+                    // Send the allocation POST request
+                    $.post("/allocation/groupAllocate", {
+                        agentIds: agentsIdsToPass.toString(),
+                        taskIds: taskIdsToPass.toString(),
+                    }).done(() => {
+                        console.log("Allocation successful!");
+                    }).fail((error) => {
+                        console.error("Failed to allocate tasks:", error);
+                    });
+                } else {
+                    console.error(`Task group not found for index ${taskGroupIndex}.`);
+                }
             } else {
-                console.error("Failed to resolve task group for allocation.");
+                console.error("Failed to resolve task group ID.");
             }
+        } else {
+            console.log("No task group was hovered over during allocation.");
         }
 
         // Hide the allocation arrow
@@ -315,6 +290,7 @@ var MapAgentHeatmapController = {
 
         MapAgentHeatmapController.groupIdToAllocateManually = null;
     },
+
 
     removeAgentMarkerFor: function (index) {
         const markerId = "AgentGroup-" + index;
@@ -451,39 +427,6 @@ var MapAgentHeatmapController = {
             });
         }
     },
-
-    drawAllocationArrow: function (agentId, taskId) {
-        const agentMarker = this.$el.gmap("get", "markers")[agentId];
-        const taskMarker = this.$el.gmap("get", "markers")[taskId];
-
-        if (agentMarker && taskMarker) {
-            const path = [agentMarker.getPosition(), taskMarker.getPosition()];
-
-            // Add or update polyline for the allocation
-            const allocationId = `${agentId}-${taskId}`;
-            const polyline = this.$el.gmap("get", "overlays > Polyline", [])[allocationId];
-            if (polyline) {
-                polyline.setOptions({ path });
-            } else {
-                this.$el.gmap("addShape", "Polyline", {
-                    id: allocationId,
-                    editable: false,
-                    path: path,
-                    icons: [{
-                        icon: {
-                            scale: 4,
-                            path: google.maps.SymbolPath.FORWARD_OPEN_ARROW
-                        },
-                        offset: '100%'
-                    }],
-                    strokeOpacity: 0.8,
-                    strokeColor: 'blue',
-                    strokeWeight: 3,
-                });
-            }
-        }
-    },
-
 
     updateHeatmapAllocationRendering: function () {
         const self = this;

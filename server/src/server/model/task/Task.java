@@ -247,6 +247,7 @@ public abstract class Task extends MObject implements Serializable {
         jsonObj.add("coordinate", context.serialize(getCoordinate()));
         jsonObj.add("id", context.serialize(getId()));
         jsonObj.add("type", context.serialize(getType()));
+        jsonObj.add("taskGroup", context.serialize(getTaskGroup()));
 
         return jsonObj;
     }
@@ -259,4 +260,7 @@ public abstract class Task extends MObject implements Serializable {
         }
     };
 
+    public int getTaskGroup() {
+        return taskGroup;
+    }
 }

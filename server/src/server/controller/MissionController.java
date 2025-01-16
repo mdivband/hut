@@ -76,6 +76,7 @@ public class MissionController extends AbstractController {
                 createdTask = simulator.getTaskController().createTask(0, relPos.getLatitude(), relPos.getLongitude(), currentTaskGroup);
                 tasksInThisBatch.add(createdTask);
             }
+
         }
     }
 
