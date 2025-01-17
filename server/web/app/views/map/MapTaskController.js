@@ -212,7 +212,8 @@ var MapTaskController = {
     },
     onTaskChange: function (task) {
         if (this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")) {
-            MapTaskController.heatmapTaskUpdateGeneric(task);
+            //MapTaskController.heatmapTaskUpdateGeneric(task);
+            MapTaskHeatmapController.updateTaskMaps();
         } else {
             var marker = this.$el.gmap("get", "markers")[task.getId()];
             if (marker)

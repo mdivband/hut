@@ -22,7 +22,7 @@ var MapAgentHeatmapController = {
         this.drawAllocation = _.bind(this.drawAllocation, context);
         this.updateHeatmapAllocationRendering = _.bind(this.updateHeatmapAllocationRendering, context);
         this.hidePolyline = _.bind(this.hidePolyline, context);
-        this.drawAllocationArrow = _.bind(this.drawAllocationArrow, context);
+        this.clearAllArrows = _.bind(this.clearAllArrows, context);
     },
 
     /**
@@ -183,7 +183,7 @@ var MapAgentHeatmapController = {
                 draggable: true,
                 id: markerId,
                 position: newPos,
-                labelContent: `Group-${index}`,
+                labelContent: `AgentGroup-${index}`,
                 labelAnchor: new google.maps.Point(25, 65),
                 labelClass: "labels",
                 labelStyle: { opacity: 1.0 },
@@ -258,23 +258,15 @@ var MapAgentHeatmapController = {
             console.log(`Resolved Task Group Index: ${taskGroupIndex}`);
 
             if (taskGroupIndex !== null) {
-                const taskGroup = MapTaskHeatmapController.addedGroups[taskGroupIndex];
-                if (taskGroup) {
-                    const taskIdsToPass = taskGroup.map(task => task.getId());
-                    console.log(`Task IDs to Allocate: ${taskIdsToPass}`);
-
-                    // Send the allocation POST request
-                    $.post("/allocation/groupAllocate", {
-                        agentIds: agentsIdsToPass.toString(),
-                        taskIds: taskIdsToPass.toString(),
-                    }).done(() => {
-                        console.log("Allocation successful!");
-                    }).fail((error) => {
-                        console.error("Failed to allocate tasks:", error);
-                    });
-                } else {
-                    console.error(`Task group not found for index ${taskGroupIndex}.`);
-                }
+                // Send the allocation POST request with the entire task group
+                $.post("/allocation/groupAllocate", {
+                    agentIds: agentsIdsToPass.toString(),
+                    taskGroupIndex: taskGroupIndex
+                }).done(() => {
+                    console.log("Allocation successful!");
+                }).fail((error) => {
+                    console.error("Failed to allocate tasks:", error);
+                });
             } else {
                 console.error("Failed to resolve task group ID.");
             }
@@ -385,24 +377,31 @@ var MapAgentHeatmapController = {
         MapAgentHeatmapController.teamAgentData = {};
     },
 
-    drawAllocation: function (lineId, color, agentId, taskId) {
-        const agentMarker = this.$el.gmap("get", "markers")[`AgentGroup-${agentId}`];
-        const taskMarker = this.$el.gmap("get", "markers")[`TaskGroup-${taskId}`];
+    drawAllocation: function (lineId, color, agentGroupId, taskGroupId) {
+        console.log(`looking for: ${agentGroupId}`)
+        // Retrieve the agent group marker
+        const agentGroupMarker = this.$el.gmap("get", "markers")[`${agentGroupId}`];
+        console.log(`looking for: TaskGroup-${taskGroupId}`)
+        // Retrieve the task group marker
+        const taskGroupMarker = this.$el.gmap("get", "markers")[`TaskGroup-${taskGroupId}`];
 
-        if (!agentMarker || !taskMarker) {
-            console.warn(`Markers not found for agent ${agentId} or task ${taskId}`);
+        // Check if markers exist
+        if (!agentGroupMarker || !taskGroupMarker) {
+            console.warn(`Markers not found for Agent Group ${agentGroupId} or Task Group ${taskGroupId}`);
             return;
         }
 
+        // Define the path for the polyline
         const path = [
-            agentMarker.getPosition(),
-            taskMarker.getPosition(),
+            agentGroupMarker.getPosition(),
+            taskGroupMarker.getPosition(),
         ];
 
+        // Check if the polyline already exists
         let polyline = this.$el.gmap("get", "overlays > Polyline", [])[lineId];
 
         if (polyline) {
-            // Update existing arrow
+            // Update the existing arrow
             polyline.setOptions({
                 path: path,
                 strokeColor: color,
@@ -428,50 +427,148 @@ var MapAgentHeatmapController = {
         }
     },
 
-    updateHeatmapAllocationRendering: function () {
-        const self = this;
-        const mainAllocation = this.state.getAllocation();
-        const tempAllocation = this.state.getTempAllocation();
-        const droppedAllocation = this.state.getDroppedAllocation();
 
-        // Iterate over agents and update allocation arrows
-        this.state.agents.each(function (agent) {
-            const agentId = agent.getId();
-
-            // Main allocation
-            if (agentId in mainAllocation) {
-                const mainTaskId = mainAllocation[agentId];
-                MapAgentHeatmapController.drawAllocation(`${agentId}_main`, "green", agentId, mainTaskId);
-            } else {
-                MapAgentHeatmapController.hidePolyline(`${agentId}_main`);
-            }
-
-            // Temporary allocation
-            if (self.state.getEditMode() === 2 && agentId in tempAllocation) {
-                const tempTaskId = tempAllocation[agentId];
-                MapAgentHeatmapController.drawAllocation(`${agentId}_temp`, "orange", agentId, tempTaskId);
-            } else {
-                MapAgentHeatmapController.hidePolyline(`${agentId}_temp`);
-            }
-
-            // Dropped allocation
-            if (self.state.getEditMode() === 2 && agentId in droppedAllocation) {
-                const droppedTaskId = droppedAllocation[agentId];
-                MapAgentHeatmapController.drawAllocation(`${agentId}_dropped`, "grey", agentId, droppedTaskId);
-            } else {
-                MapAgentHeatmapController.hidePolyline(`${agentId}_dropped`);
+    hidePolyline: function (lineId) {
+        const polylines = this.$el.gmap("get", "overlays > Polyline", []);
+        Object.keys(polylines).forEach(key => {
+            if (key.startsWith(lineId)) {
+                const polyline = polylines[key];
+                if (polyline) {
+                    console.log(`Removing polyline: ${key}`);
+                    polyline.setMap(null);
+                    delete polylines[key];
+                }
             }
         });
     },
 
-    hidePolyline: function (lineId) {
-        const polyline = this.$el.gmap("get", "overlays > Polyline", [])[lineId];
-        if (polyline) {
-            polyline.setMap(null); // Remove from map
-            delete this.$el.gmap("get", "overlays > Polyline", [])[lineId]; // Delete from storage
-        }
-    },
+    updateHeatmapAllocationRendering: function () {
+        console.log("Rendering heatmap allocation updates...");
 
+        const mainAllocation = this.state.getAllocation(); // Main allocation (team -> task mapping)
+        const tempAllocation = this.state.getTempAllocation(); // Temporary allocation
+
+        console.log("Main Allocation:", mainAllocation);
+        console.log("Temporary Allocation:", tempAllocation);
+
+        // Log the current teamAgentData
+        console.log("Current Team Agent Data:", MapAgentHeatmapController.teamAgentData);
+
+        // Convert teamAgentData to an ordered list of teamKeys
+        const teamKeys = Object.keys(MapAgentHeatmapController.teamAgentData);
+
+        // Iterate over all agent group markers
+        Object.keys(MapAgentHeatmapController.teamMarkers).forEach((teamMarkerId) => {
+            console.log(`Processing team marker: ${teamMarkerId}`);
+
+            // Extract the numeric group ID from the marker ID (e.g., "AgentGroup-1" -> 1)
+            const groupId = parseInt(teamMarkerId.replace("AgentGroup-", ""), 10) - 1;
+            console.log(`Extracted group ID: ${groupId}`);
+
+            // Match the groupId to the corresponding teamKey
+            if (groupId < 0 || groupId >= teamKeys.length) {
+                console.warn(`Invalid group ID: ${groupId}`);
+                this.hidePolyline(`${teamMarkerId}_main`);
+                this.hidePolyline(`${teamMarkerId}_temp`);
+                return;
+            }
+
+            const matchedTeamKey = teamKeys[groupId];
+            const matchedAgents = MapAgentHeatmapController.teamAgentData[matchedTeamKey];
+            console.log(`Found agents for team: ${matchedTeamKey} -> ${matchedAgents.map(agent => agent.getId()).join(", ")}`);
+
+            // Find the allocated task for any agent in this team
+            let allocatedTaskId = null;
+            let selectedAgent = null;
+
+            for (const agent of matchedAgents) {
+                allocatedTaskId = mainAllocation[agent.getId()];
+                if (allocatedTaskId) {
+                    selectedAgent = agent;
+                    break;
+                }
+            }
+
+            if (!allocatedTaskId || !selectedAgent) {
+                console.warn(`No allocated task found for team: ${matchedTeamKey}`);
+                this.hidePolyline(`${teamMarkerId}_main`);
+                this.hidePolyline(`${teamMarkerId}_temp`);
+                return;
+            }
+
+            console.log(`Selected agent: ${selectedAgent.getId()} with task ID: ${allocatedTaskId}`);
+
+            // Retrieve the task and its group
+            const allocatedTask = this.state.tasks.find(task => task.getId() === allocatedTaskId);
+            if (!allocatedTask) {
+                console.warn(`Task with ID ${allocatedTaskId} not found.`);
+                this.hidePolyline(`${teamMarkerId}_main`);
+                this.hidePolyline(`${teamMarkerId}_temp`);
+                return;
+            }
+
+            console.log(`Found allocated task:`, allocatedTask);
+
+            const taskGroupId = allocatedTask.getTaskGroup();
+            console.log(`Task belongs to TaskGroup ID: ${taskGroupId}`);
+
+            const taskMarkerId = `TaskGroup-${taskGroupId}`;
+            const taskMarker = this.$el.gmap("get", "markers")[taskMarkerId];
+
+            if (!taskMarker) {
+                console.warn(`TaskGroup marker for TaskGroup-${taskGroupId} not found.`);
+                this.hidePolyline(`${teamMarkerId}_main`);
+                this.hidePolyline(`${teamMarkerId}_temp`);
+                return;
+            }
+
+            console.log(`Drawing main allocation: Agent Group ${teamMarkerId} -> Task Group ${taskGroupId}`);
+            MapAgentHeatmapController.drawAllocation(`${teamMarkerId}_main`, "green", teamMarkerId, taskGroupId);
+
+            // Temporary allocation handling
+            if (this.state.getEditMode() === 2) {
+                const tempTaskId = tempAllocation[selectedAgent.getId()];
+                if (tempTaskId) {
+                    const tempTask = this.state.tasks.find(task => task.getId() === tempTaskId);
+                    if (tempTask) {
+                        const tempTaskGroupId = tempTask.getTaskGroup();
+                        const tempTaskMarkerId = `TaskGroup-${tempTaskGroupId}`;
+                        const tempTaskMarker = this.$el.gmap("get", "markers")[tempTaskMarkerId];
+
+                        if (tempTaskMarker) {
+                            console.log(`Drawing temporary allocation: Agent Group ${teamMarkerId} -> Task Group ${tempTaskGroupId}`);
+                            MapAgentHeatmapController.drawAllocation(`${teamMarkerId}_temp`, "orange", teamMarkerId, tempTaskGroupId);
+                        } else {
+                            console.warn(`Temporary TaskGroup marker for TaskGroup-${tempTaskGroupId} not found.`);
+                            this.hidePolyline(`${teamMarkerId}_temp`);
+                        }
+                    } else {
+                        console.warn(`Temporary Task with ID ${tempTaskId} not found.`);
+                        this.hidePolyline(`${teamMarkerId}_temp`);
+                    }
+                } else {
+                    console.log(`No temporary allocation for Agent Group ${teamMarkerId} or not in EditMode 2.`);
+                    this.hidePolyline(`${teamMarkerId}_temp`);
+                }
+            } else {
+                console.log(`Not in EditMode 2. Hiding temporary allocation polyline.`);
+                this.hidePolyline(`${teamMarkerId}_temp`);
+            }
+        });
+    }
+
+
+    ,
+
+
+    clearAllArrows: function () {
+        const polylines = this.$el.gmap("get", "overlays > Polyline", []);
+        Object.keys(polylines).forEach(key => {
+            console.log(`Clearing polyline: ${key}`);
+            polylines[key].setMap(null);
+            delete polylines[key];
+        });
+    },
 
 
 };

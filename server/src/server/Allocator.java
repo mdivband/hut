@@ -651,13 +651,16 @@ public class Allocator {
         if (!agents.isEmpty() && !tasks.isEmpty()) {
             HashMap<String, String> result = new HashMap<>();
 
+            // Create a mutable copy of the agents list
+            List<Agent> mutableAgents = new ArrayList<>(agents);
+
             for (Task task : tasks) {
                 task.clearAgents();
             }
 
-            //Make sure the assignments won't be modified if the agent is working
+            // Make sure the assignments won't be modified if the agent is working
             ArrayList<Agent> workingAgents = new ArrayList<>();
-            for (Agent agent : agents) {
+            for (Agent agent : mutableAgents) {
                 if (agent.getTask() != null && agent.isWorking()) {
                     if (!tasks.contains(agent.getTask()) && agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
                         agent.setAllocatedTaskId(null);
@@ -670,7 +673,6 @@ public class Allocator {
                         if (agent.getTask().getAgents().size() >= agent.getTask().getGroup()) {
                             tasks.remove(agent.getTask());
                         }
-
                     }
                 } else {
                     agent.setAllocatedTaskId(null);
@@ -680,34 +682,35 @@ public class Allocator {
             }
 
             for (Agent agent : workingAgents) {
-                agents.remove(agent);
+                mutableAgents.remove(agent);
             }
             System.out.println(tasks);
-            System.out.println(agents);
-            List<Agent> agentsCopy = new ArrayList<>(agents);
-            //int i = 0;
+            System.out.println(mutableAgents);
+
+            List<Agent> agentsCopy = new ArrayList<>(mutableAgents);
             for (Task task : tasks) {
                 if (task.getAgents().size() < task.getGroup()) {
-                    //if (i < agents.size()) {
-                    if (agents.size() > 0) {
-                        int rnd = new Random().nextInt(agents.size());
-                        Agent agent = agents.get(rnd);
+                    if (!mutableAgents.isEmpty()) {
+                        int rnd = new Random().nextInt(mutableAgents.size());
+                        Agent agent = mutableAgents.get(rnd);
                         result.put(agent.getId(), task.getId());
-                        agents.remove(agent);
+                        mutableAgents.remove(agent);
                     } else {
                         int rnd = new Random().nextInt(agentsCopy.size());
                         Agent agent = agentsCopy.get(rnd);
                         ((AgentVirtual) agent).addTaskToQueue(task);
                     }
-                    //i++;
                 }
             }
 
-            if (!editMode) oldresult = result;
+            if (!editMode) {
+                oldresult = result;
+            }
             return result;
         }
         return null;
     }
+
 
 
 

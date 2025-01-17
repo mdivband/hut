@@ -27,6 +27,7 @@ var MapTaskHeatmapController = {
         this.getTaskGradient = _.bind(this.getTaskGradient, context);
         this.calculateGroupCenter = _.bind(this.calculateGroupCenter, context);
         this.groupTasks = _.bind(this.groupTasks, context);
+        this.updateTaskMaps = _.bind(this.updateTaskMaps, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -69,6 +70,51 @@ var MapTaskHeatmapController = {
         }
     },
 
+    updateTaskMaps: function () {
+        if (!this.state.tasks.isEmpty()) {
+            const groupedTasks = MapTaskHeatmapController.groupTasks();
+
+            groupedTasks.forEach((group, index) => {
+                if (group.length > 0) {
+                    // Update or create task marker for this group
+                    MapTaskHeatmapController.addTaskMarkerFor(group, index);
+
+                    // Update heatmap for this group
+                    const heatmapData = group.map(task => ({
+                        location: new google.maps.LatLng(task.getPosition().lat(), task.getPosition().lng()),
+                        weight: 0.15, // Adjust weight if necessary
+                    }));
+
+                    if (MapTaskHeatmapController.taskHeatmaps[index]) {
+                        // Update existing heatmap
+                        MapTaskHeatmapController.taskHeatmaps[index].setData(heatmapData);
+                    } else {
+                        // Create new heatmap
+                        const heatmap = new google.maps.visualization.HeatmapLayer({
+                            data: heatmapData,
+                            gradient: this.getTaskGradient(group),
+                            radius: 50, // Adjust radius for visualization
+                        });
+
+                        heatmap.setMap(this.map);
+                        MapTaskHeatmapController.taskHeatmaps[index] = heatmap;
+                        console.log(`Heatmap updated for TaskGroup-${index}`);
+                    }
+                } else {
+                    // Remove empty groups
+                    this.removeTaskMarkerFor(index);
+                    if (MapTaskHeatmapController.taskHeatmaps[index]) {
+                        MapTaskHeatmapController.taskHeatmaps[index].setMap(null);
+                        delete MapTaskHeatmapController.taskHeatmaps[index];
+                    }
+                    console.log(`Removed empty TaskGroup-${index}`);
+                }
+            });
+
+            console.log("Task maps updated incrementally.");
+        }
+    },
+
 
     groupTasks: function () {
         const groups = {};
@@ -94,21 +140,23 @@ var MapTaskHeatmapController = {
     },
 
     addTaskMarkerFor: function (group, index) {
-        const markerId = `TaskGroup-${index}`;
+        const markerId = `TaskGroup-${index}`; // Use the raw index as marker ID
         const newPos = MapTaskHeatmapController.calculateGroupCenter(group);
 
         const existingMarker = this.$el.gmap("get", "markers")[markerId];
+        const labelContent = `TaskGroup-${index}`; // Display TaskGroup-X format in label
+
         if (existingMarker) {
             existingMarker.setPosition(new google.maps.LatLng(newPos.lat, newPos.lng));
-            existingMarker.setOptions({ labelContent: `[${index}] ${group.length} Tasks` });
+            existingMarker.setOptions({ labelContent }); // Update the label content
         } else {
             this.$el.gmap("addMarker", {
                 bounds: false,
                 draggable: false,
-                id: markerId,
+                id: markerId, // Raw index as ID
                 position: new google.maps.LatLng(newPos.lat, newPos.lng),
                 marker: MarkerWithLabel,
-                labelContent: `[${index}] ${group.length} Tasks`,
+                labelContent, // Use improved label content
                 labelAnchor: new google.maps.Point(25, 65),
                 labelClass: "labels",
                 labelStyle: { opacity: 1.0 },
@@ -118,7 +166,7 @@ var MapTaskHeatmapController = {
             const marker = this.$el.gmap("get", "markers")[markerId];
             if (marker) {
                 $(marker).mouseover(() => {
-                    MapAgentHeatmapController.groupIdToAllocateManually = markerId;
+                    MapAgentHeatmapController.groupIdToAllocateManually = `TaskGroup-${index}`; // Keep TaskGroup-X format for logic
                 });
                 $(marker).mouseout(() => {
                     MapAgentHeatmapController.groupIdToAllocateManually = null;
@@ -128,7 +176,6 @@ var MapTaskHeatmapController = {
             }
         }
     },
-
 
 
     getTaskGradient: function (taskGroup) {

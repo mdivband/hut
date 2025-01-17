@@ -9,6 +9,7 @@ import tool.HttpServer.Response;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.FileHandler;
+import java.util.stream.Collectors;
 
 /**
  * Rest handler for the allocation
@@ -88,25 +89,40 @@ public class AllocationHandler extends RestHandler {
 
     private void handleGroupAllocate(Request req, Response resp) throws IOException {
         Map<String, String> params = req.getParams();
-        List<String> expectedKeys = Arrays.asList("agentIds", "taskIds");
+        List<String> expectedKeys = Arrays.asList("agentIds", "taskGroupIndex");
 
         System.out.println(params);
 
-        if (!checkParams(params, expectedKeys, resp))
+        // Validate the parameters
+        if (!checkParams(params, expectedKeys, resp)) {
             return;
+        }
 
-        List<Agent> agentIdsAsArray = new ArrayList<>();
-        Arrays.stream(params.get("agentIds").split(",")).forEach(a -> agentIdsAsArray.add(Simulator.instance.getState().getAgent(a)));
+        // Parse agent IDs and task group index
+        List<String> agentIds = Arrays.asList(params.get("agentIds").split(","));
+        int taskGroupIndex = Integer.parseInt(params.get("taskGroupIndex"));
 
-        List<Task> taskIdsAsArray = new ArrayList<>();
-        Arrays.stream(params.get("taskIds").split(",")).forEach(t -> taskIdsAsArray.add(Simulator.instance.getState().getTask(t)));
+        // Retrieve matching agents
+        List<Agent> matchingAgents = simulator.getState().getAgents().stream()
+                .filter(agent -> agentIds.contains(agent.getId()))
+                .toList();
 
-        simulator.getAllocator().dynamicRandomAssignSubgroup(agentIdsAsArray, taskIdsAsArray);
+        // Retrieve matching tasks
+        List<Task> matchingTasks = simulator.getState().getTasks().stream()
+                .filter(task -> task.getTaskGroup() == taskGroupIndex)
+                .toList();
+
+        // Debugging: Log the matching agents and tasks
+        System.out.println("Matching Agents:");
+        matchingAgents.forEach(agent -> System.out.println("Agent ID: " + agent.getId()));
+
+        System.out.println("Matching Tasks:");
+        matchingTasks.forEach(task -> System.out.println("Task ID: " + task.getId()));
+
+        // Perform the allocation
+        simulator.getAllocator().dynamicRandomAssignSubgroup(matchingAgents, matchingTasks);
         simulator.getAllocator().confirmAllocation(simulator.getState().getTempAllocation());
-
-        resp.sendOkay();
     }
-
 
     private void handleUndo(Response resp) throws IOException {
         simulator.getAllocator().undoAllocationChange();
