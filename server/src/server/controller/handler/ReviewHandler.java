@@ -1,16 +1,10 @@
 package server.controller.handler;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import server.Simulator;
-import server.model.agents.Agent;
-import server.model.Coordinate;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +28,8 @@ public class ReviewHandler extends RestHandler {
             case "/report/workload":
                 handleReportWorkload(req, resp);
                 break;
-            case "/nback/click":
-                handleNBackClick(req, resp);
+            case "/report/degradation":
+                handleDegradation(req, resp);
                 break;
             default:
                 throw new UnregisteredPathException("No method for handling POST request on " + req.getPath());
@@ -84,7 +78,7 @@ public class ReviewHandler extends RestHandler {
         this.simulator.getState().setWorkloadLevel(level);
     }
 
-    private void handleNBackClick(Request req, Response resp) throws IOException {
+    private void handleDegradation(Request req, Response resp) throws IOException {
         Map<String, String> params = req.getParams();
         List<String> expectedKeys = List.of("status");
         if (!checkParams(params, expectedKeys, resp))

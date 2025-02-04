@@ -37,7 +37,6 @@ var MapController = {
         this.isHeatmapMode = _.bind(this.isHeatmapMode, context);
         this.updateAllocationVisibility = _.bind(this.updateAllocationVisibility, context);
         this.showPredictedPaths = _.bind(this.showPredictedPaths, context);
-        this.NBackReset = _.bind(this.NBackReset, context);
         this.pushImage = _.bind(this.pushImage, context);
         this.getCurrentImage = _.bind(this.getCurrentImage, context);
         this.clearReviewImage = _.bind(this.clearReviewImage, context);
@@ -97,11 +96,8 @@ var MapController = {
         $("#remove_agent").on('click', function () {
             MapController.onRemoveAgentClick()
         });
-        $("#nBackMatch").on('click', function () {
-            MapController.onNBackMatchClick()
-        });
-        $("#nBackNoMatch").on('click', function () {
-            MapController.onNBackNoMatchClick()
+        $("#degradationClick").on('click', function () {
+            MapController.onDegradationClick()
         });
 
         this.state.on("change:scoreInfo", function () {
@@ -254,26 +250,9 @@ var MapController = {
     onRemoveAgentClick: function () {
         $.post("/agents/hubdespawn");
     },
-    onNBackMatchClick: function () {
-        $("#nBackMatch").text("Match Selected");
-        $("#nBackMatch").prop('disabled', true);
-
-        $("#nBackNoMatch").text("-");
-        $("#nBackNoMatch").prop('disabled', true);
-
-        $.post("/review/nback/click", {
+    onDegradationClick: function () {
+        $.post("/review/report/degradation", {
             status: true
-        });
-    },
-    onNBackNoMatchClick: function () {
-        $("#nBackNoMatch").text("-");
-        $("#nBackNoMatch").prop('disabled', true);
-
-        $("#nBackMatch").text("No Match Selected");
-        $("#nBackMatch").prop('disabled', true);
-
-        $.post("/review/nback/click", {
-            status: false
         });
     },
     onViewModePressed: function (viewModeValue) {
@@ -476,7 +455,7 @@ var MapController = {
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
             ['triageButtons', ['triage_buttons']],
-            ['nBackPanel', ['nback_panel']],
+            ['reportPanel', ['report_panel']],
         ];
 
         console.log("======START======")
@@ -652,13 +631,6 @@ var MapController = {
         MapAgentController.updateAllAgentMarkerIcons(true)
         if(sendUpdate)
             this.state.pushMode(modeFlag);
-    },
-    NBackReset: function () {
-        $("#nBackMatch").prop('disabled', false);
-        $("#nBackMatch").text("Match");
-
-        $("#nBackNoMatch").prop('disabled', false);
-        $("#nBackNoMatch").text("No Match");
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);

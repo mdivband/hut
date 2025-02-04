@@ -75,6 +75,7 @@ public class EpisodeController {
     }
 
     public void click(boolean status) {
+        System.out.println("USer clicked: " + status);
         boolean success = (status == currentEpisode.isNBackMatch);
         double reactionTime = System.currentTimeMillis() - currentEpisodeStartTime;  //Simulator.instance.getState().getTime() - currentEpisodeStartTime;
         String clickString = (currentEpisode.isNBackMatch ? "T" : "F") + (success ? "T" : "F");

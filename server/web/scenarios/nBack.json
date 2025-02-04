@@ -13,9 +13,9 @@
       "toggleable": false
     },
     {
-      "name": "nBackPanel",
+      "name": "reportPanel",
       "default": true,
-      "toggleable": false
+      "toggleable": true
     },
     {
       "name": "workloadSlider",
