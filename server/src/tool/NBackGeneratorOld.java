@@ -59,7 +59,7 @@
 //            String agentPos;
 //            String targetPos;
 //            int numAgents;
-//            boolean nBackMatch = false;
+//            boolean degradationMatch = false;
 //
 //            // Apply n-back condition based on the user-defined probability
 //            if (i >= nValue && random.nextDouble() < matchProbability) {
@@ -85,7 +85,7 @@
 //                        numAgents = previousEpisode.numAgents();
 //                    }
 //                }
-//                nBackMatch = true;
+//                degradationMatch = true;
 //            } else {
 //                // If it's not a match, ensure this episode does not match the one nValue steps back based on the match type
 //                Episode previousEpisode = (i >= nValue) ? episodes.get(i - nValue) : new Episode(-1, -1, "", "", -1, false, "NONE", -1);
@@ -107,7 +107,7 @@
 //            char agentChar = (char) ('a' + numAgents - 1);
 //            String episodeCode = String.valueOf(agentChar);
 //
-//            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, nBackMatch, episodeCode, reviewPeriod)); // Include reviewPeriod in Episode
+//            episodes.add(new Episode(episodeLength, episodeCooldown, agentPos, targetPos, numAgents, degradationMatch, episodeCode, reviewPeriod)); // Include reviewPeriod in Episode
 //        }
 //    }
 //
@@ -280,7 +280,7 @@
 //}
 //
 //
-//record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean nBackMatch, String episodeCode, int reviewPeriod) {
+//record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean degradationMatch, String episodeCode, int reviewPeriod) {
 //    @Override
 //    public String toString() {
 //        return "{\n"
@@ -290,7 +290,7 @@
 //                + "\t\"agentPos\": \"" + agentPos + "\",\n"
 //                + "\t\"targetPos\": \"" + targetPos + "\",\n"
 //                + "\t\"numAgents\": " + numAgents + ",\n"
-//                + "\t\"nBackMatch\": " + nBackMatch + ",\n"
+//                + "\t\"degradationMatch\": " + degradationMatch + ",\n"
 //                + "\t\"episodeCode\": \"" + episodeCode + "\"\n"
 //                + "}";
 //    }

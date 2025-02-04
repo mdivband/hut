@@ -435,7 +435,7 @@ record Episode(int episodeLength, int episodeCooldown, String agentPos, String t
                 + "\t\"agentPos\": \"" + agentPos + "\",\n"
                 + "\t\"targetPos\": \"" + targetPos + "\",\n"
                 + "\t\"numAgents\": " + numAgents + ",\n"
-                + "\t\"nBackMatch\": " + nBackMatch + ",\n"
+                + "\t\"degradationMatch\": " + nBackMatch + ",\n"
                 + "\t\"episodeCode\": \"" + episodeCode + "\"\n"
                 + "}";
     }
