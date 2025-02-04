@@ -99,7 +99,15 @@ var MapController = {
         $("#degradationClick").on('click', function () {
             MapController.onDegradationClick()
         });
-
+        // Add keydown event listener to the document
+        $(document).on('keydown', function (event) {
+            console.log(event); // Debugging: Check the full event object
+            if (event.keyCode === 32) {
+                event.preventDefault(); // Prevent scrolling when pressing space
+                console.log("Spacebar pressed!");
+                MapController.onDegradationClick();
+            }
+        });
         this.state.on("change:scoreInfo", function () {
             self.updateScorePanel();
         });
