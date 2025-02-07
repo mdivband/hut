@@ -49,7 +49,8 @@ App.Models.State  = Backbone.Model.extend({
         modelStyle: "off",
         loggingById: false,
         dynamicUIFeatures: [["none"], ["none"], ["none"], ["none"], ["none"]],
-        workloadLevel: 3
+        workloadLevel: 3,
+        riskMap: {} // Added riskMap here, which should copy the original
     },
     url: function () {
         return "state.json?" + _.time();
@@ -235,5 +236,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getGameSpeed: function () {
         return this.get("gameSpeed");
+    },
+    getRiskMap: function () {
+        return this.get("riskMap");
     }
 });

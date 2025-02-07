@@ -43,6 +43,8 @@ public class Simulator {
     private final ConnectionController connectionController;
     private final ScoreController scoreController;
 
+    private final RiskMapController riskMapController;
+
     private MissionController missionController = null;
     private final HazardController hazardController;
     private final Allocator allocator;
@@ -73,6 +75,7 @@ public class Simulator {
         hazardController = new HazardController(this);
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
+        riskMapController = new RiskMapController(this);
         //modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
@@ -842,6 +845,8 @@ public class Simulator {
                 }
 
             }
+
+            riskMapController.convertRiskMapToHeatmapForm();  // Assume for now (bad practise) that we always have a risk map to load, and do so at the end
 
             this.state.setGameSpeed((int) gameSpeed);
 

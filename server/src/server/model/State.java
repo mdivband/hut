@@ -111,6 +111,8 @@ public class State {
     private Integer workloadLevel;
     private Integer gameSpeed;
 
+    private ArrayList<ArrayList<Double>> riskMap = new ArrayList<>();  // Probably wrong format; change if needed
+
     public State() {
         agents = new ArrayList<>();
         ghosts = new ArrayList<>();
@@ -886,6 +888,13 @@ public class State {
         this.gameSpeed = gameSpeed;
     }
 
+    public ArrayList<ArrayList<Double>> getRiskMap() {
+        return riskMap;
+    }
+
+    public void setRiskMap(ArrayList<ArrayList<Double>> riskMap) {
+        this.riskMap = riskMap;
+    }
 
     private class HazardHit {
         private Coordinate location;
