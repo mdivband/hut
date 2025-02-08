@@ -171,7 +171,9 @@ public class Simulator {
         int lowTickCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
         int sleepTime;
 
-        double triggerTime = -1d;
+        episodeController.setTriggerTime(-1d);
+        double degradationTriggerTime = -1d; // Time to trigger degradation if applicable
+
         // -9: Slider clicked, now trigger next, -2: review, -1: cooldown, 1: episode
         changeView(-1);
         do {
@@ -179,33 +181,49 @@ public class Simulator {
             state.incrementTime(1 / highTickRate);
 
             if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit() ||
-                    (state.getTime() >= triggerTime && episodeController.hasStarted() && !episodeController.hasEpisodes())) {
+                    (state.getTime() >= episodeController.getTriggerTime() && episodeController.hasStarted() && !episodeController.hasEpisodes())) {
 
                 System.out.println("DONE BY TIME: " + state.getTime());
                 System.out.println("NOTE: Currently there is a small bug where if the user didn't click for the final episode it is not logged.");
                 episodeController.closeLogger();
                 LogProcessor.processLogFile("logs/"+state.getUserName()+"-"+state.getGameId()+".log");
-                //LogProcessor.processLogFile(LOGGER.getName());
                 this.reset(false);
                 break;
             }
 
-            if (triggerTime == -1d) {
+            if (episodeController.getTriggerTime() == -1d) {
                 // Set initial cooldown time
-                triggerTime = state.getTime() + episodeController.peekNextEpisodeCooldown();
+                episodeController.setTriggerTime(state.getTime() + episodeController.peekNextEpisodeCooldown());
+                degradationTriggerTime = -1d; // Reset degradation trigger time
             } else if (state.getEditMode() == -2) {
                 // Do nothing, waiting for review to finish
 
-            } else if (state.getTime() >= triggerTime) {
+
+            } // Check if it's time to trigger degradation
+            else if (degradationTriggerTime > 0 && state.getTime() >= degradationTriggerTime) {
+                System.out.println("Triggering degradation at time: " + state.getTime());
+
+                // Select a random agent
+                state.getAgents().stream()
+                        .filter(agent -> agent instanceof AgentVirtual av && av.isAlive() && av.getTask() != null)
+                        .findAny()
+                        .ifPresent(agent -> {
+                            this.agentController.deleteAgent(agent.getId());
+                            LOGGER.info(String.format("%s; DEGTR; Degradation triggered for agent; %s ", state.getTime(), agent.getId()));
+                        });
+
+                degradationTriggerTime = -1d; // Reset to prevent repeated triggering
+
+            } else if (state.getTime() >= episodeController.getTriggerTime()) {
                 if (state.getEditMode() == 1) { // Episode just finished
                     // Switch to review mode
                     changeView(-2);
-                    triggerTime = 0; //state.getTime() + episodeController.getReviewPeriodLimit();
+                    episodeController.setTriggerTime(0); //state.getTime() + episodeController.getReviewPeriodLimit();
                 } else if (state.getEditMode() == -9) { // Review just finished
                     // Switch to cooldown mode
                     episodeController.logRest();
                     changeView(-1);
-                    triggerTime = state.getTime() + episodeController.getEpisodeCooldownLimit();
+                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeCooldownLimit());
                 } else if (state.getEditMode() == -1) { // Cooldown just finished
                     // Switch to next episode
                     changeView(1);
@@ -216,39 +234,58 @@ public class Simulator {
                     Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
                     int numAgents = episodeController.getNumAgents();
 
-                    // Place each agent
+                    List<Coordinate> placedAgents = new ArrayList<>();
+                    placedAgents.add(c); // Add hero agent position first
+
+// Place each agent
                     for (int i = 1; i < numAgents; i++) {
-                        List<Agent> agentList = new ArrayList<>(state.getAgents());
-                        Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
+                        Coordinate newCoord = null;
+                        boolean validPlacement = false;
+                        int attempts = 0;
 
-                        double angle = 2 * Math.PI * random.nextDouble();
-                        double offset = 250d / 111139d; // 250 meters to degrees
-                        double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(angle);
-                        double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(angle) / Math.cos(existingAgentCoord.getLatitude());
+                        while (!validPlacement && attempts < 10) { // Limit attempts to prevent infinite loops
+                            List<Agent> agentList = new ArrayList<>(state.getAgents());
+                            Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
 
-                        Coordinate newCoord = new Coordinate(newLat, newLng);
+                            double angle = 2 * Math.PI * random.nextDouble();
+                            double offset = 250d / 111139d; // 250 meters to degrees
+                            double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(angle);
+                            double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(angle) / Math.cos(existingAgentCoord.getLatitude());
 
-                        boolean valid = true;
-                        for (Agent otherAgent : state.getAgents()) {
-                            if (otherAgent.getCoordinate().getDistance(newCoord) < offset) {
-                                valid = false;
-                                break;
+                            newCoord = new Coordinate(newLat, newLng);
+                            validPlacement = true;
+
+                            // Ensure at least 150m distance from all existing agents
+                            for (Coordinate placedCoord : placedAgents) {
+                                if (placedCoord.getDistance(newCoord) < 150) {
+                                    validPlacement = false;
+                                    break;
+                                }
                             }
+
+                            attempts++;
                         }
 
-                        if (valid) {
+                        if (validPlacement) {
                             Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
+                            placedAgents.add(newCoord); // Add to valid agents list
                         } else {
-                            i--; // Retry if invalid
+                            System.out.println("Failed to place an agent after 100 attempts.");
                         }
                     }
 
-                    // Add tasks and allocate
+// Add tasks and allocate
                     Task task = taskController.createTask(0, episodeController.getTargetCoord().getLatitude(), episodeController.getTargetCoord().getLongitude());
                     allocator.putInTempAllocation(heroAgent.getId(), task.getId());
                     allocator.confirmAllocation(state.getTempAllocation());
 
-                    triggerTime = state.getTime() + episodeController.getEpisodeTimeLimit();
+                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
+
+// Check if degradation should be triggered
+                    if (episodeController.isDegradationMatch()) {
+                        degradationTriggerTime = state.getTime() + episodeController.peekDegradationTime();
+                    }
+
                 }
             }
 
@@ -761,7 +798,8 @@ public class Simulator {
                     String agentPos = GsonUtils.getValue(episode, "agentPos");
                     String targetPos = GsonUtils.getValue(episode, "targetPos");
                     double numAgents = GsonUtils.getValue(episode, "numAgents");
-                    boolean isNBackMatch = GsonUtils.getValue(episode, "nBackMatch");
+                    boolean isDegradationMatch = GsonUtils.getValue(episode, "degradationMatch");
+                    double degradationTime = GsonUtils.getValue(episode, "degradationTime");
                     String episodeCode = GsonUtils.getValue(episode, "episodeCode");
                     List<Object> markers = GsonUtils.getValue(episode, "markers");
                     ArrayList<String> markerList = new ArrayList<>();
@@ -787,7 +825,7 @@ public class Simulator {
                         }
                     }
                     // Add the episode including reviewPeriod
-                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, (int) reviewPeriod, agentPos, targetPos, (int) numAgents, isNBackMatch, episodeCode, markerList);
+                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, (int) reviewPeriod, agentPos, targetPos, (int) numAgents, isDegradationMatch, degradationTime, episodeCode, markerList);
                 }
             }
 

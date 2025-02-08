@@ -3,9 +3,7 @@ package server.controller;
 import lsl.LSLLogger;
 import server.Simulator;
 import server.model.Coordinate;
-import server.model.State;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -16,13 +14,14 @@ public class EpisodeController {
     private Episode currentEpisode = null; // Important to start null; we ensure mainloop has to define time limit first
     private Long currentEpisodeStartTime = null;
     private boolean userHasClicked = false;
+    private double triggerTime = -1;
 
     public EpisodeController() {
         episodes = new ArrayList<>();
     }
 
-    public void addEpisode(int episodeLength, int episodeCooldown, int reviewPeriod, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
-        episodes.add(new Episode(episodeLength, episodeCooldown, reviewPeriod, agentPos, targetPos, numAgents, isNBackMatch, episodeCode, markers));
+    public void addEpisode(int episodeLength, int episodeCooldown, int reviewPeriod, String agentPos, String targetPos, int numAgents, boolean isDegradationMatch, double degradationTime, String episodeCode, ArrayList<String> markers) {
+        episodes.add(new Episode(episodeLength, episodeCooldown, reviewPeriod, agentPos, targetPos, numAgents, isDegradationMatch, degradationTime, episodeCode, markers));
     }
 
     public void incrementEpisode() {
@@ -57,6 +56,22 @@ public class EpisodeController {
         return convertEpisodeCoord(currentEpisode.getTargetPos());
     }
 
+    public boolean isDegradationMatch() {
+        return currentEpisode != null && currentEpisode.isDegradation;
+    }
+
+    public double peekDegradationTime() {
+        return (currentEpisode != null && currentEpisode.isDegradation) ? currentEpisode.degradationTime : -1;
+    }
+
+    public double getTriggerTime() {
+        return triggerTime;
+    }
+
+    public void setTriggerTime(double triggerTime) {
+        this.triggerTime = triggerTime;
+    }
+
     private Coordinate convertEpisodeCoord(String pos) {
         Coordinate centre = Simulator.instance.getState().getGameCentre();
         double latOffset = 0.015; // Adjust these values as needed
@@ -75,14 +90,34 @@ public class EpisodeController {
     }
 
     public void click(boolean status) {
-        System.out.println("USer clicked: " + status);
-        boolean success = (status == currentEpisode.isNBackMatch);
-        double reactionTime = System.currentTimeMillis() - currentEpisodeStartTime;  //Simulator.instance.getState().getTime() - currentEpisodeStartTime;
-        String clickString = (currentEpisode.isNBackMatch ? "T" : "F") + (success ? "T" : "F");
-        LOGGER.info(String.format("%s; NBCLK; NBack clicked. Episode is/is not a match and so the user was with reaction time so the clickstring for oxysoft is (match, usrclicked, success, numAgents, reactiontime, clickstring); %s; %s; %s; %s; %s; %s", Simulator.instance.getState().getTime(), currentEpisode.isNBackMatch, status, (status == currentEpisode.isNBackMatch), getNumAgents(), reactionTime, clickString));
-        lslLogger.logEventMarker("CL"+clickString);  // TODO check if we should send Correct/Incorrect or nBackTrue/nBackFalse
-        userHasClicked = true;
+        System.out.println("User clicked: " + status);
+
+        boolean isDegradation = currentEpisode.isDegradation();
+        double degradationTimeMillis = currentEpisode.degradationTime * 1000;
+        double elapsedTimeSinceStart = System.currentTimeMillis() - currentEpisodeStartTime;
+
+        boolean clickedAfterDegradation = elapsedTimeSinceStart >= degradationTimeMillis;
+        boolean success = isDegradation && status && clickedAfterDegradation;
+
+        // Reaction time should be 0 if no match OR if clicked too early
+        double reactionTime = (isDegradation && clickedAfterDegradation) ? elapsedTimeSinceStart - degradationTimeMillis : 0;
+
+        // Log whether the user clicked, and whether it was correct
+        String clickString = (isDegradation ? "T" : "F") + (success ? "T" : "F");
+
+        LOGGER.info(String.format(
+                "%s; DGCLK; User clicked. Episode is/is not a degradation episode and so the user was with reaction time and the clickstring for oxysoft is (deg, usrclicked, success, numAgents, reactiontime, clickstring); %s; %s; %s; %s; %s; %s",
+                Simulator.instance.getState().getTime(),
+                isDegradation, status, success, getNumAgents(), reactionTime, clickString
+        ));
+
+        lslLogger.logEventMarker("CL" + clickString);  // TODO: check if we should send Correct/Incorrect or nBackTrue/nBackFalse
+
+        userHasClicked = true; // Always true when the user clicks, regardless of correctness
+        triggerTime = -1;  // Reset trigger time
+        Simulator.instance.getState().setEditMode(-9);
     }
+
 
     public boolean hasEpisodes() {
         return !episodes.isEmpty();
@@ -103,8 +138,8 @@ public class EpisodeController {
     public void logRest() {
         lslLogger.logEventMarker("REST");
         if (!userHasClicked) {
-            String clickString = (currentEpisode.isNBackMatch ? "T" : "F") + (!currentEpisode.isNBackMatch ? "T" : "F");
-            LOGGER.info(String.format("%s; NBNOC; NBack not clicked. Episode is/is not a match and so the user was with reaction time so the clickstring for oxysoft is (match, usrclicked, success, numAgents, reactiontime, clickstring); %s; %s; %s; %s; %s; %s", Simulator.instance.getState().getTime(), currentEpisode.isNBackMatch, false, (!currentEpisode.isNBackMatch), getNumAgents(), currentEpisode.episodeLength, clickString));
+            String clickString = (currentEpisode.isDegradation ? "T" : "F") + (!currentEpisode.isDegradation ? "T" : "F");
+            LOGGER.info(String.format("%s; DGNOC; Deg not clicked. Episode is/is not a deg episidode and so the user was so the clickstring for oxysoft is (match, usrclicked, success, numAgents, clickstring); %s; %s; %s; %s; %s", Simulator.instance.getState().getTime(), currentEpisode.isDegradation, false, (!currentEpisode.isDegradation), getNumAgents(), clickString));
         }
 
         userHasClicked = false;
@@ -134,18 +169,20 @@ public class EpisodeController {
         private String targetPos;
         private int numAgents;
         private double episodeTimeLimit;
-        private boolean isNBackMatch;
+        private boolean isDegradation;
+        private double degradationTime;
         private String episodeCode;
         private ArrayList<String> markers;
 
-        public Episode(int episodeLength, int episodeCooldown, int reviewPeriod, String agentPos, String targetPos, int numAgents, boolean isNBackMatch, String episodeCode, ArrayList<String> markers) {
+        public Episode(int episodeLength, int episodeCooldown, int reviewPeriod, String agentPos, String targetPos, int numAgents, boolean isDegradation, double degradationTime, String episodeCode, ArrayList<String> markers) {
             this.episodeLength = episodeLength;
             this.episodeCooldown = episodeCooldown;
             this.reviewPeriod = reviewPeriod; // Set reviewPeriod
             this.agentPos = agentPos;
             this.targetPos = targetPos;
             this.numAgents = numAgents;
-            this.isNBackMatch = isNBackMatch;
+            this.isDegradation = isDegradation;
+            this.degradationTime = degradationTime;
             this.episodeCode = episodeCode;
             this.markers = markers;
         }
@@ -182,8 +219,8 @@ public class EpisodeController {
             return reviewPeriod;
         }
 
-        public boolean isNBackMatch() {
-            return isNBackMatch;
+        public boolean isDegradation() {
+            return isDegradation;
         }
 
         public String getEpisodeCode() {

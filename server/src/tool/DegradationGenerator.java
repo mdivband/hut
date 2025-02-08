@@ -9,16 +9,19 @@ import java.util.*;
  * Note that the result isn't guaranteed to be good so check it.
  */
 public class DegradationGenerator {
-    private List<Episode> episodes;
+    private List<DegradationEpisode> episodes;
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
     private int numEpisodes = 60;
-    private int episodeLength = 5;
+    private int episodeLength = 10;
     private int episodeCooldown = 5;
     private int reviewPeriod = 5;
     private int minAgents = 6;
     private int maxAgents = 10;
+    private int minDegradationTime = 3;
+    private int maxDegradationTime = 8;
+
     private double degradationProbability = 0.5;
 
     private static final int DEFAULT_NUM = 5;
@@ -31,48 +34,75 @@ public class DegradationGenerator {
         this.random = new Random();
     }
 
-    private void configure(int numEpisodes, int length, int cooldown, int reviewPeriod, int minAgents, int maxAgents, double matchProbability) {
+    private void configure(int numEpisodes, int length, int cooldown, int reviewPeriod, int minAgents, int maxAgents, double matchProbability, int minDegradationTime, int maxDegradationTime) {
         this.numEpisodes = numEpisodes;
         this.episodeLength = length;
         this.episodeCooldown = cooldown;
-        this.reviewPeriod = reviewPeriod; // Set the review period
+        this.reviewPeriod = reviewPeriod;
         this.minAgents = minAgents;
         this.maxAgents = maxAgents;
         this.degradationProbability = matchProbability;
-
+        this.minDegradationTime = minDegradationTime;
+        this.maxDegradationTime = maxDegradationTime;
     }
 
-    public void generateEpisodes() {
+    public void generateBalancedEpisodes() {
         episodes.clear(); // Ensure we start fresh
-        for (int i = 0; i < numEpisodes; i++) {
-            int numAgents = getRandomNumAgents();
-            boolean degradationMatch = random.nextDouble() < degradationProbability;
-            String agentPos = getRandomPosition();
-            String targetPos = getRandomPosition();
 
-            // Ensure the agent and target positions are not the same
-            while (agentPos.equals(targetPos)) {
-                targetPos = getRandomPosition();
-            }
+        int halfNumEpisodes = numEpisodes / 2; // Ensure 50% degradationMatch = true, 50% = false
+        List<DegradationEpisode> episodeList = new ArrayList<>();
 
-            // Generate reversible episode code
-            char agentChar = (char) ('A' + (numAgents - 1)); // Maps 1 -> A, 2 -> B, etc.
-            char matchChar = degradationMatch ? 'T' : 'F';
-            String episodeCode = "EP" + agentChar + matchChar;
+        for (int i = 0; i < halfNumEpisodes; i++) {
+            // Generate one episode with degradationMatch = true
+            episodeList.add(generateSingleEpisode(true));
 
-            Episode episode = new Episode(
-                    episodeLength,
-                    episodeCooldown,
-                    agentPos,
-                    targetPos,
-                    numAgents,
-                    degradationMatch,
-                    episodeCode,
-                    reviewPeriod
-            );
-            episodes.add(episode);
+            // Generate one episode with degradationMatch = false
+            episodeList.add(generateSingleEpisode(false));
         }
+
+        // If numEpisodes is odd, add one more randomly
+        if (numEpisodes % 2 != 0) {
+            boolean degradationMatch = random.nextBoolean();
+            episodeList.add(generateSingleEpisode(degradationMatch));
+        }
+
+        // Shuffle to randomise order while keeping the balance
+        Collections.shuffle(episodeList, random);
+
+        // Assign shuffled list to episodes
+        episodes.addAll(episodeList);
     }
+
+    private DegradationEpisode generateSingleEpisode(boolean degradationMatch) {
+        int numAgents = getRandomNumAgents();
+        String agentPos = getRandomPosition();
+        String targetPos = getRandomPosition();
+
+        // Ensure agent and target positions are different
+        while (agentPos.equals(targetPos)) {
+            targetPos = getRandomPosition();
+        }
+
+        int degradationTime = degradationMatch ? getRandomDegradationTime() : -1;
+
+        // Generate reversible episode code
+        char agentChar = (char) ('A' + (numAgents - 1)); // Maps 1 -> A, 2 -> B, etc.
+        char matchChar = degradationMatch ? 'T' : 'F';
+        String episodeCode = "EP" + agentChar + matchChar;
+
+        return new DegradationEpisode(
+                episodeLength,
+                episodeCooldown,
+                agentPos,
+                targetPos,
+                numAgents,
+                degradationMatch,
+                episodeCode,
+                reviewPeriod,
+                degradationTime
+        );
+    }
+
 
 
     private String getRandomPosition() {
@@ -83,9 +113,14 @@ public class DegradationGenerator {
         return random.nextInt(maxAgents - minAgents + 1) + minAgents;
     }
 
-    public List<Episode> getEpisodes() {
+    public List<DegradationEpisode> getEpisodes() {
         return episodes;
     }
+
+    private int getRandomDegradationTime() {
+        return random.nextInt(maxDegradationTime - minDegradationTime + 1) + minDegradationTime;
+    }
+
 
     public static void main(String[] args) {
         try {
@@ -134,11 +169,23 @@ public class DegradationGenerator {
                 degradationProbability = scanner.nextDouble();
             }
 
-            degradationGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, degradationProbability);
-            degradationGenerator.generateEpisodes();
+            int minDegradationTime = degradationGenerator.minDegradationTime;
+            if (minDegradationTime == -1) {
+                System.out.println("Enter the minimum degradation time:");
+                minDegradationTime = scanner.nextInt();
+            }
+
+            int maxDegradationTime = degradationGenerator.maxDegradationTime;
+            if (maxDegradationTime == -1) {
+                System.out.println("Enter the maximum degradation time:");
+                maxDegradationTime = scanner.nextInt();
+            }
+
+            degradationGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, degradationProbability, minDegradationTime, maxDegradationTime);
+            degradationGenerator.generateBalancedEpisodes();
             System.out.println("\"episodes\": [");
             for (int i = 0; i < degradationGenerator.getEpisodes().size(); i++) {
-                Episode episode = degradationGenerator.getEpisodes().get(i);
+                DegradationEpisode episode = degradationGenerator.getEpisodes().get(i);
                 System.out.print(episode);
                 if (i < degradationGenerator.getEpisodes().size() - 1) {
                     System.out.println(",");
@@ -211,8 +258,8 @@ public class DegradationGenerator {
 
             // Check the user's choice
             if (userInput.equalsIgnoreCase("y")) {
-                // Now prompt the user to enter the number of the file they want to view
-                System.out.println("Enter the number of the file you want to view:");
+                // Now prompt the user to enter the number of the file they want to overwrite
+                System.out.println("Enter the number of the file you want to overwrite:");
                 int fileNumber = scanner.nextInt();
                 String selectedFileName = jsonFiles.get(fileNumber - 1);
                 System.out.println("You selected: " + selectedFileName);
@@ -234,7 +281,7 @@ public class DegradationGenerator {
         }
     }
 
-    public void injectJsonFile(String selectedFileName, List<Episode> episodes) throws IOException {
+    public void injectJsonFile(String selectedFileName, List<DegradationEpisode> episodes) throws IOException {
         GsonUtils.create();
 
         System.out.println("Reading JSON from file: " + selectedFileName);
@@ -259,7 +306,9 @@ public class DegradationGenerator {
         System.out.println("JSON file updated successfully.");
     }
 
-record Episode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean degradationMatch, String episodeCode, int reviewPeriod) {
+}
+
+record DegradationEpisode(int episodeLength, int episodeCooldown, String agentPos, String targetPos, int numAgents, boolean degradationMatch, String episodeCode, int reviewPeriod, int degradationTime) {
     @Override
     public String toString() {
         return "{\n"
@@ -270,7 +319,9 @@ record Episode(int episodeLength, int episodeCooldown, String agentPos, String t
                 + "\t\"targetPos\": \"" + targetPos + "\",\n"
                 + "\t\"numAgents\": " + numAgents + ",\n"
                 + "\t\"degradationMatch\": " + degradationMatch + ",\n"
+                + "\t\"degradationTime\": " + degradationTime + ",\n"
                 + "\t\"episodeCode\": \"" + episodeCode + "\"\n"
                 + "}";
     }
 }
+

@@ -154,10 +154,7 @@ public class AgentVirtual extends Agent {
             for (Agent neighbour : neighbours) {
                 double multiplier = 1;
                 if (neighbour.getTask() != null) {
-                    multiplier = 10; // Give more weight to the leader
-                }
-                else {
-                    multiplier = 1;
+                    multiplier = 100; // Give more weight to the leader
                 }
                 double neighbourHeading = Math.toRadians(neighbour.getHeading());
                 xSum += Math.cos(neighbourHeading) * multiplier;
@@ -167,7 +164,7 @@ public class AgentVirtual extends Agent {
             xAlign = xSum/magnitude;
             yAlign = ySum/magnitude;
 
-            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 200.0);
+            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 300.0);
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
             if (tooCloseNeighbours.size() > 0) {
