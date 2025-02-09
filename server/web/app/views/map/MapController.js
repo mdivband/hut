@@ -3,6 +3,7 @@ var MapController = {
     predictionLength: 0,
     uncertaintyRadius: 10,
     communicationRange: 100,
+    heatmap: null,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -44,6 +45,7 @@ var MapController = {
         this.isEnabledUIOption = _.bind(this.isEnabledUIOption, context);
         this.toggleUIOption = _.bind(this.toggleUIOption, context);
         this.updateRiskMap = _.bind(this.updateRiskMap, context);
+        this.setRiskConfig = _.bind(this.setRiskConfig, context);
 
     },
     /**
@@ -112,6 +114,9 @@ var MapController = {
             } else {
                 MapController.showPredictedPaths($(this).val());
             }
+        });
+        $('#risk_slider').on('change', function() {
+            MapController.setRiskConfig('radius', $(this).val());
         });
         $('#workload_slider').on('change', function() {
             self.state.workloadLevel = $(this).val();
@@ -590,49 +595,25 @@ var MapController = {
         if(sendUpdate)
             this.state.pushMode(modeFlag);
     },
+    setRiskConfig: function (option, value) {
+        this.heatmap.set(option, value);
+    },
     updateRiskMap: function () {
         // Get risk map from backend
         var riskMap = this.state.getRiskMap();
-        // Print it to log (This will probably just be the reference to the object)
-        console.log(riskMap)
-        // You may need to iterate through it
-        for (var i = 0; i < riskMap.length; i++) {
-            console.log(riskMap[i])
-        }
-        // Here is an earlier example of making a heatmap. I think if I remember correctly, a google MVCArray will automatically update the heatmap when it is updated.
-        // You may find this useful. No problem if you find a better way.
 
+        // add heatmap coordinates and risk data
+        let heatmapData = new google.maps.MVCArray();
+        riskMap.forEach((thing) => {
+            heatmapData.push({location: new google.maps.LatLng(thing[1], thing[0]), weight: Math.pow(thing[2],3)});
+        });
 
-        // var heatmapData = new google.maps.MVCArray();
-        //                             someThingToIterateThrough.forEach(thing) => {
-        //                                 heatmapData.push({
-        //                                     location: new google.maps.LatLng(thing.latitude, thing.longitude),
-        //                                     weight: 0.15
-        //                                 });
-        //                             })
-        //var heatmap = new google.maps.visualization.HeatmapLayer({
-        //    data: heatmapData
-        //});
-        // const gradient = [
-        //     "rgba(0, 255, 255, 0)",
-        //     "rgba(0, 255, 255, 1)",
-        //     "rgba(0, 191, 255, 1)",
-        //     "rgba(0, 127, 255, 1)",
-        //     "rgba(0, 63, 255, 1)",
-        //     "rgba(0, 0, 255, 1)",
-        //     "rgba(0, 0, 223, 1)",
-        //     "rgba(0, 0, 191, 1)",
-        //     "rgba(0, 0, 159, 1)",
-        //     "rgba(0, 0, 127, 1)",
-        //     "rgba(63, 0, 91, 1)",
-        //     "rgba(127, 0, 63, 1)",
-        //     "rgba(191, 0, 31, 1)",
-        //     "rgba(255, 0, 0, 1)",
-        // ];
-        //
-        // heatmap.setOptions({radius: 150, gradient: gradient, zIndex: 0})
-        // heatmap.setMap(this.map);
-
+        // making sure not to create multiple heatmaps
+        this.heatmap = this.heatmap || new google.maps.visualization.HeatmapLayer({
+            data: heatmapData
+        });
+        this.heatmap.setOptions({ radius: 15, zIndex: 0, dissipating: true, opacity: 1})
+        this.heatmap.setMap(this.map);
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);
