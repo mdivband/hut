@@ -601,43 +601,17 @@ var MapController = {
     updateRiskMap: function () {
         // Get risk map from backend
         var riskMap = this.state.getRiskMap();
-        console.log("riskMap:");
-        console.log(riskMap);
-        // Print it to log (This will probably just be the reference to the object)
 
-
-
-        // Here is an earlier example of making a heatmap. I think if I remember correctly, a google MVCArray will automatically update the heatmap when it is updated.
-        // You may find this useful. No problem if you find a better way.
-
-
-        let heatmapData = []; //new google.maps.MVCArray();
+        // add heatmap coordinates and risk data
+        let heatmapData = new google.maps.MVCArray();
         riskMap.forEach((thing) => {
             heatmapData.push({location: new google.maps.LatLng(thing[1], thing[0]), weight: Math.pow(thing[2],3)});
         });
-        console.log("HEATMAP DATA")
-        console.log(heatmapData)
 
+        // making sure not to create multiple heatmaps
         this.heatmap = this.heatmap || new google.maps.visualization.HeatmapLayer({
             data: heatmapData
         });
-        const gradient = [
-            "rgba(0, 255, 255, 0)",
-            "rgba(0, 255, 255, 1)",
-            "rgba(0, 191, 255, 1)",
-            "rgba(0, 127, 255, 1)",
-            "rgba(0, 63, 255, 1)",
-            "rgba(0, 0, 255, 1)",
-            "rgba(0, 0, 223, 1)",
-            "rgba(0, 0, 191, 1)",
-            "rgba(0, 0, 159, 1)",
-            "rgba(0, 0, 127, 1)",
-            "rgba(63, 0, 91, 1)",
-            "rgba(127, 0, 63, 1)",
-            "rgba(191, 0, 31, 1)",
-            "rgba(255, 0, 0, 1)",
-        ];
-
         this.heatmap.setOptions({ radius: 15, zIndex: 0, dissipating: true, opacity: 1})
         this.heatmap.setMap(this.map);
     },
