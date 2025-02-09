@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class RiskMapController extends AbstractController{
-    private String riskFileName = "web/HARIS-maps/FireRisk_Mean_ByFeature.geojson";
+    private String riskFileName;// = "web/HARIS-maps/FireRisk_Mean_ByFeature.geojson";
 
 
     public RiskMapController(Simulator simulator) {
@@ -52,5 +52,7 @@ public class RiskMapController extends AbstractController{
     }
 
 
-
+    public void setFireRiskFile(String fireRiskFile) {
+        this.riskFileName = "web/HARIS-maps/"+fireRiskFile;
+    }
 }

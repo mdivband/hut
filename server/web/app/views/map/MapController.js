@@ -115,7 +115,7 @@ var MapController = {
                 MapController.showPredictedPaths($(this).val());
             }
         });
-        $('#risk_slider').on('change', function() {
+        $('#risk_map_slider').on('change', function() {
             MapController.setRiskConfig('radius', $(this).val());
         });
         $('#workload_slider').on('change', function() {
@@ -438,7 +438,8 @@ var MapController = {
             ['workloadSlider', ['wk_sld_wrapper']],
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
-            ['triageButtons', ['triage_buttons']]
+            ['triageButtons', ['triage_buttons']],
+            ['riskMapSlider', ['risk_wrapper_div']]
         ];
 
         arrayOfPairs.forEach((pair) => {
