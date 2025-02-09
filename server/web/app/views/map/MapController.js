@@ -3,6 +3,7 @@ var MapController = {
     predictionLength: 0,
     uncertaintyRadius: 10,
     communicationRange: 100,
+    heatmap: null,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -43,6 +44,8 @@ var MapController = {
         this.isToggleableUIOption = _.bind(this.isToggleableUIOption, context);
         this.isEnabledUIOption = _.bind(this.isEnabledUIOption, context);
         this.toggleUIOption = _.bind(this.toggleUIOption, context);
+        this.updateRiskMap = _.bind(this.updateRiskMap, context);
+        this.setRiskConfig = _.bind(this.setRiskConfig, context);
 
     },
     /**
@@ -111,6 +114,9 @@ var MapController = {
             } else {
                 MapController.showPredictedPaths($(this).val());
             }
+        });
+        $('#risk_map_slider').on('change', function() {
+            MapController.setRiskConfig('radius', $(this).val());
         });
         $('#workload_slider').on('change', function() {
             self.state.workloadLevel = $(this).val();
@@ -432,7 +438,8 @@ var MapController = {
             ['workloadSlider', ['wk_sld_wrapper']],
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
-            ['triageButtons', ['triage_buttons']]
+            ['triageButtons', ['triage_buttons']],
+            ['riskMapSlider', ['risk_wrapper_div']]
         ];
 
         arrayOfPairs.forEach((pair) => {
@@ -584,8 +591,30 @@ var MapController = {
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
         MapAgentController.updateAllAgentMarkerIcons(true)
+
+        MapController.updateRiskMap(); // For now, just always update the risk map when we switch view. I'm pretty sure this will work on load also.
         if(sendUpdate)
             this.state.pushMode(modeFlag);
+    },
+    setRiskConfig: function (option, value) {
+        this.heatmap.set(option, value);
+    },
+    updateRiskMap: function () {
+        // Get risk map from backend
+        var riskMap = this.state.getRiskMap();
+
+        // add heatmap coordinates and risk data
+        let heatmapData = new google.maps.MVCArray();
+        riskMap.forEach((thing) => {
+            heatmapData.push({location: new google.maps.LatLng(thing[1], thing[0]), weight: Math.pow(thing[2],3)});
+        });
+
+        // making sure not to create multiple heatmaps
+        this.heatmap = this.heatmap || new google.maps.visualization.HeatmapLayer({
+            data: heatmapData
+        });
+        this.heatmap.setOptions({ radius: 15, zIndex: 0, dissipating: true, opacity: 1})
+        this.heatmap.setMap(this.map);
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);

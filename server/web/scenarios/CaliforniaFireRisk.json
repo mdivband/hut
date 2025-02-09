@@ -1,0 +1,55 @@
+{
+  "gameId": "CaliforniaFireRisk",
+  "gameDescription": "There is a heat-map of high risk fires in the north of Sacramento!",
+  "uIOptions": [
+    {
+      "name": "monitor",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "editmode",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "explored",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "hazard",
+      "default": false,
+      "toggleable": false
+    },
+    {
+      "name": "predictions",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "uncertainties",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "riskMapSlider",
+      "default": true,
+      "toggleable": true
+    }
+  ],
+  "flockingEnabled" : false,
+  "loggingById": true,
+  "gameCentre": {
+    "lat": 41.38241972704395,
+    "lng": -122.92039942705662
+  },
+  "allocationMethod": "maxsumsaturated",
+  "allocationStyle": "manual",
+  "fireRiskFile": "FireRisk_Mean_ByFeature.geojson",
+  "taskGroupSize": 100,
+  "agents": [],
+  "CommentedOut": [],
+  "hazards": [],
+  "targets": []
+}
