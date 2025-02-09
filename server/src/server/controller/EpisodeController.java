@@ -115,7 +115,7 @@ public class EpisodeController {
 
         userHasClicked = true; // Always true when the user clicks, regardless of correctness
         triggerTime = -1;  // Reset trigger time
-        Simulator.instance.getState().setEditMode(-9);
+        Simulator.instance.getState().setEditMode(-2);
     }
 
 

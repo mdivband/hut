@@ -54,7 +54,7 @@ public class LogProcessor {
                 }
 
                 // Handle NBCLK (NBack clicked) and NBNOC (NBack not clicked)
-                if (event.equals("NBCLK") || event.equals("NBNOC")) {
+                if (event.equals("DGCLK") || event.equals("DGNOC")) {
                     if (parts.length >= 9) {
                         int match = parts[4].trim().equalsIgnoreCase("true") ? 1 : 0;
                         int accuracy = match; // Accuracy is equal to match
@@ -63,7 +63,7 @@ public class LogProcessor {
 
                         // Determine workload
                         String workload = " "; // Default if no workload found
-                        if (event.equals("NBNOC")) {
+                        if (event.equals("DGNOC")) {
                             // Look one line back for NBNOC
                             if (i - 1 >= 0) {
                                 String[] prevLine = lines.get(i - 1).split(";");
@@ -72,7 +72,7 @@ public class LogProcessor {
                                 }
                             }
                         } else {
-                            // Look forward up to 5 lines for NBCLK
+                            // Look forward up to 5 lines for DGCLK
                             for (int j = 1; j <= 5; j++) {
                                 if (i + j < lines.size()) {
                                     String[] nextLine = lines.get(i + j).split(";");

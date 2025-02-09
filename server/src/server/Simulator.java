@@ -205,7 +205,7 @@ public class Simulator {
 
                 // Select a random agent
                 state.getAgents().stream()
-                        .filter(agent -> agent instanceof AgentVirtual av && av.isAlive() && av.getTask() != null)
+                        .filter(agent -> agent instanceof AgentVirtual av && av.isAlive() && av.getTask() == null)
                         .findAny()
                         .ifPresent(agent -> {
                             this.agentController.deleteAgent(agent.getId());
@@ -243,7 +243,7 @@ public class Simulator {
                         boolean validPlacement = false;
                         int attempts = 0;
 
-                        while (!validPlacement && attempts < 10) { // Limit attempts to prevent infinite loops
+                        while (!validPlacement && attempts < 50) { // Limit attempts to prevent infinite loops
                             List<Agent> agentList = new ArrayList<>(state.getAgents());
                             Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
 
@@ -257,7 +257,7 @@ public class Simulator {
 
                             // Ensure at least 150m distance from all existing agents
                             for (Coordinate placedCoord : placedAgents) {
-                                if (placedCoord.getDistance(newCoord) < 150) {
+                                if (placedCoord.getDistance(newCoord) < 200) {
                                     validPlacement = false;
                                     break;
                                 }
