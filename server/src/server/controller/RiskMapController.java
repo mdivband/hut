@@ -5,6 +5,7 @@ import server.Simulator;
 import tool.GsonUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -52,5 +53,41 @@ public class RiskMapController extends AbstractController{
     }
 
 
+    public void convertRiskMapToHexBinForm() {
+        // TODO: A 2D array is fine for now, but unclear
+        // NOTE: hexagon sizes are *inconsistent* in the data so calculating
+        // them based on purely their center would be inaccurate. Therefore
+        // we will need to record the coordinates of the hexagon fully
+        ArrayList<ArrayList<Double>> riskHeatMap = new ArrayList<ArrayList<Double>>();
 
+        try {
+            String json = GsonUtils.readFile(this.riskFileName);
+            Object obj = GsonUtils.fromJson(json);
+            ArrayList features = GsonUtils.getValue(obj, "features");
+
+            for(Object loc : features){
+                Object properties = GsonUtils.getValue(loc, "properties");
+                Object geometry = GsonUtils.getValue(loc, "geometry");
+                if(!GsonUtils.hasKey(properties, "FIRE")) continue;
+
+                // annoyingly wrapped in a single value array
+                ArrayList<ArrayList<ArrayList<Double>>> coordinates = GsonUtils.getValue(geometry, "coordinates");
+
+                ArrayList<Double> newPlace = new ArrayList<Double>();
+
+                for(ArrayList<Double> point : coordinates.get(0)){
+                    newPlace.add(point.get(0));
+                    newPlace.add(point.get(1));
+                }
+                Double fire = GsonUtils.getValue(properties, "FIRE");
+                newPlace.add(fire);
+                riskHeatMap.add(new ArrayList<Double>(newPlace));
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        simulator.getState().setRiskMap(riskHeatMap);
+    }
 }
