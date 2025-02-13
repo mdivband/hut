@@ -592,6 +592,14 @@ public class Simulator {
                 }
             }
 
+            // if has fireRiskFile, this is a string to pass to the riskMapController
+            if(GsonUtils.hasKey(obj,"fireRiskFile")){
+                Object fireRiskFile = GsonUtils.getValue(obj, "fireRiskFile");
+                if(fireRiskFile.getClass() == String.class) {
+                    this.riskMapController.setFireRiskFile((String)fireRiskFile);
+                }
+            }
+
             if(GsonUtils.hasKey(obj,"loggingById")){
                 Object loggingById = GsonUtils.getValue(obj, "loggingById");
                 if(loggingById.getClass() == Boolean.class) {

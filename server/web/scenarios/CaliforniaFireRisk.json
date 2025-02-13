@@ -31,16 +31,22 @@
       "name": "uncertainties",
       "default": true,
       "toggleable": true
+    },
+    {
+      "name": "riskMapSlider",
+      "default": true,
+      "toggleable": true
     }
   ],
   "flockingEnabled" : false,
   "loggingById": true,
   "gameCentre": {
-    "lat": 37.92761783506481,
-    "lng": -122.24336039256538
+    "lat": 41.38241972704395,
+    "lng": -122.92039942705662
   },
   "allocationMethod": "maxsumsaturated",
   "allocationStyle": "manual",
+  "fireRiskFile": "FireRisk_Mean_ByFeature.geojson",
   "taskGroupSize": 100,
   "agents": [],
   "CommentedOut": [],
