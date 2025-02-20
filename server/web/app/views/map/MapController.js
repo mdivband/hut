@@ -4,6 +4,7 @@ var MapController = {
     uncertaintyRadius: 10,
     communicationRange: 100,
     heatmap: null,
+    hexbin: null,
     hexbinThreshold: 1.0,
     /**
      * Binds all the methods to use the given context.
@@ -119,9 +120,12 @@ var MapController = {
                 MapController.showPredictedPaths($(this).val());
             }
         });
-        $('#risk_slider').on('change', function() {
-            //MapController.setRiskHeatMapConfig('radius', $(this).val());
-            MapController.setRiskHexBinThreshold($(this).val());
+        $('#risk_map_slider').on('change', function() {
+            if(MapController.isEnabledUIOption('heatMapToggle')){
+                MapController.setRiskHexBinThreshold($(this).val());
+            } else {
+                MapController.setRiskHeatMapConfig('radius', $(this).val());
+            }
         });
         $('#workload_slider').on('change', function() {
             self.state.workloadLevel = $(this).val();
@@ -137,6 +141,9 @@ var MapController = {
         });
         $('#ranges_toggle').change(function () {
             MapController.toggleUIOption('ranges', $(this).is(":checked"))
+        });
+        $('#heat_map_toggle').change(function () {
+            MapController.toggleUIOption('heatMapToggle', $(this).is(":checked"))
         });
         $('#exit_button').on('click', function () {
             var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
@@ -443,7 +450,9 @@ var MapController = {
             ['workloadSlider', ['wk_sld_wrapper']],
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
-            ['triageButtons', ['triage_buttons']]
+            ['triageButtons', ['triage_buttons']],
+            ['riskMapSlider', ['risk_wrapper_div']],
+            ['heatMapToggle', ['heatmap_wrapper_div'], 'heat_map_toggle']
         ];
 
         arrayOfPairs.forEach((pair) => {
@@ -474,6 +483,14 @@ var MapController = {
         MapHazardController.setHeatmapVisibility(-1, MapController.isEnabledUIOption("explored"));
         MapHazardController.setHeatmapVisibility(0, MapController.isEnabledUIOption("hazard"));
         MapHazardController.setHeatmapVisibility(1, MapController.isEnabledUIOption("hazard"));
+
+        // TODO this toggle is broken since we need to "async await" state change before changing update function
+        // extra risk map update for ui toggles
+        if(MapController.isEnabledUIOption("heatMapToggle")){
+            MapController.updateRiskMapHexBin();
+        } else {
+            MapController.updateRiskMapHeatMap();
+        }
         console.log("Made UI changes in exp to " + MapController.isEnabledUIOption("explored"));
 
 
@@ -596,7 +613,11 @@ var MapController = {
         this.hideForGametype();
         MapAgentController.updateAllAgentMarkerIcons(true)
 
-        MapController.updateRiskMapHexBin(); // For now, just always update the risk map when we switch view. I'm pretty sure this will work on load also.
+        if(MapController.isEnabledUIOption("heatMapToggle")){
+            MapController.updateRiskMapHexBin();
+        } else {
+            MapController.updateRiskMapHeatMap();
+        }
         if(sendUpdate)
             this.state.pushMode(modeFlag);
     },
@@ -608,21 +629,40 @@ var MapController = {
         MapController.updateRiskMapHexBin();
     },
     updateRiskMapHeatMap: function () {
-
-    },
-    updateRiskMapHexBin: function () {
+        console.log("Updating risk map heatmap");
         // Get risk map from backend
         var riskMap = this.state.getRiskMap();
-        if(this.heatmap === undefined){
-            this.heatmap = [];
-        } else {
-            console.log("Updating heatmap");
-            console.log(this.heatmap);
-            for(let i = 0; i < this.heatmap.length; i++){
-                this.heatmap[i].setMap(null);
-            }
-            this.heatmap = [];
-        }
+
+        // add heatmap coordinates and risk data
+        let heatmapData = new google.maps.MVCArray();
+        riskMap.forEach((thing) => {
+            heatmapData.push({location: new google.maps.LatLng(thing[1], thing[0]), weight: Math.pow(thing[2],3)});
+        });
+
+        // making sure not to create multiple heatmaps
+        this.heatmap = this.heatmap || new google.maps.visualization.HeatmapLayer({
+            data: heatmapData
+        });
+        this.heatmap.setOptions({ radius: 15, zIndex: 0, dissipating: true, opacity: 1})
+        this.heatmap.setMap(this.map);
+    },
+    updateRiskMapHexBin: function () {
+
+        // associated weights with the risk levels for fire in the california area
+        let FIRE = 0.210384
+        let Cities = 0.063707
+        let NDVI = 0.091138
+        let Roads = 0.076670
+        let Trails = 0.148578
+        let aspect = 0.126356
+        let elevation = 0.107507
+        let slope = 0.175661
+
+
+        console.log("Updating risk map hexbin");
+        // Get risk map from backend
+        var riskMap = this.state.getRiskMap();
+
 
         const gradient = [
                 "rgba(0, 255, 255, 0)",
@@ -643,40 +683,37 @@ var MapController = {
 
         // add heatmap coordinates and risk data
 
-        riskMap.forEach((thing) => {
-            let hexData = [];
-            for(let i = 0; i+1 < thing.length; i+=2){
-                hexData.push(new google.maps.LatLng(thing[i+1], thing[i]))
-            }
+        if(this.hexbin === undefined || this.hexbin === null){
+            console.log("Creating new hexbin");
+            this.hexbin = [];
+            riskMap.forEach((thing) => {
+                let hexData = new google.maps.MVCArray();
+                for(let i = 0; i+1 < thing.length; i+=2){
+                    hexData.push(new google.maps.LatLng(thing[i+1], thing[i]))
+                }
 
-            if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
-            let range = Math.min(thing[thing.length-1]*this.hexbinThreshold, 1.0);
-            let intensity = Math.floor(range*(gradient.length-1));
-            console.log(gradient[intensity], intensity, range, this.hexbinThreshold);
-            //heatmapData.push(hexData);
-            const hex = new google.maps.Polygon({
-                paths: hexData,
-                strokeColor: gradient[intensity],
-                strokeOpacity: 0.8,
-                strokeWeight: 0,
-                fillColor: gradient[intensity],
-                fillOpacity: 0.8,
+                if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
+                let range = Math.min(thing[thing.length-1]*this.hexbinThreshold, 1.0);
+                let intensity = Math.floor(range*(gradient.length-1));
+                const hex = new google.maps.Polygon({
+                    paths: hexData,
+                    strokeColor: gradient[intensity],
+                    strokeOpacity: 0.8,
+                    strokeWeight: 0,
+                    fillColor: gradient[intensity],
+                    fillOpacity: range,
+                });
+                hex.setMap(this.map);
+                this.hexbin.push(hex);
             });
-            hex.setMap(this.map);
-            this.heatmap.push(hex);
-
-        });
-        //console.log(heatmapData);
-
-        //this.heatmap = heatmapData;
-
-        //heatmapData.push({location: new google.maps.LatLng(thing[1], thing[0]), weight: Math.pow(thing[2],3)});
-        // making sure not to create multiple heatmaps
-        //this.heatmap = this.heatmap || new google.maps.visualization.HeatmapLayer({
-        //    data: heatmapData
-        //});
-        //this.heatmap.setOptions({ radius: 15, zIndex: 0, dissipating: true, opacity: 1})
-        //this.heatmap.setMap(this.map);
+        } else {
+            for(let i = 0; i < riskMap.length; i++){
+                if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
+                let range = Math.min(riskMap[i][riskMap[i].length-1]*this.hexbinThreshold, 1.0);
+                let intensity = Math.floor(range*(gradient.length-1));
+                this.hexbin[i].setOptions({fillColor: gradient[intensity], fillOpacity: range});
+            }
+        }
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);

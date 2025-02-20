@@ -854,8 +854,11 @@ public class Simulator {
 
             }
 
-            //riskMapController.convertRiskMapToHeatmapForm();  // Assume for now (bad practise) that we always have a risk map to load, and do so at the end
-            riskMapController.convertRiskMapToHexBinForm();  // Assume for now (bad practise) that we always have a risk map to load, and do so at the end
+            if(this.state.UIOptionIsAvailable("heatMapToggle")) {
+                riskMapController.convertRiskMapToHexBinForm();
+            } else {
+                riskMapController.convertRiskMapToHeatmapForm();
+            }
 
             this.state.setGameSpeed((int) gameSpeed);
 

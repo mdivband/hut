@@ -28,6 +28,11 @@
       "toggleable": true
     },
     {
+      "name": "heatMapToggle",
+      "default": true,
+      "toggleable": false
+    },
+    {
       "name": "uncertainties",
       "default": true,
       "toggleable": true
