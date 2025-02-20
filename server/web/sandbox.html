@@ -610,23 +610,39 @@
 <!-- Black overlay that we can toggle on and off -->
 <div id="overlay" style="display: block">
     <div id = "wk_sld_wrapper" style="width: 700px; margin: auto; border: solid 10px black; text-align: left; padding: 10px; display: flex; justify-content: center; align-items: center; height: 100vh;">
-<!--        <div style="background-color: white; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">-->
-<!--            <img src="icons/bin.png" alt="Low Workload" style="width: 100%; height: 100%; object-fit: contain;">-->
-<!--        </div>-->
+        <div class="slider_wrapper">
+            <h3>Workload</h3>
+            <div class="slider_container">
+                <input
+                        type="range"
+                        min="1"
+                        max="5"
+                        value="2"
+                        step="1"
+                        class="wl_slider"
+                        id="workload_slider"
+                />
 
-        <div id="accordion_slider">
-            <h3 style="margin-top: 5px; margin-bottom: 5px;">Workload</h3>
-            <div class="slider_container" style="font-size:0.9rem;">
-                <input type="range" min="1" max="5" value="2" step="1" class="wl_slider" id="workload_slider" list="level_markers" style="width: 600px; margin: 0;">
-                <datalist id="level_markers" style="display: flex; flex-direction: row; justify-content: space-between; width: 600px;">
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                </datalist>
+            <!-- Tick marks container -->
+            <div class="tickmarks">
+                <div class="tick" style="left: 0%;">
+                    <span>1. Insignificant</span>
+                </div>
+                <div class="tick" style="left: 25%;">
+                    <span>2. Light</span>
+                </div>
+                <div class="tick" style="left: 50%;">
+                    <span>3. Moderate</span>
+                </div>
+                <div class="tick" style="left: 75%;">
+                    <span>4. Significant</span>
+                </div>
+                <div class="tick" style="left: 100%;">
+                    <span>5. Maximum</span>
+                </div>
             </div>
         </div>
+
 <!--        <div style="background-color: white; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">-->
 <!--            <img src="icons/bin.png" alt="Low Workload" style="width: 100%; height: 100%; object-fit: contain;">-->
 <!--        </div>-->
