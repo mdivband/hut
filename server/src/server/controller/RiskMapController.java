@@ -59,6 +59,15 @@ public class RiskMapController extends AbstractController{
         // we will need to record the coordinates of the hexagon fully
         ArrayList<ArrayList<Double>> riskHeatMap = new ArrayList<ArrayList<Double>>();
 
+        double FIRE = 0.210384;
+        double Cities = 0.063707;
+        double NDVI = 0.091138;
+        double Roads = 0.076670;
+        double Trails = 0.148578;
+        double aspect = 0.126356;
+        double elevation = 0.107507;
+        double slope = 0.175661;
+
         try {
             String json = GsonUtils.readFile(this.riskFileName);
             Object obj = GsonUtils.fromJson(json);

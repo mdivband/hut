@@ -6,6 +6,7 @@ var MapController = {
     heatmap: null,
     hexbin: null,
     hexbinThreshold: 1.0,
+    hexbinInfoWindow: null,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -51,6 +52,7 @@ var MapController = {
         this.updateRiskMapHexBin = _.bind(this.updateRiskMapHexBin, context);
         this.setRiskHeatMapConfig = _.bind(this.setRiskHeatMapConfig, context);
         this.setRiskHexBinThreshold = _.bind(this.setRiskHexBinThreshold, context);
+        this.showHexPopup = _.bind(this.showHexPopup, context);
 
     },
     /**
@@ -647,18 +649,6 @@ var MapController = {
         this.heatmap.setMap(this.map);
     },
     updateRiskMapHexBin: function () {
-
-        // associated weights with the risk levels for fire in the california area
-        let FIRE = 0.210384
-        let Cities = 0.063707
-        let NDVI = 0.091138
-        let Roads = 0.076670
-        let Trails = 0.148578
-        let aspect = 0.126356
-        let elevation = 0.107507
-        let slope = 0.175661
-
-
         console.log("Updating risk map hexbin");
         // Get risk map from backend
         var riskMap = this.state.getRiskMap();
@@ -692,6 +682,7 @@ var MapController = {
                     hexData.push(new google.maps.LatLng(thing[i+1], thing[i]))
                 }
 
+
                 if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
                 let range = Math.min(thing[thing.length-1]*this.hexbinThreshold, 1.0);
                 let intensity = Math.floor(range*(gradient.length-1));
@@ -704,6 +695,7 @@ var MapController = {
                     fillOpacity: range,
                 });
                 hex.setMap(this.map);
+                hex.addListener("click", (e)=>{MapController.showHexPopup(e,{range})});
                 this.hexbin.push(hex);
             });
         } else {
@@ -714,6 +706,14 @@ var MapController = {
                 this.hexbin[i].setOptions({fillColor: gradient[intensity], fillOpacity: range});
             }
         }
+    },
+    showHexPopup: function (event, hexData) {
+        if(this.hexbinInfoWindow === undefined) {
+            this.hexbinInfoWindow = new google.maps.InfoWindow();
+        }
+        this.hexbinInfoWindow.setContent(`fire risk: <b>${hexData.range}</b>`);
+        this.hexbinInfoWindow.setPosition(event.latLng);
+        this.hexbinInfoWindow.open(this.map);
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);
