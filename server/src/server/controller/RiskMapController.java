@@ -6,7 +6,8 @@ import tool.GsonUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class RiskMapController extends AbstractController{
     private String riskFileName;// = "web/HARIS-maps/FireRisk_Mean_ByFeature.geojson";
@@ -18,7 +19,7 @@ public class RiskMapController extends AbstractController{
 
     public void convertRiskMapToHeatmapForm() {
         // TODO: A 2D array is fine for now, but unclear
-        ArrayList<ArrayList<Double>> riskHeatMap = new ArrayList<ArrayList<Double>>();
+        ArrayList<HashMap<String, ArrayList<Double>>> riskHeatMap = new ArrayList<HashMap<String, ArrayList<Double>>>();
 
         try {
             String json = GsonUtils.readFile(this.riskFileName);
@@ -35,13 +36,13 @@ public class RiskMapController extends AbstractController{
                 Double bottom = GsonUtils.getValue(properties, "bottom");
                 Double fire = GsonUtils.getValue(properties, "FIRE");
 
-                ArrayList<Double> newPlace = new ArrayList<Double>();
+                HashMap<String, ArrayList<Double>> newPlace = new HashMap<String, ArrayList<Double>>();
 
                 // average LR and TB to get center
-                newPlace.add(0.5*(left+right));
-                newPlace.add(0.5*(top+bottom));
-                newPlace.add(fire);
-                riskHeatMap.add(new ArrayList<Double>(newPlace));
+
+                newPlace.put("coordinates", new ArrayList<Double>(Arrays.asList(0.5*(left+right),0.5*(top+bottom))));
+                newPlace.put("FIRE", new ArrayList<Double>(Arrays.asList(fire)));
+                riskHeatMap.add(newPlace);
             }
 
         } catch (IOException e) {
@@ -53,43 +54,56 @@ public class RiskMapController extends AbstractController{
 
 
     public void convertRiskMapToHexBinForm() {
-        // TODO: A 2D array is fine for now, but unclear
+        // TODO: A 2D array is fine for now, but VERY unclear
         // NOTE: hexagon sizes are *inconsistent* in the data so calculating
         // them based on purely their center would be inaccurate. Therefore
         // we will need to record the coordinates of the hexagon fully
-        ArrayList<ArrayList<Double>> riskHeatMap = new ArrayList<ArrayList<Double>>();
+        ArrayList<HashMap<String, ArrayList<Double>>> riskHeatMap = new ArrayList<HashMap<String, ArrayList<Double>>>();
 
-        double FIRE = 0.210384;
-        double Cities = 0.063707;
-        double NDVI = 0.091138;
-        double Roads = 0.076670;
-        double Trails = 0.148578;
-        double aspect = 0.126356;
-        double elevation = 0.107507;
-        double slope = 0.175661;
+        HashMap<String,Double> features = new HashMap<String,Double>();
+        features.put("FIRE"     ,0.210384);
+        features.put("Cities"   ,0.063707);
+        features.put("NDVI"     ,0.091138);
+        features.put("Roads"    ,0.076670);
+        features.put("Trails"   ,0.148578);
+        features.put("aspect"   ,0.126356);
+        features.put("elevation",0.107507);
+        features.put("slope"    ,0.175661);
 
         try {
             String json = GsonUtils.readFile(this.riskFileName);
             Object obj = GsonUtils.fromJson(json);
-            ArrayList features = GsonUtils.getValue(obj, "features");
+            ArrayList attributes = GsonUtils.getValue(obj, "features");
 
-            for(Object loc : features){
+            for(Object loc : attributes){
                 Object properties = GsonUtils.getValue(loc, "properties");
                 Object geometry = GsonUtils.getValue(loc, "geometry");
-                if(!GsonUtils.hasKey(properties, "FIRE")) continue;
+
+                boolean skip = false;
+                for(String key : features.keySet()){
+                    if(!GsonUtils.hasKey(properties, key)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if(skip) continue;
+
+
 
                 // annoyingly wrapped in a single value array
                 ArrayList<ArrayList<ArrayList<Double>>> coordinates = GsonUtils.getValue(geometry, "coordinates");
 
-                ArrayList<Double> newPlace = new ArrayList<Double>();
+                HashMap<String, ArrayList<Double>> newPlace = new HashMap<String, ArrayList<Double>>();
+                newPlace.put("coordinates", new ArrayList<Double>());
 
                 for(ArrayList<Double> point : coordinates.get(0)){
-                    newPlace.add(point.get(0));
-                    newPlace.add(point.get(1));
+                    newPlace.get("coordinates").add(point.get(0));
+                    newPlace.get("coordinates").add(point.get(1));
                 }
-                Double fire = GsonUtils.getValue(properties, "FIRE");
-                newPlace.add(fire);
-                riskHeatMap.add(new ArrayList<Double>(newPlace));
+                for(String feature : features.keySet()){
+                    newPlace.put(feature, new ArrayList<Double>(Arrays.asList(features.get(feature))));
+                }
+                riskHeatMap.add(newPlace);
             }
 
         } catch (IOException e) {

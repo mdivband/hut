@@ -653,6 +653,8 @@ var MapController = {
         // Get risk map from backend
         var riskMap = this.state.getRiskMap();
 
+        console.log(riskMap);
+
 
         const gradient = [
                 "rgba(0, 255, 255, 0)",
