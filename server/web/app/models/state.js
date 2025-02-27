@@ -50,7 +50,8 @@ App.Models.State  = Backbone.Model.extend({
         loggingById: false,
         dynamicUIFeatures: [["none"], ["none"], ["none"], ["none"], ["none"]],
         workloadLevel: 3,
-        riskMap: {} // Added riskMap here, which should copy the original
+        riskMap: {}, // Added riskMap here, which should copy the original
+        riskMapWeights: {}
     },
     url: function () {
         return "state.json?" + _.time();
@@ -239,5 +240,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     getRiskMap: function () {
         return this.get("riskMap");
+    },
+    getRiskMapWeights: function () {
+        return this.get("riskMapWeights");
     }
 });

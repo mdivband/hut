@@ -39,7 +39,6 @@ public class RiskMapController extends AbstractController{
                 HashMap<String, ArrayList<Double>> newPlace = new HashMap<String, ArrayList<Double>>();
 
                 // average LR and TB to get center
-
                 newPlace.put("coordinates", new ArrayList<Double>(Arrays.asList(0.5*(left+right),0.5*(top+bottom))));
                 newPlace.put("FIRE", new ArrayList<Double>(Arrays.asList(fire)));
                 riskHeatMap.add(newPlace);
@@ -60,15 +59,7 @@ public class RiskMapController extends AbstractController{
         // we will need to record the coordinates of the hexagon fully
         ArrayList<HashMap<String, ArrayList<Double>>> riskHeatMap = new ArrayList<HashMap<String, ArrayList<Double>>>();
 
-        HashMap<String,Double> features = new HashMap<String,Double>();
-        features.put("FIRE"     ,0.210384);
-        features.put("Cities"   ,0.063707);
-        features.put("NDVI"     ,0.091138);
-        features.put("Roads"    ,0.076670);
-        features.put("Trails"   ,0.148578);
-        features.put("aspect"   ,0.126356);
-        features.put("elevation",0.107507);
-        features.put("slope"    ,0.175661);
+        HashMap<String,Double> features = simulator.getState().getRiskMapWeights();
 
         try {
             String json = GsonUtils.readFile(this.riskFileName);

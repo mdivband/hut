@@ -112,6 +112,7 @@ public class State {
     private Integer gameSpeed;
 
     private ArrayList<HashMap<String, ArrayList<Double>>> riskMap = new ArrayList<>();  // Probably wrong format; change if needed
+    private HashMap<String,Double> riskMapWeights = new HashMap<String,Double>();
 
     public State() {
         agents = new ArrayList<>();
@@ -177,6 +178,16 @@ public class State {
         uiOptions.clear();
         dynamicUIFeatures.clear();
         hazardHits.init();
+
+
+        riskMapWeights.put("FIRE"     ,0.210384);
+        riskMapWeights.put("Cities"   ,0.063707);
+        riskMapWeights.put("NDVI"     ,0.091138);
+        riskMapWeights.put("Roads"    ,0.076670);
+        riskMapWeights.put("Trails"   ,0.148578);
+        riskMapWeights.put("aspect"   ,0.126356);
+        riskMapWeights.put("elevation",0.107507);
+        riskMapWeights.put("slope"    ,0.175661);
 
     }
 
@@ -894,6 +905,22 @@ public class State {
 
     public void setRiskMap(ArrayList<HashMap<String, ArrayList<Double>>> riskMap) {
         this.riskMap = riskMap;
+    }
+
+    public HashMap<String,Double> getRiskMapWeights() {
+        return this.riskMapWeights;
+    }
+
+    public void setRiskMapWeights(HashMap<String,Double> riskMapWeights) {
+        this.riskMapWeights = riskMapWeights;
+    }
+
+    public void setRiskMapWeight(String feature, Double weight) {
+        this.riskMapWeights.put(feature, weight);
+    }
+
+    public Double getRiskMapWeight(String feature) {
+        return this.riskMapWeights.get(feature);
     }
 
     private class HazardHit {

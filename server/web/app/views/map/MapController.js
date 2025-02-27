@@ -627,7 +627,7 @@ var MapController = {
         this.heatmap.set(option, value);
     },
     setRiskHexBinThreshold: function (value) {
-        this.hexbinThreshold = 1 + 2*(value/30-0.5);
+        this.hexbinThreshold = 2 + 4*(value/30-0.5);
         MapController.updateRiskMapHexBin();
     },
     updateRiskMapHeatMap: function () {
@@ -651,7 +651,8 @@ var MapController = {
     updateRiskMapHexBin: function () {
         console.log("Updating risk map hexbin");
         // Get risk map from backend
-        var riskMap = this.state.getRiskMap();
+        let riskMap = this.state.getRiskMap();
+        let weights = this.state.getRiskMapWeights();
 
         const gradient = [
                 "rgba(0, 255, 255, 0)",
@@ -671,7 +672,6 @@ var MapController = {
             ];
 
         // add heatmap coordinates and risk data
-
         if(this.hexbin === undefined || this.hexbin === null){
             console.log("Creating new hexbin");
             this.hexbin = [];
@@ -682,8 +682,11 @@ var MapController = {
                 }
 
                 if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
-                let range = Math.min(hexObj["FIRE"][0]*this.hexbinThreshold, 1.0);
-                console.log(range);
+                let weightedSum = 0;
+                Object.keys(weights).forEach(weight => {
+                    weightedSum += weights[weight]*hexObj[weight][0];
+                })
+                let range = Math.min(weightedSum*this.hexbinThreshold, 1.0);
                 let intensity = Math.floor(range*(gradient.length-1));
                 const hex = new google.maps.Polygon({
                     paths: hexData,
@@ -700,7 +703,11 @@ var MapController = {
         } else {
             for(let i = 0; i < riskMap.length; i++){
                 if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
-                let range = Math.min(riskMap[i]["FIRE"][0]*this.hexbinThreshold, 1.0);
+                let weightedSum = 0;
+                Object.keys(weights).forEach(weight => {
+                    weightedSum += weights[weight]*riskMap[i][weight][0];
+                })
+                let range = Math.min(weightedSum*this.hexbinThreshold, 1.0);
                 let intensity = Math.floor(range*(gradient.length-1));
                 this.hexbin[i].setOptions({fillColor: gradient[intensity], fillOpacity: range});
             }
@@ -710,7 +717,12 @@ var MapController = {
         if(this.hexbinInfoWindow === undefined) {
             this.hexbinInfoWindow = new google.maps.InfoWindow();
         }
-        this.hexbinInfoWindow.setContent(`fire risk: <b>${hexData.range}</b>`);
+        let contentString = "";
+        let weights = this.state.getRiskMapWeights();
+        Object.keys(weights).forEach(weight => {
+            contentString += `<strong>${weight}</strong>: ${weights[weight]}<br>`
+        })
+        this.hexbinInfoWindow.setContent(contentString);
         this.hexbinInfoWindow.setPosition(event.latLng);
         this.hexbinInfoWindow.open(this.map);
     },
