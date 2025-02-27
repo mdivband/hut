@@ -653,9 +653,6 @@ var MapController = {
         // Get risk map from backend
         var riskMap = this.state.getRiskMap();
 
-        console.log(riskMap);
-
-
         const gradient = [
                 "rgba(0, 255, 255, 0)",
                 "rgba(0, 255, 255, 1)",
@@ -678,15 +675,15 @@ var MapController = {
         if(this.hexbin === undefined || this.hexbin === null){
             console.log("Creating new hexbin");
             this.hexbin = [];
-            riskMap.forEach((thing) => {
+            riskMap.forEach((hexObj) => {
                 let hexData = new google.maps.MVCArray();
-                for(let i = 0; i+1 < thing.length; i+=2){
-                    hexData.push(new google.maps.LatLng(thing[i+1], thing[i]))
+                for(let i = 0; i+1 < hexObj["coordinates"].length; i+=2){
+                    hexData.push(new google.maps.LatLng(hexObj["coordinates"][i+1], hexObj["coordinates"][i]))
                 }
 
-
                 if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
-                let range = Math.min(thing[thing.length-1]*this.hexbinThreshold, 1.0);
+                let range = Math.min(hexObj["FIRE"][0]*this.hexbinThreshold, 1.0);
+                console.log(range);
                 let intensity = Math.floor(range*(gradient.length-1));
                 const hex = new google.maps.Polygon({
                     paths: hexData,
@@ -703,7 +700,7 @@ var MapController = {
         } else {
             for(let i = 0; i < riskMap.length; i++){
                 if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
-                let range = Math.min(riskMap[i][riskMap[i].length-1]*this.hexbinThreshold, 1.0);
+                let range = Math.min(riskMap[i]["FIRE"][0]*this.hexbinThreshold, 1.0);
                 let intensity = Math.floor(range*(gradient.length-1));
                 this.hexbin[i].setOptions({fillColor: gradient[intensity], fillOpacity: range});
             }

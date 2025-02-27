@@ -101,7 +101,8 @@ public class RiskMapController extends AbstractController{
                     newPlace.get("coordinates").add(point.get(1));
                 }
                 for(String feature : features.keySet()){
-                    newPlace.put(feature, new ArrayList<Double>(Arrays.asList(features.get(feature))));
+                    Double value = GsonUtils.getValue(properties, feature);
+                    newPlace.put(feature, new ArrayList<Double>(Arrays.asList(value)));
                 }
                 riskHeatMap.add(newPlace);
             }
