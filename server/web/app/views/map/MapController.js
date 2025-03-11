@@ -652,6 +652,11 @@ var MapController = {
     },
     setRiskHexBinThreshold: function (value) {
         this.hexbinThreshold = 2 + 4*(value/100-0.5);
+        if(MapController.isEnabledUIOption("heatMapToggle")){
+            MapController.updateRiskMapHexBin();
+        } else {
+            MapController.updateRiskMapHeatMap();
+        }
     },
     updateRiskMapHeatMap: function () {
         console.log("Updating risk map heatmap");
@@ -726,7 +731,7 @@ var MapController = {
                     fillOpacity: range,
                 });
                 hex.setMap(this.map);
-                hex.addListener("click", (e)=>{MapController.showHexPopup(e,{range})});
+                hex.addListener("click", (e)=>{MapController.showHexPopup(e,{range, ...hexObj})});
                 this.hexbin.push(hex);
             });
         } else {
@@ -749,7 +754,7 @@ var MapController = {
         let contentString = "";
         let weights = this.state.getRiskMapWeights();
         Object.keys(weights).forEach(weight => {
-            contentString += `<strong>${weight}</strong>: ${weights[weight]}<br>`
+            contentString += `<strong>${weight}</strong>: ${hexData[weight]}<br>`
         })
         this.hexbinInfoWindow.setContent(contentString);
         this.hexbinInfoWindow.setPosition(event.latLng);
