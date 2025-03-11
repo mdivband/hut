@@ -6,6 +6,7 @@ var MapController = {
     heatmap: null,
     hexbin: null,
     hexbinThreshold: 1.0,
+    hexbinWeightMultipliers: {},
     hexbinInfoWindow: null,
     /**
      * Binds all the methods to use the given context.
@@ -53,6 +54,7 @@ var MapController = {
         this.setRiskHeatMapConfig = _.bind(this.setRiskHeatMapConfig, context);
         this.setRiskHexBinThreshold = _.bind(this.setRiskHexBinThreshold, context);
         this.showHexPopup = _.bind(this.showHexPopup, context);
+        this.setHexBinWeight = _.bind(this.setHexBinWeight, context);
 
     },
     /**
@@ -113,6 +115,13 @@ var MapController = {
             MapAgentController.updateAllAgentMarkerIcons(true);
             MapTaskController.updateAllTaskIcons(true);
         });
+        this.state.on("change:riskMapWeights", function () {
+            if(MapController.isEnabledUIOption("heatMapToggle")){
+                MapController.updateRiskMapHexBin();
+            } else {
+                MapController.updateRiskMapHeatMap();
+            }
+        })
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
                 MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
@@ -128,6 +137,30 @@ var MapController = {
             } else {
                 MapController.setRiskHeatMapConfig('radius', $(this).val());
             }
+        });
+        $('#FIRE_slider').on('change', function() {
+            MapController.setHexBinWeight("FIRE", $(this).val());
+        });
+        $('#Cities_slider').on('change', function() {
+            MapController.setHexBinWeight("Cities", $(this).val());
+        });
+        $('#NDVI_slider').on('change', function() {
+            MapController.setHexBinWeight("NDVI", $(this).val());
+        });
+        $('#Roads_slider').on('change', function() {
+            MapController.setHexBinWeight("Roads", $(this).val());
+        });
+        $('#Trails_slider').on('change', function() {
+            MapController.setHexBinWeight("Trails", $(this).val());
+        });
+        $('#aspect_slider').on('change', function() {
+            MapController.setHexBinWeight("aspect", $(this).val());
+        });
+        $('#elevation_slider').on('change', function() {
+            MapController.setHexBinWeight("elevation", $(this).val());
+        });
+        $('#slope_slider').on('change', function() {
+            MapController.setHexBinWeight("slope", $(this).val());
         });
         $('#workload_slider').on('change', function() {
             self.state.workloadLevel = $(this).val();
@@ -440,6 +473,7 @@ var MapController = {
         $("#allocation_redo").prop('disabled', !this.state.isAllocationRedoAvailable());
     },
     updateUIFeatures: function () {
+        console.log("UI Update")
         const arrayOfPairs = [
             ['monitor', ['monitor_wrapper']],
             ['editmode', ['editmode_wrapper']],
@@ -488,11 +522,6 @@ var MapController = {
 
         // TODO this toggle is broken since we need to "async await" state change before changing update function
         // extra risk map update for ui toggles
-        if(MapController.isEnabledUIOption("heatMapToggle")){
-            MapController.updateRiskMapHexBin();
-        } else {
-            MapController.updateRiskMapHeatMap();
-        }
         console.log("Made UI changes in exp to " + MapController.isEnabledUIOption("explored"));
 
 
@@ -615,11 +644,6 @@ var MapController = {
         this.hideForGametype();
         MapAgentController.updateAllAgentMarkerIcons(true)
 
-        if(MapController.isEnabledUIOption("heatMapToggle")){
-            MapController.updateRiskMapHexBin();
-        } else {
-            MapController.updateRiskMapHeatMap();
-        }
         if(sendUpdate)
             this.state.pushMode(modeFlag);
     },
@@ -627,8 +651,7 @@ var MapController = {
         this.heatmap.set(option, value);
     },
     setRiskHexBinThreshold: function (value) {
-        this.hexbinThreshold = 2 + 4*(value/30-0.5);
-        MapController.updateRiskMapHexBin();
+        this.hexbinThreshold = 2 + 4*(value/100-0.5);
     },
     updateRiskMapHeatMap: function () {
         console.log("Updating risk map heatmap");
@@ -647,6 +670,12 @@ var MapController = {
         });
         this.heatmap.setOptions({ radius: 15, zIndex: 0, dissipating: true, opacity: 1})
         this.heatmap.setMap(this.map);
+    },
+    setHexBinWeight: function (weight, value) {
+        $.post("/ui/slider", {
+            name: weight,
+            status: 1+2*(value/100-0.5)
+        })
     },
     updateRiskMapHexBin: function () {
         console.log("Updating risk map hexbin");

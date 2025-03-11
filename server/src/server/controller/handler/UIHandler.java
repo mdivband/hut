@@ -26,7 +26,21 @@ public class UIHandler extends RestHandler {
         if (rPath.startsWith("/toggle")) {
             handleToggle(req, resp);
         }
+        if (rPath.startsWith("/slider")) {
+            handleSlider(req, resp);
+        }
 
+    }
+
+    private void handleSlider(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Arrays.asList("name", "status");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+        String name = (params.get("name"));
+        double status = Double.parseDouble(params.get("status"));
+
+        simulator.getState().setRiskMapWeightMultiplier(name, status);
     }
 
     private void handleToggle(Request req, Response resp) throws IOException {
