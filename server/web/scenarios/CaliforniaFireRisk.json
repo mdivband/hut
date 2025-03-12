@@ -28,12 +28,57 @@
       "toggleable": true
     },
     {
+      "name": "heatMapToggle",
+      "default": true,
+      "toggleable": false
+    },
+    {
       "name": "uncertainties",
       "default": true,
       "toggleable": true
     },
     {
       "name": "riskMapSlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "fireSlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "citiesSlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "NDVISlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "RoadsSlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "TrailsSlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "aspectSlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "elevationSlider",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "slopeSlider",
       "default": true,
       "toggleable": true
     }

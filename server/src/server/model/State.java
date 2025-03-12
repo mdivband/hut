@@ -111,7 +111,9 @@ public class State {
     private Integer workloadLevel;
     private Integer gameSpeed;
 
-    private ArrayList<ArrayList<Double>> riskMap = new ArrayList<>();  // Probably wrong format; change if needed
+    private ArrayList<HashMap<String, ArrayList<Double>>> riskMap = new ArrayList<>();  // Probably wrong format; change if needed
+    private HashMap<String,Double> riskMapWeights = new HashMap<String,Double>();
+    private final HashMap<String,Double> riskMapWeightsConst = new HashMap<String,Double>();
 
     public State() {
         agents = new ArrayList<>();
@@ -131,6 +133,14 @@ public class State {
         dynamicUIFeatures = new ArrayList<>(5);
         workloadLevel = 3;
 
+        riskMapWeightsConst.put("FIRE"     ,0.210384);
+        riskMapWeightsConst.put("Cities"   ,0.063707);
+        riskMapWeightsConst.put("NDVI"     ,0.091138);
+        riskMapWeightsConst.put("Roads"    ,0.076670);
+        riskMapWeightsConst.put("Trails"   ,0.148578);
+        riskMapWeightsConst.put("aspect"   ,0.126356);
+        riskMapWeightsConst.put("elevation",0.107507);
+        riskMapWeightsConst.put("slope"    ,0.175661);
         reset();
     }
 
@@ -178,6 +188,24 @@ public class State {
         dynamicUIFeatures.clear();
         hazardHits.init();
 
+
+        riskMapWeights.put("FIRE"     ,0.210384);
+        riskMapWeights.put("Cities"   ,0.063707);
+        riskMapWeights.put("NDVI"     ,0.091138);
+        riskMapWeights.put("Roads"    ,0.076670);
+        riskMapWeights.put("Trails"   ,0.148578);
+        riskMapWeights.put("aspect"   ,0.126356);
+        riskMapWeights.put("elevation",0.107507);
+        riskMapWeights.put("slope"    ,0.175661);
+
+        riskMapWeightsConst.put("FIRE"     ,0.210384);
+        riskMapWeightsConst.put("Cities"   ,0.063707);
+        riskMapWeightsConst.put("NDVI"     ,0.091138);
+        riskMapWeightsConst.put("Roads"    ,0.076670);
+        riskMapWeightsConst.put("Trails"   ,0.148578);
+        riskMapWeightsConst.put("aspect"   ,0.126356);
+        riskMapWeightsConst.put("elevation",0.107507);
+        riskMapWeightsConst.put("slope"    ,0.175661);
     }
 
     /**
@@ -888,12 +916,56 @@ public class State {
         this.gameSpeed = gameSpeed;
     }
 
-    public ArrayList<ArrayList<Double>> getRiskMap() {
+    public ArrayList<HashMap<String, ArrayList<Double>>> getRiskMap() {
         return riskMap;
     }
 
-    public void setRiskMap(ArrayList<ArrayList<Double>> riskMap) {
+    public void setRiskMap(ArrayList<HashMap<String, ArrayList<Double>>> riskMap) {
         this.riskMap = riskMap;
+    }
+
+    public HashMap<String,Double> getRiskMapWeights() {
+        return this.riskMapWeights;
+    }
+
+    public void setRiskMapWeights(HashMap<String,Double> riskMapWeights) {
+        this.riskMapWeights = riskMapWeights;
+    }
+
+    public void setRiskMapWeight(String feature, Double weight) {
+        this.riskMapWeights.put(feature, weight);
+    }
+
+    public void setRiskMapWeightMultiplier(String feature, Double multiplier) {
+        Double newWeight = this.riskMapWeightsConst.get(feature)*multiplier;
+        Double oldWeight = this.riskMapWeights.get(feature);
+        this.riskMapWeights.put(feature, newWeight);
+
+        Double oldsum = 0.0;
+        Double newsum = 0.0;
+
+        for (Double value : this.riskMapWeights.values()) {
+            oldsum += value;
+        }
+        Double diff = oldsum-1;
+
+        // proportionally reduces other weights to maintain sum-to-1 constraint
+        this.riskMapWeights.forEach((key, value) -> {
+            if(key.equals(feature)) return;
+            this.riskMapWeights.compute(key, (k, curWeight) -> curWeight-diff*curWeight/(1.0-oldWeight));
+        });
+
+        for (Double value : this.riskMapWeights.values()) {
+            newsum += value;
+        }
+
+        System.out.println(oldsum);
+        System.out.println(newsum);
+        System.out.println();
+    }
+
+    public Double getRiskMapWeight(String feature) {
+        return this.riskMapWeights.get(feature);
     }
 
     private class HazardHit {
