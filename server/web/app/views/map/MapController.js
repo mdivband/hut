@@ -55,6 +55,7 @@ var MapController = {
         this.setRiskHexBinThreshold = _.bind(this.setRiskHexBinThreshold, context);
         this.showHexPopup = _.bind(this.showHexPopup, context);
         this.setHexBinWeight = _.bind(this.setHexBinWeight, context);
+        this.updateRiskMapWeightSliders = _.bind(this.updateRiskMapWeightSliders, context);
 
     },
     /**
@@ -121,6 +122,8 @@ var MapController = {
             } else {
                 MapController.updateRiskMapHeatMap();
             }
+
+            MapController.updateRiskMapWeightSliders()
         })
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
@@ -646,6 +649,15 @@ var MapController = {
 
         if(sendUpdate)
             this.state.pushMode(modeFlag);
+    },
+    updateRiskMapWeightSliders: function () {
+        let weightsConst = this.state.getRiskMapWeightsConst();
+        let weights = this.state.getRiskMapWeights();
+
+        for (const [key, value] of Object.entries(weights)) {
+            //console.log(Math.round(100*value/weightsConst[key]))
+            $(`#${key}_slider`).val(Math.round( 100*((value/weightsConst[key]-1)/2+0.5)  ));
+        }
     },
     setRiskHeatMapConfig: function (option, value) {
         this.heatmap.set(option, value);

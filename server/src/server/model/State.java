@@ -197,6 +197,15 @@ public class State {
         riskMapWeights.put("aspect"   ,0.126356);
         riskMapWeights.put("elevation",0.107507);
         riskMapWeights.put("slope"    ,0.175661);
+
+        riskMapWeightsConst.put("FIRE"     ,0.210384);
+        riskMapWeightsConst.put("Cities"   ,0.063707);
+        riskMapWeightsConst.put("NDVI"     ,0.091138);
+        riskMapWeightsConst.put("Roads"    ,0.076670);
+        riskMapWeightsConst.put("Trails"   ,0.148578);
+        riskMapWeightsConst.put("aspect"   ,0.126356);
+        riskMapWeightsConst.put("elevation",0.107507);
+        riskMapWeightsConst.put("slope"    ,0.175661);
     }
 
     /**
@@ -928,8 +937,31 @@ public class State {
     }
 
     public void setRiskMapWeightMultiplier(String feature, Double multiplier) {
-        this.riskMapWeights.put(feature, this.riskMapWeightsConst.get(feature)*multiplier);
-        this.riskMapWeights.forEach((key, value) -> System.out.println(key + " " + value));
+        Double newWeight = this.riskMapWeightsConst.get(feature)*multiplier;
+        Double oldWeight = this.riskMapWeights.get(feature);
+        this.riskMapWeights.put(feature, newWeight);
+
+        Double oldsum = 0.0;
+        Double newsum = 0.0;
+
+        for (Double value : this.riskMapWeights.values()) {
+            oldsum += value;
+        }
+        Double diff = oldsum-1;
+
+        // proportionally reduces other weights to maintain sum-to-1 constraint
+        this.riskMapWeights.forEach((key, value) -> {
+            if(key.equals(feature)) return;
+            this.riskMapWeights.compute(key, (k, curWeight) -> curWeight-diff*curWeight/(1.0-oldWeight));
+        });
+
+        for (Double value : this.riskMapWeights.values()) {
+            newsum += value;
+        }
+
+        System.out.println(oldsum);
+        System.out.println(newsum);
+        System.out.println();
     }
 
     public Double getRiskMapWeight(String feature) {
