@@ -468,6 +468,7 @@ App.Views.Map = Backbone.View.extend({
         $("#add_monitor_task_mode").removeClass("mode_selected");
         $("#add_patrol_task_mode").removeClass("mode_selected");
         $("#add_region_task_mode").removeClass("mode_selected");
+        $("#add_surveillance_task_mode").removeClass("mode_selected");
         //Deselect agent
         this.views.clickedAgent = null;
         var validMode = true;
