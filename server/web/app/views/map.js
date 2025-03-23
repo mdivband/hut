@@ -25,6 +25,7 @@ App.Views.Map = Backbone.View.extend({
         ADD_MONITOR_TASK: 'add_monitor_task',
         ADD_PATROL_TASK: 'add_patrol_task',
         ADD_REGION_TASK: 'add_region_task',
+        ADD_SURVEILLANCE_TASK: 'add_surveillance_task',
         ADD_AGENT: 'add_agent'
     },
     MarkerColourEnum: {
@@ -494,6 +495,10 @@ App.Views.Map = Backbone.View.extend({
             case this.ModeEnum.ADD_REGION_TASK:
                 this.drawing.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
                 $("#add_region_task_mode").addClass("mode_selected");
+                break;
+            case this.ModeEnum.ADD_SURVEILLANCE_TASK:
+                this.drawing.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
+                $("#add_surveillance_task_mode").addClass("mode_selected");
                 break;
             default:
                 validMode = false

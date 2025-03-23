@@ -79,6 +79,9 @@ var MapController = {
         $("#add_region_task_mode").on('click', function () {
             self.setMode(self.ModeEnum.ADD_REGION_TASK);
         });
+        $("#add_surveillance_task_mode").on('click', function () {
+            self.setMode(self.ModeEnum.ADD_SURVEILLANCE_TASK);
+        });
         $("#add_agent_mode").on('click', function () {
             self.setMode(self.ModeEnum.ADD_AGENT);
         });
@@ -462,6 +465,22 @@ var MapController = {
             corners.push(se.lat(), se.lng());
             corners.push(sw.lat(), sw.lng());
             $.post("/tasks/region", {corners: corners.toString()});
+            rectangle.setMap(null);
+            delete rectangle;
+        }
+
+        if (this.mapMode === this.ModeEnum.ADD_SURVEILLANCE_TASK) {
+            var corners = [];
+            var bounds = rectangle.getBounds();
+            var ne = bounds.getNorthEast();
+            var sw = bounds.getSouthWest();
+            var nw = new google.maps.LatLng(ne.lat(), sw.lng());
+            var se = new google.maps.LatLng(sw.lat(), ne.lng());
+            corners.push(nw.lat(), nw.lng());
+            corners.push(ne.lat(), ne.lng());
+            corners.push(se.lat(), se.lng());
+            corners.push(sw.lat(), sw.lng());
+            $.post("/tasks/surveillance", {corners: corners.toString()});
             rectangle.setMap(null);
             delete rectangle;
         }
