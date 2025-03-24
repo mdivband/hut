@@ -262,6 +262,8 @@ var MapController = {
         $.post("/review/report/degradation", {
             status: true
         });
+        $('#degradationClick').prop('disabled', true);
+        //$('#degradationClick').css('background-color', 'gray');
     },
     onViewModePressed: function (viewModeValue) {
         if (viewModeValue === "monitor")
@@ -633,6 +635,9 @@ var MapController = {
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", false);
         }
+
+        // Ugly but it works
+        $('#degradationClick').prop('disabled', false);
 
         this.drawing.setDrawingMode(null);
         this.hideForGametype();

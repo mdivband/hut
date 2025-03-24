@@ -1,6 +1,6 @@
 package server.controller;
 
-import lsl.LSLLogger;
+//import lsl.LSLLogger;
 import server.Simulator;
 import server.model.Coordinate;
 
@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 public class EpisodeController {
     private final Logger LOGGER = Logger.getLogger(Simulator.class.getName());
-    private final LSLLogger lslLogger = new LSLLogger();
+    //private final LSLLogger lslLogger = new LSLLogger();
     private final ArrayList<Episode> episodes;
     private Episode currentEpisode = null; // Important to start null; we ensure mainloop has to define time limit first
     private Long currentEpisodeStartTime = null;
@@ -32,7 +32,7 @@ public class EpisodeController {
         currentEpisode.setEpisodeTimeLimit(currentEpisode.getEpisodeLength());//Simulator.instance.getState().getTime() + currentEpisode.getEpisodeLength());
         currentEpisodeStartTime = System.currentTimeMillis(); //Simulator.instance.getState().getTime();
         LOGGER.info(String.format("%s; NEWEP; New episode showing, code is (code); %s", Simulator.instance.getState().getTime(), currentEpisode.getEpisodeCode()));
-        lslLogger.logEventMarker(currentEpisode.getEpisodeCode());
+        //lslLogger.logEventMarker(currentEpisode.getEpisodeCode());
         addMarkers(currentEpisode.markers);
     }
 
@@ -74,8 +74,8 @@ public class EpisodeController {
 
     private Coordinate convertEpisodeCoord(String pos) {
         Coordinate centre = Simulator.instance.getState().getGameCentre();
-        double latOffset = 0.015; // Adjust these values as needed
-        double lngOffset = 0.05; // Adjust these values as needed
+        double latOffset = 0.01; // Adjust these values as needed
+        double lngOffset = 0.03; // Adjust these values as needed
         return switch (pos) {
             case "TL" -> new Coordinate(centre.getLatitude() + latOffset, centre.getLongitude() - lngOffset);
             case "TR" -> new Coordinate(centre.getLatitude() + latOffset, centre.getLongitude() + lngOffset);
@@ -111,11 +111,11 @@ public class EpisodeController {
                 isDegradation, status, success, getNumAgents(), reactionTime, clickString
         ));
 
-        lslLogger.logEventMarker("CL" + clickString);  // TODO: check if we should send Correct/Incorrect or nBackTrue/nBackFalse
+        //lslLogger.logEventMarker("CL" + clickString);  // TODO: check if we should send Correct/Incorrect or nBackTrue/nBackFalse
 
         userHasClicked = true; // Always true when the user clicks, regardless of correctness
-        triggerTime = -1;  // Reset trigger time
-        Simulator.instance.getState().setEditMode(-2);
+        //triggerTime = -1;  // Reset trigger time
+        //Simulator.instance.getState().setEditMode(-2);
     }
 
 
@@ -132,11 +132,11 @@ public class EpisodeController {
     }
 
     public void closeLogger() {
-        lslLogger.close();
+        //lslLogger.close();
     }
 
     public void logRest() {
-        lslLogger.logEventMarker("REST");
+        //lslLogger.logEventMarker("REST");
         if (!userHasClicked) {
             String clickString = (currentEpisode.isDegradation ? "T" : "F") + (!currentEpisode.isDegradation ? "T" : "F");
             LOGGER.info(String.format("%s; DGNOC; Deg not clicked. Episode is/is not a deg episidode and so the user was so the clickstring for oxysoft is (match, usrclicked, success, numAgents, clickstring); %s; %s; %s; %s; %s", Simulator.instance.getState().getTime(), currentEpisode.isDegradation, false, (!currentEpisode.isDegradation), getNumAgents(), clickString));

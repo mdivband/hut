@@ -13,14 +13,14 @@ public class DegradationGenerator {
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
-    private int numEpisodes = 60;
-    private int episodeLength = 10;
+    private int numEpisodes = 42;
+    private int episodeLength = 8;
     private int episodeCooldown = 5;
     private int reviewPeriod = 5;
     private int minAgents = 6;
-    private int maxAgents = 10;
-    private int minDegradationTime = 3;
-    private int maxDegradationTime = 8;
+    private int maxAgents = 18;
+    private int minDegradationTime = 2;
+    private int maxDegradationTime = 4;
 
     private double degradationProbability = 0.5;
 
@@ -46,53 +46,25 @@ public class DegradationGenerator {
         this.maxDegradationTime = maxDegradationTime;
     }
 
-    public void generateBalancedEpisodes() {
-        episodes.clear(); // Ensure we start fresh
+    // Add a new field to hold the discrete list of agent numbers.
+    private List<Integer> allowedAgents = Arrays.asList(6,8,10,12,14,16,18);
 
-        int halfNumEpisodes = numEpisodes / 2; // Ensure 50% degradationMatch = true, 50% = false
-        List<DegradationEpisode> episodeList = new ArrayList<>();
-
-        for (int i = 0; i < halfNumEpisodes; i++) {
-            // Generate one episode with degradationMatch = true
-            episodeList.add(generateSingleEpisode(true));
-
-            // Generate one episode with degradationMatch = false
-            episodeList.add(generateSingleEpisode(false));
-        }
-
-        // If numEpisodes is odd, add one more randomly
-        if (numEpisodes % 2 != 0) {
-            boolean degradationMatch = random.nextBoolean();
-            episodeList.add(generateSingleEpisode(degradationMatch));
-        }
-
-        // Shuffle to randomise order while keeping the balance
-        Collections.shuffle(episodeList, random);
-
-        // Assign shuffled list to episodes
-        episodes.addAll(episodeList);
-    }
-
-    private DegradationEpisode generateSingleEpisode(boolean degradationMatch) {
-        int numAgents = getRandomNumAgents();
+    private DegradationEpisode generateSingleEpisode(int numAgents, boolean degradationMatch) {
         String agentPos = getRandomPosition();
         String targetPos = getRandomPosition();
-
-        // Ensure agent and target positions are different
+        // Ensure agent and target positions differ
         while (agentPos.equals(targetPos)) {
             targetPos = getRandomPosition();
         }
-
         int degradationTime = degradationMatch ? getRandomDegradationTime() : -1;
-
-        // Generate reversible episode code
-        char agentChar = (char) ('A' + (numAgents - 1)); // Maps 1 -> A, 2 -> B, etc.
+        // Build an episode code: e.g., if numAgents=3 then agentChar is 'C' (since 'A'+2='C')
+        char agentChar = (char) ('A' + (numAgents - 1));
         char matchChar = degradationMatch ? 'T' : 'F';
         String episodeCode = "EP" + agentChar + matchChar;
 
         return new DegradationEpisode(
                 episodeLength,
-                episodeCooldown,
+                random.nextInt(3, 5),  // Random cooldown between 3 and 5
                 agentPos,
                 targetPos,
                 numAgents,
@@ -103,6 +75,34 @@ public class DegradationGenerator {
         );
     }
 
+    public void generateBalancedEpisodes() {
+        episodes.clear();
+
+        // The total number of allowed agent counts
+        int numAgentValues = allowedAgents.size();
+        // For each agent count we want two types (degradationMatch true and false)
+        int totalCombinations = 2 * numAgentValues;
+        // Determine how many episodes per combination we can generate
+        int k = numEpisodes / totalCombinations;
+        int adjustedTotal = k * totalCombinations;
+
+        if (adjustedTotal != numEpisodes) {
+            System.out.println("Warning: numEpisodes (" + numEpisodes + ") is not a multiple of "
+                    + totalCombinations + ". Adjusting total episodes to " + adjustedTotal + " for balance.");
+        }
+
+        // For each allowed agent count, generate k episodes for each degradation type.
+        for (int agentCount : allowedAgents) {
+            for (boolean degradationMatch : new boolean[]{true, false}) {
+                for (int i = 0; i < k; i++) {
+                    episodes.add(generateSingleEpisode(agentCount, degradationMatch));
+                }
+            }
+        }
+
+        // Shuffle the deck so that the order is randomized
+        Collections.shuffle(episodes, random);
+    }
 
 
     private String getRandomPosition() {
