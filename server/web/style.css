@@ -268,6 +268,19 @@ ul.list li:hover {
 	box-sizing: border-box;
 }
 
+#percep_sld_wrapper {
+	/* No longer need height: 100vh or a 10px black border here */
+	width: 700px;
+	margin: auto;
+	/* If you still want a black border around the white card,
+       move that to .slider_wrapper or keep it here. */
+	border: none;
+	display: block;
+	text-align: left;
+	padding: 0; /* We'll move the padding into the card. */
+	box-sizing: border-box;
+}
+
 
 #accordion_slider  table {
 	width: 100%;

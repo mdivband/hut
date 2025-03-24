@@ -28,6 +28,9 @@ public class ReviewHandler extends RestHandler {
             case "/report/workload":
                 handleReportWorkload(req, resp);
                 break;
+            case "/report/perception":
+                handleReportPerception(req, resp);
+                break;
             case "/report/degradation":
                 handleDegradation(req, resp);
                 break;
@@ -76,6 +79,17 @@ public class ReviewHandler extends RestHandler {
         Integer level = Integer.valueOf(params.get("level"));
         this.simulator.changeView(-9);
         this.simulator.getState().setWorkloadLevel(level);
+    }
+
+    private void handleReportPerception(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = List.of("level");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+
+        Integer level = Integer.valueOf(params.get("level"));
+        this.simulator.changeView(-9);
+        this.simulator.getState().setPerceptionLevel(level);
     }
 
     private void handleDegradation(Request req, Response resp) throws IOException {

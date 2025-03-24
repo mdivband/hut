@@ -142,6 +142,24 @@ var MapController = {
                 isDragging = false; // Reset the flag
             }
         });
+
+        // $('#perception_slider').on('mousedown', function() {
+        //     isDragging = true;
+        // });
+        //
+        // $('#perception_slider').on('mouseup', function() {
+        //     if (isDragging) {
+        //         $.post("/review/report/perception", {
+        //             level: $(this).val()
+        //         });
+        //         //self.state.perce = $(this).val();
+        //         MapAgentController.updateAllAgentMarkerIcons(true);
+        //         MapTaskController.updateAllTaskIcons(true);
+        //
+        //         isDragging = false; // Reset the flag
+        //     }
+        // });
+
         $('#uncertainties_toggle').change(function () {
             MapController.toggleUIOption('uncertainties', $(this).is(":checked"))
         });
@@ -462,6 +480,7 @@ var MapController = {
             ['uncertainties', ['uncertainties_wrapper_div'], "uncertainties_toggle"],
             ['ranges', ['ranges_wrapper_div'], "ranges_toggle"],
             ['workloadSlider', ['wk_sld_wrapper']],
+            ['perceptionSlider', ['percep_sld_wrapper']],
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
             ['triageButtons', ['triage_buttons']],
@@ -579,10 +598,12 @@ var MapController = {
             // Show overlay
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'none';
+            //document.getElementById('percep_sld_wrapper').style.display = 'none';
         } else if (modeFlag === -2) {
             // Show overlay with slider
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'block';
+            //document.getElementById('percep_sld_wrapper').style.display = 'block';
         } else if(modeFlag === 2) {  // edit
             document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();

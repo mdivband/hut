@@ -108,6 +108,7 @@ public class State {
     private ArrayList<String> handledTargets = new ArrayList<>();
     private HashMap<Coordinate, String> pendingMap = new HashMap<>();
     private Integer workloadLevel;
+    private Integer perceptionLevel;
     private Integer gameSpeed;
 
     public State() {
@@ -127,6 +128,7 @@ public class State {
         allocationRedoAvailable = false;
         dynamicUIFeatures = new ArrayList<>(5);
         workloadLevel = 3;
+        perceptionLevel = 5;
 
         reset();
     }
@@ -156,6 +158,7 @@ public class State {
         modelStyle = "off";
         showReviewPanel = false;
         workloadLevel = 3;
+        perceptionLevel = 5;
 
         agents.clear();
         ghosts.clear();
@@ -894,9 +897,18 @@ public class State {
         return workloadLevel;
     }
 
+    public Integer getPerceptionLevel() {
+        return perceptionLevel;
+    }
+
     public void setWorkloadLevel(Integer workloadLevel) {
         LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s ", getTime(), workloadLevel));
         this.workloadLevel = workloadLevel;
+    }
+
+    public void setPerceptionLevel(Integer perceptionLevel) {
+        LOGGER.info(String.format("%s; PRCP; User set Perception level to (level); %s ", getTime(), perceptionLevel));
+        this.perceptionLevel = perceptionLevel;
     }
 
     public Integer getGameSpeed() {
