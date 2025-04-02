@@ -284,41 +284,41 @@ var MapTaskController = {
 
             // TODO Maybe consider changing the image now. Probably not until the image is dealt with though
             var uid = task.getId() + "_completed";
-            if (task.getType() === this.state.tasks.TASK_SHALLOW_SCAN || task.getType() === this.state.tasks.TASK_DEEP_SCAN) {
-                var content = _.template($("#popup_left_right").html(), {
-                    left_content: task.getId() + " scanned.",
-                    right_content: "View",
-                    uid: uid
-                });
-
-                spop({
-                    template: content,
-                    style: 'default'
-                });
-
-                // TODO Maybe mount this on the target popup instead
-                $("#" + uid).on('click', function () {
-                    alert("temp approach. In future this should change view and trigger an opening of this image");
-                    MapImageController.showImage(task)
-                });
-
-            } else {
-                var content = _.template($("#popup_left_right").html(), {
-                    left_content: task.getId() + " has been completed",
-                    right_content: "View",
-                    uid: uid
-                });
-
-                spop({
-                    template: content,
-                    style: 'default'
-                });
-
-                $("#" + uid).on('click', function () {
-                    self.map.panTo(task.getPosition());
-                    self.map.setZoom(19);
-                });
-            }
+            // if (task.getType() === this.state.tasks.TASK_SHALLOW_SCAN || task.getType() === this.state.tasks.TASK_DEEP_SCAN) {
+            //     var content = _.template($("#popup_left_right").html(), {
+            //         left_content: task.getId() + " scanned.",
+            //         right_content: "View",
+            //         uid: uid
+            //     });
+            //
+            //     spop({
+            //         template: content,
+            //         style: 'default'
+            //     });
+            //
+            //     // TODO Maybe mount this on the target popup instead
+            //     $("#" + uid).on('click', function () {
+            //         alert("temp approach. In future this should change view and trigger an opening of this image");
+            //         MapImageController.showImage(task)
+            //     });
+            //
+            // } else {
+            //     var content = _.template($("#popup_left_right").html(), {
+            //         left_content: task.getId() + " has been completed",
+            //         right_content: "View",
+            //         uid: uid
+            //     });
+            //
+            //     spop({
+            //         template: content,
+            //         style: 'default'
+            //     });
+            //
+            //     $("#" + uid).on('click', function () {
+            //         self.map.panTo(task.getPosition());
+            //         self.map.setZoom(19);
+            //     });
+            // }
         }
     },
     onTaskMarkerLeftClick: function (marker) {},

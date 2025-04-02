@@ -268,7 +268,7 @@ ul.list li:hover {
 	box-sizing: border-box;
 }
 
-#percep_sld_wrapper {
+#subj_performance_sld_wrapper {
 	/* No longer need height: 100vh or a 10px black border here */
 	width: 700px;
 	margin: auto;
@@ -734,13 +734,13 @@ ul.list li:hover {
 	background-image: -ms-linear-gradient(top, #3093c7, #1c5a85);
 	background-image: -o-linear-gradient(top, #3093c7, #1c5a85);
 }
-#degradationClick:hover {
-	background-color: #26759e; background-image: -webkit-gradient(linear, left top, left bottom, from(#26759e), to(#133d5b));
-	background-image: -webkit-linear-gradient(top, #26759e, #133d5b);
-	background-image: -moz-linear-gradient(top, #26759e, #133d5b);
-	background-image: -ms-linear-gradient(top, #26759e, #133d5b);
-	background-image: -o-linear-gradient(top, #26759e, #133d5b);
-}
+/*#degradationClick:hover {*/
+/*	background-color: #26759e; background-image: -webkit-gradient(linear, left top, left bottom, from(#26759e), to(#133d5b));*/
+/*	background-image: -webkit-linear-gradient(top, #26759e, #133d5b);*/
+/*	background-image: -moz-linear-gradient(top, #26759e, #133d5b);*/
+/*	background-image: -ms-linear-gradient(top, #26759e, #133d5b);*/
+/*	background-image: -o-linear-gradient(top, #26759e, #133d5b);*/
+/*}*/
 #degradationClick:disabled {
 	background-color: #bababa; background-image: -webkit-gradient(linear, left top, left bottom, from(#bababa), to(#575757));
 	background-image: -webkit-linear-gradient(top, #bababa, #575757);

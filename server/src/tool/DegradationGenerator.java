@@ -13,14 +13,14 @@ public class DegradationGenerator {
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
-    private int numEpisodes = 42;
+    private int numEpisodes = 30;
     private int episodeLength = 8;
     private int episodeCooldown = 5;
     private int reviewPeriod = 5;
-    private int minAgents = 6;
+    private int minAgents = 4;
     private int maxAgents = 18;
-    private int minDegradationTime = 2;
-    private int maxDegradationTime = 4;
+    private int minDegradationTime = 3;
+    private int maxDegradationTime = 5;
 
     private double degradationProbability = 0.5;
 
@@ -47,7 +47,7 @@ public class DegradationGenerator {
     }
 
     // Add a new field to hold the discrete list of agent numbers.
-    private List<Integer> allowedAgents = Arrays.asList(6,8,10,12,14,16,18);
+    private List<Integer> allowedAgents = Arrays.asList(4,9,14);
 
     private DegradationEpisode generateSingleEpisode(int numAgents, boolean degradationMatch) {
         String agentPos = getRandomPosition();

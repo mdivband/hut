@@ -65,3 +65,4 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.lnk
+server/processedLogs/

@@ -275,7 +275,12 @@ public class Simulator {
                     }
 
 // Add tasks and allocate
-                    Task task = taskController.createTask(0, episodeController.getTargetCoord().getLatitude(), episodeController.getTargetCoord().getLongitude());
+                    Coordinate targetLocation = episodeController.getTargetCoord();
+                    // Now we use the getCoordinate method .getCoordinate(distance, angle) to make the drones move in that direction for ages
+                    double angle = heroAgent.getCoordinate().getAngle(targetLocation);
+                    Coordinate newTaskLocation = targetLocation.getCoordinate(100000, angle);
+
+                    Task task = taskController.createTask(0, newTaskLocation.getLatitude(), newTaskLocation.getLongitude());
                     allocator.putInTempAllocation(heroAgent.getId(), task.getId());
                     allocator.confirmAllocation(state.getTempAllocation());
 

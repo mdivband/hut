@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import server.Allocator;
 import server.Simulator;
 import server.model.agents.*;
 import server.model.hazard.Hazard;
@@ -108,7 +107,7 @@ public class State {
     private ArrayList<String> handledTargets = new ArrayList<>();
     private HashMap<Coordinate, String> pendingMap = new HashMap<>();
     private Integer workloadLevel;
-    private Integer perceptionLevel;
+    private Integer subjPerfLevel;
     private Integer gameSpeed;
 
     public State() {
@@ -128,7 +127,7 @@ public class State {
         allocationRedoAvailable = false;
         dynamicUIFeatures = new ArrayList<>(5);
         workloadLevel = 3;
-        perceptionLevel = 5;
+        subjPerfLevel = 5;
 
         reset();
     }
@@ -158,7 +157,7 @@ public class State {
         modelStyle = "off";
         showReviewPanel = false;
         workloadLevel = 3;
-        perceptionLevel = 5;
+        subjPerfLevel = 5;
 
         agents.clear();
         ghosts.clear();
@@ -897,8 +896,8 @@ public class State {
         return workloadLevel;
     }
 
-    public Integer getPerceptionLevel() {
-        return perceptionLevel;
+    public Integer getSubjPerfLevel() {
+        return subjPerfLevel;
     }
 
     public void setWorkloadLevel(Integer workloadLevel) {
@@ -906,9 +905,9 @@ public class State {
         this.workloadLevel = workloadLevel;
     }
 
-    public void setPerceptionLevel(Integer perceptionLevel) {
-        LOGGER.info(String.format("%s; PRCP; User set Perception level to (level); %s ", getTime(), perceptionLevel));
-        this.perceptionLevel = perceptionLevel;
+    public void setSubjPerfLevel(Integer subjPerfLevel) {
+        LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s ", getTime(), subjPerfLevel));
+        this.subjPerfLevel = subjPerfLevel;
     }
 
     public Integer getGameSpeed() {

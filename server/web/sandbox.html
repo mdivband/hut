@@ -175,7 +175,7 @@
             <div id="report_panel" style="text-align: center;" class="edit_accordion">
                 <!-- First we have some text explaining the N-Back task -->
                 <p style="text-align: left; margin-left: 10px; margin-right: 10px;">
-                    [May need to update] Click the button if an agent disappears
+                    Press SPACEBAR if an agent disappears. Once you have done that wait for the next episode.
                 </p>
                 <button class="edit_mode_buttons_large" id="degradationClick">Drone disappeared</button>
                 <!--<button class="edit_mode_buttons" id="nBackNoMatch">No Match</button>-->
@@ -364,7 +364,7 @@
     </div>
 
     <!-- time goes to button -->
-    <div id="game_info" style="margin: 2px;">
+    <div id="game_info" style="margin: 2px; display: none">
         <div id="game_id" class="game_info_item"></div>
         <div id="game_time" class="game_info_item">Time: 00:00:00</div>
         <div id="sim_time" class="game_info_item">Sim Time: 00:00:00</div>
@@ -609,9 +609,9 @@
 </div>
 <!-- Black overlay that we can toggle on and off -->
 <div id="overlay" style="display: block">
-    <div id = "wk_sld_wrapper" style="width: 700px; margin: auto; border: solid 10px black; text-align: left; padding: 10px; display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <div id="wk_sld_wrapper" style="width: 700px; margin: 20px auto; border: solid 10px black; text-align: left; padding: 10px;">
         <div class="slider_wrapper">
-            <h3>Workload</h3>
+            <h3>How would you rate your current workload?</h3>
             <div class="slider_container">
                 <input
                         type="range"
@@ -622,76 +622,70 @@
                         class="wl_slider"
                         id="workload_slider"
                 />
-
-            <!-- Tick marks container -->
-            <div class="tickmarks">
-                <div class="tick" style="left: 0%;">
-                    <span>1. Insignificant</span>
-                </div>
-                <div class="tick" style="left: 25%;">
-                    <span>2. Light</span>
-                </div>
-                <div class="tick" style="left: 50%;">
-                    <span>3. Moderate</span>
-                </div>
-                <div class="tick" style="left: 75%;">
-                    <span>4. Significant</span>
-                </div>
-                <div class="tick" style="left: 100%;">
-                    <span>5. Maximum</span>
+                <!-- Tick marks container -->
+                <div class="tickmarks">
+                    <div class="tick" style="left: 0%;">
+                        <span>1. Insignificant</span>
+                    </div>
+                    <div class="tick" style="left: 25%;">
+                        <span>2. Light</span>
+                    </div>
+                    <div class="tick" style="left: 50%;">
+                        <span>3. Moderate</span>
+                    </div>
+                    <div class="tick" style="left: 75%;">
+                        <span>4. Significant</span>
+                    </div>
+                    <div class="tick" style="left: 100%;">
+                        <span>5. Maximum</span>
+                    </div>
                 </div>
             </div>
         </div>
-
-<!--        <div style="background-color: white; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">-->
-<!--            <img src="icons/bin.png" alt="Low Workload" style="width: 100%; height: 100%; object-fit: contain;">-->
-<!--        </div>-->
     </div>
+
+    <div id="subj_performance_sld_wrapper" style="width: 700px; margin: 20px auto; border: solid 10px black; text-align: left; padding: 10px;">
+        <div class="slider_wrapper">
+            <h3>How would you rate your current performance?</h3>
+            <div class="slider_container">
+                <input
+                        type="range"
+                        min="1"
+                        max="5"
+                        value="2"
+                        step="1"
+                        class="wl_slider"
+                        id="subj_performance_slider"
+                />
+                <!-- Tick marks container -->
+                <div class="tickmarks">
+                    <div class="tick" style="left: 0%;">
+                        <span>1. Terrible</span>
+                    </div>
+                    <div class="tick" style="left: 25%;">
+                        <span>2. Poor</span>
+                    </div>
+                    <div class="tick" style="left: 50%;">
+                        <span>3. Average</span>
+                    </div>
+                    <div class="tick" style="left: 75%;">
+                        <span>4. Good</span>
+                    </div>
+                    <div class="tick" style="left: 100%;">
+                        <span>5. Excellent</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Now we add a submit button -->
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <button id="submit_post_ep" style="margin: 10px;">Submit</button>
+    </div>
+
 </div>
 
-    <!-- Now do the same for a slider rating out of 7 as a likert for "how did you perceive the drones?": Fully as individuals -> Fully as a team -->
-<!--    <div id = "percep_sld_wrapper" style="width: 700px; margin: auto; border: solid 10px black; text-align: left; padding: 10px; display: flex; justify-content: center; align-items: center; height: 100vh;">-->
-<!--        <div class="slider_wrapper">-->
-<!--            <h3>How did you perceive the drones?</h3>-->
-<!--            <div class="slider_container">-->
-<!--                &lt;!&ndash; Labels as in the above example &ndash;&gt;-->
-<!--                <input-->
-<!--                        type="range"-->
-<!--                        min="1"-->
-<!--                        max="7"-->
-<!--                        value="4"-->
-<!--                        step="1"-->
-<!--                        class="wl_slider"-->
-<!--                        id="perception_slider"-->
-<!--                />-->
 
-<!--                &lt;!&ndash; Tick marks container &ndash;&gt;-->
-<!--                <div class="tickmarks">-->
-<!--                    <div class="tick" style="left: 0%;">-->
-<!--                        <span>1. Fully as individuals</span>-->
-<!--                    </div>-->
-<!--                    <div class="tick" style="left: 14.3%;">-->
-<!--                        <span>2</span>-->
-<!--                    </div>-->
-<!--                    <div class="tick" style="left: 28.6%;">-->
-<!--                        <span>3</span>-->
-<!--                    </div>-->
-<!--                    <div class="tick" style="left: 42.9%;">-->
-<!--                        <span>4</span>-->
-<!--                    </div>-->
-<!--                    <div class="tick" style="left: 57.2%;">-->
-<!--                        <span>5</span>-->
-<!--                    </div>-->
-<!--                    <div class="tick" style="left: 71.5%;">-->
-<!--                        <span>6</span>-->
-<!--                    </div>-->
-<!--                    <div class="tick" style="left: 85.8%;">-->
-<!--                        <span>7. Fully as a team</span>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-</div>
 </body>
 </html>

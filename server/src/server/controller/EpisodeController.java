@@ -74,8 +74,8 @@ public class EpisodeController {
 
     private Coordinate convertEpisodeCoord(String pos) {
         Coordinate centre = Simulator.instance.getState().getGameCentre();
-        double latOffset = 0.01; // Adjust these values as needed
-        double lngOffset = 0.03; // Adjust these values as needed
+        double latOffset = 0.008; // Adjust these values as needed
+        double lngOffset = 0.024; // Adjust these values as needed
         return switch (pos) {
             case "TL" -> new Coordinate(centre.getLatitude() + latOffset, centre.getLongitude() - lngOffset);
             case "TR" -> new Coordinate(centre.getLatitude() + latOffset, centre.getLongitude() + lngOffset);

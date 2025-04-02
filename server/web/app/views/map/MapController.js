@@ -3,6 +3,8 @@ var MapController = {
     predictionLength: 0,
     uncertaintyRadius: 10,
     communicationRange: 100,
+    workloadLevel: 2,
+    subjPerformance: 2,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -97,7 +99,8 @@ var MapController = {
             MapController.onRemoveAgentClick()
         });
         $("#degradationClick").on('click', function () {
-            MapController.onDegradationClick()
+            console.log("Button disabled")
+            //MapController.onDegradationClick()
         });
         // Add keydown event listener to the document
         $(document).on('keydown', function (event) {
@@ -124,41 +127,35 @@ var MapController = {
                 MapController.showPredictedPaths($(this).val());
             }
         });
-        let isDragging = false;
 
-        $('#workload_slider').on('mousedown', function() {
-            isDragging = true;
+        // Optionally, you can still update local state on slider changes:
+        $('#workload_slider').on('change', function() {
+            self.workloadLevel = $(this).val();
+        });
+        $('#subj_performance_slider').on('change', function() {
+            self.subjPerformance = $(this).val();
         });
 
-        $('#workload_slider').on('mouseup', function() {
-            if (isDragging) {
-                $.post("/review/report/workload", {
-                    level: $(this).val()
-                });
-                self.state.workloadLevel = $(this).val();
-                MapAgentController.updateAllAgentMarkerIcons(true);
-                MapTaskController.updateAllTaskIcons(true);
+        // Submit button now sends both preferences:
+        $('#submit_post_ep').on('click', function () {
+            var workloadValue = $('#workload_slider').val();
+            var subjPerformanceValue = $('#subj_performance_slider').val();
 
-                isDragging = false; // Reset the flag
-            }
+            // Post workload preference
+            $.post("/review/report/workload", { level: workloadValue });
+
+            // Post subject performance preference
+            $.post("/review/report/subj_performance", { level: subjPerformanceValue });
+
+            // Update local state if needed
+            self.state.workloadLevel = workloadValue;
+            self.state.subjPerformance = subjPerformanceValue;
+
+            // Refresh map markers/icons
+            MapAgentController.updateAllAgentMarkerIcons(true);
+            MapTaskController.updateAllTaskIcons(true);
         });
 
-        // $('#perception_slider').on('mousedown', function() {
-        //     isDragging = true;
-        // });
-        //
-        // $('#perception_slider').on('mouseup', function() {
-        //     if (isDragging) {
-        //         $.post("/review/report/perception", {
-        //             level: $(this).val()
-        //         });
-        //         //self.state.perce = $(this).val();
-        //         MapAgentController.updateAllAgentMarkerIcons(true);
-        //         MapTaskController.updateAllTaskIcons(true);
-        //
-        //         isDragging = false; // Reset the flag
-        //     }
-        // });
 
         $('#uncertainties_toggle').change(function () {
             MapController.toggleUIOption('uncertainties', $(this).is(":checked"))
@@ -480,7 +477,7 @@ var MapController = {
             ['uncertainties', ['uncertainties_wrapper_div'], "uncertainties_toggle"],
             ['ranges', ['ranges_wrapper_div'], "ranges_toggle"],
             ['workloadSlider', ['wk_sld_wrapper']],
-            ['perceptionSlider', ['percep_sld_wrapper']],
+            ['subjPerformanceSlider', ['subj_performance_sld_wrapper']],
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
             ['triageButtons', ['triage_buttons']],
@@ -598,11 +595,15 @@ var MapController = {
             // Show overlay
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'none';
+            document.getElementById('subj_performance_sld_wrapper').style.display = 'none';
+            document.getElementById('submit_post_ep').style.display = 'none';
             //document.getElementById('percep_sld_wrapper').style.display = 'none';
         } else if (modeFlag === -2) {
             // Show overlay with slider
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'block';
+            document.getElementById('subj_performance_sld_wrapper').style.display = 'block';
+            document.getElementById('submit_post_ep').style.display = 'block';
             //document.getElementById('percep_sld_wrapper').style.display = 'block';
         } else if(modeFlag === 2) {  // edit
             document.getElementById('overlay').style.display = 'none';
