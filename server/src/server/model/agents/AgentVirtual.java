@@ -24,6 +24,7 @@ public class AgentVirtual extends Agent {
     private final double batteryVariance;
     private final double speedVariance;
     private boolean charging = false;
+    private int turnsToVeerFor = 0;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -89,14 +90,25 @@ public class AgentVirtual extends Agent {
     @Override
     void moveTowardsDestination() {
         //Align agent, if aligned then moved towards target
-        if(!isStopped() && this.adjustHeadingTowardsGoal()) {
-            // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
-            // We also check if we are closer than 1 move step; in which case
-            double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
-            double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
-            this.moveAlongHeading(distToMove);
-            //System.out.println(this.getId() + " Moving towards " + this.getAllocatedTaskId() + " dist = " + distToMove);
-        }
+//        if (turnsToVeerFor <=0 && Simulator.instance.getRandom().nextDouble() < 0.2) {
+//            turnsToVeerFor = 10;
+//            // turn a random angle (-30 to +30 deg) and move for 3 timesteps
+//            double angle = Math.toRadians((Simulator.instance.getRandom().nextDouble() * 60) - 30);
+//            // Apply this angle to current heading
+//            this.heading += Math.toDegrees(angle);
+//            double distToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
+//            this.moveAlongHeading(distToMove);
+//        } else {
+            if (!isStopped() && this.adjustHeadingTowardsGoal()) {
+                // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
+                // We also check if we are closer than 1 move step; in which case
+                double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
+                double distToMove = Math.min(possDistToMove, getCoordinate().getDistance(getCurrentDestination()));
+                this.moveAlongHeading(distToMove);
+                //System.out.println(this.getId() + " Moving towards " + this.getAllocatedTaskId() + " dist = " + distToMove);
+            }
+            turnsToVeerFor--;
+        //}
     }
 
     @Override

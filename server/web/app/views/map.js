@@ -102,7 +102,8 @@ App.Views.Map = Backbone.View.extend({
             disableDefaultUI: true,
 
 
-            fullscreenControl: false
+            fullscreenControl: false,
+            draggable: false,
 
 
         };

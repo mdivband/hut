@@ -55,9 +55,9 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double highTickRate = 10;  // We are updating the sim 10 times per second
+    private static final double highTickRate = 25;
     private static final double lowTickRate = 1;  // Certain functions can be checked less often (once per second)
-    private static final double gameSpeed = 25;  // We are running at 5x real speed
+    private static final double gameSpeed = 25;
     private final Random random;
 
     private Thread mainLoopThread;
@@ -230,14 +230,14 @@ public class Simulator {
                     episodeController.incrementEpisode();
                     this.softReset();
 
-                    Coordinate c = episodeController.getAgentCoord();
+                    Coordinate c = state.getGameCentre(); //episodeController.getAgentCoord();
                     Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
                     int numAgents = episodeController.getNumAgents();
 
                     List<Coordinate> placedAgents = new ArrayList<>();
                     placedAgents.add(c); // Add hero agent position first
 
-// Place each agent
+                    // Place each agent
                     for (int i = 1; i < numAgents; i++) {
                         Coordinate newCoord = null;
                         boolean validPlacement = false;
@@ -274,18 +274,36 @@ public class Simulator {
                         }
                     }
 
-// Add tasks and allocate
-                    Coordinate targetLocation = episodeController.getTargetCoord();
-                    // Now we use the getCoordinate method .getCoordinate(distance, angle) to make the drones move in that direction for ages
-                    double angle = heroAgent.getCoordinate().getAngle(targetLocation);
-                    Coordinate newTaskLocation = targetLocation.getCoordinate(100000, angle);
 
-                    Task task = taskController.createTask(0, newTaskLocation.getLatitude(), newTaskLocation.getLongitude());
-                    allocator.putInTempAllocation(heroAgent.getId(), task.getId());
-                    allocator.confirmAllocation(state.getTempAllocation());
+
+// Add tasks and allocate
+                    Coordinate start = heroAgent.getCoordinate();
+                    Coordinate targetLocation = episodeController.getTargetCoord();
+                    double dist = start.getDistance(targetLocation);
+                    double angle = start.getAngle(targetLocation);
+                    double stepDistance = dist / 30.0;
+
+                    List<Coordinate> route = new ArrayList<>();
+                    route.add(start);
+
+// Generate 9 intermediate steps with randomized deviation
+                    for (int i = 0; i < 29; i++) {
+                        //double deviation = (Math.random() - 0.5) * (Math.PI / 3); // ±30 degrees
+                        // Other version 45 degrees
+                        double deviation = (Math.random() - 0.5) * (Math.PI / 4); // ±45 degrees
+                        double newAngle = angle + deviation;
+                        Coordinate newCoord = route.get(route.size() - 1).getCoordinate(stepDistance, newAngle);
+                        route.add(newCoord);
+                    }
+// Ensure the route ends exactly at the target location
+                    route.add(targetLocation);
+
+                    heroAgent.setRoute(route);
+                    System.out.println(route);
+
+
 
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
-
 // Check if degradation should be triggered
                     if (episodeController.isDegradationMatch()) {
                         degradationTriggerTime = state.getTime() + episodeController.peekDegradationTime();
