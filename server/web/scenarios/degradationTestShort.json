@@ -21,11 +21,6 @@
       "name": "workloadSlider",
       "default": true,
       "toggleable": true
-    },
-    {
-      "name": "subjPerformanceSlider",
-      "default": true,
-      "toggleable": true
     }
   ],
   "episodes": [

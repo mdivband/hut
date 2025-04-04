@@ -21,11 +21,6 @@
       "name": "workloadSlider",
       "default": true,
       "toggleable": true
-    },
-    {
-      "name": "subjPerformanceSlider",
-      "default": true,
-      "toggleable": true
     }
   ],
   "episodes": [
@@ -37,7 +32,7 @@
       "numAgents": 14,
       "degradationMatch": true,
       "episodeCode": "EPNT",
-      "reviewPeriod": 5,
+      "reviewPeriod": 3,
       "degradationTime": 4,
       "markers": [
         {
@@ -56,7 +51,7 @@
       "numAgents": 10,
       "degradationMatch": true,
       "episodeCode": "EPJT",
-      "reviewPeriod": 5,
+      "reviewPeriod": 3,
       "degradationTime": 4,
       "markers": [
         {
@@ -75,7 +70,7 @@
       "numAgents": 16,
       "degradationMatch": false,
       "episodeCode": "EPPF",
-      "reviewPeriod": 5,
+      "reviewPeriod": 3,
       "degradationTime": -1,
       "markers": [
         {
@@ -94,7 +89,7 @@
       "numAgents": 16,
       "degradationMatch": false,
       "episodeCode": "EPPF",
-      "reviewPeriod": 5,
+      "reviewPeriod": 3,
       "degradationTime": -1,
       "markers": [
         {
@@ -113,7 +108,7 @@
       "numAgents": 8,
       "degradationMatch": false,
       "episodeCode": "EPHF",
-      "reviewPeriod": 5,
+      "reviewPeriod": 3,
       "degradationTime": -1,
       "markers": [
         {

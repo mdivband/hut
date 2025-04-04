@@ -307,7 +307,7 @@ var simulator = {
                             // Return to menu
                             scenario_end_panel.innerHTML = _.template($("#scenario_end_panel").html(), {
                                 title: "Scenario Ended",
-                                description: "This scenario has ended, please close."
+                                description: "This scenario has ended and your results have been saved. You may now close this tab in your browser, then go back to the main page where you can tick that you have completed this scenario and continue by clicking next."
                             });
                             $.blockWithContent(scenario_end_panel);
                             $('#end_scenario').on('click', function () {

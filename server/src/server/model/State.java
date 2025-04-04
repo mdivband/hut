@@ -109,6 +109,7 @@ public class State {
     private Integer workloadLevel;
     private Integer subjPerfLevel;
     private Integer gameSpeed;
+    private boolean complexFlocking;
 
     public State() {
         agents = new ArrayList<>();
@@ -128,6 +129,8 @@ public class State {
         dynamicUIFeatures = new ArrayList<>(5);
         workloadLevel = 3;
         subjPerfLevel = 5;
+
+        complexFlocking = false;
 
         reset();
     }
@@ -175,6 +178,8 @@ public class State {
         uiOptions.clear();
         dynamicUIFeatures.clear();
         hazardHits.init();
+
+        complexFlocking = false;
 
     }
 
@@ -519,6 +524,14 @@ public class State {
      */
     public void setUncertaintyRadius(double uncertaintyRadius) {
         this.uncertaintyRadius = uncertaintyRadius;
+    }
+
+    public void setComplexFlocking(boolean complexFlocking) {
+        this.complexFlocking = complexFlocking;
+    }
+
+    public boolean isComplexFlocking() {
+        return complexFlocking;
     }
 
     /**

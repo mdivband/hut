@@ -159,13 +159,17 @@ public class AgentVirtual extends Agent {
         double yAttract = 0.0;
         double targetHeading = Math.toRadians(this.heading);
 
+        Boolean complexFlocking = Simulator.instance.getState().isComplexFlocking();
+
         List<Agent> neighbours = this.sensor.senseNeighbours(this, 999999999.0);
 
         if (neighbours.size() > 0) {
 
             for (Agent neighbour : neighbours) {
                 double multiplier = 1;
-                if (neighbour.getTask() != null) {
+                if (neighbour.getTask() != null && complexFlocking) {
+                    multiplier = 5; // Give more weight to the leader
+                } else if (neighbour.getTask() != null ) {
                     multiplier = 100; // Give more weight to the leader
                 }
                 double neighbourHeading = Math.toRadians(neighbour.getHeading());
@@ -176,7 +180,13 @@ public class AgentVirtual extends Agent {
             xAlign = xSum/magnitude;
             yAlign = ySum/magnitude;
 
-            List<Agent> tooCloseNeighbours = this.sensor.senseNeighbours(this, 300.0);
+
+            List<Agent> tooCloseNeighbours;
+            if (complexFlocking) {
+                tooCloseNeighbours = this.sensor.senseNeighbours(this, 50.0);
+            } else {
+                tooCloseNeighbours = this.sensor.senseNeighbours(this, 250.0);
+            }
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
             if (tooCloseNeighbours.size() > 0) {
@@ -225,7 +235,11 @@ public class AgentVirtual extends Agent {
             );
 
             //Now a random offset to the heading between -10 and 10 degrees
-            targetHeading += Math.toRadians((Math.random() * 30) - 15);
+            if (complexFlocking) {
+                targetHeading += Math.toRadians((Math.random() * 45) - 22.5);
+            } else {
+                targetHeading += Math.toRadians((Math.random() * 30) - 15);
+            }
         }
         adjustHeading(targetHeading);
         return true;

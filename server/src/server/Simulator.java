@@ -180,16 +180,22 @@ public class Simulator {
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
 
-            if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit() ||
-                    (state.getTime() >= episodeController.getTriggerTime() && episodeController.hasStarted() && !episodeController.hasEpisodes())) {
+// Allow exit only after final review panel has been shown
+            boolean isOutOfTime = (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit());
+            boolean allEpisodesUsed = (!episodeController.hasEpisodes());
+            boolean inFinalReviewMode = (state.getEditMode() == -2);  // review panel is showing
+
+            if ((isOutOfTime || (state.getTime() >= episodeController.getTriggerTime() && episodeController.hasStarted() && allEpisodesUsed))
+                    && inFinalReviewMode) {
 
                 System.out.println("DONE BY TIME: " + state.getTime());
-                System.out.println("NOTE: Currently there is a small bug where if the user didn't click for the final episode it is not logged.");
+                System.out.println("NOTE: Ending after final review completed.");
                 episodeController.closeLogger();
                 LogProcessor.processLogFile("logs/"+state.getUserName()+"-"+state.getGameId()+".log");
                 this.reset(false);
                 break;
             }
+
 
             if (episodeController.getTriggerTime() == -1d) {
                 // Set initial cooldown time
@@ -852,6 +858,11 @@ public class Simulator {
                 }
             }
 
+            if(GsonUtils.hasKey(obj,"complexFlocking")) {
+                this.state.setComplexFlocking(GsonUtils.getValue(obj, "complexFlocking"));
+            } else {
+                this.state.setComplexFlocking(false);
+            }
 
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {

@@ -131,30 +131,38 @@ var MapController = {
         // Optionally, you can still update local state on slider changes:
         $('#workload_slider').on('change', function() {
             self.workloadLevel = $(this).val();
+            var workloadValue = $('#workload_slider').val();
+            self.state.workloadLevel = workloadValue;
+            // Post workload preference
+            $.post("/review/report/workload", { level: workloadValue });
+            MapAgentController.updateAllAgentMarkerIcons(true);
+            MapTaskController.updateAllTaskIcons(true);
+
+
         });
         $('#subj_performance_slider').on('change', function() {
             self.subjPerformance = $(this).val();
         });
 
-        // Submit button now sends both preferences:
-        $('#submit_post_ep').on('click', function () {
-            var workloadValue = $('#workload_slider').val();
-            var subjPerformanceValue = $('#subj_performance_slider').val();
-
-            // Post workload preference
-            $.post("/review/report/workload", { level: workloadValue });
-
-            // Post subject performance preference
-            $.post("/review/report/subj_performance", { level: subjPerformanceValue });
-
-            // Update local state if needed
-            self.state.workloadLevel = workloadValue;
-            self.state.subjPerformance = subjPerformanceValue;
-
-            // Refresh map markers/icons
-            MapAgentController.updateAllAgentMarkerIcons(true);
-            MapTaskController.updateAllTaskIcons(true);
-        });
+        // // Submit button now sends both preferences:
+        // $('#submit_post_ep').on('click', function () {
+        //     var workloadValue = $('#workload_slider').val();
+        //     var subjPerformanceValue = $('#subj_performance_slider').val();
+        //
+        //     // Post workload preference
+        //     $.post("/review/report/workload", { level: workloadValue });
+        //
+        //     // Post subject performance preference
+        //     $.post("/review/report/subj_performance", { level: subjPerformanceValue });
+        //
+        //     // Update local state if needed
+        //     self.state.workloadLevel = workloadValue;
+        //     self.state.subjPerformance = subjPerformanceValue;
+        //
+        //     // Refresh map markers/icons
+        //     MapAgentController.updateAllAgentMarkerIcons(true);
+        //     MapTaskController.updateAllTaskIcons(true);
+        // });
 
 
         $('#uncertainties_toggle').change(function () {
@@ -602,8 +610,8 @@ var MapController = {
             // Show overlay with slider
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'block';
-            document.getElementById('subj_performance_sld_wrapper').style.display = 'block';
-            document.getElementById('submit_post_ep').style.display = 'block';
+            //document.getElementById('subj_performance_sld_wrapper').style.display = 'block';
+            //document.getElementById('submit_post_ep').style.display = 'block';
             //document.getElementById('percep_sld_wrapper').style.display = 'block';
         } else if(modeFlag === 2) {  // edit
             document.getElementById('overlay').style.display = 'none';
