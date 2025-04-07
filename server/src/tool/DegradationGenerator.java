@@ -15,8 +15,8 @@ public class DegradationGenerator {
 
     private int numEpisodes = 64;
     private int episodeLength = 7;
-    private int episodeCooldown = 5;
-    private int reviewPeriod = 3;
+    private int episodeCooldown = 0;
+    private int reviewPeriod = 5;
     private int minAgents = 4;
     private int maxAgents = 22;
     private int minDegradationTime = 3;
@@ -51,11 +51,23 @@ public class DegradationGenerator {
 
     private DegradationEpisode generateSingleEpisode(int numAgents, boolean degradationMatch) {
         String agentPos = getRandomPosition();
-        String targetPos = getRandomPosition();
-        // Ensure agent and target positions differ
-        while (agentPos.equals(targetPos)) {
-            targetPos = getRandomPosition();
+
+
+        //String targetPos = getRandomPosition();
+        // // Ensure agent and target positions differ
+        //while (agentPos.equals(targetPos)) {
+        //    targetPos = getRandomPosition();
+        //}
+
+        // Instead of the above, we always pick the opposite corner out of {"BL", "TL", "TR", "BR"}
+        String targetPos = "";
+        switch (agentPos) {
+            case "BL" -> targetPos = "TR";
+            case "TL" -> targetPos = "BR";
+            case "TR" -> targetPos = "BL";
+            case "BR" -> targetPos = "TL";
         }
+
         int degradationTime = degradationMatch ? getRandomDegradationTime() : -1;
         // Build an episode code: e.g., if numAgents=3 then agentChar is 'C' (since 'A'+2='C')
         char agentChar = (char) ('A' + (numAgents - 1));

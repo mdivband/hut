@@ -24,7 +24,7 @@ public class AgentVirtual extends Agent {
     private final double batteryVariance;
     private final double speedVariance;
     private boolean charging = false;
-    private int turnsToVeerFor = 0;
+    private int flockCounter = 0;
 
     public AgentVirtual(String id, Coordinate position, Sensor sensor) {
         super(id, position, true);
@@ -90,36 +90,30 @@ public class AgentVirtual extends Agent {
     @Override
     void moveTowardsDestination() {
         //Align agent, if aligned then moved towards target
-//        if (turnsToVeerFor <=0 && Simulator.instance.getRandom().nextDouble() < 0.2) {
-//            turnsToVeerFor = 10;
-//            // turn a random angle (-30 to +30 deg) and move for 3 timesteps
-//            double angle = Math.toRadians((Simulator.instance.getRandom().nextDouble() * 60) - 30);
-//            // Apply this angle to current heading
-//            this.heading += Math.toDegrees(angle);
-//            double distToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
-//            this.moveAlongHeading(distToMove);
-//        } else {
-            if (!isStopped() && this.adjustHeadingTowardsGoal()) {
-                // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
-                // We also check if we are closer than 1 move step; in which case
-                double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
-                double distToMove = Math.min(possDistToMove, getCoordinate().getDistance(getCurrentDestination()));
-                this.moveAlongHeading(distToMove);
-                //System.out.println(this.getId() + " Moving towards " + this.getAllocatedTaskId() + " dist = " + distToMove);
-            }
-            turnsToVeerFor--;
-        //}
+        if (!isStopped() && this.adjustHeadingTowardsGoal()) {
+            // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
+            // We also check if we are closer than 1 move step; in which case
+            double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
+            double distToMove = Math.min(possDistToMove, getCoordinate().getDistance(getCurrentDestination()));
+            this.moveAlongHeading(distToMove);
+            //System.out.println(this.getId() + " Moving towards " + this.getAllocatedTaskId() + " dist = " + distToMove);
+        }
     }
 
     @Override
     void performFlocking() {
         //Align agent, if aligned then moved towards target
-        if(!isStopped() && this.adjustFlockingHeading()) {
+        if(!isStopped() && flockCounter >= 5 && this.adjustFlockingHeading()) {
             // From ms/s, but instead of dividing by 1 second, it's by one game step (fraction of a second)
             // We also check if we are closer than 1 move step; in which case
             double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
             //double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
             this.moveAlongHeading(possDistToMove);
+            flockCounter = 0;
+        } else {
+            double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
+            this.moveAlongHeading(possDistToMove);
+            flockCounter++;
         }
     }
 
@@ -168,9 +162,9 @@ public class AgentVirtual extends Agent {
             for (Agent neighbour : neighbours) {
                 double multiplier = 1;
                 if (neighbour.getTask() != null && complexFlocking) {
-                    multiplier = 5; // Give more weight to the leader
+                    multiplier = 50; // Give more weight to the leader
                 } else if (neighbour.getTask() != null ) {
-                    multiplier = 100; // Give more weight to the leader
+                    multiplier = 50; // Give more weight to the leader
                 }
                 double neighbourHeading = Math.toRadians(neighbour.getHeading());
                 xSum += Math.cos(neighbourHeading) * multiplier;
@@ -183,9 +177,9 @@ public class AgentVirtual extends Agent {
 
             List<Agent> tooCloseNeighbours;
             if (complexFlocking) {
-                tooCloseNeighbours = this.sensor.senseNeighbours(this, 50.0);
+                tooCloseNeighbours = this.sensor.senseNeighbours(this, 150.0);
             } else {
-                tooCloseNeighbours = this.sensor.senseNeighbours(this, 300.0);
+                tooCloseNeighbours = this.sensor.senseNeighbours(this, 250.0);
             }
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
@@ -236,7 +230,7 @@ public class AgentVirtual extends Agent {
 
             //Now a random offset to the heading between -10 and 10 degrees
             if (complexFlocking) {
-                targetHeading += Math.toRadians((Math.random() * 45) - 22.5);
+                targetHeading += Math.toRadians((Math.random() * 40) - 20);
             } else {
                 targetHeading += Math.toRadians((Math.random() * 20) - 10);
             }

@@ -55,7 +55,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double highTickRate = 25;
+    private static final double highTickRate = 15;
     private static final double lowTickRate = 1;  // Certain functions can be checked less often (once per second)
     private static final double gameSpeed = 25;
     private final Random random;
@@ -177,14 +177,15 @@ public class Simulator {
         // -9: Slider clicked, now trigger next, -2: review, -1: cooldown, 1: episode
         changeView(-1);
         do {
+
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
 
-// Allow exit only after final review panel has been shown
             boolean isOutOfTime = (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit());
             boolean allEpisodesUsed = (!episodeController.hasEpisodes());
             boolean inFinalReviewMode = (state.getEditMode() == -2);  // review panel is showing
 
+            // 1. Check if final review is done => end simulation
             if ((isOutOfTime || (state.getTime() >= episodeController.getTriggerTime() && episodeController.hasStarted() && allEpisodesUsed))
                     && inFinalReviewMode) {
 
@@ -196,17 +197,14 @@ public class Simulator {
                 break;
             }
 
-
+            // 2. Set the initial trigger time if we haven't yet.
             if (episodeController.getTriggerTime() == -1d) {
                 // Set initial cooldown time
                 episodeController.setTriggerTime(state.getTime() + episodeController.peekNextEpisodeCooldown());
                 degradationTriggerTime = -1d; // Reset degradation trigger time
-            } else if (state.getEditMode() == -2) {
-                // Do nothing, waiting for review to finish
 
-
-            } // Check if it's time to trigger degradation
-            else if (degradationTriggerTime > 0 && state.getTime() >= degradationTriggerTime) {
+            // 3. Degradation check
+            } else if (degradationTriggerTime > 0 && state.getTime() >= degradationTriggerTime) {
                 System.out.println("Triggering degradation at time: " + state.getTime());
 
                 // Select a random agent
@@ -220,28 +218,44 @@ public class Simulator {
 
                 degradationTriggerTime = -1d; // Reset to prevent repeated triggering
 
+            // 4. If we've reached the trigger time, check the current mode and transition
             } else if (state.getTime() >= episodeController.getTriggerTime()) {
                 if (state.getEditMode() == 1) { // Episode just finished
                     // Switch to review mode
                     changeView(-2);
-                    episodeController.setTriggerTime(0); //state.getTime() + episodeController.getReviewPeriodLimit();
-                } else if (state.getEditMode() == -9) { // Review just finished
-                    // Switch to cooldown mode
-                    episodeController.logRest();
+                    episodeController.setTriggerTime(state.getTime() + episodeController.getReviewPeriodLimit());
+
+                } else if (state.getEditMode() == -2) {
+                    // REVIEW JUST FINISHED (auto after 5s)
+                    LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s ", state.getTime(), state.getWorkloadLevel()));
+                    LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s ", state.getTime(), state.getSubjPerfLevel()));
+                    LOGGER.info(String.format("%s; EPEND; Episode end ", state.getTime()));
+
+                    //episodeController.logRest();
                     changeView(-1);
+                    // Start cooldown. For example, 10s cooldown:
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeCooldownLimit());
+
                 } else if (state.getEditMode() == -1) { // Cooldown just finished
                     // Switch to next episode
                     changeView(1);
                     episodeController.incrementEpisode();
                     this.softReset();
 
-                    Coordinate c = state.getGameCentre(); //episodeController.getAgentCoord();
+                    Coordinate c = episodeController.getAgentCoord(); //state.getGameCentre();
                     Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
                     int numAgents = episodeController.getNumAgents();
 
                     List<Coordinate> placedAgents = new ArrayList<>();
                     placedAgents.add(c); // Add hero agent position first
+
+                    Coordinate targetLocation = episodeController.getTargetCoord();
+                    // Now we use the getCoordinate method .getCoordinate(distance, angle) to make the drones move in that direction for ages
+                    double angle = heroAgent.getCoordinate().getAngle(targetLocation);
+                    Coordinate newTaskLocation = targetLocation.getCoordinate(100000, angle);
+                    heroAgent.setHeading(Math.toDegrees(angle));
+
+                    int separationDist = state.isComplexFlocking() ? 150 : 150;
 
                     // Place each agent
                     for (int i = 1; i < numAgents; i++) {
@@ -253,17 +267,17 @@ public class Simulator {
                             List<Agent> agentList = new ArrayList<>(state.getAgents());
                             Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
 
-                            double angle = 2 * Math.PI * random.nextDouble();
-                            double offset = 250d / 111139d; // 250 meters to degrees
-                            double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(angle);
-                            double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(angle) / Math.cos(existingAgentCoord.getLatitude());
+                            double spawnAngle = 2 * Math.PI * random.nextDouble();
+                            double offset = (separationDist * 1.5) / 111139d; // 250 meters to degrees
+                            double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(spawnAngle);
+                            double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(spawnAngle) / Math.cos(existingAgentCoord.getLatitude());
 
                             newCoord = new Coordinate(newLat, newLng);
                             validPlacement = true;
 
                             // Ensure at least 150m distance from all existing agents
                             for (Coordinate placedCoord : placedAgents) {
-                                if (placedCoord.getDistance(newCoord) < 200) {
+                                if (placedCoord.getDistance(newCoord) < separationDist) {
                                     validPlacement = false;
                                     break;
                                 }
@@ -273,40 +287,42 @@ public class Simulator {
                         }
 
                         if (validPlacement) {
-                            Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 0);
+                            Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), Math.toDegrees(angle));
                             placedAgents.add(newCoord); // Add to valid agents list
                         } else {
                             System.out.println("Failed to place an agent after 100 attempts.");
                         }
                     }
 
+                    Task task = taskController.createTask(0, newTaskLocation.getLatitude(), newTaskLocation.getLongitude());
+                    allocator.putInTempAllocation(heroAgent.getId(), task.getId());
+                    allocator.confirmAllocation(state.getTempAllocation());
 
 
-// Add tasks and allocate
-                    Coordinate start = heroAgent.getCoordinate();
-                    Coordinate targetLocation = episodeController.getTargetCoord();
-                    double dist = start.getDistance(targetLocation);
-                    double angle = start.getAngle(targetLocation);
-                    double stepDistance = dist / 30.0;
-
-                    List<Coordinate> route = new ArrayList<>();
-                    route.add(start);
-
-// Generate 9 intermediate steps with randomized deviation
-                    for (int i = 0; i < 29; i++) {
-                        //double deviation = (Math.random() - 0.5) * (Math.PI / 3); // ±30 degrees
-                        // Other version 45 degrees
-                        double deviation = (Math.random() - 0.5) * (Math.PI / 4); // ±45 degrees
-                        double newAngle = angle + deviation;
-                        Coordinate newCoord = route.get(route.size() - 1).getCoordinate(stepDistance, newAngle);
-                        route.add(newCoord);
-                    }
-// Ensure the route ends exactly at the target location
-                    route.add(targetLocation);
-
-                    heroAgent.setRoute(route);
-                    System.out.println(route);
-
+//// Add tasks and allocate
+//                    Coordinate start = heroAgent.getCoordinate();
+//                    Coordinate targetLocation = episodeController.getTargetCoord();
+//                    double dist = start.getDistance(targetLocation);
+//                    double angle = start.getAngle(targetLocation);
+//                    double stepDistance = dist / 30.0;
+//
+//                    List<Coordinate> route = new ArrayList<>();
+//                    route.add(start);
+//
+//// Generate 9 intermediate steps with randomized deviation
+//                    for (int i = 0; i < 29; i++) {
+//                        //double deviation = (Math.random() - 0.5) * (Math.PI / 3); // ±30 degrees
+//                        // Other version 45 degrees
+//                        double deviation = (Math.random() - 0.5) * (Math.PI / 4); // ±45 degrees
+//                        double newAngle = angle + deviation;
+//                        Coordinate newCoord = route.get(route.size() - 1).getCoordinate(stepDistance, newAngle);
+//                        route.add(newCoord);
+//                    }
+//// Ensure the route ends exactly at the target location
+//                    route.add(targetLocation);
+//
+//                    heroAgent.setRoute(route);
+//                    System.out.println(route);
 
 
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
@@ -316,7 +332,12 @@ public class Simulator {
                     }
 
                 }
+
+            } else if (state.getEditMode() == -2) {
+                //LOGGER.info(String.format("%s; WAIT; Waiting", state.getTime()));
+                // Do nothing, waiting for review to finish
             }
+
 
 
             // Decide if we should spawn a new task

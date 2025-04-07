@@ -21,6 +21,11 @@
       "name": "workloadSlider",
       "default": true,
       "toggleable": true
+    },
+    {
+      "name": "subjPerformanceSlider",
+      "default": true,
+      "toggleable": true
     }
   ],
   "noiseParameters": {
@@ -30,35 +35,35 @@
   "episodes": [
     {
       "episodeLength": 7,
-      "episodeCooldown": 3,
+      "episodeCooldown": 0,
       "agentPos": "TL",
       "targetPos": "BL",
       "numAgents": 16,
       "degradationMatch": true,
       "episodeCode": "EPPT",
-      "reviewPeriod": 3,
+      "reviewPeriod": 5,
       "degradationTime": 4
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 3,
+      "episodeCooldown": 0,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 14,
       "degradationMatch": false,
       "episodeCode": "EPNF",
-      "reviewPeriod": 3,
+      "reviewPeriod": 5,
       "degradationTime": -1
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 3,
+      "episodeCooldown": 0,
       "agentPos": "BR",
       "targetPos": "BL",
       "numAgents": 10,
       "degradationMatch": true,
       "episodeCode": "EPJT",
-      "reviewPeriod": 3,
+      "reviewPeriod": 5,
       "degradationTime": 3
     },
     {

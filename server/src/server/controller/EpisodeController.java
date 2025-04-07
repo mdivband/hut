@@ -69,6 +69,7 @@ public class EpisodeController {
     }
 
     public void setTriggerTime(double triggerTime) {
+        System.out.println("Setting trigger time: " + triggerTime);
         this.triggerTime = triggerTime;
     }
 

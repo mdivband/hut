@@ -128,7 +128,7 @@ public class State {
         allocationRedoAvailable = false;
         dynamicUIFeatures = new ArrayList<>(5);
         workloadLevel = 3;
-        subjPerfLevel = 5;
+        subjPerfLevel = 3;
 
         complexFlocking = false;
 
@@ -160,7 +160,7 @@ public class State {
         modelStyle = "off";
         showReviewPanel = false;
         workloadLevel = 3;
-        subjPerfLevel = 5;
+        subjPerfLevel = 3;
 
         agents.clear();
         ghosts.clear();
@@ -914,12 +914,12 @@ public class State {
     }
 
     public void setWorkloadLevel(Integer workloadLevel) {
-        LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s ", getTime(), workloadLevel));
+        //LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s ", getTime(), workloadLevel));
         this.workloadLevel = workloadLevel;
     }
 
     public void setSubjPerfLevel(Integer subjPerfLevel) {
-        LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s ", getTime(), subjPerfLevel));
+        //LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s ", getTime(), subjPerfLevel));
         this.subjPerfLevel = subjPerfLevel;
     }
 

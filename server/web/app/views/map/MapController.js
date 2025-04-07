@@ -3,8 +3,8 @@ var MapController = {
     predictionLength: 0,
     uncertaintyRadius: 10,
     communicationRange: 100,
-    workloadLevel: 2,
-    subjPerformance: 2,
+    workloadLevel: 3,
+    subjPerformance: 3,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -128,46 +128,25 @@ var MapController = {
             }
         });
 
-        let isDragging = false;
-
-        $('#workload_slider').on('mousedown', function() {
-            isDragging = true;
-        });
-
-        $('#workload_slider').on('mouseup', function() {
-            self.workloadLevel = $(this).val();
-            var workloadValue = $('#workload_slider').val();
+        // Workload Slider
+        $('#workload_slider').on('change', function() {
+            const workloadValue = $(this).val();
+            self.workloadLevel = workloadValue;
             self.state.workloadLevel = workloadValue;
+
             // Post workload preference
             $.post("/review/report/workload", { level: workloadValue });
-            MapAgentController.updateAllAgentMarkerIcons(true);
-            MapTaskController.updateAllTaskIcons(true);
-
-            isDragging = false; // Reset the flag
         });
+
+        // Subjective Performance Slider
         $('#subj_performance_slider').on('change', function() {
-            self.subjPerformance = $(this).val();
-        });
+            const subjPerformanceValue = $(this).val();
+            self.subjPerformance = subjPerformanceValue;
+            self.state.subjPerformance = subjPerformanceValue;
 
-        // // Submit button now sends both preferences:
-        // $('#submit_post_ep').on('click', function () {
-        //     var workloadValue = $('#workload_slider').val();
-        //     var subjPerformanceValue = $('#subj_performance_slider').val();
-        //
-        //     // Post workload preference
-        //     $.post("/review/report/workload", { level: workloadValue });
-        //
-        //     // Post subject performance preference
-        //     $.post("/review/report/subj_performance", { level: subjPerformanceValue });
-        //
-        //     // Update local state if needed
-        //     self.state.workloadLevel = workloadValue;
-        //     self.state.subjPerformance = subjPerformanceValue;
-        //
-        //     // Refresh map markers/icons
-        //     MapAgentController.updateAllAgentMarkerIcons(true);
-        //     MapTaskController.updateAllTaskIcons(true);
-        // });
+            // Post subject performance preference
+            $.post("/review/report/subj_performance", { level: subjPerformanceValue });
+        });
 
 
         $('#uncertainties_toggle').change(function () {
@@ -615,7 +594,7 @@ var MapController = {
             // Show overlay with slider
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'block';
-            //document.getElementById('subj_performance_sld_wrapper').style.display = 'block';
+            document.getElementById('subj_performance_sld_wrapper').style.display = 'block';
             //document.getElementById('submit_post_ep').style.display = 'block';
             //document.getElementById('percep_sld_wrapper').style.display = 'block';
         } else if(modeFlag === 2) {  // edit

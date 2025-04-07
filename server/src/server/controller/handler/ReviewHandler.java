@@ -77,7 +77,7 @@ public class ReviewHandler extends RestHandler {
             return;
 
         Integer level = Integer.valueOf(params.get("level"));
-        this.simulator.changeView(-9);
+        //this.simulator.changeView(-9);
         this.simulator.getState().setWorkloadLevel(level);
     }
 
@@ -88,7 +88,7 @@ public class ReviewHandler extends RestHandler {
             return;
 
         Integer level = Integer.valueOf(params.get("level"));
-        this.simulator.changeView(-9);
+        //this.simulator.changeView(-9);
         this.simulator.getState().setSubjPerfLevel(level);
     }
 
@@ -100,7 +100,9 @@ public class ReviewHandler extends RestHandler {
 
         boolean status = Boolean.parseBoolean(params.get("status"));  // Should always be true anyway in current config
 
-        simulator.getEpisodeController().click(status);
+        if (Simulator.instance.getState().getEditMode() == 1) {
+            simulator.getEpisodeController().click(status);
+        }
 
     }
 
