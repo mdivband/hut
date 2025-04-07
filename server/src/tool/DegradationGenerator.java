@@ -47,7 +47,7 @@ public class DegradationGenerator {
     }
 
     // Add a new field to hold the discrete list of agent numbers.
-    private List<Integer> allowedAgents = Arrays.asList(8,10,12,14,16,18,20,22);
+    private List<Integer> allowedAgents = Arrays.asList(6,8,10,12,14,16,18,20);
 
     private DegradationEpisode generateSingleEpisode(int numAgents, boolean degradationMatch) {
         String agentPos = getRandomPosition();

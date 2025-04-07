@@ -185,7 +185,7 @@ public class AgentVirtual extends Agent {
             if (complexFlocking) {
                 tooCloseNeighbours = this.sensor.senseNeighbours(this, 50.0);
             } else {
-                tooCloseNeighbours = this.sensor.senseNeighbours(this, 250.0);
+                tooCloseNeighbours = this.sensor.senseNeighbours(this, 300.0);
             }
             List<Agent> notTooClose = new ArrayList<>(neighbours);
 
@@ -238,7 +238,7 @@ public class AgentVirtual extends Agent {
             if (complexFlocking) {
                 targetHeading += Math.toRadians((Math.random() * 45) - 22.5);
             } else {
-                targetHeading += Math.toRadians((Math.random() * 30) - 15);
+                targetHeading += Math.toRadians((Math.random() * 20) - 10);
             }
         }
         adjustHeading(targetHeading);

@@ -128,8 +128,13 @@ var MapController = {
             }
         });
 
-        // Optionally, you can still update local state on slider changes:
-        $('#workload_slider').on('change', function() {
+        let isDragging = false;
+
+        $('#workload_slider').on('mousedown', function() {
+            isDragging = true;
+        });
+
+        $('#workload_slider').on('mouseup', function() {
             self.workloadLevel = $(this).val();
             var workloadValue = $('#workload_slider').val();
             self.state.workloadLevel = workloadValue;
@@ -138,7 +143,7 @@ var MapController = {
             MapAgentController.updateAllAgentMarkerIcons(true);
             MapTaskController.updateAllTaskIcons(true);
 
-
+            isDragging = false; // Reset the flag
         });
         $('#subj_performance_slider').on('change', function() {
             self.subjPerformance = $(this).val();
