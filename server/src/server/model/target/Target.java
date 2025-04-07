@@ -25,6 +25,8 @@ public abstract class Target extends MObject implements Serializable {
     public static final int ADJ_DISMISSED = 4;
     public static final int ADJ_FOUND = 5;
 
+    public static final int FIRE = 6;
+
 
     public Target(String id, Coordinate coordinate, int type) {
         super(id, coordinate);

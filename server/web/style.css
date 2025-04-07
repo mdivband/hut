@@ -1044,6 +1044,29 @@ ul.list li:hover {
 	background-position:5% center;
 }
 
+
+#add_fire_target_mode {
+	background: url(icons/used/fire.png), -webkit-gradient(linear, left top, left bottom, from(#f2f5f6), to(#c8d7dc));
+	background: url(icons/used/fire.png), -moz-linear-gradient(to top, #f2f5f6, #c8d7dc);
+	background-size: contain;
+	background-repeat:no-repeat;
+	background-position:5% center;
+}
+#add_fire_target_mode:hover {
+	background: url(icons/used/fire.png), -webkit-gradient(linear, left top, left bottom, from(#d4dee1), to(#a9c0c8));
+	background: url(icons/used/fire.png), -moz-linear-gradient(to top, #d4dee1, #a9c0c8);
+	background-size: contain;
+	background-repeat:no-repeat;
+	background-position:5% center;
+}
+#add_fire_target_mode.mode_selected {
+	background: url(icons/used/fire.png), -webkit-gradient(linear, left top, left bottom, from(#133d5b), to(#26759e));
+	background: url(icons/used/fire.png), -moz-linear-gradient(to top, #133d5b, #26759e);
+	background-size: contain;
+	background-repeat:no-repeat;
+	background-position:5% center;
+}
+
 #add_agent_mode {
 	background: url(icons/used/add_uav.png), -webkit-gradient(linear, left top, left bottom, from(#f2f5f6), to(#c8d7dc));
 	background: url(icons/used/add_uav.png), -moz-linear-gradient(to top, #f2f5f6, #c8d7dc);

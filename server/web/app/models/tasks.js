@@ -47,7 +47,8 @@ App.Collections.Tasks = Backbone.Collection.extend({
 	TASK_DEEP_SCAN: 4,
 	TASK_SHALLOW_SCAN: 5,
 	TASK_VISIT: 6,
-	TASK_GROUND: 7
+	TASK_GROUND: 7,
+	TASK_SURVEILLANCE: 8
 });
 
 App.Collections.CompletedTasks = Backbone.Collection.extend({

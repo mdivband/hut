@@ -728,6 +728,12 @@ public class Simulator {
                     if(GsonUtils.hasKey(agentJSon,"programmed")){
                         programmed = GsonUtils.getValue(agentJSon, "programmed");
                     }
+
+                    String surveillanceType = "default";
+                    if(GsonUtils.hasKey(agentJSon,"surveillanceType")){
+                         surveillanceType = GsonUtils.getValue(agentJSon, "surveillanceType");
+                    }
+
                     Agent agent;
                     if (programmed) {
                         // This means the agent is a programmed one, and the Hub is set up for this

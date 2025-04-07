@@ -82,6 +82,9 @@ var MapController = {
         $("#add_surveillance_task_mode").on('click', function () {
             self.setMode(self.ModeEnum.ADD_SURVEILLANCE_TASK);
         });
+        $("#add_fire_target_mode").on('click', function () {
+            self.setMode(self.ModeEnum.ADD_FIRE_TARGET);
+        });
         $("#add_agent_mode").on('click', function () {
             self.setMode(self.ModeEnum.ADD_AGENT);
         });
@@ -435,6 +438,13 @@ var MapController = {
                 lat: latlng.latitude,
                 lng: latlng.longitude,
                 heading: 0.0
+            });
+        }
+        else if (this.mapMode === this.ModeEnum.ADD_FIRE_TARGET){
+            $.post("/targets", {
+                type: this.state.targets.FIRE,
+                lat: latlng.latitude,
+                lng: latlng.longitude
             });
         }
         marker.setMap(null);
