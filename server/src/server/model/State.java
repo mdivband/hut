@@ -941,6 +941,7 @@ public class State {
         Double oldWeight = this.riskMapWeights.get(feature);
         this.riskMapWeights.put(feature, newWeight);
 
+        /* // dynamic weight setting
         Double oldsum = 0.0;
         Double newsum = 0.0;
 
@@ -962,6 +963,7 @@ public class State {
         System.out.println(oldsum);
         System.out.println(newsum);
         System.out.println();
+        */
     }
 
     public Double getRiskMapWeight(String feature) {

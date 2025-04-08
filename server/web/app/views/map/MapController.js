@@ -128,8 +128,6 @@ var MapController = {
             } else {
                 MapController.updateRiskMapHeatMap();
             }
-
-            MapController.updateRiskMapWeightSliders()
         })
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
@@ -170,6 +168,14 @@ var MapController = {
         });
         $('#slope_slider').on('change', function() {
             MapController.setHexBinWeight("slope", $(this).val());
+        });
+        $('#risk_features_reset').on('click', function() {
+            let weights = self.state.getRiskMapWeights();
+
+            Object.keys(weights).forEach(weight => {
+                MapController.setHexBinWeight(weight, 100);
+                $(`#${weight}_slider`).val(100);
+            });
         });
         $('#workload_slider').on('change', function() {
             self.state.workloadLevel = $(this).val();
@@ -692,7 +698,7 @@ var MapController = {
         this.heatmap.set(option, value);
     },
     setRiskHexBinThreshold: function (value) {
-        this.hexbinThreshold = 2 + 4*(value/100-0.5);
+        this.hexbinThreshold = value/100;
         if(MapController.isEnabledUIOption("heatMapToggle")){
             MapController.updateRiskMapHexBin();
         } else {
@@ -720,7 +726,7 @@ var MapController = {
     setHexBinWeight: function (weight, value) {
         $.post("/ui/slider", {
             name: weight,
-            status: 1+2*(value/100-0.5)
+            status: value/100
         })
     },
     updateRiskMapHexBin: function () {
@@ -728,7 +734,6 @@ var MapController = {
         // Get risk map from backend
         let riskMap = this.state.getRiskMap();
         let weights = this.state.getRiskMapWeights();
-
         const gradient = [
                 "rgba(0, 255, 255, 0)",
                 "rgba(0, 255, 255, 1)",
@@ -746,6 +751,16 @@ var MapController = {
                 "rgba(255, 0, 0, 1)",
             ];
 
+        // First pass: find the maximum weightedSum
+        let maxWeightedSum = 0;
+        riskMap.forEach((hexObj) => {
+            let weightedSum = 0;
+            Object.keys(weights).forEach(weight => {
+                weightedSum += weights[weight] * hexObj[weight][0];
+            });
+            maxWeightedSum = Math.max(maxWeightedSum, weightedSum);
+        });
+
         // add heatmap coordinates and risk data
         if(this.hexbin === undefined || this.hexbin === null){
             console.log("Creating new hexbin");
@@ -761,7 +776,8 @@ var MapController = {
                 Object.keys(weights).forEach(weight => {
                     weightedSum += weights[weight]*hexObj[weight][0];
                 })
-                let range = Math.min(weightedSum*this.hexbinThreshold, 1.0);
+
+                let range = Math.min((weightedSum/ maxWeightedSum)*this.hexbinThreshold, 1.0);
                 let intensity = Math.floor(range*(gradient.length-1));
                 const hex = new google.maps.Polygon({
                     paths: hexData,
@@ -782,7 +798,7 @@ var MapController = {
                 Object.keys(weights).forEach(weight => {
                     weightedSum += weights[weight]*riskMap[i][weight][0];
                 })
-                let range = Math.min(weightedSum*this.hexbinThreshold, 1.0);
+                let range = Math.min((weightedSum/maxWeightedSum)*this.hexbinThreshold, 1.0);
                 let intensity = Math.floor(range*(gradient.length-1));
                 this.hexbin[i].setOptions({fillColor: gradient[intensity], fillOpacity: range});
             }
