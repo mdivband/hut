@@ -188,6 +188,24 @@ ul.list li:hover {
 	position: relative;
 }
 
+#risk_features_reset {
+	width: 100%;
+	text-align: center;
+}
+
+.risk_slider_text {
+	text-align: right;
+}
+
+.risk_slider_div {
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.risk_slider {
+}
+
 #scroll {
 	height: 170px;
 }

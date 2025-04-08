@@ -724,6 +724,9 @@ var MapController = {
         this.heatmap.setMap(this.map);
     },
     setHexBinWeight: function (weight, value) {
+
+        $(`#${weight}_slider`).attr('title', `${value/100}x`);
+
         $.post("/ui/slider", {
             name: weight,
             status: value/100
@@ -811,7 +814,7 @@ var MapController = {
         let contentString = "";
         let weights = this.state.getRiskMapWeights();
         Object.keys(weights).forEach(weight => {
-            contentString += `<strong>${weight}</strong>: ${hexData[weight]}<br>`
+            contentString += `<strong>${weight}</strong>: ${Number.parseFloat(weights[weight]*100).toFixed(2)}%<br>`
         })
         this.hexbinInfoWindow.setContent(contentString);
         this.hexbinInfoWindow.setPosition(event.latLng);
