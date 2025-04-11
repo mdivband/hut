@@ -596,6 +596,17 @@ var MapController = {
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('wk_sld_wrapper').style.display = 'block';
             document.getElementById('subj_performance_sld_wrapper').style.display = 'block';
+            // Clear (uncheck) all workload radio buttons
+            const workloadRadios = document.querySelectorAll('input[name="workload"]');
+            workloadRadios.forEach((radio) => {
+                radio.checked = false;
+            });
+
+            // Clear (uncheck) all performance radio buttons
+            const performanceRadios = document.querySelectorAll('input[name="performance"]');
+            performanceRadios.forEach((radio) => {
+                radio.checked = false;
+            });
         } else if(modeFlag === 2) {  // edit
             document.getElementById('overlay').style.display = 'none';
             $("#monitor_accordions").hide();

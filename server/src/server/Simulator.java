@@ -294,7 +294,8 @@ public class Simulator {
                         }
 
                         if (validPlacement) {
-                            Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), Math.toDegrees(angle));
+                            // I actually don't quite know why this needs 180 degrees added, but it does
+                            Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 180+Math.toDegrees(angle));
                             placedAgents.add(newCoord); // Add to valid agents list
                         } else {
                             System.out.println("Failed to place an agent after 50 attempts.");
