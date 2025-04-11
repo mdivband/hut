@@ -59,8 +59,8 @@ public abstract class Agent extends MObject implements Serializable {
         // Sensible range 5-20m/s e.g.:
         // DJI Phantom 4 Pro V2.0 S-Mode = 20.1168 m/s
         // DJI Mavic 3 C-Mode = 5 m/s
-        speed = 12.0;
-        unitTurningAngle = (0.5d * Simulator.instance.getStepScale());
+        speed = 40;//40.0;
+        unitTurningAngle = (0.1d * Simulator.instance.getStepScale());  //(0.5d * Simulator.instance.getStepScale());
         heading = 0.0;
         battery = 1.0;
         altitude = 3.0;

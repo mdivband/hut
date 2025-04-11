@@ -36,6 +36,7 @@ var MapController = {
         this.onUndoRedoAvailableChange = _.bind(this.onUndoRedoAvailableChange, context);
         this.updateUIFeatures = _.bind(this.updateUIFeatures, context);
         this.onCancelAllocationClick = _.bind(this.onCancelAllocationClick, context);
+        this.onAbortMissionClick = _.bind(this.onAbortMissionClick, context);
         this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
@@ -105,6 +106,9 @@ var MapController = {
         });
         $("#cancel_allocation").on('click', function () {
             MapController.onCancelAllocationClick()
+        });
+        $("#abort_mission").on('click', function () {
+            MapController.onAbortMissionClick()
         });
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
@@ -294,6 +298,9 @@ var MapController = {
     },
     onCancelAllocationClick: function () {
         MapController.abortAllocation();
+    },
+    onAbortMissionClick: function () {
+        $.post("/agents/allhome");
     },
     onAddAgentClick: function () {
         $.post("/agents/hubspawn");

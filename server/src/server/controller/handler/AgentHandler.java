@@ -4,14 +4,13 @@ import server.ModelGenerator;
 import server.Simulator;
 import server.model.agents.*;
 import server.model.Coordinate;
+import server.model.task.Task;
+import server.model.task.WaypointTask;
 import tool.HttpServer.Request;
 import tool.HttpServer.Response;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Rest handler for agents
@@ -33,6 +32,8 @@ public class AgentHandler extends RestHandler {
             handleHubSpawn(req, resp);
         else if (rPath.startsWith("/hubdespawn"))
             handleHubDespawn(req, resp);
+        else if (rPath.startsWith("/allhome"))
+            handleAllHome(req, resp);
         else if(rPath.startsWith("/time-out"))
             handleTimeout(req, resp, rPath.replace("/time-out/", ""));
         // /agents/route/add/<id>
@@ -65,6 +66,59 @@ public class AgentHandler extends RestHandler {
         } else {
             resp.send(201, "Scheduled a removal, " + res + " agents will be removed");
         }
+    }
+
+    public void handleAllHome(Request req, Response resp) throws IOException {
+        simulator.getAllocator().clearAllAgents();
+        simulator.getAllocator().resetAllocation();
+        simulator.getState().getTempAllocation().clear();
+
+        System.out.println(1);
+
+
+        // The below has a concurrency issue, as the task is removed from the simulator before the agent has a chance to clear it.
+        //for (Task task : simulator.getState().getTasks()) {
+        //    simulator.getTaskController().deleteTask(task.getId(), false);
+        //}
+
+        // Fixed version:
+        List<Task> tasksToDelete = new ArrayList<>(simulator.getState().getTasks());
+
+        for (Task task : tasksToDelete) {
+            simulator.getTaskController().deleteTask(task.getId(), false);
+        }
+
+
+
+
+        System.out.println(2);
+
+
+
+        for (Agent agent : simulator.getState().getAgents()) {
+            if (agent instanceof AgentVirtual av) {
+                Task homeTask = simulator.getTaskController().createTask(Task.TASK_WAYPOINT, Simulator.instance.getState().getHubLocation().getLatitude(), Simulator.instance.getState().getHubLocation().getLongitude());
+                System.out.println(3);
+                //av.getTask().clearAgents();
+//                av.setAllocatedTaskId(null);
+//                av.clearRoute();
+//                av.clearTempRoute();
+//                av.setAllocatedTaskId(homeTask.getId());
+//                av.resume();
+//
+//                av.setRoute(new ArrayList<>());
+//                av.getRoute().add(new Coordinate(av.getCoordinate().getLatitude(), av.getCoordinate().getLongitude()));
+//                av.getRoute().add(new Coordinate(homeTask.getCoordinate().getLatitude(), homeTask.getCoordinate().getLongitude()));
+
+                simulator.getAllocator().putInTempAllocation(agent.getId(), homeTask.getId());
+                //simulator.getAllocator().putInTempAllocation(agent.getId(), homeTask.getId(), true);
+            }
+            System.out.println("---4");
+        }
+        System.out.println(5);
+
+        simulator.getAllocator().confirmAllocation(Simulator.instance.getState().getTempAllocation());
+        resp.sendOkay();
     }
 
     @Override

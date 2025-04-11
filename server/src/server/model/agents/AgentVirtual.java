@@ -97,6 +97,12 @@ public class AgentVirtual extends Agent {
             this.moveAlongHeading(distToMove);
             //System.out.println(this.getId() + " Moving towards " + this.getAllocatedTaskId() + " dist = " + distToMove);
         }
+
+        if(!isStopped()) {
+            double possDistToMove = (speed + speedVariance + Simulator.instance.getState().calculateRandomValueFor("speedPerSecond")) * Simulator.instance.getStepScale();
+            double distToMove = Math.min(possDistToMove,  getCoordinate().getDistance(getCurrentDestination()));
+            this.moveAlongHeading(distToMove);
+        }
     }
 
     @Override

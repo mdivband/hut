@@ -763,6 +763,31 @@ ul.list li:hover {
 	background-image: linear-gradient(to bottom, #bababa, #575757);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#bababa, endColorstr=#575757);
 }
 
+#abort_mission {
+	background-color: #f08080;
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#f08080), to(#8b0000));
+	background-image: -webkit-linear-gradient(top, #f08080, #8b0000);
+	background-image: -moz-linear-gradient(top, #f08080, #8b0000);
+	background-image: -ms-linear-gradient(top, #f08080, #8b0000);
+	background-image: -o-linear-gradient(top, #f08080, #8b0000);
+	background-image: linear-gradient(to bottom, #f08080, #8b0000);
+	filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#f08080, endColorstr=#8b0000);
+	color: white;
+}
+
+#abort_mission:hover {
+	background-color: #e06666;
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#e06666), to(#5c0000));
+	background-image: -webkit-linear-gradient(top, #e06666, #5c0000);
+	background-image: -moz-linear-gradient(top, #e06666, #5c0000);
+	background-image: -ms-linear-gradient(top, #e06666, #5c0000);
+	background-image: -o-linear-gradient(top, #e06666, #5c0000);
+	background-image: linear-gradient(to bottom, #e06666, #5c0000);
+	filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#e06666, endColorstr=#5c0000);
+	color: white;
+}
+
+
 #add_agent, #remove_agent {
 	background-color: #ffaf46; background-image: -webkit-gradient(linear, left top, left bottom, from(#ffaf46), to(#e78404));
 	background-image: -webkit-linear-gradient(top, #ffaf46, #e78404);

@@ -171,6 +171,10 @@
                 <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
             </div>
 
+            <div style="text-align: center;" class="edit_accordion">
+                <!-- ✅ New Abort Mission Button -->
+                <button class="edit_mode_buttons" id="abort_mission" style="margin-top: 250px; height: 6em;">Abort Mission</button>
+            </div>
         </div> <!-- end of monitor accordions-->
 
         <div id="edit_contexts">
@@ -232,15 +236,21 @@
             </div>
 
             <div style="text-align: center;" class="edit_accordion">
-                <div style="display: none"> <!---"text-align: left; width: 95%">--->
+                <div style="display: none">
                     <input title="Undo allocation change" type="image" src="icons/undo.png" class="edit_mode_icon_buttons" id="allocation_undo"/>
                     <input title="Redo allocation change" type="image" src="icons/redo.png" class="edit_mode_icon_buttons" id="allocation_redo"/>
                     <input title="Reset allocation" type="image" src="icons/reset.png" class="edit_mode_icon_buttons" id="allocation_reset"/>
                 </div>
+
                 <button class="edit_mode_buttons" id="run_auto_allocation">Run Auto Allocation</button>
                 <button class="edit_mode_buttons" id="confirm_allocation">Confirm Allocation</button>
                 <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
+
+                <!-- ✅ New Abort Mission Button -->
+                <!-- <button class="edit_mode_buttons" id="abort_mission" style="margin-top: 400px; height: 6em;">Abort Mission</button> -->
+
             </div>
+
 
             <div id = "wk_sld_wrapper" style="width: 350px; margin-right: auto; margin-left: auto; border: solid 1px black; text-align: left; padding: 10px;">
                 <div id="accordion_slider">
