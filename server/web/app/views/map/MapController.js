@@ -128,25 +128,28 @@ var MapController = {
             }
         });
 
-        // Workload Slider
-        $('#workload_slider').on('change', function() {
-            const workloadValue = $(this).val();
-            self.workloadLevel = workloadValue;
-            self.state.workloadLevel = workloadValue;
+        $('input[name="workload"], input[name="performance"]').on('change', function() {
+            const workloadValue = $('input[name="workload"]:checked').val();
+            const performanceValue = $('input[name="performance"]:checked').val();
 
-            // Post workload preference
-            $.post("/review/report/workload", { level: workloadValue });
+            // If both values are selected, post both
+            if (workloadValue && performanceValue) {
+                // Update your local state objects if needed
+                self.workloadLevel = workloadValue;
+                self.state.workloadLevel = workloadValue;
+
+                self.subjPerformance = performanceValue;
+                self.state.subjPerformance = performanceValue;
+
+                // Post workload preference
+                $.post("/review/report/workload", { level: workloadValue });
+
+                // Post subjective performance preference
+                $.post("/review/report/subj_performance", { level: performanceValue });
+            }
         });
 
-        // Subjective Performance Slider
-        $('#subj_performance_slider').on('change', function() {
-            const subjPerformanceValue = $(this).val();
-            self.subjPerformance = subjPerformanceValue;
-            self.state.subjPerformance = subjPerformanceValue;
 
-            // Post subject performance preference
-            $.post("/review/report/subj_performance", { level: subjPerformanceValue });
-        });
 
 
         $('#uncertainties_toggle').change(function () {

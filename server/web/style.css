@@ -281,6 +281,41 @@ ul.list li:hover {
 	box-sizing: border-box;
 }
 
+.radio_container {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap; /* Allows wrapping on narrow screens */
+	background-color: #ffffff;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+}
+
+.radio_option {
+	display: inline-block;     /* Let each box sit side by side */
+	text-align: center;
+	margin: 5px;
+	padding: 10px;
+	cursor: pointer;           /* Pointer cursor on hover */
+	background-color: #f9f9f9; /* Slight contrast background */
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+.radio_option:hover {
+	background-color: #f0f0f0;
+}
+
+.radio_option input[type="radio"] {
+	margin-bottom: 5px;        /* Space between button and label */
+}
+
+.radio_option span {
+	font-size: 0.9rem;         /* Slightly smaller text */
+	line-height: 1.2rem;
+}
+
+
 
 #accordion_slider  table {
 	width: 100%;

@@ -609,75 +609,106 @@
 </div>
 <!-- Black overlay that we can toggle on and off -->
 <div id="overlay" style="display: block">
-    <div id="wk_sld_wrapper" style="width: 700px; margin: 20px auto; border: solid 10px black; text-align: left; padding: 10px;">
-        <div class="slider_wrapper">
-            <h3>How would you rate your current workload?</h3>
-            <div class="slider_container">
-                <input
-                        type="range"
-                        min="1"
-                        max="5"
-                        value="3"
-                        step="1"
-                        class="wl_slider"
-                        id="workload_slider"
-                />
-                <!-- Tick marks container -->
-                <div class="tickmarks">
-                    <div class="tick" style="left: 0%;">
-                        <span>1. Insignificant</span>
-                    </div>
-                    <div class="tick" style="left: 25%;">
-                        <span>2. Light</span>
-                    </div>
-                    <div class="tick" style="left: 50%;">
-                        <span>3. Moderate</span>
-                    </div>
-                    <div class="tick" style="left: 75%;">
-                        <span>4. Significant</span>
-                    </div>
-                    <div class="tick" style="left: 100%;">
-                        <span>5. Maximum</span>
-                    </div>
-                </div>
+    <!-- Workload Panel -->
+    <div id="wk_sld_wrapper" style="width: 700px; margin: 20px auto; border: 10px solid black; background-color: #fff;">
+        <!-- Heading area -->
+        <div class="panel-heading" style="background-color: #eaeaea; padding: 10px;">
+            <h3 style="margin: 0;">How would you rate your current workload?</h3>
+        </div>
+
+        <!-- Body area with radio buttons -->
+        <div class="panel-body" style="padding: 10px;">
+            <div class="radio_container" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="workload" value="1">
+<!--                    <br><span>1<br>Insignificant</span>-->
+                    <br><span>1</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="workload" value="2">
+<!--                    <br><span>2<br>Light</span>-->
+                    <br><span>2</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="workload" value="3">
+<!--                    <br><span>3<br>Moderate</span>-->
+                    <br><span>3</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="workload" value="4">
+<!--                    <br><span>4<br>Significant</span>-->
+                    <br><span>4</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="workload" value="5">
+<!--                    <br><span>5<br>Heavy</span>-->
+                    <br><span>5</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="workload" value="6">
+<!--                    <br><span>6<br>Very Heavy</span>-->
+                    <br><span>6</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="workload" value="7">
+<!--                    <br><span>7<br>Overwhelming</span>-->
+                    <br><span>7</span>
+                </label>
             </div>
         </div>
     </div>
 
-    <div id="subj_performance_sld_wrapper" style="width: 700px; margin: 20px auto; border: solid 10px black; text-align: left; padding: 10px;">
-        <div class="slider_wrapper">
-            <h3>How would you rate your current performance?</h3>
-            <div class="slider_container">
-                <input
-                        type="range"
-                        min="1"
-                        max="5"
-                        value="3"
-                        step="1"
-                        class="wl_slider"
-                        id="subj_performance_slider"
-                />
-                <!-- Tick marks container -->
-                <div class="tickmarks">
-                    <div class="tick" style="left: 0%;">
-                        <span>1. Terrible</span>
-                    </div>
-                    <div class="tick" style="left: 25%;">
-                        <span>2. Poor</span>
-                    </div>
-                    <div class="tick" style="left: 50%;">
-                        <span>3. Average</span>
-                    </div>
-                    <div class="tick" style="left: 75%;">
-                        <span>4. Good</span>
-                    </div>
-                    <div class="tick" style="left: 100%;">
-                        <span>5. Excellent</span>
-                    </div>
-                </div>
+    <!-- Subjective Performance Panel -->
+    <div id="subj_performance_sld_wrapper" style="width: 700px; margin: 20px auto; border: 10px solid black; background-color: #fff;">
+        <!-- Heading area -->
+        <div class="panel-heading" style="background-color: #eaeaea; padding: 10px;">
+            <h3 style="margin: 0;">How would you rate your performance in the last episode?</h3>
+        </div>
+
+        <!-- Body area with radio buttons -->
+        <div class="panel-body" style="padding: 10px;">
+            <div class="radio_container" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="performance" value="1">
+<!--                    <br><span>1<br>Terrible</span>-->
+                    <br><span>1</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="performance" value="2">
+<!--                    <br><span>2<br>Poor</span>-->
+                    <br><span>2</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="performance" value="3">
+<!--                    <br><span>3<br>Below Avg</span>-->
+                    <br><span>3</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="performance" value="4">
+<!--                    <br><span>4<br>Average</span>-->
+                    <br><span>4</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="performance" value="5">
+<!--                    <br><span>5<br>Good</span>-->
+                    <br><span>5</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="performance" value="6">
+<!--                    <br><span>6<br>Very Good</span>-->
+                    <br><span>6</span>
+                </label>
+                <label class="radio_option" style="flex: 0 0 auto; text-align: center; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="radio" name="performance" value="7">
+<!--                    <br><span>7<br>Excellent</span>-->
+                    <br><span>7</span>
+                </label>
             </div>
         </div>
     </div>
+
+
+
 
 </div>
 

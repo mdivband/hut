@@ -35,7 +35,7 @@
   "episodes": [
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TL",
       "targetPos": "BR",
       "numAgents": 20,
@@ -46,7 +46,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 20,
@@ -57,7 +57,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TL",
       "targetPos": "BR",
       "numAgents": 10,
@@ -68,7 +68,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 14,
@@ -101,7 +101,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 14,
@@ -112,7 +112,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 20,
@@ -134,7 +134,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TL",
       "targetPos": "BR",
       "numAgents": 10,
@@ -145,7 +145,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TR",
       "targetPos": "BL",
       "numAgents": 8,
@@ -167,7 +167,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 12,
@@ -189,7 +189,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 20,
@@ -222,7 +222,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TR",
       "targetPos": "BL",
       "numAgents": 6,
@@ -255,7 +255,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 16,
@@ -266,7 +266,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 16,
@@ -288,7 +288,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 18,
@@ -310,7 +310,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TL",
       "targetPos": "BR",
       "numAgents": 20,
@@ -332,7 +332,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 18,
@@ -343,7 +343,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TL",
       "targetPos": "BR",
       "numAgents": 6,
@@ -387,7 +387,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TL",
       "targetPos": "BR",
       "numAgents": 10,
@@ -398,7 +398,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TR",
       "targetPos": "BL",
       "numAgents": 6,
@@ -431,7 +431,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 12,
@@ -442,7 +442,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TR",
       "targetPos": "BL",
       "numAgents": 18,
@@ -453,7 +453,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 18,
@@ -464,7 +464,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "TL",
       "targetPos": "BR",
       "numAgents": 16,
@@ -508,7 +508,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 12,
@@ -541,7 +541,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 8,
@@ -552,7 +552,7 @@
     },
     {
       "episodeLength": 7,
-      "episodeCooldown": 4,
+      "episodeCooldown": 3,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 10,
