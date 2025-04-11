@@ -31,13 +31,13 @@
   "episodes": [
     {
       "episodeLength": 8,
-      "episodeCooldown": 4,
+      "episodeCooldown": 0,
       "agentPos": "BL",
       "targetPos": "TR",
-      "numAgents": 14,
+      "numAgents": 10,
       "degradationMatch": true,
       "episodeCode": "EPNT",
-      "reviewPeriod": 2,
+      "reviewPeriod": 6,
       "degradationTime": 4,
       "markers": [
         {
@@ -50,13 +50,13 @@
     },
     {
       "episodeLength": 8,
-      "episodeCooldown": 3,
+      "episodeCooldown": 0,
       "agentPos": "BR",
       "targetPos": "BL",
-      "numAgents": 10,
+      "numAgents": 14,
       "degradationMatch": true,
       "episodeCode": "EPJT",
-      "reviewPeriod": 2,
+      "reviewPeriod": 6,
       "degradationTime": 4,
       "markers": [
         {
@@ -69,13 +69,13 @@
     },
     {
       "episodeLength": 8,
-      "episodeCooldown": 3,
+      "episodeCooldown": 0,
       "agentPos": "TR",
       "targetPos": "TL",
-      "numAgents": 16,
+      "numAgents": 12,
       "degradationMatch": false,
       "episodeCode": "EPPF",
-      "reviewPeriod": 2,
+      "reviewPeriod": 6,
       "degradationTime": -1,
       "markers": [
         {
@@ -88,13 +88,13 @@
     },
     {
       "episodeLength": 8,
-      "episodeCooldown": 3,
+      "episodeCooldown": 0,
       "agentPos": "BR",
       "targetPos": "TL",
-      "numAgents": 16,
-      "degradationMatch": false,
+      "numAgents": 18,
+      "degradationMatch": true,
       "episodeCode": "EPPF",
-      "reviewPeriod": 2,
+      "reviewPeriod": 6,
       "degradationTime": -1,
       "markers": [
         {
@@ -107,13 +107,13 @@
     },
     {
       "episodeLength": 8,
-      "episodeCooldown": 4,
+      "episodeCooldown": 0,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 8,
       "degradationMatch": false,
       "episodeCode": "EPHF",
-      "reviewPeriod": 2,
+      "reviewPeriod": 6,
       "degradationTime": -1,
       "markers": [
         {

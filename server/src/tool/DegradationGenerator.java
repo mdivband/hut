@@ -13,7 +13,7 @@ public class DegradationGenerator {
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
 
-    private int numEpisodes = 64;
+    private int numEpisodes = 48;
     private int episodeLength = 7;
     private int episodeCooldown = 0;
     private int reviewPeriod = 5;
