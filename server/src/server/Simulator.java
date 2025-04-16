@@ -188,12 +188,16 @@ public class Simulator {
 
             boolean isOutOfTime = (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit());
             boolean allEpisodesUsed = (!episodeController.hasEpisodes());
-            boolean inFinalReviewMode = (state.getEditMode() == -2);  // Review panel is showing
+            boolean inFinalReviewMode = (state.getEditMode() == -9);  // Review panel is showing
 
-            // 1. Check if final review is done => end simulation
-            if ((isOutOfTime ||
-                    (state.getTime() >= episodeController.getTriggerTime() && episodeController.hasStarted() && allEpisodesUsed))
-                    && inFinalReviewMode) {
+            if (inFinalReviewMode && (isOutOfTime ||
+                    (state.getTime() >= episodeController.getTriggerTime() && episodeController.hasStarted() && allEpisodesUsed))) {
+                // Terminate simulation
+
+                // Normal episode end: process external signal and switch to cooldown.
+                LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s", state.getTime(), state.getWorkloadLevel()));
+                LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s", state.getTime(), state.getSubjPerfLevel()));
+                LOGGER.info(String.format("%s; EPEND; Episode end", state.getTime()));
 
                 System.out.println("DONE BY TIME: " + state.getTime());
                 System.out.println("NOTE: Ending after final review completed.");
@@ -226,91 +230,119 @@ public class Simulator {
 
                 // 4. Check for external signal (mode -9) regardless of time-based triggers
             } else if (state.getEditMode() == -9) {
-                LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s ", state.getTime(), state.getWorkloadLevel()));
-                LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s ", state.getTime(), state.getSubjPerfLevel()));
-                LOGGER.info(String.format("%s; EPEND; Episode end ", state.getTime()));
-
-                // Process external signal and switch to cooldown
-                changeView(-1);
-                episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeCooldownLimit());
-
-                // 5. Handle time-based transitions if no external signal was received
+                if (allEpisodesUsed) {
+                    // External signal during final review: terminate simulation.
+                    LOGGER.info(String.format("%s; EPEND; Final review complete. Terminating simulation.", state.getTime()));
+                    episodeController.closeLogger();
+                    LogProcessor.processLogFile("logs/" + state.getUserName() + "-" + state.getGameId() + ".log");
+                    this.reset(false);
+                    break;
+                } else {
+                    // Normal episode end: process external signal and switch to cooldown.
+                    LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s", state.getTime(), state.getWorkloadLevel()));
+                    LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s", state.getTime(), state.getSubjPerfLevel()));
+                    LOGGER.info(String.format("%s; EPEND; Episode end", state.getTime()));
+                    changeView(-1);
+                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeCooldownLimit());
+                }
+            // 5. Handle time-based transitions if no external signal was received
             } else if (state.getTime() >= episodeController.getTriggerTime()) {
                 if (state.getEditMode() == 1) { // Episode just finished
                     // Switch to review mode (or if you want to go directly to cooldown, you could change mode here)
                     changeView(-2);
+                    System.out.println("Switching to review mode");
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeCooldownLimit());
 
                 } else if (state.getEditMode() == -2) {
                     // In review mode: do nothing and wait (hold in review)
 
                 } else if (state.getEditMode() == -1) { // Cooldown just finished
-                    // Switch to next episode
-                    changeView(1);
-                    episodeController.incrementEpisode();
-                    this.softReset();
+                    if (episodeController.hasEpisodes()) {
+                        // Switch to next episode
+                        System.out.println("Next ep");
+                        changeView(1);
+                        episodeController.incrementEpisode();
+                        this.softReset();
 
-                    Coordinate c = episodeController.getAgentCoord();
-                    Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
-                    int numAgents = episodeController.getNumAgents();
+                        Coordinate c = episodeController.getAgentCoord();
+                        Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+                        int numAgents = episodeController.getNumAgents();
 
-                    List<Coordinate> placedAgents = new ArrayList<>();
-                    placedAgents.add(c); // Add hero agent position first
+                        List<Coordinate> placedAgents = new ArrayList<>();
+                        placedAgents.add(c); // Add hero agent position first
 
-                    Coordinate targetLocation = episodeController.getTargetCoord();
-                    double angle = heroAgent.getCoordinate().getAngle(targetLocation);
-                    Coordinate newTaskLocation = targetLocation.getCoordinate(100000, angle);
-                    heroAgent.setHeading(Math.toDegrees(angle));
+                        Coordinate targetLocation = episodeController.getTargetCoord();
+                        double angle = heroAgent.getCoordinate().getAngle(targetLocation);
+                        Coordinate newTaskLocation = targetLocation.getCoordinate(100000, angle);
+                        heroAgent.setHeading(Math.toDegrees(angle));
 
-                    int separationDist = state.isComplexFlocking() ? 150 : 150;
+                        int separationDist = state.isComplexFlocking() ? 150 : 150;
 
-                    // Place each additional agent
-                    for (int i = 1; i < numAgents; i++) {
-                        Coordinate newCoord = null;
-                        boolean validPlacement = false;
-                        int attempts = 0;
+                        // Place each additional agent
+                        for (int i = 1; i < numAgents; i++) {
+                            Coordinate newCoord = null;
+                            boolean validPlacement = false;
+                            int attempts = 0;
 
-                        while (!validPlacement && attempts < 50) { // Limit attempts to prevent infinite loops
-                            List<Agent> agentList = new ArrayList<>(state.getAgents());
-                            Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
+                            while (!validPlacement && attempts < 50) { // Limit attempts to prevent infinite loops
+                                List<Agent> agentList = new ArrayList<>(state.getAgents());
+                                Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
 
-                            double spawnAngle = 2 * Math.PI * random.nextDouble();
-                            double offset = (separationDist * 1.5) / 111139d; // 250 meters to degrees conversion
-                            double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(spawnAngle);
-                            double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(spawnAngle)
-                                    / Math.cos(existingAgentCoord.getLatitude());
+                                double spawnAngle = 2 * Math.PI * random.nextDouble();
+                                double offset = (separationDist * 1.5) / 111139d; // 250 meters to degrees conversion
+                                double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(spawnAngle);
+                                double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(spawnAngle)
+                                        / Math.cos(existingAgentCoord.getLatitude());
 
-                            newCoord = new Coordinate(newLat, newLng);
-                            validPlacement = true;
+                                newCoord = new Coordinate(newLat, newLng);
+                                validPlacement = true;
 
-                            // Verify minimum separation distance
-                            for (Coordinate placedCoord : placedAgents) {
-                                if (placedCoord.getDistance(newCoord) < separationDist) {
-                                    validPlacement = false;
-                                    break;
+                                // Verify minimum separation distance
+                                for (Coordinate placedCoord : placedAgents) {
+                                    if (placedCoord.getDistance(newCoord) < separationDist) {
+                                        validPlacement = false;
+                                        break;
+                                    }
                                 }
+                                attempts++;
                             }
-                            attempts++;
+
+                            if (validPlacement) {
+                                // I actually don't quite know why this needs 180 degrees added, but it does
+                                Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 180 + Math.toDegrees(angle));
+                                placedAgents.add(newCoord); // Add to valid agents list
+                            } else {
+                                System.out.println("Failed to place an agent after 50 attempts.");
+                            }
                         }
 
-                        if (validPlacement) {
-                            // I actually don't quite know why this needs 180 degrees added, but it does
-                            Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 180+Math.toDegrees(angle));
-                            placedAgents.add(newCoord); // Add to valid agents list
+                        Task task = taskController.createTask(0, newTaskLocation.getLatitude(), newTaskLocation.getLongitude());
+                        allocator.putInTempAllocation(heroAgent.getId(), task.getId());
+                        allocator.confirmAllocation(state.getTempAllocation());
+
+                        episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
+                        // Check if degradation should be triggered for next episode
+                        if (episodeController.isDegradationMatch()) {
+                            degradationTriggerTime = state.getTime() + episodeController.peekDegradationTime();
+                        }
+                    } else if (state.getEditMode() == -1) { // Cooldown just finished
+                        if (episodeController.hasEpisodes()) {
+                            // Switch to next episode...
+                            System.out.println("Next ep");
+                            changeView(1);
+                            // [episode initialization code …]
+                            episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
+                            if (episodeController.isDegradationMatch()) {
+                                degradationTriggerTime = state.getTime() + episodeController.peekDegradationTime();
+                            }
                         } else {
-                            System.out.println("Failed to place an agent after 50 attempts.");
+                            // Final episode: switch to review mode and wait indefinitely
+                            changeView(-2);
+                            System.out.println("Entering final review mode");
+                            // Do not update trigger time – let it remain unchanged so that no further transition happens automatically.
                         }
                     }
 
-                    Task task = taskController.createTask(0, newTaskLocation.getLatitude(), newTaskLocation.getLongitude());
-                    allocator.putInTempAllocation(heroAgent.getId(), task.getId());
-                    allocator.confirmAllocation(state.getTempAllocation());
-
-                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
-                    // Check if degradation should be triggered for next episode
-                    if (episodeController.isDegradationMatch()) {
-                        degradationTriggerTime = state.getTime() + episodeController.peekDegradationTime();
-                    }
                 }
             }
             // 6. If in review mode (-2) and no other condition applies, do nothing (hold)
@@ -823,7 +855,7 @@ public class Simulator {
                 for (Object episode : episodesJson) {
                     double episodeLength = GsonUtils.getValue(episode, "episodeLength");
                     double episodeCooldown = GsonUtils.getValue(episode, "episodeCooldown");
-                    double reviewPeriod = GsonUtils.getValue(episode, "reviewPeriod"); // Extract reviewPeriod from JSON
+                    double reviewPeriod = GsonUtils.getValue(episode, "reviewPeriod");
                     String agentPos = GsonUtils.getValue(episode, "agentPos");
                     String targetPos = GsonUtils.getValue(episode, "targetPos");
                     double numAgents = GsonUtils.getValue(episode, "numAgents");

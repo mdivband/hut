@@ -1,6 +1,6 @@
 {
-  "gameId": "Degradation Tutorial",
-  "gameDescription": "Tutorial for the degradation scenario",
+  "gameId": "Deg-short",
+  "gameDescription": "Degradation scenario",
   "uIOptions": [
     {
       "name": "monitor",
@@ -28,101 +28,54 @@
       "toggleable": true
     }
   ],
+  "noiseParameters": {
+    "speedPerSecond": 0.5
+  },
+  "complexFlocking": true,
   "episodes": [
     {
-      "episodeLength": 8,
+      "episodeLength": 7,
       "episodeCooldown": 1,
       "agentPos": "BL",
       "targetPos": "TR",
       "numAgents": 10,
       "degradationMatch": true,
-      "episodeCode": "EPNT",
-      "reviewPeriod": 999999,
-      "degradationTime": 4,
-      "markers": [
-        {
-          "shape": "banner",
-          "colorBg": "#ffcc00",
-          "colorTxt": "#000",
-          "text": "TUTORIAL: A drone disappears! When it does press space"
-        }
-      ]
-    },
-    {
-      "episodeLength": 8,
-      "episodeCooldown": 1,
-      "agentPos": "BR",
-      "targetPos": "BL",
-      "numAgents": 14,
-      "degradationMatch": true,
       "episodeCode": "EPJT",
       "reviewPeriod": 999999,
-      "degradationTime": 4,
-      "markers": [
-        {
-          "shape": "banner",
-          "colorBg": "#ffcc00",
-          "colorTxt": "#000",
-          "text": "TUTORIAL: Another one disappears! When it does press space"
-        }
-      ]
+      "degradationTime": 4
     },
     {
-      "episodeLength": 8,
+      "episodeLength": 7,
       "episodeCooldown": 1,
-      "agentPos": "TR",
+      "agentPos": "BR",
       "targetPos": "TL",
       "numAgents": 12,
       "degradationMatch": false,
-      "episodeCode": "EPPF",
+      "episodeCode": "EPLF",
       "reviewPeriod": 999999,
-      "degradationTime": -1,
-      "markers": [
-        {
-          "shape": "banner",
-          "colorBg": "#ffcc00",
-          "colorTxt": "#000",
-          "text": "TUTORIAL: No drone disappears in this episode. Just wait until the end and don't press anything"
-        }
-      ]
+      "degradationTime": -1
     },
     {
-      "episodeLength": 8,
-      "episodeCooldown": 1,
-      "agentPos": "BR",
-      "targetPos": "TL",
-      "numAgents": 18,
-      "degradationMatch": true,
-      "episodeCode": "EPPF",
-      "reviewPeriod": 999999,
-      "degradationTime": -1,
-      "markers": [
-        {
-          "shape": "banner",
-          "colorBg": "#ffcc00",
-          "colorTxt": "#000",
-          "text": "TUTORIAL: Try to keep going until the end"
-        }
-      ]
-    },
-    {
-      "episodeLength": 8,
+      "episodeLength": 7,
       "episodeCooldown": 1,
       "agentPos": "BL",
       "targetPos": "TR",
-      "numAgents": 8,
+      "numAgents": 20,
       "degradationMatch": false,
-      "episodeCode": "EPHF",
+      "episodeCode": "EPTF",
       "reviewPeriod": 999999,
-      "degradationTime": -1,
-      "markers": [
-        {
-          "shape": "banner",
-          "colorBg": "#ffcc00",
-          "colorTxt": "#000",
-          "text": "TUTORIAL: Try to keep going until the end"
-        }
-      ]
+      "degradationTime": -1
+    },
+    {
+      "episodeLength": 7,
+      "episodeCooldown": 1,
+      "agentPos": "BL",
+      "targetPos": "TR",
+      "numAgents": 14,
+      "degradationMatch": true,
+      "episodeCode": "EPNT",
+      "reviewPeriod": 999999,
+      "degradationTime": 3
     }
   ],
   "flockingEnabled": true,

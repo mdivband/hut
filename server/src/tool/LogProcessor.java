@@ -149,15 +149,13 @@ public class LogProcessor {
                             }
                         } else {
                             if (userHasClicked) {
-                                if (degradationMatched) {
-                                    fn++; metrics.fn++;  // Likely misclick or unexpected
-                                } else {
-                                    tn++; metrics.tn++;
-                                }
+                                // Any click when there's no degradation should be considered a false positive.
+                                fp++; metrics.fp++;
                             } else {
                                 tn++; metrics.tn++;
                             }
                         }
+
 
                         // Record workload/performance
                         try {
