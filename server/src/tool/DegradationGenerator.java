@@ -12,6 +12,9 @@ public class DegradationGenerator {
     private List<DegradationEpisode> episodes;
     private Random random;
     private static final String[] POSITIONS = {"BL", "TL", "TR", "BR"}; // "Bottom Left", "Top Left", "Top Right", "Bottom Right, Top, Bottom, Left, Right"
+    private int rampRepetitions = 2;
+
+    private int repetitionsPerAgent = 2;
 
     private int numEpisodes = 48;
     private int episodeLength = 7;
@@ -19,6 +22,8 @@ public class DegradationGenerator {
     private int reviewPeriod = 5;
     private int minAgents = 4;
     private int maxAgents = 22;
+    // Add a new field to hold the discrete list of agent numbers.
+    private List<Integer> allowedAgents = Arrays.asList(2,4,6,8,10,12,14,16,18,20,22,24);
     private int minDegradationTime = 3;
     private int maxDegradationTime = 5;
 
@@ -34,7 +39,9 @@ public class DegradationGenerator {
         this.random = new Random();
     }
 
-    private void configure(int numEpisodes, int length, int cooldown, int reviewPeriod, int minAgents, int maxAgents, double matchProbability, int minDegradationTime, int maxDegradationTime) {
+    private void configure(int numEpisodes, int length, int cooldown, int reviewPeriod, int minAgents, int maxAgents,
+                           double matchProbability, int minDegradationTime, int maxDegradationTime, int rampRepetitions,
+                           int repetitionsPerAgent) {
         this.numEpisodes = numEpisodes;
         this.episodeLength = length;
         this.episodeCooldown = cooldown;
@@ -44,10 +51,11 @@ public class DegradationGenerator {
         this.degradationProbability = matchProbability;
         this.minDegradationTime = minDegradationTime;
         this.maxDegradationTime = maxDegradationTime;
+        this.rampRepetitions = rampRepetitions;
+        this.repetitionsPerAgent = repetitionsPerAgent;
     }
 
-    // Add a new field to hold the discrete list of agent numbers.
-    private List<Integer> allowedAgents = Arrays.asList(6,8,10,12,14,16,18,20);
+
 
     private DegradationEpisode generateSingleEpisode(int numAgents, boolean degradationMatch) {
         String agentPos = getRandomPosition();
@@ -114,6 +122,57 @@ public class DegradationGenerator {
 
         // Shuffle the deck so that the order is randomized
         Collections.shuffle(episodes, random);
+    }
+
+    public void generateRampEpisodes() {
+        episodes.clear();
+
+        List<Integer> rampAgents = new ArrayList<>();
+        for (int a : allowedAgents) {
+            if (a >= 2 && a <= 14) {
+                rampAgents.add(a);
+            }
+        }
+        Collections.sort(rampAgents);
+
+        List<Integer> rampSequence = new ArrayList<>();
+        for (int i = 0; i < rampRepetitions; i++) {
+            // For the first ramp, include full ascent
+            if (i == 0) {
+                rampSequence.addAll(rampAgents);
+            } else {
+                // For subsequent ramps, skip repeating the lowest (valley) value
+                rampSequence.addAll(rampAgents.subList(1, rampAgents.size()));
+            }
+
+            List<Integer> descending = new ArrayList<>(rampAgents);
+            descending.remove(descending.size() - 1); // Avoid repeating peak
+            Collections.reverse(descending);
+            rampSequence.addAll(descending);
+        }
+
+
+
+        for (int agentCount : rampSequence) {
+            List<DegradationEpisode> repeatedEpisodes = new ArrayList<>();
+
+            // Determine exact number of 'true' and 'false' degradations
+            int numTrue = (int) Math.round(repetitionsPerAgent * degradationProbability);
+            int numFalse = repetitionsPerAgent - numTrue;
+
+            List<Boolean> flags = new ArrayList<>();
+            for (int i = 0; i < numTrue; i++) flags.add(true);
+            for (int i = 0; i < numFalse; i++) flags.add(false);
+
+            // Shuffle the true/false flags to randomize order
+            Collections.shuffle(flags, random);
+
+            for (boolean degradationMatch : flags) {
+                repeatedEpisodes.add(generateSingleEpisode(agentCount, degradationMatch));
+            }
+
+            episodes.addAll(repeatedEpisodes);
+        }
     }
 
 
@@ -193,8 +252,25 @@ public class DegradationGenerator {
                 maxDegradationTime = scanner.nextInt();
             }
 
-            degradationGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, degradationProbability, minDegradationTime, maxDegradationTime);
-            degradationGenerator.generateBalancedEpisodes();
+            System.out.println("Use ramp episode generation mode? (y/[n])");
+            String rampChoice = scanner.nextLine().trim();
+            boolean useRampMode = rampChoice.equalsIgnoreCase("y");
+
+            if (useRampMode) {
+                System.out.println("Enter number of ramp repetitions:");
+                int reps = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+                System.out.println("Enter number of repetitions per agent count:");
+                int repsPerAgent = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+                //degradationGenerator.rampRepetitions = reps;
+                degradationGenerator.configure(numEpisodes, length, cooldown, reviewPeriod, minAgents, maxAgents, degradationProbability, minDegradationTime, maxDegradationTime, reps, repsPerAgent);
+                degradationGenerator.generateRampEpisodes();
+            } else {
+                degradationGenerator.generateBalancedEpisodes();
+            }
+
+
             System.out.println("\"episodes\": [");
             for (int i = 0; i < degradationGenerator.getEpisodes().size(); i++) {
                 DegradationEpisode episode = degradationGenerator.getEpisodes().get(i);
