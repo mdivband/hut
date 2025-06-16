@@ -24,7 +24,9 @@ App.Views.Map = Backbone.View.extend({
         ADD_WAYPOINT_TASK: 'add_waypoint_task',
         ADD_MONITOR_TASK: 'add_monitor_task',
         ADD_PATROL_TASK: 'add_patrol_task',
+        ADD_FIRE_TARGET: 'add_fire_target',
         ADD_REGION_TASK: 'add_region_task',
+        ADD_SURVEILLANCE_TASK: 'add_surveillance_task',
         ADD_AGENT: 'add_agent'
     },
     MarkerColourEnum: {
@@ -116,6 +118,8 @@ App.Views.Map = Backbone.View.extend({
             TargetDismissed: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
             TruckMarker: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
             TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
+            TargetFire: $.loadIcon("icons/used/fire.png", "icons/used/fire.png", 0, 0), // TODO: make fire shadow
+
 
 
             FLAG: $.loadIcon("icons/flag_up.png", "icons/man.shadow.png", 15, 15)
@@ -466,7 +470,9 @@ App.Views.Map = Backbone.View.extend({
         $("#add_waypoint_task_mode").removeClass("mode_selected");
         $("#add_monitor_task_mode").removeClass("mode_selected");
         $("#add_patrol_task_mode").removeClass("mode_selected");
+        $("#add_fire_target_mode").removeClass("mode_selected");
         $("#add_region_task_mode").removeClass("mode_selected");
+        $("#add_surveillance_task_mode").removeClass("mode_selected");
         //Deselect agent
         this.views.clickedAgent = null;
         var validMode = true;
@@ -487,6 +493,10 @@ App.Views.Map = Backbone.View.extend({
                 this.drawing.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
                 $("#add_monitor_task_mode").addClass("mode_selected");
                 break;
+            case this.ModeEnum.ADD_FIRE_TARGET:
+                this.drawing.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
+                $("#add_fire_target_mode").addClass("mode_selected");
+                break;
             case this.ModeEnum.ADD_PATROL_TASK:
                 this.drawing.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
                 $("#add_patrol_task_mode").addClass("mode_selected");
@@ -494,6 +504,10 @@ App.Views.Map = Backbone.View.extend({
             case this.ModeEnum.ADD_REGION_TASK:
                 this.drawing.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
                 $("#add_region_task_mode").addClass("mode_selected");
+                break;
+            case this.ModeEnum.ADD_SURVEILLANCE_TASK:
+                this.drawing.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
+                $("#add_surveillance_task_mode").addClass("mode_selected");
                 break;
             default:
                 validMode = false

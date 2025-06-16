@@ -171,6 +171,10 @@
                 <button class="edit_mode_buttons" id="remove_agent">Remove Agent</button>
             </div>
 
+            <div style="text-align: center;" class="edit_accordion">
+                <!-- ✅ New Abort Mission Button -->
+                <button class="edit_mode_buttons" id="abort_mission" style="margin-top: 250px; height: 6em;">Abort Mission</button>
+            </div>
         </div> <!-- end of monitor accordions-->
 
         <div id="edit_contexts">
@@ -232,15 +236,21 @@
             </div>
 
             <div style="text-align: center;" class="edit_accordion">
-                <div style="display: none"> <!---"text-align: left; width: 95%">--->
+                <div style="display: none">
                     <input title="Undo allocation change" type="image" src="icons/undo.png" class="edit_mode_icon_buttons" id="allocation_undo"/>
                     <input title="Redo allocation change" type="image" src="icons/redo.png" class="edit_mode_icon_buttons" id="allocation_redo"/>
                     <input title="Reset allocation" type="image" src="icons/reset.png" class="edit_mode_icon_buttons" id="allocation_reset"/>
                 </div>
+
                 <button class="edit_mode_buttons" id="run_auto_allocation">Run Auto Allocation</button>
                 <button class="edit_mode_buttons" id="confirm_allocation">Confirm Allocation</button>
                 <button class="edit_mode_buttons" id="cancel_allocation">Cancel</button>
+
+                <!-- ✅ New Abort Mission Button -->
+                <!-- <button class="edit_mode_buttons" id="abort_mission" style="margin-top: 400px; height: 6em;">Abort Mission</button> -->
+
             </div>
+
 
             <div id = "wk_sld_wrapper" style="width: 350px; margin-right: auto; margin-left: auto; border: solid 1px black; text-align: left; padding: 10px;">
                 <div id="accordion_slider">
@@ -387,14 +397,45 @@
             <div id="ranges_wrapper_div" class="edit_buttons_sub" style="display:none">
                 <input id="ranges_toggle" type="checkbox">Show Communication Range</input><br>
             </div>
-
+            <div id="heatmap_wrapper_div" class="edit_buttons_sub" style="display:none">
+                <input id="heat_map_toggle" type="checkbox">Toggle HexBin/Heatmap</input><br>
+            </div>
             <div id="prediction_wrapper_div" class="edit_buttons_sub" style="display:none">
-                <input id="prediction_slider" type="range" min="0" max="20" value="0" class="slider">Path Prediction Length</input><br>
+                <input id="prediction_slider" type="range" min="1" max="20" value="0" class="slider">Path Prediction Length</input><br>
+            </div>
+            <div id="risk_wrapper_div" class="edit_buttons_sub" style="">
+                <input id="risk_map_slider" type="range" min="1" max="200" value="100" class="slider">Risk Sensitivity</input><br>
             </div>
 
-            <div id="risk_wrapper_div" class="edit_buttons_sub" style="">
-                <input id="risk_map_slider" type="range" min="0" max="30" value="20" class="slider">Risk Sensitivity</input><br>
-            </div>
+            <details id="risk_features_wrapper" name="risk features">
+                <div class="risk_slider_div" id="FIRE_div">
+                    <input id="FIRE_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">FIRE</label><br>
+                </div>
+                <div class="risk_slider_div" id="Cities_div">
+                    <input id="Cities_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">Cities</label><br>
+                </div>
+                <div class="risk_slider_div" id="NDVI_div">
+                    <input id="NDVI_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">NDVI</label><br>
+                </div>
+                <div class="risk_slider_div" id="Roads_div">
+                    <input id="Roads_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">Roads</label><br>
+                </div>
+                <div class="risk_slider_div" id="Trails_div">
+                    <input id="Trails_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">Trails</label><br>
+                </div>
+                <div class="risk_slider_div" id="aspect_div">
+                    <input id="aspect_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">aspect</label><br>
+                </div>
+                <div class="risk_slider_div" id="elevation_div">
+                    <input id="elevation_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">elevation</label><br>
+                </div>
+                <div class="risk_slider_div" id="slope_div">
+                    <input id="slope_slider" title="1x" type="range" min="1" max="400" value="100" class="risk_slider"/><label class="risk_slider_text">slope</label><br>
+                </div>
+                <div id="risk_features_reset_div">
+                    <button id="risk_features_reset">reset</button><br>
+                </div>
+            </details>
 
         </div>
     </div>
@@ -406,6 +447,8 @@
             <div id="add_monitor_task_mode" class="map_sub_button"></div>
             <div id="add_patrol_task_mode" class="map_sub_button"></div>
             <div id="add_region_task_mode" class="map_sub_button"></div>
+            <div id="add_surveillance_task_mode" class="map_sub_button"></div>
+            <div id="add_fire_target_mode" class="map_sub_button"></div>
         </div>
 
         <div id="sandbox_buttons_sub" class="edit_buttons_sub">

@@ -3,6 +3,7 @@ package server.controller;
 import server.Simulator;
 import server.model.Coordinate;
 import server.model.target.AdjustableTarget;
+import server.model.target.FireTarget;
 import server.model.target.HumanTarget;
 import server.model.target.Target;
 
@@ -39,6 +40,9 @@ public class TargetController extends AbstractController {
                 break;
             case Target.ADJUSTABLE:
                 target = new AdjustableTarget(generateUID("Unknown"), new Coordinate(lat, lng), true);
+                break;
+            case Target.FIRE:
+                target = new FireTarget(generateUID("Fire"), new Coordinate(lat, lng));
                 break;
             default:
                 throw new RuntimeException("Unrecognized target type - " + type);

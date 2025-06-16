@@ -4,6 +4,10 @@ var MapController = {
     uncertaintyRadius: 10,
     communicationRange: 100,
     heatmap: null,
+    hexbin: null,
+    hexbinThreshold: 1.0,
+    hexbinWeightMultipliers: {},
+    hexbinInfoWindow: null,
     /**
      * Binds all the methods to use the given context.
      *  This means the methods can be called just using MapController.method() without
@@ -32,6 +36,7 @@ var MapController = {
         this.onUndoRedoAvailableChange = _.bind(this.onUndoRedoAvailableChange, context);
         this.updateUIFeatures = _.bind(this.updateUIFeatures, context);
         this.onCancelAllocationClick = _.bind(this.onCancelAllocationClick, context);
+        this.onAbortMissionClick = _.bind(this.onAbortMissionClick, context);
         this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
@@ -44,8 +49,14 @@ var MapController = {
         this.isToggleableUIOption = _.bind(this.isToggleableUIOption, context);
         this.isEnabledUIOption = _.bind(this.isEnabledUIOption, context);
         this.toggleUIOption = _.bind(this.toggleUIOption, context);
-        this.updateRiskMap = _.bind(this.updateRiskMap, context);
-        this.setRiskConfig = _.bind(this.setRiskConfig, context);
+        //this.updateRiskMap = _.bind(this.updateRiskMap, context);
+        this.updateRiskMapHeatMap = _.bind(this.updateRiskMapHeatMap, context);
+        this.updateRiskMapHexBin = _.bind(this.updateRiskMapHexBin, context);
+        this.setRiskHeatMapConfig = _.bind(this.setRiskHeatMapConfig, context);
+        this.setRiskHexBinThreshold = _.bind(this.setRiskHexBinThreshold, context);
+        this.showHexPopup = _.bind(this.showHexPopup, context);
+        this.setHexBinWeight = _.bind(this.setHexBinWeight, context);
+        this.updateRiskMapWeightSliders = _.bind(this.updateRiskMapWeightSliders, context);
 
     },
     /**
@@ -69,6 +80,12 @@ var MapController = {
         $("#add_region_task_mode").on('click', function () {
             self.setMode(self.ModeEnum.ADD_REGION_TASK);
         });
+        $("#add_surveillance_task_mode").on('click', function () {
+            self.setMode(self.ModeEnum.ADD_SURVEILLANCE_TASK);
+        });
+        $("#add_fire_target_mode").on('click', function () {
+            self.setMode(self.ModeEnum.ADD_FIRE_TARGET);
+        });
         $("#add_agent_mode").on('click', function () {
             self.setMode(self.ModeEnum.ADD_AGENT);
         });
@@ -90,6 +107,9 @@ var MapController = {
         $("#cancel_allocation").on('click', function () {
             MapController.onCancelAllocationClick()
         });
+        $("#abort_mission").on('click', function () {
+            MapController.onAbortMissionClick()
+        });
         $("input:radio", "#view_mode").button().click(function () {
             MapController.onViewModePressed($(this).val())
         });
@@ -106,6 +126,13 @@ var MapController = {
             MapAgentController.updateAllAgentMarkerIcons(true);
             MapTaskController.updateAllTaskIcons(true);
         });
+        this.state.on("change:riskMapWeights", function () {
+            if(MapController.isEnabledUIOption("heatMapToggle")){
+                MapController.updateRiskMapHexBin();
+            } else {
+                MapController.updateRiskMapHeatMap();
+            }
+        })
         $('#prediction_slider').on('change', function() {
             if ($(this).val() === $(this).prop('max')) {
                 MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
@@ -116,7 +143,43 @@ var MapController = {
             }
         });
         $('#risk_map_slider').on('change', function() {
-            MapController.setRiskConfig('radius', $(this).val());
+            if(MapController.isEnabledUIOption('heatMapToggle')){
+                MapController.setRiskHexBinThreshold($(this).val());
+            } else {
+                MapController.setRiskHeatMapConfig('radius', $(this).val());
+            }
+        });
+        $('#FIRE_slider').on('change', function() {
+            MapController.setHexBinWeight("FIRE", $(this).val());
+        });
+        $('#Cities_slider').on('change', function() {
+            MapController.setHexBinWeight("Cities", $(this).val());
+        });
+        $('#NDVI_slider').on('change', function() {
+            MapController.setHexBinWeight("NDVI", $(this).val());
+        });
+        $('#Roads_slider').on('change', function() {
+            MapController.setHexBinWeight("Roads", $(this).val());
+        });
+        $('#Trails_slider').on('change', function() {
+            MapController.setHexBinWeight("Trails", $(this).val());
+        });
+        $('#aspect_slider').on('change', function() {
+            MapController.setHexBinWeight("aspect", $(this).val());
+        });
+        $('#elevation_slider').on('change', function() {
+            MapController.setHexBinWeight("elevation", $(this).val());
+        });
+        $('#slope_slider').on('change', function() {
+            MapController.setHexBinWeight("slope", $(this).val());
+        });
+        $('#risk_features_reset').on('click', function() {
+            let weights = self.state.getRiskMapWeights();
+
+            Object.keys(weights).forEach(weight => {
+                MapController.setHexBinWeight(weight, 100);
+                $(`#${weight}_slider`).val(100);
+            });
         });
         $('#workload_slider').on('change', function() {
             self.state.workloadLevel = $(this).val();
@@ -132,6 +195,9 @@ var MapController = {
         });
         $('#ranges_toggle').change(function () {
             MapController.toggleUIOption('ranges', $(this).is(":checked"))
+        });
+        $('#heat_map_toggle').change(function () {
+            MapController.toggleUIOption('heatMapToggle', $(this).is(":checked"))
         });
         $('#exit_button').on('click', function () {
             var exitConfirmed = confirm("Only exit the scenario early if you are sure you have found and classified all " +
@@ -232,6 +298,9 @@ var MapController = {
     },
     onCancelAllocationClick: function () {
         MapController.abortAllocation();
+    },
+    onAbortMissionClick: function () {
+        $.post("/agents/allhome");
     },
     onAddAgentClick: function () {
         $.post("/agents/hubspawn");
@@ -344,7 +413,7 @@ var MapController = {
         this.drawMarkers();
         this.clearHandledTargetMarkers();
 
-        MapHazardController.updateHeatmap(-1);
+        //MapHazardController.updateHeatmap(-1);
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
 
@@ -384,6 +453,13 @@ var MapController = {
                 heading: 0.0
             });
         }
+        else if (this.mapMode === this.ModeEnum.ADD_FIRE_TARGET){
+            $.post("/targets", {
+                type: this.state.targets.FIRE,
+                lat: latlng.latitude,
+                lng: latlng.longitude
+            });
+        }
         marker.setMap(null);
         delete marker;
     },
@@ -415,6 +491,22 @@ var MapController = {
             rectangle.setMap(null);
             delete rectangle;
         }
+
+        if (this.mapMode === this.ModeEnum.ADD_SURVEILLANCE_TASK) {
+            var corners = [];
+            var bounds = rectangle.getBounds();
+            var ne = bounds.getNorthEast();
+            var sw = bounds.getSouthWest();
+            var nw = new google.maps.LatLng(ne.lat(), sw.lng());
+            var se = new google.maps.LatLng(sw.lat(), ne.lng());
+            corners.push(nw.lat(), nw.lng());
+            corners.push(ne.lat(), ne.lng());
+            corners.push(se.lat(), se.lng());
+            corners.push(sw.lat(), sw.lng());
+            $.post("/tasks/surveillance", {corners: corners.toString()});
+            rectangle.setMap(null);
+            delete rectangle;
+        }
     },
     onTempAllocationChange: function () {
         if (this.state.isInProgress()) {
@@ -426,6 +518,7 @@ var MapController = {
         $("#allocation_redo").prop('disabled', !this.state.isAllocationRedoAvailable());
     },
     updateUIFeatures: function () {
+        console.log("UI Update")
         const arrayOfPairs = [
             ['monitor', ['monitor_wrapper']],
             ['editmode', ['editmode_wrapper']],
@@ -439,7 +532,8 @@ var MapController = {
             ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
             ['scanButtons', ['scan_buttons']],
             ['triageButtons', ['triage_buttons']],
-            ['riskMapSlider', ['risk_wrapper_div']]
+            ['riskMapSlider', ['risk_wrapper_div']],
+            ['heatMapToggle', ['heatmap_wrapper_div'], 'heat_map_toggle']
         ];
 
         arrayOfPairs.forEach((pair) => {
@@ -470,6 +564,9 @@ var MapController = {
         MapHazardController.setHeatmapVisibility(-1, MapController.isEnabledUIOption("explored"));
         MapHazardController.setHeatmapVisibility(0, MapController.isEnabledUIOption("hazard"));
         MapHazardController.setHeatmapVisibility(1, MapController.isEnabledUIOption("hazard"));
+
+        // TODO this toggle is broken since we need to "async await" state change before changing update function
+        // extra risk map update for ui toggles
         console.log("Made UI changes in exp to " + MapController.isEnabledUIOption("explored"));
 
 
@@ -592,14 +689,31 @@ var MapController = {
         this.hideForGametype();
         MapAgentController.updateAllAgentMarkerIcons(true)
 
-        MapController.updateRiskMap(); // For now, just always update the risk map when we switch view. I'm pretty sure this will work on load also.
         if(sendUpdate)
             this.state.pushMode(modeFlag);
     },
-    setRiskConfig: function (option, value) {
+    updateRiskMapWeightSliders: function () {
+        let weightsConst = this.state.getRiskMapWeightsConst();
+        let weights = this.state.getRiskMapWeights();
+
+        for (const [key, value] of Object.entries(weights)) {
+            //console.log(Math.round(100*value/weightsConst[key]))
+            $(`#${key}_slider`).val(Math.round( 100*((value/weightsConst[key]-1)/2+0.5)  ));
+        }
+    },
+    setRiskHeatMapConfig: function (option, value) {
         this.heatmap.set(option, value);
     },
-    updateRiskMap: function () {
+    setRiskHexBinThreshold: function (value) {
+        this.hexbinThreshold = value/100;
+        if(MapController.isEnabledUIOption("heatMapToggle")){
+            MapController.updateRiskMapHexBin();
+        } else {
+            MapController.updateRiskMapHeatMap();
+        }
+    },
+    updateRiskMapHeatMap: function () {
+        console.log("Updating risk map heatmap");
         // Get risk map from backend
         var riskMap = this.state.getRiskMap();
 
@@ -615,6 +729,103 @@ var MapController = {
         });
         this.heatmap.setOptions({ radius: 15, zIndex: 0, dissipating: true, opacity: 1})
         this.heatmap.setMap(this.map);
+    },
+    setHexBinWeight: function (weight, value) {
+
+        $(`#${weight}_slider`).attr('title', `${value/100}x`);
+
+        $.post("/ui/slider", {
+            name: weight,
+            status: value/100
+        })
+    },
+    updateRiskMapHexBin: function () {
+        console.log("Updating risk map hexbin");
+        // Get risk map from backend
+        let riskMap = this.state.getRiskMap();
+        let weights = this.state.getRiskMapWeights();
+        const gradient = [
+                "rgba(0, 255, 255, 0)",
+                "rgba(0, 255, 255, 1)",
+                "rgba(0, 191, 255, 1)",
+                "rgba(0, 127, 255, 1)",
+                "rgba(0, 63, 255, 1)",
+                "rgba(0, 0, 255, 1)",
+                "rgba(0, 0, 223, 1)",
+                "rgba(0, 0, 191, 1)",
+                "rgba(0, 0, 159, 1)",
+                "rgba(0, 0, 127, 1)",
+                "rgba(63, 0, 91, 1)",
+                "rgba(127, 0, 63, 1)",
+                "rgba(191, 0, 31, 1)",
+                "rgba(255, 0, 0, 1)",
+            ];
+
+        // First pass: find the maximum weightedSum
+        let maxWeightedSum = 0;
+        riskMap.forEach((hexObj) => {
+            let weightedSum = 0;
+            Object.keys(weights).forEach(weight => {
+                weightedSum += weights[weight] * hexObj[weight][0];
+            });
+            maxWeightedSum = Math.max(maxWeightedSum, weightedSum);
+        });
+
+        // add heatmap coordinates and risk data
+        if(this.hexbin === undefined || this.hexbin === null){
+            console.log("Creating new hexbin");
+            this.hexbin = [];
+            riskMap.forEach((hexObj) => {
+                let hexData = new google.maps.MVCArray();
+                for(let i = 0; i+1 < hexObj["coordinates"].length; i+=2){
+                    hexData.push(new google.maps.LatLng(hexObj["coordinates"][i+1], hexObj["coordinates"][i]))
+                }
+
+                if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
+                let weightedSum = 0;
+                Object.keys(weights).forEach(weight => {
+                    weightedSum += weights[weight]*hexObj[weight][0];
+                })
+
+                let range = Math.min((weightedSum/ maxWeightedSum)*this.hexbinThreshold, 1.0);
+                let intensity = Math.floor(range*(gradient.length-1));
+                const hex = new google.maps.Polygon({
+                    paths: hexData,
+                    strokeColor: gradient[intensity],
+                    strokeOpacity: 0.8,
+                    strokeWeight: 0,
+                    fillColor: gradient[intensity],
+                    fillOpacity: range,
+                });
+                hex.setMap(this.map);
+                hex.addListener("click", (e)=>{MapController.showHexPopup(e,{range, ...hexObj})});
+                this.hexbin.push(hex);
+            });
+        } else {
+            for(let i = 0; i < riskMap.length; i++){
+                if(this.hexbinThreshold===undefined) this.hexbinThreshold = 1;
+                let weightedSum = 0;
+                Object.keys(weights).forEach(weight => {
+                    weightedSum += weights[weight]*riskMap[i][weight][0];
+                })
+                let range = Math.min((weightedSum/maxWeightedSum)*this.hexbinThreshold, 1.0);
+                let intensity = Math.floor(range*(gradient.length-1));
+                this.hexbin[i].setOptions({fillColor: gradient[intensity], fillOpacity: range});
+            }
+        }
+    },
+    showHexPopup: function (event, hexData) {
+        if(this.hexbinInfoWindow === undefined) {
+            this.hexbinInfoWindow = new google.maps.InfoWindow();
+        }
+        let contentString = "";
+        let weights = this.state.getRiskMapWeights();
+        Object.keys(weights).forEach(weight => {
+            contentString += `<strong>${weight}</strong>: ${Number.parseFloat(weights[weight]*100).toFixed(2)}%<br>`
+        })
+        this.hexbinInfoWindow.setContent(contentString);
+        this.hexbinInfoWindow.setPosition(event.latLng);
+        this.hexbinInfoWindow.open(this.map);
     },
     pushImage: function (id, iRef, update) {
         this.views.review.displayImage(id, iRef, update);

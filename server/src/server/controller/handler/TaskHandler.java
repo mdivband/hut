@@ -36,6 +36,9 @@ public class TaskHandler extends RestHandler {
         // /tasks/region
         else if(rPath.startsWith("/region"))
             handleAddRegion(req, resp);
+        // /tasks/surveillance
+        else if(rPath.startsWith("/surveillance"))
+            handleAddSurveillance(req, resp);
         // /tasks/<id>
         else
             handleUpdate(req, resp, rPath.substring(1));
@@ -148,6 +151,24 @@ public class TaskHandler extends RestHandler {
             LOGGER.warning("Unable to update task path.");
             resp.send(400, "Unable to update task path.");
         }
+    }
+
+    private void handleAddSurveillance(Request req, Response resp) throws IOException {
+        Map<String, String> params = req.getParams();
+        List<String> expectedKeys = Collections.singletonList("corners");
+        if (!checkParams(params, expectedKeys, resp))
+            return;
+
+        List<Coordinate> corners = new ArrayList<>();
+        String[] pathSplit = params.get("corners").split(",");
+        for(int i = 0; i < pathSplit.length; i += 2) {
+            Double lat = Double.parseDouble(pathSplit[i]);
+            Double lng = Double.parseDouble(pathSplit[i + 1]);
+            corners.add(new Coordinate(lat, lng));
+        }
+        Task task = simulator.getTaskController().createSurveillanceTask(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+        resp.getHeaders().add("Content-type", "text");
+        resp.send(201, task.getId());
     }
 
     private void handleUpdate(Request req, Response resp, String id) throws IOException {

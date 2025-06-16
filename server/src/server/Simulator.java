@@ -55,7 +55,7 @@ public class Simulator {
 
     public static Simulator instance;
 
-    private static final double highTickRate = 5;  // We are updating the sim 5 times per second
+    private static final double highTickRate = 50;  // We are updating the sim 5 times per second
     private static final double lowTickRate = 1;  // Certain functions can be checked less often (once per second)
     private static final double gameSpeed = 5;  // We are running at 5x real speed
     private final Random random;
@@ -728,6 +728,12 @@ public class Simulator {
                     if(GsonUtils.hasKey(agentJSon,"programmed")){
                         programmed = GsonUtils.getValue(agentJSon, "programmed");
                     }
+
+                    String surveillanceType = "default";
+                    if(GsonUtils.hasKey(agentJSon,"surveillanceType")){
+                         surveillanceType = GsonUtils.getValue(agentJSon, "surveillanceType");
+                    }
+
                     Agent agent;
                     if (programmed) {
                         // This means the agent is a programmed one, and the Hub is set up for this
@@ -819,15 +825,51 @@ public class Simulator {
                     this.state.getMarkers().add(shapeRep);
                 }
             }
+
+// Load and process task list from JSON
             List<Object> tasksJson = GsonUtils.getValue(obj, "tasks");
             if (tasksJson != null) {
                 for (Object taskJson : tasksJson) {
-                    Double lat = GsonUtils.getValue(taskJson, "lat");
-                    Double lng = GsonUtils.getValue(taskJson, "lng");
                     int type = ((Double) GsonUtils.getValue(taskJson, "type")).intValue();
-                    Task task = taskController.createTask(type, lat, lng);
+
+                    switch (type) {
+                        case Task.TASK_PATROL: {
+                            // Patrol task expects a path: a list of lat/lng points
+                            List<Object> pathJson = GsonUtils.getValue(taskJson, "path");
+                            List<Coordinate> path = new ArrayList<>();
+                            for (Object pointJson : pathJson) {
+                                double plat = GsonUtils.getValue(pointJson, "lat");
+                                double plng = GsonUtils.getValue(pointJson, "lng");
+                                path.add(new Coordinate(plat, plng));
+                            }
+                            taskController.createPatrolTask(path);
+                            break;
+                        }
+
+                        case Task.TASK_REGION: {
+                            // Region task expects four corner coordinates: nw, ne, se, sw
+                            Coordinate nw = new Coordinate(GsonUtils.getValue(taskJson, "nwlat"), GsonUtils.getValue(taskJson, "nwlng"));
+                            Coordinate ne = new Coordinate(GsonUtils.getValue(taskJson, "nelat"), GsonUtils.getValue(taskJson, "nelng"));
+                            Coordinate se = new Coordinate(GsonUtils.getValue(taskJson, "selat"), GsonUtils.getValue(taskJson, "selng"));
+                            Coordinate sw = new Coordinate(GsonUtils.getValue(taskJson, "swlat"), GsonUtils.getValue(taskJson, "swlng"));
+                            taskController.createRegionTask(nw, ne, se, sw);
+                            break;
+                        }
+
+                        case Task.TASK_MONITOR: {
+                            // Standard task types that only need lat/lng
+                            double lat = GsonUtils.getValue(taskJson, "lat");
+                            double lng = GsonUtils.getValue(taskJson, "lng");
+                            taskController.createTask(type, lat, lng);
+                            break;
+                        }
+
+                        default:
+                            LOGGER.warning("Unknown task type: " + type);
+                    }
                 }
             }
+
 
             if(GsonUtils.hasKey(obj,"uncertaintyRadius")) {
                 this.state.setUncertaintyRadius(GsonUtils.getValue(obj, "uncertaintyRadius"));
@@ -854,7 +896,11 @@ public class Simulator {
 
             }
 
-            riskMapController.convertRiskMapToHeatmapForm();  // Assume for now (bad practise) that we always have a risk map to load, and do so at the end
+            if(this.state.UIOptionIsAvailable("heatMapToggle")) {
+                riskMapController.convertRiskMapToHexBinForm();
+            } else {
+                riskMapController.convertRiskMapToHeatmapForm();
+            }
 
             this.state.setGameSpeed((int) gameSpeed);
 

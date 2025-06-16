@@ -165,6 +165,8 @@ var MapTargetController = {
                 case this.state.targets.ADJ_FOUND:
                     icon = this.icons.TargetFound;
                     break;
+                case this.state.targets.FIRE:
+                    icon = this.icons.TargetFire;
                 default:
                     console.log("No icon found for target type " + target.getType());
             }
