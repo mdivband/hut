@@ -152,3 +152,5 @@ server/web/ModelFiles/*.txt
 server/*.log
 
 server/web/PrismModel/*.pm
+
+server/processedLogs/
