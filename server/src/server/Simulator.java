@@ -214,120 +214,119 @@ public class Simulator {
 
 
             //if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
-            if (true) {
+//            if (true) {
+//                if (state.getAllocationStyle().equals("dynamic")) {
+//                    if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+//                        System.out.println("DONE BY COMPLETION: " + state.getTime());
+//                        System.out.println("agents = " + state.getAgents());
+//                        int numFailed = 0;
+//                        for (Agent a : state.getAgents()) {
+//                            if (a instanceof AgentVirtual av) {
+//                                if (!av.isAlive()) {
+//                                    numFailed++;
+//                                }
+//                            }
+//                        }
+//                        System.out.println("Num failed: " + numFailed);
+//                        this.reset();
+//                    }
+//
+//                    List<Agent> agentsToRemove = new ArrayList<>();
+//                    synchronized (state.getAgents()) {
+//                        for (Agent agent : state.getAgents()) {
+//                            if (agent instanceof AgentVirtual av) {
+//                                if (agentController.modelFailure(av)) {
+//                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+//                                }
+//
+//                                if (agent.isTimedOut()) {
+//                                    //System.out.println("timed out, passing");
+//                                } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
+//                                    av.charge();
+//                                } else if (agent.getBattery() < 0.15 && av.isAlive()) {
+//                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+//                                    av.killBattery();
+//                                } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
+//                                    //System.out.println(agent);
+//                                    av.step(state.isFlockingEnabled());
+//                                } else {
+//                                    if (getAgentController().getScheduledRemovals() > 0) {
+//                                        agentsToRemove.add(agent);
+//                                        getAgentController().decrementRemoval();
+//                                    } else if (getTaskController().checkForFreeTasks()) {
+//                                        av.stopGoingHome();
+//                                        getAllocator().dynamicAssign(av);
+//                                        if (av.getAllocatedTaskId() != null && av.getTask().getType() == 6) {
+//                                            av.setType("withpack");
+//                                            av.setMarker("UAVWithPack");
+//                                        }
+//                                        Simulator.instance.getScoreController().incrementCompletedTask();
+//                                        // In-runtime allocation model
+//                                        //double successChance = modeller.calculateAll(agent);
+//                                        //state.setSuccessChance(successChance);
+//                                    } else if (agent.getBattery() < 0.9 && av.isAlive()) {
+//                                        // If no tasks available, charge up in case we need to replace it
+//                                        av.charge();
+//                                    } else {
+//                                        av.heartbeat();
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//
+//                    agentsToRemove.forEach(a -> {
+//                        getState().getAgents().remove(a);
+//
+//                        // If an agent is removed or dies, update model and start thread
+//                        //updateMissionModel();
+//                    });
+//
+//                } else {
+//                    checkAgentsForTimeout();
+//
+//                    Hub hub = state.getHub();
+//                    if (hub instanceof AgentHub ah) {
+//                        ah.step(state.isFlockingEnabled());
+//                    } else if (hub instanceof AgentHubProgrammed ahp) {
+//                        ahp.step(state.isFlockingEnabled());
+//                    }
+//                    // ELSE no hub
+//                    state.getAgents().forEach(a -> a.step(state.isFlockingEnabled()));
+//                }
 
-                if (state.getAllocationStyle().equals("dynamic")) {
-                    if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
-                        System.out.println("DONE BY COMPLETION: " + state.getTime());
-                        System.out.println("agents = " + state.getAgents());
-                        int numFailed = 0;
-                        for (Agent a : state.getAgents()) {
-                            if (a instanceof AgentVirtual av) {
-                                if (!av.isAlive()) {
-                                    numFailed++;
-                                }
-                            }
-                        }
-                        System.out.println("Num failed: " + numFailed);
-                        this.reset();
-                    }
-
-                    List<Agent> agentsToRemove = new ArrayList<>();
-                    synchronized (state.getAgents()) {
-                        for (Agent agent : state.getAgents()) {
-                            if (agent instanceof AgentVirtual av) {
-                                if (agentController.modelFailure(av)) {
-                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                                }
-
-                                if (agent.isTimedOut()) {
-                                    //System.out.println("timed out, passing");
-                                } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
-                                    av.charge();
-                                } else if (agent.getBattery() < 0.15 && av.isAlive()) {
-                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-                                    av.killBattery();
-                                } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
-                                    //System.out.println(agent);
-                                    av.step(state.isFlockingEnabled());
-                                } else {
-                                    if (getAgentController().getScheduledRemovals() > 0) {
-                                        agentsToRemove.add(agent);
-                                        getAgentController().decrementRemoval();
-                                    } else if (getTaskController().checkForFreeTasks()) {
-                                        av.stopGoingHome();
-                                        getAllocator().dynamicAssign(av);
-                                        if (av.getAllocatedTaskId() != null && av.getTask().getType() == 6) {
-                                            av.setType("withpack");
-                                            av.setMarker("UAVWithPack");
-                                        }
-                                        Simulator.instance.getScoreController().incrementCompletedTask();
-                                        // In-runtime allocation model
-                                        //double successChance = modeller.calculateAll(agent);
-                                        //state.setSuccessChance(successChance);
-                                    } else if (agent.getBattery() < 0.9 && av.isAlive()) {
-                                        // If no tasks available, charge up in case we need to replace it
-                                        av.charge();
-                                    } else {
-                                        av.heartbeat();
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    agentsToRemove.forEach(a -> {
-                        getState().getAgents().remove(a);
-
-                        // If an agent is removed or dies, update model and start thread
-                        //updateMissionModel();
-                    });
-
-                } else {
-                    checkAgentsForTimeout();
-
-                    Hub hub = state.getHub();
-                    if (hub instanceof AgentHub ah) {
-                        ah.step(state.isFlockingEnabled());
-                    } else if (hub instanceof AgentHubProgrammed ahp) {
-                        ahp.step(state.isFlockingEnabled());
-                    }
-                    // ELSE no hub
-                    state.getAgents().forEach(a -> a.step(state.isFlockingEnabled()));
-                }
-
-                if (state.isCommunicationConstrained()) {
-                    state.updateAgentVisibility();
-                    state.updateGhosts();
-                    state.moveGhosts();
-                }
+//                if (state.isCommunicationConstrained()) {
+//                    state.updateAgentVisibility();
+//                    state.updateGhosts();
+//                    state.moveGhosts();
+//                }
 
                 // Step tasks - requires completed tasks array to avoid concurrent modification.
-                List<Task> completedTasks = new ArrayList<>();
-                synchronized (state.getTasks()) {
-                    for (Task task : state.getTasks()) {
-                        if (task.step()) {
-                            // If it's already tagged by a programmed agent, or if it gets completed by the step command
-                            completedTasks.add(task);
-                            //System.out.println("Adding " + task.getId());
-                        }
-                    }
-                }
+//                List<Task> completedTasks = new ArrayList<>();
+//                synchronized (state.getTasks()) {
+//                    for (Task task : state.getTasks()) {
+//                        if (task.step()) {
+//                            // If it's already tagged by a programmed agent, or if it gets completed by the step command
+//                            completedTasks.add(task);
+//                            //System.out.println("Adding " + task.getId());
+//                        }
+//                    }
+//                }
 
-                synchronized (Simulator.instance.getState().getCompletedTasks()) {
-                    completedTasks.stream().filter(task -> task.getType() == 6).forEach(task -> task.getAgents().forEach(a -> a.setType("standard")));
-                    //if (!completedTasks.isEmpty()) {
-                        //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
-                        completedTasks.forEach(Task::complete);
-                    //}
-                }
+//                synchronized (Simulator.instance.getState().getCompletedTasks()) {
+//                    completedTasks.stream().filter(task -> task.getType() == 6).forEach(task -> task.getAgents().forEach(a -> a.setType("standard")));
+//                    //if (!completedTasks.isEmpty()) {
+//                        //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
+//                        completedTasks.forEach(Task::complete);
+//                    //}
+//                }
 
                 //if (!modeller.isStarted()) {
                 //    modeller.start();
                 //    updateMissionModel();
                 //}
 
-            }
+            //}
 
             //scoreController.handleUpkeep();
 
