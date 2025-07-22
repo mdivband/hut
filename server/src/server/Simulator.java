@@ -47,6 +47,8 @@ public class Simulator {
 
     private MissionController missionController = null;
     private final HazardController hazardController;
+
+    private DDSHandler ddsHandler;
     private final Allocator allocator;
     //private final Modeller modeller;
     private final ModelCaller modelCaller;
@@ -76,6 +78,7 @@ public class Simulator {
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
         riskMapController = new RiskMapController(this);
+        ddsHandler = new DDSHandler(state);
         //modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
@@ -171,6 +174,12 @@ public class Simulator {
         int lowTickCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
         int sleepTime;
         do {
+
+            // ---------------------
+            // Pull and update from the DDS
+            ddsHandler.update();
+            // ---------------------
+
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
