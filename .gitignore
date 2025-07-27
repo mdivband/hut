@@ -154,3 +154,15 @@ server/*.log
 server/web/PrismModel/*.pm
 
 server/processedLogs/
+
+# Ignore csv files
+*.csv
+
+# Ignore .vscode directory
+/.vscode/
+
+# Ignore server/scripts/pyDDS/flatbuffers/generated files
+server/scripts/pyDDS/flatbuffers/generated/
+
+# Ignore server/scripts/pyDDS/flatbuffers/flatc.exe
+server/scripts/pyDDS/flatbuffers/flatc.exe

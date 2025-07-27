@@ -1,0 +1,63 @@
+// FlatBuffers schema for DDS communication
+// This defines the structure for data exchange between publisher and listener
+
+namespace DDSSchema;
+
+// Position data structure for GPS coordinates
+table Coordinate {
+    lat: double;
+    lng: double;
+}
+
+// Velocity data structure
+table Velocity {
+    x: double;
+    y: double;
+    z: double;
+}
+
+// Attitude data structure (orientation)
+table Attitude {
+    roll: double;
+    pitch: double;
+    yaw: double;
+}
+
+// Status information
+enum Status: byte {
+    UNKNOWN = 0,
+    ACTIVE = 1,
+    INACTIVE = 2,
+    ERROR = 3
+}
+
+// Individual agent data structure
+table AgentData {
+    agent_id: string;
+    coordinate: Coordinate;
+    altitude: double;
+    heading: double;
+    velocity: Velocity;
+    attitude: Attitude;
+    status: Status;
+    
+    // Battery and health
+    battery_level: float;
+    signal_strength: float;
+    
+    // Custom payload for additional data
+    custom_data: string;
+}
+
+// Main DDS message structure
+table DDSMessage {
+    // Message metadata
+    timestamp: ulong;
+    message_id: string;
+    source: string;
+    
+    // Vector of agent data (dynamic number of agents)
+    agents: [AgentData];
+}
+
+root_type DDSMessage;
