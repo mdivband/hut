@@ -233,52 +233,46 @@ public class Simulator {
     private void mainLoop() {
         final double waitTime = (int) (1000/(highTickRate)); //When gameSpeed is 1, should be 200ms.
         int lowTickCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
-        int ddsTickCounter = 0;  // Counter for DDS data checking
-        int resetCounter = 0;   // Used to start the publisher at a later time
-        final int ddsCheckInterval = 5; //(int) highTickRate; // Check DDS data every second (50 ticks at 50Hz)
+        final int startPublisherDelay = 100; // Delay starting publisher for 2 seconds
+        int tickCounter = 0;
         boolean publisherStarted = false;
         int sleepTime;
-        do {
 
-            // ---------------------
-            // Check for new DDS data and process if available (only every second to prevent busy waiting)
+        do {
+            // Reset the start time for this loop and increment the simulation time
+            long startTime = System.currentTimeMillis();
+            state.incrementTime(1 / highTickRate);
+
+            // Check for new DDS data and process if available and we are in DDS mode
             if (state.getDDSMode()) { 
-                ddsTickCounter++;
-                if (ddsTickCounter >= ddsCheckInterval) {
-                    ddsTickCounter = 0; // Reset counter
-                    
-                    long ddsStartTime = System.nanoTime();
-                    boolean printProcessingTime = false; // Printing control flag
-                    
-                    if (ddsController.hasDataReceived()) {
-                        // New DDS data is available, process it cleanly
-                        ddsController.completeDataProcessing(
-                            ddsController.processData());
-                        printProcessingTime = true;         // Set flag to true
-                    }
-                    
-                    long ddsEndTime = System.nanoTime();
-                    double ddsProcessingTimeMs = (ddsEndTime - ddsStartTime) / 1_000_000.0;
-                    if (printProcessingTime) {
-                        // Print the processing time if data was processed
-                        System.out.printf("DDS data processed in: %.3f ms%n", 
-                            ddsProcessingTimeMs);
-                    }
+                long ddsStartTime = System.nanoTime();
+                boolean printProcessingTime = false; // Printing control flag
+                
+                if (ddsController.hasDataReceived()) {
+                    // New DDS data is available, process it cleanly
+                    ddsController.completeDataProcessing(
+                        ddsController.processData());
+                    printProcessingTime = true;         // Set flag to true
+                }
+                
+                long ddsEndTime = System.nanoTime();
+                double ddsProcessingTimeMs = (ddsEndTime - ddsStartTime) / 1_000_000.0;
+                if (printProcessingTime) {
+                    // Print the processing time if data was processed
+                    System.out.printf("DDS data processed in: %.3f ms%n", 
+                        ddsProcessingTimeMs);
                 }
 
                 // Start DDS publisher if in dev mode and set the started flag
                 if (state.getDevMode() && !publisherStarted && 
-                    resetCounter > 10*ddsCheckInterval) {
+                    tickCounter > startPublisherDelay) {
                     ddsController.startDDSPublisher();
                     publisherStarted = true;
                 }
-                // Increment the reset counter
-                resetCounter++;
+                // Increment the tick counter
+                tickCounter++;
             }
-            // ---------------------
 
-            long startTime = System.currentTimeMillis();
-            state.incrementTime(1 / highTickRate);
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
             if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
@@ -304,8 +298,6 @@ public class Simulator {
 
                 break;
                 //passthrough();
-
-
             }
 
             // Decide if we should spawn a new task
