@@ -128,9 +128,6 @@ public class Simulator {
             }
         } else {
             port = 44101;
-            // Default scenario for IntelliJ runs when no arguments provided
-            scenarioToLoad = "DDSTest.json";
-            System.out.println("Auto-loading scenario: " + scenarioToLoad);
         }
         
         Simulator simulator = new Simulator();

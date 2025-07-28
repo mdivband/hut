@@ -208,7 +208,7 @@ public class DDSController extends AbstractController {
         
         try {
             // Start the publisher with the specified arguments
-            String countArg = "80"; // Default count for dev mode
+            String countArg = "200"; // Default count for dev mode
             String stepIntervalArgs = "0.5"; // Default step interval in seconds
             boolean success = publisherExecutor.startAsyncScript(
                 publisherScriptPath, "--use_csv", "--count", countArg,
