@@ -15,7 +15,6 @@ This setup uses the `zenoh.io` pub/sub framework with `flatbuffers` for data ser
 
 3. **Configure the project:**
    - Set **Project SDK** to **Java 17 (LTS)**.
-   - Set **Working Directory** to: `repo_path/server` *(critical step)*.
    - Set **Compile Output** to: `repo/out`.
    - Mark the following as source folders in **Modules**:
      - `server/src`
@@ -23,11 +22,12 @@ This setup uses the `zenoh.io` pub/sub framework with `flatbuffers` for data ser
    - Under **Run/Debug Configurations**:
      - Set Java version to 17.
      - Leave CLI arguments empty for now.
+     - Set **Working Directory** to: `repo_path/server` if not set *(critical step)*.
 
 4. **If you see "package not found" errors:**
-   - Add the following as dependencies under **Modules**:
+   - Add the following as dependencies under **Modules** by clicking on **+** and selecting **1.**:
      - `libs/`
-     - `libs/selenium/`
+     - `libs/selenium**/`
 
 5. **To run a test scenario:**
    - Start the simulation.
@@ -39,7 +39,7 @@ This setup uses the `zenoh.io` pub/sub framework with `flatbuffers` for data ser
 
 ### 1. Install Python (system-wide)
 
-Use Python 3.7 or greater for compatibility.
+Use Python 3.7+ for compatibility.
 
 ### 2. Create a virtual environment
 
@@ -88,16 +88,16 @@ Edit `repo_path/server/web/scenarios/DDSTest.json` and update the `pythonPath` f
 
 ### 5. Setup FlatBuffers
 
-Inside the activated `hut-dds` environment and from the `repo_path/server` folder:
-```bash
-python scripts/pyDDS/flatbuffers/setup_flatbuffers.py
+Inside the activated `hut-dds` environment and from the `repo_path` folder:
+```bash/ powershell
+python server/scripts/pyDDS/flatbuffers/setup_flatbuffers.py
 ```
 
 ### 6. Generate Sample Data
 
 Run the following to produce example data:
-```bash
-python scripts/pyDDS/sample_data/generate_sample_data.py
+```bash/ powershell
+python server/scripts/pyDDS/sample_data/generate_sample_data.py
 ```
 
 ---
