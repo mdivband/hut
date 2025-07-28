@@ -200,8 +200,9 @@ public class DDSController extends AbstractController {
     public void startDDSPublisher() {
         if (publisherScriptPath == null || 
             publisherScriptPath.trim().isEmpty()) {
-            LOGGER.warning(
-                "DDS publisher script path not set, cannot start publisher in dev mode");
+            LOGGER.warning(String.format(
+                "%s; DDSWRN; DDS publisher script path not set, cannot start publisher in dev mode", 
+                simulator.getState().getTime()));
             return;
         }
         
@@ -235,6 +236,10 @@ public class DDSController extends AbstractController {
      */
     private void stopDDSPublisher() {
         try {
+            if (publisherExecutor == null || !publisherExecutor.isAsyncScriptRunning()) {
+                return;
+            }
+            
             publisherExecutor.stopAsyncScript();
             
             // Get final status

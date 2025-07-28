@@ -21,7 +21,7 @@ public class ErrorHandler {
         // Check for script not found errors
         if (isScriptNotFoundError(output, exception)) {
             throw new RuntimeException(
-                "Cannot run pyDDS as the listener script was not found at the specified path");
+                "Cannot run pyDDS as the Python script was not found at the specified path");
         }
         
         // Check for permission errors
@@ -33,7 +33,7 @@ public class ErrorHandler {
         // Check for module import errors
         if (isModuleImportError(output, exception)) {
             throw new RuntimeException(
-                "Cannot run pyDDS due to missing Python dependencies (zenoh module not installed)");
+                "Cannot run pyDDS due to missing Python dependencies (e.g. zenoh, flatbuffers). Are you in the correct Python environment?");
         }
         
         // Check for general Python syntax or runtime errors (but not data availability issues)
@@ -74,7 +74,7 @@ public class ErrorHandler {
      * Checks if the error is related to the script file not being found
      */
     private boolean isScriptNotFoundError(String output, Exception exception) {
-        return containsErrorPattern(output, exception, "listener.py", 
+        return containsErrorPattern(output, exception, ".py",
                 new String[]{"no such file", "file not found", "cannot find"}) ||
                containsErrorPattern(output, exception, "FileNotFoundError", new String[]{""});
     }

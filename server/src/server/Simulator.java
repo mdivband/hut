@@ -666,10 +666,21 @@ public class Simulator {
                 
                 // Set publisher script path if in dev mode
                 if (state.getDevMode()) {
-                    if (GsonUtils.hasKey(obj, "publisherScriptPath")) {
-                        String publisherScriptPath = GsonUtils.getValue(obj, "publisherScriptPath");
-                        if (publisherScriptPath != null && !publisherScriptPath.trim().isEmpty()) {
-                            ddsController.setPublisherScriptPath(publisherScriptPath);
+                    if (useFlatBuffers) {
+                        // Use FlatBuffers publisher script
+                        if (GsonUtils.hasKey(obj, "fbsPublisherPath")) {
+                            String fbsPublisherPath = GsonUtils.getValue(obj, "fbsPublisherPath");
+                            if (fbsPublisherPath != null && !fbsPublisherPath.trim().isEmpty()) {
+                                ddsController.setPublisherScriptPath(fbsPublisherPath);
+                            }
+                        }
+                    } else {
+                        // Use simple string publisher script
+                        if (GsonUtils.hasKey(obj, "simplePublisherPath")) {
+                            String simplePublisherPath = GsonUtils.getValue(obj, "simplePublisherPath");
+                            if (simplePublisherPath != null && !simplePublisherPath.trim().isEmpty()) {
+                                ddsController.setPublisherScriptPath(simplePublisherPath);
+                            }
                         }
                     }
                 }

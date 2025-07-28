@@ -249,6 +249,44 @@ public class PythonExecutor {
             readerThread.setDaemon(true);
             readerThread.start();
             
+            // Wait a bit and check if the process is still alive
+            try {
+                Thread.sleep(100); // Wait 100ms for process to potentially fail
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            if (!persistentProcess.isAlive()) {
+                // Process failed to start or crashed immediately
+                int exitCode = persistentProcess.exitValue();
+                
+                // Give the reader thread a moment to capture any error output
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                
+                // Get any error output that was captured by the reader thread
+                String errorOutput;
+                synchronized (outputLock) {
+                    errorOutput = outputBuffer;
+                }
+   
+                // Clean up
+                stopPersistentScript();
+                
+                // Handle the error
+                if (!errorOutput.isEmpty()) {
+                    errorHandler.checkForErrors(errorOutput, null);
+                } else {
+                    errorHandler.checkForErrors(null, 
+                        new RuntimeException(
+                            "Python process failed to start. Exit code: " + exitCode));
+                }
+                return false;
+            }
+            
             LOGGER.info("Persistent Python script started successfully");
             return true;
             
@@ -402,6 +440,44 @@ public class PythonExecutor {
                 this::readAsyncOutput, "Async-Python-Reader");
             asyncReaderThread.setDaemon(true);
             asyncReaderThread.start();
+            
+            // Wait a bit and check if the process is still alive
+            try {
+                Thread.sleep(100); // Wait 100ms for process to potentially fail
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            if (!asyncProcess.isAlive()) {
+                // Process failed to start or crashed immediately
+                int processExitCode = asyncProcess.exitValue();
+                
+                // Give the reader thread a moment to capture any error output
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                
+                // Get any error output that was captured by the reader thread
+                String errorOutput;
+                synchronized (asyncLock) {
+                    errorOutput = asyncOutput;
+                }
+                
+                // Clean up and set error state
+                stopAsyncScript();
+                
+                // Handle the error
+                if (!errorOutput.isEmpty()) {
+                    errorHandler.checkForErrors(errorOutput, null);
+                } else {
+                    errorHandler.checkForErrors(null, 
+                        new RuntimeException(
+                            "Python process failed to start. Exit code: " + processExitCode));
+                }
+                return false;
+            }
             
             LOGGER.info("Async Python script started successfully");
             return true;
