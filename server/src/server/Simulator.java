@@ -11,7 +11,6 @@ import tool.GsonUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
@@ -48,7 +47,7 @@ public class Simulator {
     private MissionController missionController = null;
     private final HazardController hazardController;
 
-    private DDSHandler ddsHandler;
+    private DDSController ddsController;
     private final Allocator allocator;
     //private final Modeller modeller;
     private final ModelCaller modelCaller;
@@ -78,7 +77,7 @@ public class Simulator {
         targetController = new TargetController(this);
         scoreController = new ScoreController(this);
         riskMapController = new RiskMapController(this);
-        ddsHandler = new DDSHandler(state);
+        ddsController = new DDSController(this);
         //modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
@@ -101,13 +100,55 @@ public class Simulator {
         GsonUtils.registerTypeAdapter(State.HazardHitCollection.class, State.hazardHitsSerializer);
         GsonUtils.create();
 
+        /**
+         * This is the main entry point for the simulator.
+         * A port number can be passed as the first argument (default is 44101), 
+         * and an optional scenario file name as the second argument.
+         * If a third argument is "dev", the simulator will run in development mode.
+         * If a scenario file is provided, it will be loaded automatically to:
+         * 127.0.0.1:port/sandbox.html.
+         * The scenario file should be in the web/scenarios directory.
+         */
         int port;
+        String scenarioToLoad = null;
+        boolean devMode = false;
+        
+        // Parse command line arguments
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
+            if (args.length > 1) {
+                scenarioToLoad = args[1];
+                System.out.println(
+                    "Auto-loading scenario: " + scenarioToLoad);
+                
+                if (args.length > 2 && args[2].contains("dev")) {
+                    devMode = true;
+                    System.out.println("Development mode enabled");
+                }
+            }
         } else {
             port = 44101;
         }
-        new Simulator().start(port);
+        
+        Simulator simulator = new Simulator();
+        
+        // Set dev mode if specified
+        if (devMode) {
+            simulator.getState().setDevMode();
+        }
+        
+        simulator.start(port);
+        
+        // Auto-load scenario if specified
+        if (scenarioToLoad != null) {
+            if (simulator.loadScenarioMode(scenarioToLoad)) {
+                simulator.startSimulation();
+            } else {
+                System.out.println(
+                    "Failed to load scenario: " + scenarioToLoad + 
+                    ". Starting with loading screen.");
+            }
+        }
     }
 
     public void start(Integer port) {
@@ -130,11 +171,25 @@ public class Simulator {
 
     public boolean loadScenarioMode(String scenarioFileName) {
         this.state.setGameType(State.GAME_TYPE_SCENARIO);
+        // Check if the loaded scenario is DDSTest and set the DDSMode
+        if(scenarioFileName.equals("DDSTest.json")) {
+            this.state.setDDSMode();
+            LOGGER.info(String.format("%s; SMDDS; Simulator set to DDSMode",
+                    getState().getTime()));
+        }
         if(loadScenarioFromFile(webRef+"/scenarios/" + scenarioFileName)) {
-            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ", getState().getTime(), scenarioFileName));
+            LOGGER.info(String.format("%s; SCLD; Scenario loaded (filename); %s ",
+                    getState().getTime(), scenarioFileName));
+            
+            // Start DDS controller if in DDS mode
+            if (state.getDDSMode()) {
+                ddsController.start();
+            }
+            
             return true;
         } else {
-            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ", getState().getTime(), scenarioFileName));
+            LOGGER.info(String.format("%s; SCUN; Unable to start scenario (filename); %s ",
+                    getState().getTime(), scenarioFileName));
             return false;
         }
     }
@@ -158,30 +213,63 @@ public class Simulator {
         if(scenarioDir.exists() && scenarioDir.isDirectory()) {
             for(File file : scenarioDir.listFiles()) {
                 if (!file.isDirectory()) {
-                    String scenarioName = getScenarioNameFromFile(webRef + SCENARIO_DIR_PATH + file.getName());
+                    String scenarioName = getScenarioNameFromFile(
+                        webRef + SCENARIO_DIR_PATH + file.getName());
                     if (scenarioName != null)
                         scenarios.put(file.getName(), scenarioName);
                 }
             }
         }
         else
-            LOGGER.info(String.format("%s; SCNF; Could not find scenario (directory); %s ", getState().getTime(), SCENARIO_DIR_PATH));
+            LOGGER.info(String.format(
+                "%s; SCNF; Could not find scenario (directory); %s ", 
+                getState().getTime(), SCENARIO_DIR_PATH));
         return scenarios;
     }
 
     private void mainLoop() {
         final double waitTime = (int) (1000/(highTickRate)); //When gameSpeed is 1, should be 200ms.
         int lowTickCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
+        final int startPublisherDelay = 100; // Delay starting publisher for 2 seconds
+        int tickCounter = 0;
+        boolean publisherStarted = false;
         int sleepTime;
+
         do {
-
-            // ---------------------
-            // Pull and update from the DDS
-            ddsHandler.update();
-            // ---------------------
-
+            // Reset the start time for this loop and increment the simulation time
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
+
+            // Check for new DDS data and process if available and we are in DDS mode
+            if (state.getDDSMode()) { 
+                long ddsStartTime = System.nanoTime();
+                boolean printProcessingTime = false; // Printing control flag
+                
+                if (ddsController.hasDataReceived()) {
+                    // New DDS data is available, process it cleanly
+                    ddsController.completeDataProcessing(
+                        ddsController.processData());
+                    printProcessingTime = true;         // Set flag to true
+                }
+                
+                long ddsEndTime = System.nanoTime();
+                double ddsProcessingTimeMs = (ddsEndTime - ddsStartTime) / 1_000_000.0;
+                if (printProcessingTime) {
+                    // Print the processing time if data was processed
+                    System.out.printf("DDS data processed in: %.3f ms%n", 
+                        ddsProcessingTimeMs);
+                }
+
+                // Start DDS publisher if in dev mode and set the started flag
+                if (state.getDevMode() && !publisherStarted && 
+                    tickCounter > startPublisherDelay) {
+                    ddsController.startDDSPublisher();
+                    publisherStarted = true;
+                }
+                // Increment the tick counter
+                tickCounter++;
+            }
+
             //if (state.getScenarioEndTime() !=0 && System.currentTimeMillis() >= state.getScenarioEndTime()) {
             if (state.getTimeLimit() != 0 && state.getTime() >= state.getTimeLimit()) {
                 System.out.println("DONE BY TIME: " + state.getTime());
@@ -207,8 +295,6 @@ public class Simulator {
 
                 break;
                 //passthrough();
-
-
             }
 
             // Decide if we should spawn a new task
@@ -221,127 +307,127 @@ public class Simulator {
             }
 
 
-
+/*
             //if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
-//            if (true) {
-//                if (state.getAllocationStyle().equals("dynamic")) {
-//                    if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
-//                        System.out.println("DONE BY COMPLETION: " + state.getTime());
-//                        System.out.println("agents = " + state.getAgents());
-//                        int numFailed = 0;
-//                        for (Agent a : state.getAgents()) {
-//                            if (a instanceof AgentVirtual av) {
-//                                if (!av.isAlive()) {
-//                                    numFailed++;
-//                                }
-//                            }
-//                        }
-//                        System.out.println("Num failed: " + numFailed);
-//                        this.reset();
-//                    }
-//
-//                    List<Agent> agentsToRemove = new ArrayList<>();
-//                    synchronized (state.getAgents()) {
-//                        for (Agent agent : state.getAgents()) {
-//                            if (agent instanceof AgentVirtual av) {
-//                                if (agentController.modelFailure(av)) {
-//                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-//                                }
-//
-//                                if (agent.isTimedOut()) {
-//                                    //System.out.println("timed out, passing");
-//                                } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
-//                                    av.charge();
-//                                } else if (agent.getBattery() < 0.15 && av.isAlive()) {
-//                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
-//                                    av.killBattery();
-//                                } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
-//                                    //System.out.println(agent);
-//                                    av.step(state.isFlockingEnabled());
-//                                } else {
-//                                    if (getAgentController().getScheduledRemovals() > 0) {
-//                                        agentsToRemove.add(agent);
-//                                        getAgentController().decrementRemoval();
-//                                    } else if (getTaskController().checkForFreeTasks()) {
-//                                        av.stopGoingHome();
-//                                        getAllocator().dynamicAssign(av);
-//                                        if (av.getAllocatedTaskId() != null && av.getTask().getType() == 6) {
-//                                            av.setType("withpack");
-//                                            av.setMarker("UAVWithPack");
-//                                        }
-//                                        Simulator.instance.getScoreController().incrementCompletedTask();
-//                                        // In-runtime allocation model
-//                                        //double successChance = modeller.calculateAll(agent);
-//                                        //state.setSuccessChance(successChance);
-//                                    } else if (agent.getBattery() < 0.9 && av.isAlive()) {
-//                                        // If no tasks available, charge up in case we need to replace it
-//                                        av.charge();
-//                                    } else {
-//                                        av.heartbeat();
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    agentsToRemove.forEach(a -> {
-//                        getState().getAgents().remove(a);
-//
-//                        // If an agent is removed or dies, update model and start thread
-//                        //updateMissionModel();
-//                    });
-//
-//                } else {
-//                    checkAgentsForTimeout();
-//
-//                    Hub hub = state.getHub();
-//                    if (hub instanceof AgentHub ah) {
-//                        ah.step(state.isFlockingEnabled());
-//                    } else if (hub instanceof AgentHubProgrammed ahp) {
-//                        ahp.step(state.isFlockingEnabled());
-//                    }
-//                    // ELSE no hub
-//                    state.getAgents().forEach(a -> a.step(state.isFlockingEnabled()));
-//                }
+    //            if (true) {
+    //                if (state.getAllocationStyle().equals("dynamic")) {
+    //                    if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+    //                        System.out.println("DONE BY COMPLETION: " + state.getTime());
+    //                        System.out.println("agents = " + state.getAgents());
+    //                        int numFailed = 0;
+    //                        for (Agent a : state.getAgents()) {
+    //                            if (a instanceof AgentVirtual av) {
+    //                                if (!av.isAlive()) {
+    //                                    numFailed++;
+    //                                }
+    //                            }
+    //                        }
+    //                        System.out.println("Num failed: " + numFailed);
+    //                        this.reset();
+    //                    }
+    //
+    //                    List<Agent> agentsToRemove = new ArrayList<>();
+    //                    synchronized (state.getAgents()) {
+    //                        for (Agent agent : state.getAgents()) {
+    //                            if (agent instanceof AgentVirtual av) {
+    //                                if (agentController.modelFailure(av)) {
+    //                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+    //                                }
+    //
+    //                                if (agent.isTimedOut()) {
+    //                                    //System.out.println("timed out, passing");
+    //                                } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
+    //                                    av.charge();
+    //                                } else if (agent.getBattery() < 0.15 && av.isAlive()) {
+    //                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+    //                                    av.killBattery();
+    //                                } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
+    //                                    //System.out.println(agent);
+    //                                    av.step(state.isFlockingEnabled());
+    //                                } else {
+    //                                    if (getAgentController().getScheduledRemovals() > 0) {
+    //                                        agentsToRemove.add(agent);
+    //                                        getAgentController().decrementRemoval();
+    //                                    } else if (getTaskController().checkForFreeTasks()) {
+    //                                        av.stopGoingHome();
+    //                                        getAllocator().dynamicAssign(av);
+    //                                        if (av.getAllocatedTaskId() != null && av.getTask().getType() == 6) {
+    //                                            av.setType("withpack");
+    //                                            av.setMarker("UAVWithPack");
+    //                                        }
+    //                                        Simulator.instance.getScoreController().incrementCompletedTask();
+    //                                        // In-runtime allocation model
+    //                                        //double successChance = modeller.calculateAll(agent);
+    //                                        //state.setSuccessChance(successChance);
+    //                                    } else if (agent.getBattery() < 0.9 && av.isAlive()) {
+    //                                        // If no tasks available, charge up in case we need to replace it
+    //                                        av.charge();
+    //                                    } else {
+    //                                        av.heartbeat();
+    //                                    }
+    //                                }
+    //                            }
+    //                        }
+    //                    }
+    //
+    //                    agentsToRemove.forEach(a -> {
+    //                        getState().getAgents().remove(a);
+    //
+    //                        // If an agent is removed or dies, update model and start thread
+    //                        //updateMissionModel();
+    //                    });
+    //
+    //                } else {
+    //                    checkAgentsForTimeout();
+    //
+    //                    Hub hub = state.getHub();
+    //                    if (hub instanceof AgentHub ah) {
+    //                        ah.step(state.isFlockingEnabled());
+    //                    } else if (hub instanceof AgentHubProgrammed ahp) {
+    //                        ahp.step(state.isFlockingEnabled());
+    //                    }
+    //                    // ELSE no hub
+    //                    state.getAgents().forEach(a -> a.step(state.isFlockingEnabled()));
+    //                }
 
-//                if (state.isCommunicationConstrained()) {
-//                    state.updateAgentVisibility();
-//                    state.updateGhosts();
-//                    state.moveGhosts();
-//                }
+    //                if (state.isCommunicationConstrained()) {
+    //                    state.updateAgentVisibility();
+    //                    state.updateGhosts();
+    //                    state.moveGhosts();
+    //                }
 
-                // Step tasks - requires completed tasks array to avoid concurrent modification.
-//                List<Task> completedTasks = new ArrayList<>();
-//                synchronized (state.getTasks()) {
-//                    for (Task task : state.getTasks()) {
-//                        if (task.step()) {
-//                            // If it's already tagged by a programmed agent, or if it gets completed by the step command
-//                            completedTasks.add(task);
-//                            //System.out.println("Adding " + task.getId());
-//                        }
-//                    }
-//                }
+                    // Step tasks - requires completed tasks array to avoid concurrent modification.
+    //                List<Task> completedTasks = new ArrayList<>();
+    //                synchronized (state.getTasks()) {
+    //                    for (Task task : state.getTasks()) {
+    //                        if (task.step()) {
+    //                            // If it's already tagged by a programmed agent, or if it gets completed by the step command
+    //                            completedTasks.add(task);
+    //                            //System.out.println("Adding " + task.getId());
+    //                        }
+    //                    }
+    //                }
 
-//                synchronized (Simulator.instance.getState().getCompletedTasks()) {
-//                    completedTasks.stream().filter(task -> task.getType() == 6).forEach(task -> task.getAgents().forEach(a -> a.setType("standard")));
-//                    //if (!completedTasks.isEmpty()) {
-//                        //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
-//                        completedTasks.forEach(Task::complete);
-//                    //}
-//                }
+    //                synchronized (Simulator.instance.getState().getCompletedTasks()) {
+    //                    completedTasks.stream().filter(task -> task.getType() == 6).forEach(task -> task.getAgents().forEach(a -> a.setType("standard")));
+    //                    //if (!completedTasks.isEmpty()) {
+    //                        //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
+    //                        completedTasks.forEach(Task::complete);
+    //                    //}
+    //                }
 
-                //if (!modeller.isStarted()) {
-                //    modeller.start();
-                //    updateMissionModel();
+                    //if (!modeller.isStarted()) {
+                    //    modeller.start();
+                    //    updateMissionModel();
+                    //}
+
                 //}
 
-            //}
+                //scoreController.handleUpkeep();
 
-            //scoreController.handleUpkeep();
-
-            // Step hazard hits
-            //this.state.decayHazardHits();
-
+                // Step hazard hits
+                //this.state.decayHazardHits();
+*/
             // Check and trigger images that are scheduled
             //if (state.isShowReviewPanel()) {
             if (state.UIOptionIsAvailable("reviewPanel")) {
@@ -399,7 +485,8 @@ public class Simulator {
             Object obj = GsonUtils.fromJson(json);
             state.setGameId(GsonUtils.getValue(obj, "gameId"));
             state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
-            LOGGER.info(String.format("%s; SCPS; Passing through to next scenario ", getState().getTime()));
+            LOGGER.info(String.format("%s; SCPS; Passing through to next scenario ", 
+            getState().getTime()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -414,7 +501,9 @@ public class Simulator {
             if (agent.getMillisSinceLastHeartbeat() > 20 * 1000) {
                 if(!agent.isTimedOut()) {
                     agent.setTimedOut(true);
-                    LOGGER.info(String.format("%s; LSTCN; Lost connection with agent (id); %s ", getState().getTime(), agent.getId()));
+                    LOGGER.info(String.format(
+                        "%s; LSTCN; Lost connection with agent (id); %s ", 
+                        getState().getTime(), agent.getId()));
                 }
             }
         }
@@ -423,7 +512,8 @@ public class Simulator {
     public void changeView(int modeFlag) {
         //System.out.println("TEMP FORCECHANGE: mode forced to task edit");
         //modeFlag = 2;
-        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ", Simulator.instance.getState().getTime(), modeFlag));
+        LOGGER.info(String.format("%s; CHVW; Changing view to mode; %s ",
+                Simulator.instance.getState().getTime(), modeFlag));
         if (modeFlag == 2) {
             //agentController.stopAllAgents();
             //agentController.updateAgentsTempRoutes();
@@ -457,6 +547,12 @@ public class Simulator {
         if (interruptMain && this.mainLoopThread != null) {
             this.mainLoopThread.interrupt();
          }
+        
+        // Stop DDS controller if running
+        if (state.getDDSMode()) {
+            ddsController.stop();
+        }
+        
         state.reset();
         agentController.resetAgentNumbers();
         hazardController.resetHazardNumbers();
@@ -469,7 +565,8 @@ public class Simulator {
         }
         //modeller.stop();  // NOTE, if we disable the normal modeller, we will need to slightly refactor to give the modelCaller this start/stop functionality
 
-        LOGGER.info(String.format("%s; SVRST; Server reset ", getState().getTime()));
+        LOGGER.info(String.format(
+            "%s; SVRST; Server reset ", getState().getTime()));
         imageController.reset();
     }
 
@@ -478,7 +575,8 @@ public class Simulator {
             String fileName = userName + "-" + state.getGameId() + ".log";
             FileHandler fileHandler = new FileHandler(fileName);
             LogManager.getLogManager().reset();
-            LogManager.getLogManager().readConfiguration(new FileInputStream("./loggingForStudy.properties"));
+            LogManager.getLogManager().readConfiguration(
+                new FileInputStream("./loggingForStudy.properties"));
             LOGGER.addHandler(fileHandler);
             state.resetLogger(fileHandler);
             taskController.resetLogger(fileHandler);
@@ -489,10 +587,14 @@ public class Simulator {
             hazardController.resetLogger(fileHandler);
             allocator.resetLogger(fileHandler);
             imageController.resetLogger(fileHandler);
-            LOGGER.info(String.format("%s; LGSTRT; Reset log (scenario, username); %s; %s ", getState().getTime(), state.getGameId(), userName));
+            ddsController.resetLogger(fileHandler);
+            LOGGER.info(String.format(
+                "%s; LGSTRT; Reset log (scenario, username); %s; %s ", 
+                getState().getTime(), state.getGameId(), userName));
 
         } catch (final IOException e) {
-            Logger.getAnonymousLogger().severe("Could not load default loggingForStudy.properties file");
+            Logger.getAnonymousLogger().severe(
+                "Could not load default loggingForStudy.properties file");
             Logger.getAnonymousLogger().severe(e.getMessage());
         }
 
@@ -501,7 +603,9 @@ public class Simulator {
 
     private void readConfig() {
         try {
-            LOGGER.info(String.format("%s; RDCFG; Reading Server Config File (directory); %s ", getState().getTime(), webRef+SERVER_CONFIG_FILE));
+            LOGGER.info(String.format(
+                "%s; RDCFG; Reading Server Config File (directory); %s ", 
+                getState().getTime(), webRef+SERVER_CONFIG_FILE));
             String json = GsonUtils.readFile(webRef+SERVER_CONFIG_FILE);
             Object obj = GsonUtils.fromJson(json);
             Double port = GsonUtils.getValue(obj, "port");
@@ -521,11 +625,70 @@ public class Simulator {
         try {
             String json = GsonUtils.readFile(scenarioFile);
             Object obj = GsonUtils.fromJson(json);
+            boolean DDSMode = this.state.getDDSMode();
+
+            // Configure DDS settings if DDS mode is enabled
+            if (DDSMode) {
+                // Set Python path if provided
+                if (GsonUtils.hasKey(obj, "pythonPath")) {
+                    String pythonPath = GsonUtils.getValue(obj, "pythonPath");
+                    if (pythonPath != null && !pythonPath.trim().isEmpty()) {
+                        ddsController.setPythonPath(pythonPath);
+                    }
+                }
+                
+                // Set script path based on useflatbuffers setting
+                boolean useFlatBuffers = false;
+                if (GsonUtils.hasKey(obj, "useflatbuffers")) {
+                    useFlatBuffers = GsonUtils.getValue(obj, "useflatbuffers");
+                }
+                
+                if (useFlatBuffers) {
+                    // Use FlatBuffers listener script
+                    if (GsonUtils.hasKey(obj, "fbsListenerPath")) {
+                        String fbsListenerPath = GsonUtils.getValue(obj, "fbsListenerPath");
+                        if (fbsListenerPath != null && !fbsListenerPath.trim().isEmpty()) {
+                            ddsController.setScriptPath(fbsListenerPath);
+                        }
+                    }
+                } else {
+                    // Use simple string listener script
+                    if (GsonUtils.hasKey(obj, "simpleListenerPath")) {
+                        String simpleListenerPath = GsonUtils.getValue(obj, "simpleListenerPath");
+                        if (simpleListenerPath != null && !simpleListenerPath.trim().isEmpty()) {
+                            ddsController.setScriptPath(simpleListenerPath);
+                        }
+                    }
+                }
+                
+                // Set publisher script path if in dev mode
+                if (state.getDevMode()) {
+                    if (useFlatBuffers) {
+                        // Use FlatBuffers publisher script
+                        if (GsonUtils.hasKey(obj, "fbsPublisherPath")) {
+                            String fbsPublisherPath = GsonUtils.getValue(obj, "fbsPublisherPath");
+                            if (fbsPublisherPath != null && !fbsPublisherPath.trim().isEmpty()) {
+                                ddsController.setPublisherScriptPath(fbsPublisherPath);
+                            }
+                        }
+                    } else {
+                        // Use simple string publisher script
+                        if (GsonUtils.hasKey(obj, "simplePublisherPath")) {
+                            String simplePublisherPath = GsonUtils.getValue(obj, "simplePublisherPath");
+                            if (simplePublisherPath != null && !simplePublisherPath.trim().isEmpty()) {
+                                ddsController.setPublisherScriptPath(simplePublisherPath);
+                            }
+                        }
+                    }
+                }
+            }
 
             this.state.setGameId(GsonUtils.getValue(obj, "gameId"));
             this.state.setGameDescription(GsonUtils.getValue(obj, "gameDescription"));
             Object centre = GsonUtils.getValue(obj, "gameCentre");
-            this.state.setGameCentre(new Coordinate(GsonUtils.getValue(centre, "lat"), GsonUtils.getValue(centre, "lng")));
+            this.state.setGameCentre(
+                    new Coordinate(GsonUtils.getValue(centre, "lat"),
+                            GsonUtils.getValue(centre, "lng")));
 
             Object dynamicUIFeaturesJson = GsonUtils.getValue(obj, "dynamicUIFeatures");
             if (dynamicUIFeaturesJson != null) {
@@ -834,7 +997,7 @@ public class Simulator {
                 }
             }
 
-// Load and process task list from JSON
+            // Load and process task list from JSON
             List<Object> tasksJson = GsonUtils.getValue(obj, "tasks");
             if (tasksJson != null) {
                 for (Object taskJson : tasksJson) {

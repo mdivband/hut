@@ -247,5 +247,10 @@ App.Models.State  = Backbone.Model.extend({
     },
     getRiskMapWeightsConst: function () {
         return this.get("riskMapWeightsConst");
+    },
+
+    // Add getter for DDSMode
+    getDDSMode: function () {
+        return this.get("DDSMode");
     }
 });

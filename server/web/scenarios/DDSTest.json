@@ -1,0 +1,16 @@
+{
+  "gameId": "DDS Test",
+  "gameDescription": " Test scenario for the DDS Mode ",
+  "flockingEnabled" : false,
+  "loggingById": true,
+  "useflatbuffers": true,
+  "pythonPath": "C:\\Users\\haris\\python-envs\\hut-dds\\Scripts\\python.exe",
+  "simpleListenerPath": "scripts\\pyDDS\\simple_listener.py",
+  "fbsListenerPath": "scripts\\pyDDS\\fbs_listener.py",
+  "simplePublisherPath": "scripts\\pyDDS\\simple_publisher.py",
+  "fbsPublisherPath": "scripts\\pyDDS\\fbs_publisher.py",
+  "gameCentre": {
+    "lat": 50.929378522204615,
+    "lng": -1.4080147702592285
+  }
+}

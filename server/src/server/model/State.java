@@ -111,6 +111,12 @@ public class State {
     private Integer workloadLevel;
     private Integer gameSpeed;
 
+    // New boolean flag to specify DDS mode
+    private boolean DDSMode;
+    
+    // New boolean flag to specify dev mode
+    private boolean devMode;
+
     private ArrayList<HashMap<String, ArrayList<Double>>> riskMap = new ArrayList<>();  // Probably wrong format; change if needed
     private HashMap<String,Double> riskMapWeights = new HashMap<String,Double>();
     private final HashMap<String,Double> riskMapWeightsConst = new HashMap<String,Double>();
@@ -169,6 +175,11 @@ public class State {
         modelStyle = "off";
         showReviewPanel = false;
         workloadLevel = 3;
+        // We set ddsMode to false by default
+        DDSMode = false;
+        
+        // We set devMode to false by default
+        devMode = false;
 
         agents.clear();
         ghosts.clear();
@@ -968,6 +979,26 @@ public class State {
 
     public Double getRiskMapWeight(String feature) {
         return this.riskMapWeights.get(feature);
+    }
+
+    // Setter method for DDSMode - ddsMode
+    public void setDDSMode(){
+        DDSMode = true;
+    }
+
+    // Getter for DDSMode flag
+    public boolean getDDSMode(){
+        return DDSMode;
+    }
+    
+    // Setter method for devMode
+    public void setDevMode(){
+        devMode = true;
+    }
+
+    // Getter for devMode flag
+    public boolean getDevMode(){
+        return devMode;
     }
 
     private class HazardHit {
