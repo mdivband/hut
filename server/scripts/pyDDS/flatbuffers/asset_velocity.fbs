@@ -1,0 +1,16 @@
+// msgs/asset_position.fbs
+
+include "common_types.fbs";
+
+namespace messages;
+
+table VelocityMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  x: float;
+  y:float;
+  z:float;
+}
+
+root_type VelocityMessage;

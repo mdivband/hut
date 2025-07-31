@@ -11,17 +11,17 @@ def generate_sample_data():
     - Agent 3: 25 m/s (steps 1-80)
     - Agent 4: 20 m/s (steps 20-80)
     - Agent 5: 18 m/s (steps 40-80)
-    - 4 second intervals between steps
+    - Compatible with FlatBuffers schemas
     """
     
     # Setup the configurable parameters
     
     # Time and step configuration
-    SECONDS_PER_STEP = 0.5  # Time interval between simulation steps
-    TOTAL_STEPS = 300      # Total number of simulation steps
+    SECONDS_PER_STEP = 0.5  # Match the combine_interval from listener (default 0.5)
+    TOTAL_STEPS = 300       # Reduced to match typical use case
     
     # Noise control
-    USE_NOISE = False       # Enable/disable all randomization and noise
+    USE_NOISE = False        # Enable for more realistic data
     
     # Starting position for new agents (agents 4 and 5)
     START_LAT = 50.92880002299894
@@ -41,12 +41,12 @@ def generate_sample_data():
     # Orientation parameters
     MAX_ROLL_PITCH = 8.0                  # degrees
     
-    # Battery parameters
+    # Battery parameters (kept for compatibility)
     MIN_BATTERY_DRAIN = 0.005             # per step
     MAX_BATTERY_DRAIN = 0.015             # per step
     MIN_BATTERY_LEVEL = 0.1               # minimum battery level
     
-    # Signal strength parameters
+    # Signal strength parameters (kept for compatibility)
     SIGNAL_VARIATION = 0.05               # variation per step
     MIN_SIGNAL = 0.7                      # minimum signal strength
     MAX_SIGNAL = 0.98                     # maximum signal strength
@@ -57,31 +57,31 @@ def generate_sample_data():
     LAT_METERS_PER_DEGREE = 111000        # meters per degree latitude
     LON_METERS_PER_DEGREE = 80000         # meters per degree longitude
     
-    # Agent configurations
+    # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
-        'UAV-001': {'speed': 20, 'start_step': 1, 'mission': 'Alpha', 'start_heading': 270},
-        'UAV-002': {'speed': 18, 'start_step': 1, 'mission': 'Beta', 'start_heading': 72},
-        'UAV-003': {'speed': 25, 'start_step': 1, 'mission': 'Gamma', 'start_heading': 0},
-        'UAV-004': {'speed': 20, 'start_step': 80, 'mission': 'Delta', 'start_heading': 216},
-        'UAV-005': {'speed': 18, 'start_step': 160, 'mission': 'Echo', 'start_heading': 330}
+        '1': {'speed': 20, 'start_step': 1, 'mission': 'Alpha', 'start_heading': 270, 'type': 'STA'},
+        '2': {'speed': 18, 'start_step': 1, 'mission': 'Beta', 'start_heading': 72, 'type': 'STA'},
+        '3': {'speed': 25, 'start_step': 1, 'mission': 'Gamma', 'start_heading': 0, 'type': 'STA'},
+        '4': {'speed': 20, 'start_step': 50, 'mission': 'Delta', 'start_heading': 216, 'type': 'FSA'},
+        '5': {'speed': 18, 'start_step': 80, 'mission': 'Echo', 'start_heading': 330, 'type': 'FSA'}
     }
         
     # Initialize agent states
     agent_states = {}
     for agent_id, config in agents.items():
         # Apply position offsets for all agents (with optional noise)
-        if agent_id in ['UAV-004', 'UAV-005']:
+        if agent_id in ['4', '5']:
             # Base offset for new agents, plus optional noise
-            base_lat_offset = 0.0001 * (int(agent_id[-1]) - 4)  # Small distinct offsets
-            base_lon_offset = 0.0001 * (int(agent_id[-1]) - 4)
+            base_lat_offset = 0.0001 * (int(agent_id) - 4)  # Small distinct offsets
+            base_lon_offset = 0.0001 * (int(agent_id) - 4)
             noise_lat = random.uniform(-NEW_AGENT_POS_VARIATION, NEW_AGENT_POS_VARIATION) if USE_NOISE else 0
             noise_lon = random.uniform(-NEW_AGENT_POS_VARIATION, NEW_AGENT_POS_VARIATION) if USE_NOISE else 0
             lat_offset = base_lat_offset + noise_lat
             lon_offset = base_lon_offset + noise_lon
         else:
             # Base offset for existing agents, plus optional noise
-            base_lat_offset = 0.001 * (int(agent_id[-1]) - 1)  # Distinct offsets for agents 1-3
-            base_lon_offset = 0.001 * (int(agent_id[-1]) - 1)
+            base_lat_offset = 0.001 * (int(agent_id) - 1)  # Distinct offsets for agents 1-3
+            base_lon_offset = 0.001 * (int(agent_id) - 1)
             noise_lat = random.uniform(-EXISTING_AGENT_POS_VARIATION, EXISTING_AGENT_POS_VARIATION) if USE_NOISE else 0
             noise_lon = random.uniform(-EXISTING_AGENT_POS_VARIATION, EXISTING_AGENT_POS_VARIATION) if USE_NOISE else 0
             lat_offset = base_lat_offset + noise_lat
@@ -109,14 +109,15 @@ def generate_sample_data():
             'battery': 1.0,
             'signal': random.uniform(
                 INITIAL_SIGNAL_MIN, 
-                INITIAL_SIGNAL_MAX) if USE_NOISE else (INITIAL_SIGNAL_MIN + INITIAL_SIGNAL_MAX) / 2
+                INITIAL_SIGNAL_MAX) if USE_NOISE else (INITIAL_SIGNAL_MIN + INITIAL_SIGNAL_MAX) / 2,
+            'type': config['type']
         }
     
     # Generate data
     data = []
     
-    # Header
-    header = ['step', 'agent_id', 'latitude', 'longitude', 'altitude', 'heading', 
+    # Header - updated to include aircraft_type for better compatibility
+    header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading', 
               'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level', 
               'signal_strength', 'status', 'custom_data']
     data.append(header)
@@ -179,10 +180,11 @@ def generate_sample_data():
             state['signal'] += signal_change
             state['signal'] = max(MIN_SIGNAL, min(MAX_SIGNAL, state['signal']))
             
-            # Create row data
+            # Create row data - added aircraft_type column
             row = [
                 step,
                 agent_id,
+                state['type'],  # aircraft_type column
                 round(state['lat'], 13),
                 round(state['lon'], 13),
                 round(state['altitude'], 1),
@@ -205,11 +207,11 @@ def generate_sample_data():
     print("\nData generation summary:")
     for agent_id, config in agents.items():
         end_step = TOTAL_STEPS
-        print(f"- {agent_id}: {config['speed']} m/s, steps {config['start_step']}-{end_step}")
+        print(f"- Agent {agent_id} ({config['type']}): {config['speed']} m/s, steps {config['start_step']}-{end_step}")
     print(f"- {SECONDS_PER_STEP} second intervals between steps")
     print(f"- Total steps: {TOTAL_STEPS}")
     print(f"- Noise enabled: {USE_NOISE}")
-    print(f"- New agents start near position: {START_LAT}, {START_LON}")
+    print(f"- Compatible with FlatBuffers schemas")
     
     return data
 

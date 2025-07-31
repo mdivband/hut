@@ -1,0 +1,12 @@
+// msgs/common_types.fbs
+
+namespace messages;
+
+enum Type : byte {
+  STA,
+  FSA,
+  MCS,
+  FOB,
+  FIRE,
+  UNDEFINED
+}

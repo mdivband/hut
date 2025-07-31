@@ -1,0 +1,16 @@
+// msgs/asset_position.fbs
+
+include "common_types.fbs";
+
+namespace messages;
+
+table PositionMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  latitude: float;
+  longitude:float;
+  altitude:float;
+}
+
+root_type PositionMessage;
