@@ -596,9 +596,9 @@ public class DDSController extends AbstractController {
                     }
                     
                     if (existingAgent == null) {
-                        // Agent doesn't exist, create new virtual agent
-                        Agent newAgent = simulator.getAgentController().addVirtualAgent(
-                            lat, lng, heading);
+                        // Agent doesn't exist, create new virtual agent with string ID
+                        Agent newAgent = simulator.getAgentController().addIdVirtualAgent(
+                            ddsAgentId, lat, lng, heading);
                         newAgent.setAltitude(altitude);
                         newAgent.setBattery(batteryLevel);
                         

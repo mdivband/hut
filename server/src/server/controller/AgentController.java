@@ -35,12 +35,33 @@ public class AgentController extends AbstractController {
         return nextId;
     }
 
+    /**
+     * Generates a unique ID based on the provided ID
+     * If the ID clashes with an existing agent,
+     * it increments the last part of the ID until a unique ID is found.
+     * @param id the base ID to generate from
+     * @return a unique ID
+    */
+    private String generateUID(String id) {
+        String nextId = id;
+        while (isClash(nextId)) {
+            System.out.println("CLASH DETECTED. INCREMENTING ID");
+            String[] parts = nextId.split("-");
+            int lastPart = Integer.parseInt(parts[parts.length - 1]);
+            lastPart++;
+            parts[parts.length - 1] = String.valueOf(lastPart);
+            nextId = String.join("-", parts);
+        }
+        return nextId;
+    }
+
     private boolean isClash(String idToCheck) {
         return simulator.getState().getAgents().stream().anyMatch(a -> a.getId().equals(idToCheck));
     }
 
     public synchronized Agent addRealAgent(double lat, double lng, double heading) {
-        Agent agent = new AgentReal(generateUID(), new Coordinate(lat, lng), simulator.getQueueManager().createMessagePublisher());
+        Agent agent = new AgentReal(generateUID(), new Coordinate(lat, lng), 
+            simulator.getQueueManager().createMessagePublisher());
         agent.setHeading(heading);
         simulator.getState().add(agent);
         return agent;
@@ -48,6 +69,24 @@ public class AgentController extends AbstractController {
 
     public synchronized Agent addVirtualAgent(double lat, double lng, double heading) {
         Agent agent = new AgentVirtual(generateUID(), new Coordinate(lat, lng), sensor);
+        agent.setHeading(heading);
+        simulator.getState().add(agent);
+        return agent;
+    }
+
+    /**
+     * Adds a named virtual agent with the specified parameters.
+     * @param name the name of the named agent
+     * @param lat the latitude of the agent
+     * @param lng the longitude of the agent
+     * @param heading the heading of the agent
+     * @return the created agent
+     */
+    public synchronized Agent addIdVirtualAgent(
+            String id, double lat, double lng, double heading) {
+        // Generate a unique ID based on the provided ID
+        id = generateUID(id);
+        Agent agent = new AgentVirtual(id, new Coordinate(lat, lng), sensor);
         agent.setHeading(heading);
         simulator.getState().add(agent);
         return agent;
