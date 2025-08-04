@@ -12,6 +12,14 @@ App.Views.Prediction = Backbone.View.extend({
         //this.ctx = options.ctx;
 
         var self = this;
+        // Get DDS Mode from state and hide the prediction circle if in DDS Mode
+        console.log("Prediction View initialized with type: " + this.type);
+        console.log("DDS Mode: " + this.state.getDDSMode());
+        if (this.state.getDDSMode() === "true") {
+            $("#bounded_prediction_canvas").hide();
+            return
+        }
+
         if (this.type === "allocation") {
             this.state.on("change:successChance", function () {
                 self.update();

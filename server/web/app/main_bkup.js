@@ -330,7 +330,7 @@ var simulator = {
                                 $.post('/mode/scenario', {'file-name': fileName}, function () {
                                     nextScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
                                     nextScenarioDiv[0].addEventListener("animationend", function () {
-                                        window.location = "/sandbox_test.html";
+                                        window.location = "/sandbox.html";
                                     })
                                 }).fail(function () {
                                     showError("Unable to start scenario.");

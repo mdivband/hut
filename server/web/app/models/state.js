@@ -52,7 +52,8 @@ App.Models.State  = Backbone.Model.extend({
         workloadLevel: 3,
         riskMap: {}, // Added riskMap here, which should copy the original
         riskMapWeights: {},
-        riskMapWeightsConst: {}
+        riskMapWeightsConst: {},
+        DDSMode: false // Default to false, can be set to true for DDS mode
     },
     url: function () {
         return "state.json?" + _.time();
@@ -251,6 +252,8 @@ App.Models.State  = Backbone.Model.extend({
 
     // Add getter for DDSMode
     getDDSMode: function () {
+        console.log("Getting DDS Mode");
+        console.log("DDSMode: " + this.get("DDSMode"));
         return this.get("DDSMode");
     }
 });
