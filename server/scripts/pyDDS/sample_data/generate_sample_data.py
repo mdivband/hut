@@ -24,9 +24,9 @@ def generate_sample_data():
     USE_NOISE = False        # Enable for more realistic data
     
     # Starting position for new agents (agents 4 and 5)
-    START_LAT = 50.92880002299894
-    START_LON = -1.4094788872327502
-    
+    START_LAT = 51.501123
+    START_LON = -0.142386
+
     # Position variation for existing agents (agents 1-3)
     EXISTING_AGENT_POS_VARIATION = 0.004  # degrees
     NEW_AGENT_POS_VARIATION = 0.0002      # degrees

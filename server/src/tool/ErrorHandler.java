@@ -56,7 +56,7 @@ public class ErrorHandler {
      * Checks if the output message is related to data availability (not an error)
      */
     public boolean isDataAvailabilityMessage(String output) {
-        return output.contains("No data received - publisher may not be active") ||
+        return output.contains("No data received") ||
                output.contains("Empty Data:") ||
                output.contains("Empty data received") ||
                output.contains("DDS Listener started, waiting for");

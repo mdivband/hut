@@ -375,7 +375,7 @@ public class DDSController extends AbstractController {
                 if (pythonOutput.contains(
                     "No data received - publisher may not be active")) {
                     handleNoPublisherWarning();
-                } else if (pythonOutput.contains("Empty Data:")) {
+                } else if (pythonOutput.contains("No data received")) {
                     handleNoDataWarning();
                 } else if (pythonOutput.contains("FlatBuffer Data received for") ||
                            pythonOutput.contains("String Data:")) {
