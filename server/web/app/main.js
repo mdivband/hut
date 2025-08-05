@@ -330,7 +330,7 @@ var simulator = {
                                 $.post('/mode/scenario', {'file-name': fileName}, function () {
                                     nextScenarioDiv[0].style = 'animation: popout 0.5s forwards;';
                                     nextScenarioDiv[0].addEventListener("animationend", function () {
-                                        window.location = "/sandbox_test.html";
+                                        window.location = "/sandbox.html";
                                     })
                                 }).fail(function () {
                                     showError("Unable to start scenario.");
@@ -364,6 +364,16 @@ var simulator = {
             $('#view_mode').buttonset().css({
                 "margin-right": "0px"
             }).find("label").width("50%");
+            // Hide the ui-layout-east if in DDS mode
+            if (self.state.getDDSMode()) {
+                $('.ui-layout-east').hide();
+                $('.ui-layout-pane-east, .ui-layout-resizer-east').hide();
+                $('.ui-layout-pane-center').css({
+                    right: '0',
+                    width: '100%'
+                });
+
+            }
         } catch (e) {
             alert("MainLoop error: " + e)
         }

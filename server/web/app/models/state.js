@@ -53,7 +53,7 @@ App.Models.State  = Backbone.Model.extend({
         riskMap: {}, // Added riskMap here, which should copy the original
         riskMapWeights: {},
         riskMapWeightsConst: {},
-        DDSMode: false // Default to false, can be set to true for DDS mode
+        DDSMode: null // Default to null, can be set to true for DDS mode and false for non-DDS mode
     },
     url: function () {
         return "state.json?" + _.time();
@@ -131,6 +131,10 @@ App.Models.State  = Backbone.Model.extend({
         return this.get("hazardHits")[type];
     },
     getEditMode: function () {
+        // If we are in DDS mode, we set editMode to 0
+        if (this.get("DDSMode")) {
+            this.set("editMode", 0);
+        }
         return this.get("editMode");
     },
     isAllocationUndoAvailable: function () {
@@ -216,9 +220,11 @@ App.Models.State  = Backbone.Model.extend({
         return this.get("loggingById")
     },
     pushMode: function(modeFlag) {
-        // modeflag 1 = monitor
-        //          2 = edit
-        //          3 = images
+        // modeflag 
+        // 0 = map only
+        // 1 = monitor
+        // 2 = edit
+        // 3 = images
         if (modeFlag === 2) {
             this.set("editMode", 2);
             $("#map_title").html("Edit Mode");
@@ -228,6 +234,9 @@ App.Models.State  = Backbone.Model.extend({
         } else if (modeFlag === 3) {
             this.set("editMode", 3);
             $("#map_title").html("Image Review");
+        } else {
+            this.set("editMode", 0);
+            $("#map_title").html("DDS Mode");
         }
         $.post("/changeview", {edit: modeFlag});
     },
@@ -252,8 +261,6 @@ App.Models.State  = Backbone.Model.extend({
 
     // Add getter for DDSMode
     getDDSMode: function () {
-        console.log("Getting DDS Mode");
-        console.log("DDSMode: " + this.get("DDSMode"));
         return this.get("DDSMode");
     }
 });

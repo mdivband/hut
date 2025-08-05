@@ -43,7 +43,8 @@ public class State {
     private Integer timeLimit;
     //private Long scenarioEndTime;
     private int editMode;
-    // editMode 1 = monitor
+    // editMode 0 = map only        - Adding this as the default edit mode
+    //          1 = monitor
     //          2 = edit
     //          3 = images
     private boolean hasPassthrough = false;
@@ -155,7 +156,7 @@ public class State {
         time = 0;
         timeLimit = 0;    // 0 means no time limit
         //scenarioEndTime = 0; // 0 means no time limit
-        editMode = 2;//1;
+        editMode = 0; // 0 = map only
         inProgress = false;
         allocationMethod = "maxsum";
         allocationStyle = "manualwithstop";
@@ -983,7 +984,7 @@ public class State {
 
     // Setter method for DDSMode - ddsMode
     public void setDDSMode(){
-        DDSMode = true;
+        this.DDSMode = true;
     }
 
     // Getter for DDSMode flag
@@ -993,7 +994,7 @@ public class State {
     
     // Setter method for devMode
     public void setDevMode(){
-        devMode = true;
+        this.devMode = true;
     }
 
     // Getter for devMode flag
