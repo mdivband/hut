@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-DDS Publisher with FlatBuffers support and CSV data reading
-This script publishes data using FlatBuffers serialization from CSV files
+DDS Publisher with FlatBuffers support for Aircraft Messages
+This script publishes position, velocity, and heading data using separate topics
 """
 
 import zenoh
@@ -17,15 +17,77 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 sys.path.append(os.path.join(script_dir, 'flatbuffers', 'generated'))
 
-# FlatBuffers imports (will be available after running setup_flatbuffers.py)
-try:
+# Import utility functions
+from utils import *
+
+# Check if FlatBuffers are available
+FLATBUFFERS_AVAILABLE = check_flatbuffers()
+if FLATBUFFERS_AVAILABLE:
     import flatbuffers
-    from DDSSchema import DDSMessage, AgentData, Coordinate, Velocity, Attitude, Status
-    FLATBUFFERS_AVAILABLE = True
+    from messages import PositionMessage, VelocityMessage, HeadingMessage
     print("FlatBuffers support enabled")
-except ImportError as e:
-    FLATBUFFERS_AVAILABLE = False
-    print(f"FlatBuffers not available - using string format: {e}")
+
+# Global dictionary to store publishers
+publishers_cache = {}
+
+def create_position_message(aircraft_type, aircraft_id, lat, lng, alt):
+    """Create a PositionMessage FlatBuffer"""
+    builder = flatbuffers.Builder(256)
+    
+    # Set the aircraft type
+    aircraft_type = get_aircraft_type(aircraft_type)
+    
+    # Create PositionMessage
+    PositionMessage.PositionMessageStart(builder)
+    PositionMessage.PositionMessageAddTimestamp(builder, int(time.time() * 1000))
+    PositionMessage.PositionMessageAddTtype(builder, aircraft_type)
+    PositionMessage.PositionMessageAddId(builder, int(aircraft_id) if aircraft_id.isdigit() else 1)
+    PositionMessage.PositionMessageAddLatitude(builder, lat)
+    PositionMessage.PositionMessageAddLongitude(builder, lng)
+    PositionMessage.PositionMessageAddAltitude(builder, alt)
+    message_offset = PositionMessage.PositionMessageEnd(builder)
+
+    # Finish the buffer
+    builder.Finish(message_offset)
+    return builder.Output()
+
+def create_velocity_message(aircraft_type, aircraft_id, vel_x, vel_y, vel_z):
+    """Create a VelocityMessage FlatBuffer"""
+    builder = flatbuffers.Builder(256)
+    # Set the aircraft type
+    aircraft_type = get_aircraft_type(aircraft_type)
+    
+    # Create VelocityMessage
+    VelocityMessage.VelocityMessageStart(builder)
+    VelocityMessage.VelocityMessageAddTimestamp(builder, int(time.time() * 1000))
+    VelocityMessage.VelocityMessageAddTtype(builder, aircraft_type)
+    VelocityMessage.VelocityMessageAddId(builder, int(aircraft_id) if aircraft_id.isdigit() else 1)
+    VelocityMessage.VelocityMessageAddX(builder, vel_x)
+    VelocityMessage.VelocityMessageAddY(builder, vel_y)
+    VelocityMessage.VelocityMessageAddZ(builder, vel_z)
+    message_offset = VelocityMessage.VelocityMessageEnd(builder)
+
+    # Finish the buffer
+    builder.Finish(message_offset)
+    return builder.Output()
+
+def create_heading_message(aircraft_type, aircraft_id, heading):
+    """Create a HeadingMessage FlatBuffer"""
+    builder = flatbuffers.Builder(256)
+    # Set the aircraft type
+    aircraft_type = get_aircraft_type(aircraft_type)
+
+    # Create HeadingMessage
+    HeadingMessage.HeadingMessageStart(builder)
+    HeadingMessage.HeadingMessageAddTimestamp(builder, int(time.time() * 1000))
+    HeadingMessage.HeadingMessageAddTtype(builder, aircraft_type)
+    HeadingMessage.HeadingMessageAddId(builder, int(aircraft_id) if aircraft_id.isdigit() else 1)
+    HeadingMessage.HeadingMessageAddHeading(builder, heading)
+    message_offset = HeadingMessage.HeadingMessageEnd(builder)
+    
+    # Finish the buffer
+    builder.Finish(message_offset)
+    return builder.Output()
 
 def load_csv_data(csv_file_path):
     """Load CSV data and organize by steps"""
@@ -49,176 +111,109 @@ def load_csv_data(csv_file_path):
         print(f"Error loading CSV file: {e}")
         return None
 
-def create_flatbuffer_message_from_csv_step(step_data, message_counter):
-    """Create a FlatBuffer message from CSV step data (multiple agents)"""
-    builder = flatbuffers.Builder(2048)
+def publish_aircraft_data(
+        session, aircraft_type, aircraft_id, position_data, 
+        velocity_data, heading_data, format_type):
+    """Publish aircraft data to separate topics"""
     
-    # Create strings for message metadata
-    message_id_offset = builder.CreateString(f"msg_{message_counter}")
-    source_offset = builder.CreateString("csv_publisher")
+    # Create topic keys for this aircraft
+    position_topic = f"aircraft/{aircraft_type}/{aircraft_id}/position"
+    velocity_topic = f"aircraft/{aircraft_type}/{aircraft_id}/velocity"
+    heading_topic = f"aircraft/{aircraft_type}/{aircraft_id}/heading"
     
-    # Create agent data for each agent in this step
-    agent_offsets = []
+    # Get or create publishers for this aircraft using global cache
+    if position_topic not in publishers_cache:
+        publishers_cache[position_topic] = session.declare_publisher(position_topic)
+    if velocity_topic not in publishers_cache:
+        publishers_cache[velocity_topic] = session.declare_publisher(velocity_topic)
+    if heading_topic not in publishers_cache:
+        publishers_cache[heading_topic] = session.declare_publisher(heading_topic)
     
-    for row in step_data:
-        # Create strings for this agent
-        agent_id_offset = builder.CreateString(row['agent_id'])
-        custom_data_offset = builder.CreateString(row['custom_data'])
+    if format_type == 'flatbuffer':
+        # Create and publish FlatBuffer messages
+        if position_data:
+            pos_msg = create_position_message(
+                aircraft_type, aircraft_id,
+                position_data['lat'], position_data['lng'], position_data['alt'])
+            publishers_cache[position_topic].put(pos_msg)
+            print(f"Published position FlatBuffer for {aircraft_type}/{aircraft_id}")
         
-        # Create Coordinate
-        Coordinate.CoordinateStart(builder)
-        Coordinate.CoordinateAddLat(builder, float(row['latitude']))
-        Coordinate.CoordinateAddLng(builder, float(row['longitude']))
-        coordinate_offset = Coordinate.CoordinateEnd(builder)
+        if velocity_data:
+            vel_msg = create_velocity_message(
+                aircraft_type, aircraft_id,
+                velocity_data['x'], velocity_data['y'], velocity_data['z'])
+            publishers_cache[velocity_topic].put(vel_msg)
+            print(f"Published velocity FlatBuffer for {aircraft_type}/{aircraft_id}")
         
-        # Create Velocity
-        Velocity.VelocityStart(builder)
-        Velocity.VelocityAddX(builder, float(row['vel_x']))
-        Velocity.VelocityAddY(builder, float(row['vel_y']))
-        Velocity.VelocityAddZ(builder, float(row['vel_z']))
-        velocity_offset = Velocity.VelocityEnd(builder)
-        
-        # Create Attitude
-        Attitude.AttitudeStart(builder)
-        Attitude.AttitudeAddRoll(builder, float(row['roll']))
-        Attitude.AttitudeAddPitch(builder, float(row['pitch']))
-        Attitude.AttitudeAddYaw(builder, float(row['yaw']))
-        attitude_offset = Attitude.AttitudeEnd(builder)
-        
-        # Map status string to enum
-        status_map = {
-            'ACTIVE': Status.Status.ACTIVE,
-            'INACTIVE': Status.Status.INACTIVE,
-            'ERROR': Status.Status.ERROR,
-            'UNKNOWN': Status.Status.UNKNOWN
-        }
-        status_value = status_map.get(row['status'], Status.Status.UNKNOWN)
-        
-        # Create AgentData
-        AgentData.AgentDataStart(builder)
-        AgentData.AgentDataAddAgentId(builder, agent_id_offset)
-        AgentData.AgentDataAddCoordinate(builder, coordinate_offset)
-        AgentData.AgentDataAddAltitude(builder, float(row['altitude']))
-        AgentData.AgentDataAddHeading(builder, float(row['heading']))
-        AgentData.AgentDataAddVelocity(builder, velocity_offset)
-        AgentData.AgentDataAddAttitude(builder, attitude_offset)
-        AgentData.AgentDataAddStatus(builder, status_value)
-        AgentData.AgentDataAddBatteryLevel(builder, float(row['battery_level']))
-        AgentData.AgentDataAddSignalStrength(builder, float(row['signal_strength']))
-        AgentData.AgentDataAddCustomData(builder, custom_data_offset)
-        agent_offset = AgentData.AgentDataEnd(builder)
-        
-        agent_offsets.append(agent_offset)
+        if heading_data:
+            head_msg = create_heading_message(
+                aircraft_type, aircraft_id, heading_data['heading'])
+            publishers_cache[heading_topic].put(head_msg)
+            print(f"Published heading FlatBuffer for {aircraft_type}/{aircraft_id}")
     
-    # Create vector of agents
-    DDSMessage.DDSMessageStartAgentsVector(builder, len(agent_offsets))
-    for agent_offset in reversed(agent_offsets):  # FlatBuffers vectors are built in reverse
-        builder.PrependUOffsetTRelative(agent_offset)
-    agents_vector = builder.EndVector(len(agent_offsets))
-    
-    # Create main DDSMessage
-    DDSMessage.DDSMessageStart(builder)
-    DDSMessage.DDSMessageAddTimestamp(builder, int(time.time() * 1000))
-    DDSMessage.DDSMessageAddMessageId(builder, message_id_offset)
-    DDSMessage.DDSMessageAddSource(builder, source_offset)
-    DDSMessage.DDSMessageAddAgents(builder, agents_vector)
-    message_offset = DDSMessage.DDSMessageEnd(builder)
-    
-    # Finish the buffer
-    builder.Finish(message_offset)
-    
-    return builder.Output()
+    else:
+        # Create and publish string messages
+        if position_data:
+            pos_str = f"Position - Lat: {position_data['lat']}, Lng: {position_data['lng']}, Alt: {position_data['alt']}"
+            publishers_cache[position_topic].put(pos_str)
+            print(f"Published position string for {aircraft_type}/{aircraft_id}: {pos_str}")
+        
+        if velocity_data:
+            vel_str = f"Velocity - X: {velocity_data['x']}, Y: {velocity_data['y']}, Z: {velocity_data['z']}"
+            publishers_cache[velocity_topic].put(vel_str)
+            print(f"Published velocity string for {aircraft_type}/{aircraft_id}: {vel_str}")
+        
+        if heading_data:
+            head_str = f"Heading: {heading_data['heading']}"
+            publishers_cache[heading_topic].put(head_str)
+            print(f"Published heading string for {aircraft_type}/{aircraft_id}: {head_str}")
 
-def create_flatbuffer_message(agent_id, counter):
-    """Create a FlatBuffer message with sample data for a single agent"""
-    builder = flatbuffers.Builder(1024)
+def generate_random_aircraft_data(aircraft_id):
+    """Generate random aircraft data for testing"""
+    position_data = {
+        'lat': random.uniform(37.7, 37.8),
+        'lng': random.uniform(-122.5, -122.4),
+        'alt': random.uniform(100, 200)
+    }
     
-    # Create strings for message metadata
-    message_id_offset = builder.CreateString(f"msg_{counter}")
-    source_offset = builder.CreateString("test_publisher")
+    velocity_data = {
+        'x': random.uniform(-10, 10),
+        'y': random.uniform(-10, 10),
+        'z': random.uniform(-2, 2)
+    }
     
-    # Create strings for agent
-    agent_id_offset = builder.CreateString(agent_id)
-    custom_data_offset = builder.CreateString(f"Sample data {counter}")
+    heading_data = {
+        'heading': random.uniform(0, 360)
+    }
     
-    # Create Coordinate
-    Coordinate.CoordinateStart(builder)
-    Coordinate.CoordinateAddLat(builder, random.uniform(37.7, 37.8))
-    Coordinate.CoordinateAddLng(builder, random.uniform(-122.5, -122.4))
-    coordinate_offset = Coordinate.CoordinateEnd(builder)
-    
-    # Create Velocity
-    Velocity.VelocityStart(builder)
-    Velocity.VelocityAddX(builder, random.uniform(-5, 5))
-    Velocity.VelocityAddY(builder, random.uniform(-5, 5))
-    Velocity.VelocityAddZ(builder, random.uniform(-1, 1))
-    velocity_offset = Velocity.VelocityEnd(builder)
-    
-    # Create Attitude
-    Attitude.AttitudeStart(builder)
-    Attitude.AttitudeAddRoll(builder, random.uniform(-180, 180))
-    Attitude.AttitudeAddPitch(builder, random.uniform(-90, 90))
-    Attitude.AttitudeAddYaw(builder, random.uniform(-180, 180))
-    attitude_offset = Attitude.AttitudeEnd(builder)
-    
-    # Create AgentData
-    AgentData.AgentDataStart(builder)
-    AgentData.AgentDataAddAgentId(builder, agent_id_offset)
-    AgentData.AgentDataAddCoordinate(builder, coordinate_offset)
-    AgentData.AgentDataAddAltitude(builder, random.uniform(100, 200))
-    AgentData.AgentDataAddVelocity(builder, velocity_offset)
-    AgentData.AgentDataAddAttitude(builder, attitude_offset)
-    AgentData.AgentDataAddStatus(builder, Status.Status.ACTIVE)
-    AgentData.AgentDataAddBatteryLevel(builder, random.uniform(0.2, 1.0))
-    AgentData.AgentDataAddSignalStrength(builder, random.uniform(0.5, 1.0))
-    AgentData.AgentDataAddCustomData(builder, custom_data_offset)
-    agent_offset = AgentData.AgentDataEnd(builder)
-    
-    # Create vector of agents (single agent in this case)
-    DDSMessage.DDSMessageStartAgentsVector(builder, 1)
-    builder.PrependUOffsetTRelative(agent_offset)
-    agents_vector = builder.EndVector(1)
-    
-    # Create main DDSMessage
-    DDSMessage.DDSMessageStart(builder)
-    DDSMessage.DDSMessageAddTimestamp(builder, int(time.time() * 1000))
-    DDSMessage.DDSMessageAddMessageId(builder, message_id_offset)
-    DDSMessage.DDSMessageAddSource(builder, source_offset)
-    DDSMessage.DDSMessageAddAgents(builder, agents_vector)
-    message_offset = DDSMessage.DDSMessageEnd(builder)
-    
-    # Finish the buffer
-    builder.Finish(message_offset)
-    
-    return builder.Output()
-
-def create_string_message(agent_id, counter):
-    """Create a simple string message for fallback"""
-    return f"Agent {agent_id} - Message {counter} - Time: {time.time()}"
+    return position_data, velocity_data, heading_data
 
 def main():
     parser = argparse.ArgumentParser(
-        description='DDS Publisher with FlatBuffers support')
-    parser.add_argument('--agent_id', default='UAV-1', 
-                        help='Agent ID (default: UAV-1)')
+        description='DDS Publisher for Aircraft Messages with FlatBuffers support')
+    parser.add_argument('--aircraft_type', default='STA', 
+                        help='Aircraft type (default: STA)')
+    parser.add_argument('--aircraft_id', default='1', 
+                        help='Aircraft ID (default: 1)')
     parser.add_argument('--interval', type=float, default=1.0, 
                         help='Publish interval in seconds (default: 1.0)')
     parser.add_argument('--format', choices=['flatbuffer', 'string'], 
                         default='flatbuffer',
                         help='Data format to publish (default: flatbuffer)')
     parser.add_argument('--count', type=int, default=0, 
-                        help='Number of messages to send (0 = infinite)')
+                        help='Number of message cycles to send (0 = infinite)')
     parser.add_argument('--use_csv', action='store_true', 
                         help='Use CSV data from sample_data folder')
-    parser.add_argument('--step_interval', type=float, default=2.0, 
-                        help='Interval between steps when using CSV data (default: 2.0)')
+    parser.add_argument('--step_interval', type=float, default=0.5, 
+                        help='Interval between steps when using CSV data (default: 0.5)')
     args = parser.parse_args()
     
-    print(f"Starting DDS Publisher for agent '{args.agent_id}'")
+    print(f"Starting Aircraft DDS Publisher")
+    print(f"Aircraft: {args.aircraft_type}/{args.aircraft_id}")
     print(f"Format: {args.format}, Interval: {args.interval}s")
     
     if args.format == 'flatbuffer' and not FLATBUFFERS_AVAILABLE:
-        print("FlatBuffers not available, falling back to string format")
+        print("\n\n\nFlatBuffers not available, falling back to string format\n\n\n")
         args.format = 'string'
     
     # Load CSV data if requested
@@ -234,38 +229,45 @@ def main():
     
     try:
         with zenoh.open(zenoh.Config()) as session:
-            pub = session.declare_publisher('DDS/test')
-            
             counter = 1
             current_step = 1
             
             while True:
                 try:
                     if args.use_csv and csv_data:
-                        # CSV mode - publish all agents for current step
+                        # CSV mode - publish data for all agents in current step
                         if current_step in csv_data:
                             step_data = csv_data[current_step]
-                            print(f"\n--- Publishing Step {current_step} "
-                                  f"({len(step_data)} agents) ---")
+                            print(f"\n--- Publishing Step {current_step} ({len(step_data)} agents) ---")
                             
-                            if args.format == 'flatbuffer':
-                                # Create and send FlatBuffer message from CSV step (all agents)
-                                message_data = create_flatbuffer_message_from_csv_step(
-                                    step_data, counter)
-                                pub.put(message_data)
-                                print(f"Published FlatBuffer message for {len(step_data)} agents "
-                                      f"(Step {current_step})")
-                            else:
-                                # Create and send string messages from CSV (one per agent)
-                                for row in step_data:
-                                    message_data = f"Agent {row['agent_id']} - Step {current_step} "
-                                    message_data += f"Lat: {row['latitude']}, Lon: {row['longitude']}, "
-                                    message_data += f"Alt: {row['altitude']}"
-                                    message_data += f", Heading: {row['heading']}"
-                                    pub.put(message_data)
-                                    print(f"Published string message: {message_data}")
-                            
-                            counter += 1
+                            for row in step_data:
+                                aircraft_id = row['agent_id']
+                                # Use aircraft_type from CSV if available, otherwise use command line argument
+                                aircraft_type = row.get('aircraft_type', args.aircraft_type)
+                                
+                                # Extract data from CSV row
+                                position_data = {
+                                    'lat': float(row['latitude']),
+                                    'lng': float(row['longitude']),
+                                    'alt': float(row['altitude'])
+                                }
+                                
+                                velocity_data = {
+                                    'x': float(row['vel_x']),
+                                    'y': float(row['vel_y']),
+                                    'z': float(row['vel_z'])
+                                }
+                                
+                                heading_data = {
+                                    'heading': float(row['heading'])
+                                }
+                                
+                                # Publish all message types for this aircraft
+                                publish_aircraft_data(
+                                    session, aircraft_type, aircraft_id,
+                                    position_data, velocity_data, heading_data,
+                                    args.format
+                                )
                             
                             # Move to next step
                             current_step += 1
@@ -277,25 +279,24 @@ def main():
                         else:
                             print(f"No data for step {current_step}")
                             current_step += 1
+                    
                     else:
-                        # Random mode - single agent
-                        if args.format == 'flatbuffer':
-                            # Create and send FlatBuffer message
-                            message_data = create_flatbuffer_message(
-                                args.agent_id, counter)
-                            pub.put(message_data)
-                            print(f"Published FlatBuffer message {counter} for "
-                                  f"{args.agent_id}")
-                        else:
-                            # Create and send string message
-                            message_data = create_string_message(args.agent_id, counter)
-                            pub.put(message_data)
-                            print(f"Published string message {counter}: {message_data}")
+                        # Random mode - single aircraft
+                        position_data, velocity_data, heading_data = generate_random_aircraft_data(
+                            args.aircraft_id)
                         
-                        counter += 1
+                        publish_aircraft_data(
+                            session, args.aircraft_type, args.aircraft_id,
+                            position_data, velocity_data, heading_data,
+                            args.format
+                        )
+                        print()
+                        
                         time.sleep(args.interval)
                     
-                    # Check if we've sent enough messages
+                    counter += 1
+                    
+                    # Check if we've sent enough message cycles
                     if args.count > 0 and counter > args.count:
                         break
                         

@@ -161,8 +161,16 @@ server/processedLogs/
 # Ignore .vscode directory
 /.vscode/
 
-# Ignore server/scripts/pyDDS/flatbuffers/generated files
-server/scripts/pyDDS/flatbuffers/generated/
+# Ignore all pycache files
+**/__pycache__/
 
-# Ignore server/scripts/pyDDS/flatbuffers/flatc.exe
-server/scripts/pyDDS/flatbuffers/flatc.exe
+# Ignore /flatbuffers/generated folder
+**/flatbuffers/generated/
+
+# Ignore flatc.exe and flatc
+**/flatc.exe
+**/flatc
+
+# Ignore old_dds folder and generate_sample_data_dds.py script
+**/old_dds/
+**/generate_sample_data_dds.py

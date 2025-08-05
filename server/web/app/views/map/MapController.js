@@ -630,7 +630,8 @@ var MapController = {
      * @param sendUpdate
      */
     swapMode: function (modeFlag, sendUpdate) {
-        // modeflag 1 = monitor
+        // modeflag 0 = map only
+        //          1 = monitor
         //          2 = edit
         //          3 = images
         self = this;
@@ -665,7 +666,7 @@ var MapController = {
             $('#scanmode').prop("checked", false);
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", true);
-        } else {  // scans
+        } else if (modeFlag === 3) {  // scans
             $("#monitor_accordions").hide();
             $("#edit_contexts").hide();
             $("#edit_buttons_sub").hide();
@@ -683,6 +684,21 @@ var MapController = {
             $('#scanmode').prop("checked", true);
             $('#editmode').prop("checked", false);
             $('#monitor').prop("checked", false);
+        } else if (modeFlag === 0) { 
+            // This is a new map only mode that will be the base for DDSMode
+            $("#monitor_accordions").hide();
+            $("#edit_contexts").hide();
+            $("#edit_buttons_sub").hide();
+            $("#sandbox_buttons_sub").hide();
+            $("#scan_view").hide();
+
+            $("#map_canvas").show();
+            $("#image_review").hide();
+            $("#review_panel").hide();
+
+            $('#scanmode').prop("checked", false);
+            $('#editmode').prop("checked", false);
+            $('#monitor').prop("checked", true);
         }
 
         this.drawing.setDrawingMode(null);

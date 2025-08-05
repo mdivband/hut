@@ -1,0 +1,14 @@
+// msgs/asset_heading.fbs
+
+include "common_types.fbs";
+
+namespace messages;
+
+table HeadingMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  heading:float;
+}
+
+root_type HeadingMessage;

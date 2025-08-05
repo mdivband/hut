@@ -364,6 +364,16 @@ var simulator = {
             $('#view_mode').buttonset().css({
                 "margin-right": "0px"
             }).find("label").width("50%");
+            // Hide the ui-layout-east if in DDS mode
+            if (self.state.getDDSMode()) {
+                $('.ui-layout-east').hide();
+                $('.ui-layout-pane-east, .ui-layout-resizer-east').hide();
+                $('.ui-layout-pane-center').css({
+                    right: '0',
+                    width: '100%'
+                });
+
+            }
         } catch (e) {
             alert("MainLoop error: " + e)
         }

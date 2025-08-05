@@ -65,6 +65,10 @@ public class ModeHandler extends RestHandler {
             case "/in-progress":
                 handleInProgress(resp);
                 break;
+            // Handle DDS mode check request
+            case "/check-dds-mode":
+                handleDDSModeCheck(resp);
+                break;
             default:
                 throw new UnregisteredPathException("No method for handling GET request on " + req.getPath());
         }
@@ -111,5 +115,15 @@ public class ModeHandler extends RestHandler {
     private void handleInProgress(Response resp) throws IOException {
         resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
         resp.send(200, Boolean.toString(this.simulator.getState().isInProgress()));
+    }
+
+    /**
+     * Handle DDS mode check request.
+     * Responds with a JSON object indicating whether DDS mode is enabled.
+     * @param resp The HTTP response object to send the response.
+     */
+    private void handleDDSModeCheck(Response resp) throws IOException {
+        resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
+        resp.send(200, Boolean.toString(this.simulator.getState().getDDSMode()));
     }
 }

@@ -3,6 +3,7 @@ package tool;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.File;
 import java.util.logging.Logger;
 
 /**
@@ -42,7 +43,8 @@ public class PythonExecutor {
      * @param pythonPath The full path to the Python executable
      */
     public void setCustomPythonPath(String pythonPath) {
-        this.customPythonPath = pythonPath;
+        // Normalize the script path for platform compatibility
+        this.customPythonPath = normalizePath(pythonPath);
         // Clear the cache when custom path changes, so we re-test
         this.cachedWorkingCommand = null;
     }
@@ -106,6 +108,16 @@ public class PythonExecutor {
                     "Python is not available in this environment"));
             return false;
         }
+
+        // Normalize the script path for platform compatibility
+        scriptPath = normalizePath(scriptPath);
+        
+        // Validate that the script exists
+        if (!isPathValid(scriptPath)) {
+            errorHandler.checkForErrors(null, 
+                new RuntimeException("Script file not found or not accessible: " + scriptPath));
+            return false;
+        }        
         
         try {
             // Build command with script path and arguments
@@ -163,6 +175,16 @@ public class PythonExecutor {
                 new RuntimeException("Python is not available in this environment"));
             return null;
         }
+
+        // Normalize the script path for platform compatibility
+        scriptPath = normalizePath(scriptPath);
+        
+        // Validate that the script exists
+        if (!isPathValid(scriptPath)) {
+            errorHandler.checkForErrors(null, 
+                new RuntimeException("Script file not found or not accessible: " + scriptPath));
+            return null;
+        } 
         
         try {
             // Build command with script path and arguments
@@ -226,6 +248,16 @@ public class PythonExecutor {
                 new RuntimeException("Python is not available in this environment"));
             return false;
         }
+
+        // Normalize the script path for platform compatibility
+        scriptPath = normalizePath(scriptPath);
+        
+        // Validate that the script exists
+        if (!isPathValid(scriptPath)) {
+            errorHandler.checkForErrors(null, 
+                new RuntimeException("Script file not found or not accessible: " + scriptPath));
+            return false;
+        } 
         
         try {
             // Build command with script path and arguments
@@ -409,6 +441,16 @@ public class PythonExecutor {
             }
             return false;
         }
+
+        // Normalize the script path for platform compatibility
+        scriptPath = normalizePath(scriptPath);
+        
+        // Validate that the script exists
+        if (!isPathValid(scriptPath)) {
+            errorHandler.checkForErrors(null, 
+                new RuntimeException("Script file not found or not accessible: " + scriptPath));
+            return false;
+        } 
         
         try {
             // Build command with script path and arguments
@@ -656,6 +698,45 @@ public class PythonExecutor {
                     exitCode = asyncProcess.exitValue();
                 }
             }
+        }
+    }
+
+        /**
+     * Normalizes a file path to be compatible with the current platform
+     * Converts path separators and handles platform-specific path formats
+     * @param path The path to normalize
+     * @return The normalized path compatible with the current platform
+     */
+    private String normalizePath(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return path;
+        }
+        
+        // Use File.separator to get the platform-specific separator
+        String normalizedPath = path.replace('\\', File.separatorChar)
+                                   .replace('/', File.separatorChar);
+        
+        // Create a File object to further normalize the path
+        File file = new File(normalizedPath);
+        return file.getPath();
+    }
+    
+    /**
+     * Checks if a path exists and is accessible on the current platform
+     * @param path The path to check
+     * @return true if the path exists and is accessible, false otherwise
+     */
+    private boolean isPathValid(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return false;
+        }
+        
+        try {
+            File file = new File(normalizePath(path));
+            return file.exists() && file.canRead();
+        } catch (SecurityException e) {
+            LOGGER.warning("Security exception when checking path: " + path + " - " + e.getMessage());
+            return false;
         }
     }
 }

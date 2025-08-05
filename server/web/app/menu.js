@@ -146,7 +146,17 @@ function menuInit() {
         data = String(data);
         var inProgress = (data === 'true');
         if (inProgress) {
-            inProgressDiv.show();
+            // Check if DDS mode is enabled
+            // Load /sandbox.html directly if so else show in-progress screen
+            $.get("/mode/check-dds-mode", {}, function(ddsData) {
+                ddsData = String(ddsData);
+                if (ddsData === 'true') {
+                    // Handle DDS mode enabled case
+                    window.location = "/sandbox.html";
+                } else {
+                    inProgressDiv.show();
+                }
+            });
         } else {
             mainButtonGroup.show();
             // Ensure any scenario is loaded with a clean slate

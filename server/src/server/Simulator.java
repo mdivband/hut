@@ -532,6 +532,12 @@ public class Simulator {
             }
 
              */
+        } else if (modeFlag == 0) { // map only
+            state.setEditMode(0);
+        } else {
+            LOGGER.warning(String.format(
+                "%s; CHVW; Invalid mode flag; %s ", 
+                Simulator.instance.getState().getTime(), modeFlag));
         }
     }
 
