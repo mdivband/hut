@@ -10,13 +10,16 @@ This setup uses the `zenoh.io` pub/sub framework with `flatbuffers` for data ser
 
 ### Automated Setup
 ## Linux
-A setup script is not provided for automated setup on linux.
+A setup script is now provided for automated setup on linux.
+
 This script will install all required dependencies and provide the running `jar` command.
 
 **To use this script, run the following**
-`wget https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs/scripts/setup_haris.sh -O setup_haris.sh`
-`chmod +x setup_haris.sh`
-`./setup_haris.sh`
+```
+wget https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs/scripts/setup_haris.sh -O setup_haris.sh
+chmod +x setup_haris.sh
+./setup_haris.sh
+```
 
 ## Simulator Setup (Java / IntelliJ)
 
