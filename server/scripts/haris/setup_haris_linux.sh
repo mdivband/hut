@@ -106,31 +106,24 @@ else
   esac
 fi
 
-# Check ensurepip and upgrade if needed
-if python3 -m ensurepip --help >/dev/null 2>&1; then
-  echo "ensurepip module available."
-else
-  echo "ensurepip not found. Installing..."
-  $UPDATE_CMD
-  case "$PKG_MANAGER" in
-    apt)     $INSTALL_CMD python3-ensurepip ;;
-    dnf|yum) $INSTALL_CMD python3-ensurepip || $INSTALL_CMD python39-pip ;;
-    pacman)  $INSTALL_CMD python-pip ;;
-  esac
-fi
-
 # Python pip
 echo "Checking for pip..."
-if command -v pip3 >/dev/null 2>&1; then
-  echo "Found pip: $(pip3 --version)"
+if python3 -m pip --version >/dev/null 2>&1; then
+  echo "Found pip: $(python3 -m pip --version)"
 else
   echo "pip not found. Installing..."
-  $UPDATE_CMD
-  case "$PKG_MANAGER" in
-    apt)     $INSTALL_CMD python3-pip ;;
-    dnf|yum) $INSTALL_CMD python3-pip ;;
-    pacman)  $INSTALL_CMD python-pip ;;
-  esac
+  # Try ensurepip first
+  if python3 -m ensurepip --upgrade >/dev/null 2>&1; then
+    echo "pip installed via ensurepip"
+  else
+    echo "ensurepip failed. Installing via package manager..."
+    $UPDATE_CMD
+    case "$PKG_MANAGER" in
+      apt)     $INSTALL_CMD python3-pip ;;
+      dnf|yum) $INSTALL_CMD python3-pip ;;
+      pacman)  $INSTALL_CMD python-pip ;;
+    esac
+  fi
 fi
 
 # FlatBuffers compiler (flatc)
