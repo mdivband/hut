@@ -103,41 +103,27 @@ else
   PY_MAJOR_MINOR="${PY_MAJOR}.${PY_MINOR}"
 fi
 
-# Python venv
-echo "Checking for Python venv..."
-if python3 -m venv --help >/dev/null 2>&1; then
-  echo "Python venv module available."
-else
-  echo "Python venv not found. Installing..."
-  $UPDATE_CMD
-  case "$PKG_MANAGER" in
-    apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
-    dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
-    pacman)  $INSTALL_CMD python-virtualenv ;;
-  esac
-fi
+# Python venv - always install for current Python version
+echo "Installing Python venv for version ${PY_MAJOR_MINOR}..."
+$UPDATE_CMD
+case "$PKG_MANAGER" in
+  apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
+  dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
+  pacman)  $INSTALL_CMD python-virtualenv ;;
+esac
 
 # Python pip
 echo "Checking for pip..."
 if python3 -m pip --version >/dev/null 2>&1; then
   echo "Found pip: $(python3 -m pip --version)"
-  # Always run ensurepip to ensure pip is up to date
-  echo "Running ensurepip to ensure pip is current..."
-  python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
 else
-  echo "pip not found. Installing..."
-  # Try ensurepip first
-  if python3 -m ensurepip --upgrade >/dev/null 2>&1; then
-    echo "pip installed via ensurepip"
-  else
-    echo "ensurepip failed. Installing via package manager..."
-    $UPDATE_CMD
-    case "$PKG_MANAGER" in
-      apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
-      dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
-      pacman)  $INSTALL_CMD python-pip ;;
-    esac
-  fi
+  echo "pip not found. Installing via package manager..."
+  $UPDATE_CMD
+  case "$PKG_MANAGER" in
+    apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
+    dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
+    pacman)  $INSTALL_CMD python-pip ;;
+  esac
 fi
 
 # FlatBuffers compiler (flatc)
