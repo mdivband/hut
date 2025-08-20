@@ -71,6 +71,7 @@ if command -v python3 >/dev/null 2>&1; then
   PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
   PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
   PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+  PY_MAJOR_MINOR="${PY_MAJOR}.${PY_MINOR}"
   if [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -ge 7 ]; then
     echo "Found Python $PY_VERSION"
   else
@@ -81,6 +82,11 @@ if command -v python3 >/dev/null 2>&1; then
       dnf|yum) $INSTALL_CMD python39 ;;
       pacman)  $INSTALL_CMD python ;;
     esac
+    # Re-check version after installation
+    PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
+    PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
+    PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+    PY_MAJOR_MINOR="${PY_MAJOR}.${PY_MINOR}"
   fi
 else
   echo "Python not found. Installing Python..."
@@ -90,6 +96,11 @@ else
     dnf|yum) $INSTALL_CMD python39 ;;
     pacman)  $INSTALL_CMD python ;;
   esac
+  # Get version after installation
+  PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
+  PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
+  PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+  PY_MAJOR_MINOR="${PY_MAJOR}.${PY_MINOR}"
 fi
 
 # Python venv
@@ -100,8 +111,8 @@ else
   echo "Python venv not found. Installing..."
   $UPDATE_CMD
   case "$PKG_MANAGER" in
-    apt)     $INSTALL_CMD python3-venv ;;
-    dnf|yum) $INSTALL_CMD python3-venv || $INSTALL_CMD python39-virtualenv ;;
+    apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
+    dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
     pacman)  $INSTALL_CMD python-virtualenv ;;
   esac
 fi
@@ -122,8 +133,8 @@ else
     echo "ensurepip failed. Installing via package manager..."
     $UPDATE_CMD
     case "$PKG_MANAGER" in
-      apt)     $INSTALL_CMD python3-pip ;;
-      dnf|yum) $INSTALL_CMD python3-pip ;;
+      apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
+      dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
       pacman)  $INSTALL_CMD python-pip ;;
     esac
   fi
