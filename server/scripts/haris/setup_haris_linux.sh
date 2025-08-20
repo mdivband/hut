@@ -74,21 +74,49 @@ if command -v python3 >/dev/null 2>&1; then
   if [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -ge 7 ]; then
     echo "Found Python $PY_VERSION"
   else
-    echo "Python version is < 3.7. Installing Python 3..."
+    echo "Python version < 3.7 detected. Installing newer Python..."
     $UPDATE_CMD
     case "$PKG_MANAGER" in
-      apt)     $INSTALL_CMD python3 python3-venv python3-pip ;;
+      apt)     $INSTALL_CMD python3 ;;
       dnf|yum) $INSTALL_CMD python39 ;;
       pacman)  $INSTALL_CMD python ;;
     esac
   fi
 else
-  echo "Python not found. Installing Python 3..."
+  echo "Python not found. Installing Python..."
   $UPDATE_CMD
   case "$PKG_MANAGER" in
-    apt)     $INSTALL_CMD python3 python3-venv python3-pip ;;
+    apt)     $INSTALL_CMD python3 ;;
     dnf|yum) $INSTALL_CMD python39 ;;
     pacman)  $INSTALL_CMD python ;;
+  esac
+fi
+
+# Python venv
+echo "Checking for Python venv..."
+if python3 -m venv --help >/dev/null 2>&1; then
+  echo "Python venv module available."
+else
+  echo "Python venv not found. Installing..."
+  $UPDATE_CMD
+  case "$PKG_MANAGER" in
+    apt)     $INSTALL_CMD python3-venv ;;
+    dnf|yum) $INSTALL_CMD python3-venv || $INSTALL_CMD python39-virtualenv ;;
+    pacman)  $INSTALL_CMD python-virtualenv ;;
+  esac
+fi
+
+# Python pip
+echo "Checking for pip..."
+if command -v pip3 >/dev/null 2>&1; then
+  echo "Found pip: $(pip3 --version)"
+else
+  echo "pip not found. Installing..."
+  $UPDATE_CMD
+  case "$PKG_MANAGER" in
+    apt)     $INSTALL_CMD python3-pip ;;
+    dnf|yum) $INSTALL_CMD python3-pip ;;
+    pacman)  $INSTALL_CMD python-pip ;;
   esac
 fi
 
