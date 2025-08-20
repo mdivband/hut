@@ -13,7 +13,7 @@ var MapAgentController = {
         this.bindEvents = _.bind(this.bindEvents, context);
         this.onAgentAdd = _.bind(this.onAgentAdd, context);
         this.onGhostAdd = _.bind(this.onGhostAdd, context);
-        this.heatmapAgentUpdateGeneric  = _.bind(this.heatmapAgentUpdateGeneric, context);
+        // this.heatmapAgentUpdateGeneric  = _.bind(this.heatmapAgentUpdateGeneric, context);
         this.onAgentChange = _.bind(this.onAgentChange, context);
         this.onGhostChange = _.bind(this.onGhostChange, context);
         this.onAgentRemove = _.bind(this.onAgentRemove, context);
@@ -29,7 +29,7 @@ var MapAgentController = {
         this.drawAgentBattery = _.bind(this.drawAgentBattery, context);
         this.updateAgentVisibility = _.bind(this.updateAgentVisibility, context);
         this.updateBatteryVisibility = _.bind(this.updateBatteryVisibility, context);
-        this.forceRedrawMaps = _.bind(this.forceRedrawMaps, context);
+        // this.forceRedrawMaps = _.bind(this.forceRedrawMaps, context);
     },
     /**
      * Bind listeners for agent state add, change and remove events
@@ -173,10 +173,10 @@ var MapAgentController = {
             MapAgentController.updateAgentMarkerIcon(agent);
         this.updateTable();
         MapTargetController.checkForReveal(agent);
-        if (MapController.isHeatmapMode()) {
-            MapAgentHeatmapController.updateAllAgentMarkers();
-            MapAgentHeatmapController.adjustHeatmapLocation(agent);
-        }
+        // if (MapController.isHeatmapMode()) {
+        //     MapAgentHeatmapController.updateAllAgentMarkers();
+        //     MapAgentHeatmapController.adjustHeatmapLocation(agent);
+        // }
     },
     onGhostChange: function (agent) {
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
@@ -413,8 +413,8 @@ var MapAgentController = {
                     delete marker;
                 }
             });
-            MapAgentHeatmapController.clearAll();
-            self.clearAllocationRendering()
+            // MapAgentHeatmapController.clearAll();
+            // self.clearAllocationRendering()
         }
         if (MapController.isHeatmapMode()) {
             console.log("redrawing agent maps")

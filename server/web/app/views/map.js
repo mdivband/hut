@@ -1360,6 +1360,13 @@ App.Views.SubMap = Backbone.View.extend({
         this.state.agents.on("change", function (model, options) {
             var id = model.getId();
             var marker = markers[id];
+            
+            // Stop here if there is no marker for this agent
+            // This is a temporary fix for the case where the agent is not updated
+            /** TODO: Fix the agent update logic */
+            if (!marker) {
+                return;
+            }
             if (id === self.views.clickedAgent) {
                 self.map.setCenter(model.getPosition());
                 self.map.setZoom(19);

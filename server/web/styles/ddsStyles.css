@@ -1,0 +1,105 @@
+.ui-layout-center {
+    position: relative;
+    background-image: url('../resources/drone_img.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+.button-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.control-button {
+    background-color: #1565C0;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    min-width: 120px;
+}
+
+.control-button:hover {
+    background-color: #0D47A1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.control-button.open {
+    background-color: #D32F2F;
+}
+
+.control-button.open:hover {
+    background-color: #B71C1C;
+}
+
+#map_canvas {
+    width: 100%;
+    height: 100vh;
+    background: transparent;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .button-panel {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .control-button {
+        min-width: 200px;
+    }
+}
+
+/* Confirmation dialog styling */
+.confirmation-dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 300px;
+}
+
+.confirmation-dialog h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.confirmation-dialog .dialog-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.confirmation-dialog button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.confirmation-dialog .confirm-btn {
+    background-color: #1565C0;
+    color: white;
+}
+
+.confirmation-dialog .cancel-btn {
+    background-color: #666;
+    color: white;
+}
