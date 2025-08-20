@@ -110,6 +110,9 @@ fi
 echo "Checking for pip..."
 if python3 -m pip --version >/dev/null 2>&1; then
   echo "Found pip: $(python3 -m pip --version)"
+  # Always run ensurepip to ensure pip is up to date
+  echo "Running ensurepip to ensure pip is current..."
+  python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
 else
   echo "pip not found. Installing..."
   # Try ensurepip first
