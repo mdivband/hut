@@ -106,6 +106,19 @@ else
   esac
 fi
 
+# Check ensurepip and upgrade if needed
+if python3 -m ensurepip --help >/dev/null 2>&1; then
+  echo "ensurepip module available."
+else
+  echo "ensurepip not found. Installing..."
+  $UPDATE_CMD
+  case "$PKG_MANAGER" in
+    apt)     $INSTALL_CMD python3-ensurepip ;;
+    dnf|yum) $INSTALL_CMD python3-ensurepip || $INSTALL_CMD python39-pip ;;
+    pacman)  $INSTALL_CMD python-pip ;;
+  esac
+fi
+
 # Python pip
 echo "Checking for pip..."
 if command -v pip3 >/dev/null 2>&1; then
