@@ -6,7 +6,7 @@
 # - Java 17
 # - Python 3.7+
 # - DDS instance with pixi support setup (or Python 3.7+)
-# - flatc (FlatBuffers compiler)
+# - flatc v25.2+ (FlatBuffers compiler)
 
 set -e
 
@@ -71,6 +71,7 @@ if command -v python3 >/dev/null 2>&1; then
   PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
   PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
   PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+  PY_MAJOR_MINOR="${PY_MAJOR}.${PY_MINOR}"
   if [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -ge 7 ]; then
     echo "Found Python $PY_VERSION"
   else
@@ -81,6 +82,11 @@ if command -v python3 >/dev/null 2>&1; then
       dnf|yum) $INSTALL_CMD python39 ;;
       pacman)  $INSTALL_CMD python ;;
     esac
+    # Re-check version after installation
+    PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
+    PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
+    PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+    PY_MAJOR_MINOR="${PY_MAJOR}.${PY_MINOR}"
   fi
 else
   echo "Python not found. Installing Python..."
@@ -90,32 +96,32 @@ else
     dnf|yum) $INSTALL_CMD python39 ;;
     pacman)  $INSTALL_CMD python ;;
   esac
+  # Get version after installation
+  PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
+  PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
+  PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+  PY_MAJOR_MINOR="${PY_MAJOR}.${PY_MINOR}"
 fi
 
-# Python venv
-echo "Checking for Python venv..."
-if python3 -m venv --help >/dev/null 2>&1; then
-  echo "Python venv module available."
-else
-  echo "Python venv not found. Installing..."
-  $UPDATE_CMD
-  case "$PKG_MANAGER" in
-    apt)     $INSTALL_CMD python3-venv ;;
-    dnf|yum) $INSTALL_CMD python3-venv || $INSTALL_CMD python39-virtualenv ;;
-    pacman)  $INSTALL_CMD python-virtualenv ;;
-  esac
-fi
+# Python venv - always install for current Python version
+echo "Installing Python venv for version ${PY_MAJOR_MINOR}..."
+$UPDATE_CMD
+case "$PKG_MANAGER" in
+  apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
+  dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-venv" || $INSTALL_CMD python3-venv ;;
+  pacman)  $INSTALL_CMD python-virtualenv ;;
+esac
 
 # Python pip
 echo "Checking for pip..."
-if command -v pip3 >/dev/null 2>&1; then
-  echo "Found pip: $(pip3 --version)"
+if python3 -m pip --version >/dev/null 2>&1; then
+  echo "Found pip: $(python3 -m pip --version)"
 else
-  echo "pip not found. Installing..."
+  echo "pip not found. Installing via package manager..."
   $UPDATE_CMD
   case "$PKG_MANAGER" in
-    apt)     $INSTALL_CMD python3-pip ;;
-    dnf|yum) $INSTALL_CMD python3-pip ;;
+    apt)     $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
+    dnf|yum) $INSTALL_CMD "python${PY_MAJOR_MINOR}-pip" || $INSTALL_CMD python3-pip ;;
     pacman)  $INSTALL_CMD python-pip ;;
   esac
 fi
@@ -123,14 +129,53 @@ fi
 # FlatBuffers compiler (flatc)
 echo "Checking for flatc..."
 if command -v flatc >/dev/null 2>&1; then
-  echo "flatc already installed."
-else
-  echo "Installing flatc..."
-  if [ "$PKG_MANAGER" = "apt" ]; then
-    $UPDATE_CMD
-    $INSTALL_CMD flatbuffers-compiler
+  FLATC_VERSION=$(flatc --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+  FLATC_MAJOR=$(echo "$FLATC_VERSION" | cut -d. -f1)
+  FLATC_MINOR=$(echo "$FLATC_VERSION" | cut -d. -f2)
+  
+  if [ "$FLATC_MAJOR" -gt 25 ] || ([ "$FLATC_MAJOR" -eq 25 ] && [ "$FLATC_MINOR" -ge 2 ]); then
+    echo "Found flatc v$FLATC_VERSION (meets requirement v25.2+)"
   else
-    echo "Please install 'flatc' manually from https://github.com/google/flatbuffers/releases"
+    echo "Found flatc v$FLATC_VERSION but need v25.2+. Installing newer version..."
+    INSTALL_FLATC=true
+  fi
+else
+  echo "flatc not found. Installing v25.2.10..."
+  INSTALL_FLATC=true
+fi
+
+if [ "$INSTALL_FLATC" = true ]; then
+  # Download and install flatc v25.2.10
+  FLATC_URL="https://github.com/google/flatbuffers/releases/download/v25.2.10/Linux.flatc.binary.g++-13.zip"
+  TEMP_DIR=$(mktemp -d)
+  
+  echo "Downloading flatc v25.2.10 from $FLATC_URL..."
+  if command -v curl >/dev/null 2>&1; then
+    curl -L "$FLATC_URL" -o "$TEMP_DIR/flatc.zip"
+  elif command -v wget >/dev/null 2>&1; then
+    wget "$FLATC_URL" -O "$TEMP_DIR/flatc.zip"
+  else
+    echo "Neither curl nor wget found. Installing curl..."
+    $UPDATE_CMD
+    $INSTALL_CMD curl
+    curl -L "$FLATC_URL" -o "$TEMP_DIR/flatc.zip"
+  fi
+  
+  # Extract and install
+  cd "$TEMP_DIR"
+  unzip flatc.zip
+  sudo mv flatc /usr/local/bin/
+  sudo chmod +x /usr/local/bin/flatc
+  
+  # Cleanup
+  rm -rf "$TEMP_DIR"
+  
+  # Verify installation
+  if command -v flatc >/dev/null 2>&1; then
+    NEW_VERSION=$(flatc --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+    echo "flatc v$NEW_VERSION installed successfully"
+  else
+    echo "Failed to install flatc"
     exit 1
   fi
 fi

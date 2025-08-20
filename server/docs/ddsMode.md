@@ -16,7 +16,7 @@ This script will install all required dependencies and provide the running `jar`
 
 **To use this script, run the following**
 ```
-wget https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs/scripts/setup_haris.sh -O setup_haris.sh
+wget https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs/server/scripts/haris/setup_haris_linux.sh -O setup_haris.sh
 chmod +x setup_haris.sh
 ./setup_haris.sh
 ```
@@ -99,7 +99,7 @@ Edit `repo_path/server/web/scenarios/DDSTest.json` and update the `pythonPath` f
   which python
   ```
 
-### 5. Setup FlatBuffers
+### 5. Setup FlatBuffers v25.2+
 
 Inside the activated `hut-dds` environment and from the `repo_path` folder:
 ```bash/ powershell
