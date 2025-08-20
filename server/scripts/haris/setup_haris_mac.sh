@@ -140,26 +140,33 @@ else
 fi
 
 if [ "$INSTALL_FLATC" = true ]; then
-  # Download and install flatc v25.2.10 for Mac
-  FLATC_URL="https://github.com/google/flatbuffers/releases/download/v25.2.10/Mac.flatc.binary.zip"
+  FLATC_VERSION="25.2.10"
+  FLATC_URL="https://github.com/google/flatbuffers/releases/download/v${FLATC_VERSION}/Mac.flatc.binary.zip"
   TEMP_DIR=$(mktemp -d)
-  
-  echo "Downloading flatc v25.2.10 from $FLATC_URL..."
+
+  echo "Downloading flatc v$FLATC_VERSION from $FLATC_URL..."
   curl -L "$FLATC_URL" -o "$TEMP_DIR/flatc.zip"
-  
-  # Extract and install
+
   cd "$TEMP_DIR"
-  unzip flatc.zip
-  sudo mv flatc /usr/local/bin/
-  sudo chmod +x /usr/local/bin/flatc
-  
-  # Cleanup
+  unzip -q flatc.zip
+
+  # Find flatc binary after unzip
+  if [ -f flatc ]; then
+    TARGET_DIR="/usr/local/bin"
+    [ -d "/opt/homebrew/bin" ] && TARGET_DIR="/opt/homebrew/bin"
+
+    echo "Installing flatc to $TARGET_DIR..."
+    sudo mv flatc "$TARGET_DIR/"
+    sudo chmod +x "$TARGET_DIR/flatc"
+  else
+    echo "flatc binary not found in archive!"
+    exit 1
+  fi
+
   rm -rf "$TEMP_DIR"
-  
-  # Verify installation
+
   if command -v flatc >/dev/null 2>&1; then
-    NEW_VERSION=$(flatc --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
-    echo "flatc v$NEW_VERSION installed successfully"
+    echo "flatc $(flatc --version) installed successfully"
   else
     echo "Failed to install flatc"
     exit 1
