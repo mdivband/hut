@@ -129,14 +129,62 @@ fi
 # FlatBuffers compiler (flatc)
 echo "Checking for flatc..."
 if command -v flatc >/dev/null 2>&1; then
-  echo "flatc already installed."
-else
-  echo "Installing flatc..."
-  if [ "$PKG_MANAGER" = "apt" ]; then
-    $UPDATE_CMD
-    $INSTALL_CMD flatbuffers-compiler
+  FLATC_VERSION=$(flatc --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+  FLATC_MAJOR=$(echo "$FLATC_VERSION" | cut -d. -f1)
+  FLATC_MINOR=$(echo "$FLATC_VERSION" | cut -d. -f2)
+  
+  if [ "$FLATC_MAJOR" -gt 25 ] || ([ "$FLATC_MAJOR" -eq 25 ] && [ "$FLATC_MINOR" -ge 2 ]); then
+    echo "Found flatc v$FLATC_VERSION (meets requirement v25.2+)"
   else
-    echo "Please install 'flatc' manually from https://github.com/google/flatbuffers/releases"
+    echo "Found flatc v$FLATC_VERSION but need v25.2+. Installing newer version..."
+    INSTALL_FLATC=true
+  fi
+else
+  echo "flatc not found. Installing v25.2.10..."
+  INSTALL_FLATC=true
+fi
+
+if [ "$INSTALL_FLATC" = true ]; then
+  # Detect architecture
+  ARCH=$(uname -m)
+  case "$ARCH" in
+    x86_64) FLATC_ARCH="Linux.64bit" ;;
+    i386|i686) FLATC_ARCH="Linux.32bit" ;;
+    aarch64|arm64) FLATC_ARCH="Linux.ARM64" ;;
+    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+  esac
+  
+  # Download and install flatc v25.2.10
+  FLATC_URL="https://github.com/google/flatbuffers/releases/download/v25.2.10/flatc_${FLATC_ARCH}.zip"
+  TEMP_DIR=$(mktemp -d)
+  
+  echo "Downloading flatc v25.2.10 from $FLATC_URL..."
+  if command -v curl >/dev/null 2>&1; then
+    curl -L "$FLATC_URL" -o "$TEMP_DIR/flatc.zip"
+  elif command -v wget >/dev/null 2>&1; then
+    wget "$FLATC_URL" -O "$TEMP_DIR/flatc.zip"
+  else
+    echo "Neither curl nor wget found. Installing curl..."
+    $UPDATE_CMD
+    $INSTALL_CMD curl
+    curl -L "$FLATC_URL" -o "$TEMP_DIR/flatc.zip"
+  fi
+  
+  # Extract and install
+  cd "$TEMP_DIR"
+  unzip flatc.zip
+  sudo mv flatc /usr/local/bin/
+  sudo chmod +x /usr/local/bin/flatc
+  
+  # Cleanup
+  rm -rf "$TEMP_DIR"
+  
+  # Verify installation
+  if command -v flatc >/dev/null 2>&1; then
+    NEW_VERSION=$(flatc --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+    echo "flatc v$NEW_VERSION installed successfully"
+  else
+    echo "Failed to install flatc"
     exit 1
   fi
 fi
