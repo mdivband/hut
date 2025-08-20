@@ -43,17 +43,37 @@ else
   $INSTALL_CMD git
 fi
 
-# Java
 echo "Checking for Java..."
 if command -v java >/dev/null 2>&1; then
-  JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
-  echo "Found Java version $JAVA_VERSION"
+  JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' || echo "0")
+  if [[ "$JAVA_VERSION" == "0" ]]; then
+    echo "Java wrapper found, but no JDK installed. Installing OpenJDK 17..."
+    INSTALL_JAVA=true
+  elif [[ "${JAVA_VERSION%%.*}" -lt 17 ]]; then
+    echo "Found old Java version $JAVA_VERSION. Installing OpenJDK 17..."
+    INSTALL_JAVA=true
+  else
+    echo "Found valid Java version $JAVA_VERSION"
+    INSTALL_JAVA=false
+  fi
 else
   echo "Java not found. Installing OpenJDK 17..."
-  $UPDATE_CMD
+  INSTALL_JAVA=true
+fi
+
+if [ "$INSTALL_JAVA" = true ]; then
   case "$PKG_MANAGER" in
-    brew) $INSTALL_CMD openjdk@17 ;;
-    port) $INSTALL_CMD openjdk17 ;;
+    brew)
+      brew install openjdk@17
+      sudo ln -sfn "$(brew --prefix openjdk@17)/libexec/openjdk.jdk" \
+        /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+      export PATH="$(brew --prefix openjdk@17)/bin:$PATH"
+      echo "Add this to your shell profile (~/.zshrc or ~/.bashrc):"
+      echo "   export PATH=\"\$(brew --prefix openjdk@17)/bin:\$PATH\""
+      ;;
+    port)
+      sudo port install openjdk17
+      ;;
   esac
 fi
 
