@@ -145,17 +145,8 @@ else
 fi
 
 if [ "$INSTALL_FLATC" = true ]; then
-  # Detect architecture
-  ARCH=$(uname -m)
-  case "$ARCH" in
-    x86_64) FLATC_ARCH="Linux.64bit" ;;
-    i386|i686) FLATC_ARCH="Linux.32bit" ;;
-    aarch64|arm64) FLATC_ARCH="Linux.ARM64" ;;
-    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
-  esac
-  
   # Download and install flatc v25.2.10
-  FLATC_URL="https://github.com/google/flatbuffers/releases/download/v25.2.10/flatc_${FLATC_ARCH}.zip"
+  FLATC_URL="https://github.com/google/flatbuffers/releases/download/v25.2.10/Linux.flatc.binary.g++-13.zip"
   TEMP_DIR=$(mktemp -d)
   
   echo "Downloading flatc v25.2.10 from $FLATC_URL..."
