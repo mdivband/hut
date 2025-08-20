@@ -6,7 +6,7 @@
 # - Java 17
 # - Python 3.7+
 # - DDS instance with pixi support setup (or Python 3.7+)
-# - flatc (FlatBuffers compiler)
+# - flatc v25.2+ (FlatBuffers compiler)
 
 set -e
 

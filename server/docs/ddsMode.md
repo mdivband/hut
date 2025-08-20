@@ -99,7 +99,7 @@ Edit `repo_path/server/web/scenarios/DDSTest.json` and update the `pythonPath` f
   which python
   ```
 
-### 5. Setup FlatBuffers
+### 5. Setup FlatBuffers v25.2+
 
 Inside the activated `hut-dds` environment and from the `repo_path` folder:
 ```bash/ powershell
