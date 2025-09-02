@@ -1200,4 +1200,9 @@ public class Simulator {
     public void incrementCompletedTargets() {
         completedTargets++;
     }
+
+    // Getter method for the latest DDS message
+    public String getLatestDDSMessage() {
+        return this.ddsController.getLatestDDSMessage();
+    }
 }

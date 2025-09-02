@@ -17,6 +17,7 @@ This document gives an overview of the code structure and a description of each 
             + handler (Handler classes - for dealing with REST API calls)
                 - AgentHandler (Agent REST API functionality)
                 - AllocationHandler (Allocation REST API functionality)
+                - DDSHandler (DDS operations REST API functionality)
                 - ModeHandler (Operation Mode REST API functionality)
                 - PresetHandler (Handler for direct passing into a scenario)
                 - RestHandler (Abstract class - basis for other handler classes)
