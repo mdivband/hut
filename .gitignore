@@ -174,3 +174,7 @@ server/processedLogs/
 # Ignore old_dds folder and generate_sample_data_dds.py script
 **/old_dds/
 **/generate_sample_data_dds.py
+
+# Ignore site images
+**/site_images/*
+**/temp/*
