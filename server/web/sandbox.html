@@ -10,7 +10,7 @@
 
     <link rel="stylesheet" href="style.css"/>
     <link rel="stylesheet" href="lib/spop/spop.css">
-    <link rel="stylesheet" href="styles/ddsStyles.css">
+    <link rel="stylesheet" href="dds/styles/master.css">
 
     <script type="text/javascript"
             src="//maps.googleapis.com/maps/api/js?key=AIzaSyApKa49vf32gNY9MgnxXsqijN7Me168GnU&sensor=true&libraries=drawing,geometry,visualization"></script>
@@ -27,11 +27,11 @@
     
     <!-- Button Control Panel -->
     <div class="button-panel">
-        <button type="button" id="open-drone-x-view" class="control-button" data-action="Open Drone X View">Open Drone X View</button>
-        <button type="button" id="open-mission-view" class="control-button" data-action="Open Mission View">Open Mission View</button>
-        <button type="button" id="open-fire-view" class="control-button" data-action="Open Fire View">Open Fire View</button>
-        <button type="button" id="open-dds-log" class="control-button" data-action="Open DDS Log">Open DDS Log</button>
-        <button type="button" id="path-planning-view" class="control-button" data-action="Path Planning View">Path Planning View</button>
+        <button type="button" id="open-drone-x-view" class="view-button" data-action="Open Drone X View">Open Drone X View</button>
+        <button type="button" id="open-mission-view" class="view-button" data-action="Open Mission View">Open Mission View</button>
+        <button type="button" id="open-fire-view" class="view-button" data-action="Open Fire View">Open Fire View</button>
+        <button type="button" id="open-dds-log" class="view-button" data-action="Open DDS Log">Open DDS Log</button>
+        <button type="button" id="path-planning-view" class="view-button" data-action="Path Planning View">Path Planning View</button>
     </div>
     
     <div id="optimise">
@@ -62,7 +62,5 @@
         <input id="start_btn" type="button" value="Start Demo" style="margin: 2px;"/>
     </div>
 </div>
-
-<script src="dds_controls/master-view.js"></script>
 </body>
 </html>
