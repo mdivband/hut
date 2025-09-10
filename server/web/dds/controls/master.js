@@ -203,7 +203,8 @@ $(document).ready(function() {
     }
 
     // Function to build Foxglove URL with drone type and ID
-    function buildFoxgloveURL(droneType, droneId, orgId = 'soorati-lab', layoutId = null) {
+    const orgId = 'AIVE';   //'soorati-lab'; // Default organization ID
+    function buildFoxgloveURL(droneType, droneId, layoutId = null) {
         let websocketPort;
         
         // Determine websocket port based on drone type and ID
