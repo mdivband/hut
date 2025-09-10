@@ -6,39 +6,18 @@ class MissionView {
     }
 
     initializeEventListeners() {
-        // Hub Information button
-        document.getElementById('hubInfoBtn').addEventListener('click', () => {
-            this.showHubInformation();
-        });
-
-        // Manage Mission button
-        document.getElementById('manageMissionBtn').addEventListener('click', () => {
-            this.manageMission();
-        });
-
-        // Deploy STA button
-        document.getElementById('deploySTABtn').addEventListener('click', () => {
-            this.deploySTA();
-        });
-
-        // Deploy FSA button
-        document.getElementById('deployFSABtn').addEventListener('click', () => {
-            this.deployFSA();
-        });
-
-        // Deploy All button
-        document.getElementById('deployAllBtn').addEventListener('click', () => {
-            this.deployAll();
-        });
-
-        // Generate Mission Report button
-        document.getElementById('generateReportBtn').addEventListener('click', () => {
-            this.generateMissionReport();
-        });
-
-        // Abort Mission button
-        document.getElementById('abortMissionBtn').addEventListener('click', () => {
-            this.abortMission();
+        const ids = [
+            { id: 'deploySTABtn', handler: this.deploySTA.bind(this) },
+            { id: 'deployFSABtn', handler: this.deployFSA.bind(this) },
+            { id: 'deployAllBtn', handler: this.deployAll.bind(this) },
+            { id: 'generateReportBtn', handler: this.generateMissionReport.bind(this) },
+            { id: 'abortMissionBtn', handler: this.abortMission.bind(this) }
+        ];
+        ids.forEach(({ id, handler }) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('click', handler);
+            }
         });
     }
 
@@ -58,16 +37,6 @@ class MissionView {
         document.getElementById('fsaActive').textContent = "0";
         document.getElementById('fsaInactive').textContent = "0";
         document.getElementById('fsaReady').textContent = "0";
-    }
-
-    showHubInformation() {
-        console.log('Hub Information clicked');
-        // Implement hub information display
-    }
-
-    manageMission() {
-        console.log('Manage Mission clicked');
-        // Implement mission management
     }
 
     deploySTA() {
@@ -98,7 +67,47 @@ class MissionView {
     }
 }
 
+async function fetchHubStatus() {
+    try {
+        const response = await fetch('/idds/hubstatus');
+        if (response.ok) {
+            const data = await response.json();
+            // Example expected data:
+            // {
+            //   "location": "(37.7749, -122.4194)",
+            //   "operators": 2,
+            //   "sta": { "active": 3, "inactive": 1, "ready": 2 },
+            //   "fsa": { "active": 1, "inactive": 2, "ready": 1 }
+            // }
+            updateHubStatus(data);
+        } else {
+            console.error('Failed to fetch hub status:', response.status);
+        }
+    } catch (error) {
+        console.error('Error fetching hub status:', error);
+    }
+}
+
+// Update the DOM with hub status data
+function updateHubStatus(data) {
+    document.getElementById('positionValue').textContent = data.location || "Unknown";
+    document.getElementById('operatorValue').textContent = data.operators ?? "0";
+    document.getElementById('staActive').textContent = data.sta?.active ?? "0";
+    document.getElementById('staInactive').textContent = data.sta?.inactive ?? "0";
+    document.getElementById('staReady').textContent = data.sta?.ready ?? "0";
+    document.getElementById('fsaActive').textContent = data.fsa?.active ?? "0";
+    document.getElementById('fsaInactive').textContent = data.fsa?.inactive ?? "0";
+    document.getElementById('fsaReady').textContent = data.fsa?.ready ?? "0";
+}
+
+// Add this to MissionView class (or outside if you prefer)
+function startHubStatusPolling() {
+    fetchHubStatus();
+    setInterval(fetchHubStatus, 5000); // Poll every 5 seconds
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new MissionView();
+    startHubStatusPolling();
 });

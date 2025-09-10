@@ -12,6 +12,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 import tool.GsonUtils;
 
@@ -707,6 +710,67 @@ public class DDSController extends AbstractController {
                     break;
             }
         }
+    }
+
+    /** Compile the hub status json object
+        Example expected data:
+        {
+        "location": "(37.7749, -122.4194)",
+        "operators": 2,
+        "sta": { "active": 3, "inactive": 1, "ready": 2 },
+        "fsa": { "active": 1, "inactive": 2, "ready": 1 }
+        }
+        @return JsonObject representing the hub status
+      */
+    public JsonObject getHubStatus() {
+        JsonObject hubStatus = new JsonObject();
+        hubStatus.addProperty("location", this.simulator.getState().getGameCentre().toString());
+        hubStatus.addProperty("operators", 2);
+
+        int staActive = 0, staInactive = 0, staReady = 0;
+        int fsaActive = 0, fsaInactive = 0, fsaReady = 0;
+
+        synchronized (dataLock) {
+            Object agentsObj = extractedDDSData.get("agents");
+            if (agentsObj instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<java.util.HashMap<String, Object>> agents = (List<java.util.HashMap<String, Object>>) agentsObj;
+                for (java.util.HashMap<String, Object> agent : agents) {
+                    String agentId = (String) agent.get("agent_id");
+                    // Assuming status: 0=active, 1=inactive, 2=ready
+                    Integer status = (Integer) agent.get("status");
+                    if (agentId != null) {
+                        if (agentId.toUpperCase().contains("STA")) {
+                            if (status != null) {
+                                if (status == 0) staActive++;
+                                else if (status == 1) staInactive++;
+                                else if (status == 2) staReady++;
+                            }
+                        } else if (agentId.toUpperCase().contains("FSA")) {
+                            if (status != null) {
+                                if (status == 0) fsaActive++;
+                                else if (status == 1) fsaInactive++;
+                                else if (status == 2) fsaReady++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        JsonObject sta = new JsonObject();
+        sta.addProperty("active", staActive);
+        sta.addProperty("inactive", staInactive);
+        sta.addProperty("ready", staReady);
+        hubStatus.add("sta", sta);
+
+        JsonObject fsa = new JsonObject();
+        fsa.addProperty("active", fsaActive);
+        fsa.addProperty("inactive", fsaInactive);
+        fsa.addProperty("ready", fsaReady);
+        hubStatus.add("fsa", fsa);
+
+        return hubStatus;
     }
 
     // Return the latest DDS message

@@ -36,6 +36,9 @@ public class DDSHandler extends RestHandler {
             case "/latest":
                 handleLatest(resp);
                 break;
+            case "/hubstatus":
+                handleHubStatus(resp);
+                break;
             default:
                 throw new UnregisteredPathException("No method for handling GET request on " + req.getPath());
         }
@@ -61,5 +64,12 @@ public class DDSHandler extends RestHandler {
         String latestMessage = this.simulator.getLatestDDSMessage();
         resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
         resp.send(200, latestMessage);
+    }
+
+    // Handle hub status request.
+    private void handleHubStatus(Response resp) throws IOException {
+        JsonObject status = this.simulator.getHubStatus();
+        resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
+        resp.send(200, status.toString());
     }
 }
