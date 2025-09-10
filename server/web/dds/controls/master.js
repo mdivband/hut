@@ -1,7 +1,8 @@
 $(document).ready(function() {
     // Button state tracking
     const buttonStates = {
-        'open-drone-x-view': false,
+        'open-FSA-1-view': false,
+        'open-STA-1-view': false,
         'open-mission-view': false,
         'open-fire-view': false,
         'open-dds-log': false,
@@ -11,22 +12,33 @@ $(document).ready(function() {
     // Window references for tracking opened windows
     const windowReferences = {
         'open-dds-log': null,
-        'open-mission-view': null
+        'open-mission-view': null,
+        'open-drone-x-view': null
     };
 
     // Function to open windows based on button ID
     function openWindow(buttonId) {
         let url = '';
         let windowName = '';
-        
+
         switch(buttonId) {
             case 'open-dds-log':
-                url = 'dds/views/log.html';  // Relative path from controls to views
+                url = 'dds/views/log.html';
                 windowName = 'DDSLogView';
                 break;
             case 'open-mission-view':
-                url = 'dds/views/mission.html';  // Relative path from controls to views
+                url = 'dds/views/mission.html';
                 windowName = 'MissionView';
+                break;
+            case 'open-FSA-1-view':
+                url = buildFoxgloveURL('FSA', 1, 'soorati-lab', null);
+                console.log('Opening Foxglove FSA-1 URL:', url);
+                windowName = 'ws://localhost:9201 | Foxglove';
+                break;
+            case 'open-STA-1-view':
+                url = buildFoxgloveURL('STA', 1, 'soorati-lab', null);
+                console.log('Opening Foxglove STA-1 URL:', url);
+                windowName = 'ws://localhost:9101 | Foxglove';
                 break;
             default:
                 return false;
@@ -40,25 +52,28 @@ $(document).ready(function() {
                         menubar=yes,toolbar=yes,status=yes`;
         windowReferences[buttonId] = window.open(url, windowName, windowFeatures);
 
-        
         // Check if window was blocked by popup blocker
         if (!windowReferences[buttonId]) {
             alert('Popup blocked! Please allow popups for this site and try again.');
             return false;
         }
         
-        // Monitor if the window is closed by user (not programmatically)
-        const checkClosed = setInterval(function() {
-            if (windowReferences[buttonId].closed) {
-                clearInterval(checkClosed);
-                // Reset button state if window was closed by user
-                if (buttonStates[buttonId]) {
-                    const button = $('#' + buttonId);
-                    const originalAction = button.data('action');
-                    toggleButton(buttonId, originalAction, true);
+        // Only monitor window closed by user if NOT FSA or STA in buttonId
+        if (!/FSA|STA/i.test(buttonId)) {
+            const checkClosed = setInterval(function() {
+                if (windowReferences[buttonId].closed) {
+                    clearInterval(checkClosed);
+                    // Reset button state if window was closed by user
+                    if (buttonStates[buttonId]) {
+                        // Only log if the button state was open
+                        console.log('Window closed by user:', buttonId);
+                        const button = $('#' + buttonId);
+                        const originalAction = button.data('action');
+                        toggleButton(buttonId, originalAction, true);
+                    }
                 }
-            }
-        }, 1000);
+            }, 1000);
+        }
         
         return true;
     }
@@ -77,6 +92,7 @@ $(document).ready(function() {
     function toggleButton(buttonId, action, skipWindowAction = false) {
         const button = $('#' + buttonId);
         const isOpen = buttonStates[buttonId];
+        console.log(`Toggling button: ${buttonId}, Current state: ${isOpen}, Action: ${action}`);
 
         if (!isOpen) {
             // Opening - change to red and update text
@@ -92,7 +108,13 @@ $(document).ready(function() {
             buttonStates[buttonId] = true;
             
             // Handle window opening for supported buttons
-            if ((buttonId === 'open-dds-log' || buttonId === 'open-mission-view') && !skipWindowAction) {
+            if (
+                buttonId === 'open-dds-log' ||
+                buttonId === 'open-mission-view' ||
+                buttonId === 'open-drone-x-view' ||
+                buttonId === 'open-FSA-1-view' ||
+                buttonId === 'open-STA-1-view'
+            ) {
                 const success = openWindow(buttonId);
                 if (!success) {
                     // Revert button state if window opening failed
@@ -113,7 +135,8 @@ $(document).ready(function() {
             buttonStates[buttonId] = false;
             
             // Handle window closing for supported buttons
-            if ((buttonId === 'open-dds-log' || buttonId === 'open-mission-view') && !skipWindowAction) {
+            if ((buttonId === 'open-dds-log' || buttonId === 'open-mission-view' 
+                || buttonId === 'open-drone-x-view') && !skipWindowAction) {
                 closeWindow(buttonId);
             }
             
@@ -177,6 +200,36 @@ $(document).ready(function() {
                 callback(false);
             }
         });
+    }
+
+    // Function to build Foxglove URL with drone type and ID
+    function buildFoxgloveURL(droneType, droneId, orgId = 'soorati-lab', layoutId = null) {
+        let websocketPort;
+        
+        // Determine websocket port based on drone type and ID
+        switch(droneType.toUpperCase()) {
+            case 'STA':
+                websocketPort = 9100 + parseInt(droneId);
+                break;
+            case 'FSA':
+                websocketPort = 9200 + parseInt(droneId);
+                break;
+            default:
+                throw new Error(`Unknown drone type: ${droneType}. Supported types: STA, FSA`);
+        }
+        
+        const baseURL = 'https://app.foxglove.dev';
+        const websocketURL = `ws://localhost:${websocketPort}`;
+        const encodedWebsocketURL = encodeURIComponent(websocketURL);
+        
+        let url = `${baseURL}/${orgId}/view?ds=foxglove-websocket&ds.url=${encodedWebsocketURL}`;
+        
+        // Add layout ID if provided
+        if (layoutId) {
+            url += `&layoutId=${layoutId}`;
+        }
+        
+        return url;
     }
 
     // Function to capitalize first letter of each word
