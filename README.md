@@ -1,6 +1,6 @@
 # HARIS with DDS Support Documentation
 
-### Descrition
+### Description
 This repository contains a version of HARIS that supports updating the state of the Simulator using infrormation from a DDS (Data Distribution Service) framework.
 
 For more information about **HARIS**, go to the `Master` branch.
