@@ -1,8 +1,8 @@
 $(document).ready(function() {
     // Button state tracking
     const buttonStates = {
-        'open-FSA-1-view': false,
         'open-STA-1-view': false,
+        'open-FSA-1-view': false,
         'open-mission-view': false,
         'open-fire-view': false,
         'open-dds-log': false,
@@ -30,15 +30,15 @@ $(document).ready(function() {
                 url = 'dds/views/mission.html';
                 windowName = 'MissionView';
                 break;
-            case 'open-FSA-1-view':
-                url = buildFoxgloveURL('FSA', 1, 'soorati-lab', null);
-                console.log('Opening Foxglove FSA-1 URL:', url);
-                windowName = 'ws://localhost:9201 | Foxglove';
-                break;
             case 'open-STA-1-view':
                 url = buildFoxgloveURL('STA', 1, 'soorati-lab', null);
                 console.log('Opening Foxglove STA-1 URL:', url);
                 windowName = 'ws://localhost:9101 | Foxglove';
+                break;
+            case 'open-FSA-1-view':
+                url = buildFoxgloveURL('FSA', 1, 'soorati-lab', null);
+                console.log('Opening Foxglove FSA-1 URL:', url);
+                windowName = 'ws://localhost:9201 | Foxglove';
                 break;
             default:
                 return false;
@@ -112,8 +112,8 @@ $(document).ready(function() {
                 buttonId === 'open-dds-log' ||
                 buttonId === 'open-mission-view' ||
                 buttonId === 'open-drone-x-view' ||
-                buttonId === 'open-FSA-1-view' ||
-                buttonId === 'open-STA-1-view'
+                buttonId === 'open-STA-1-view' ||
+                buttonId === 'open-FSA-1-view'
             ) {
                 const success = openWindow(buttonId);
                 if (!success) {
@@ -203,7 +203,8 @@ $(document).ready(function() {
     }
 
     // Function to build Foxglove URL with drone type and ID
-    function buildFoxgloveURL(droneType, droneId, orgId = 'soorati-lab', layoutId = null) {
+    const orgId = 'AIVE';   //'soorati-lab'; // Default organization ID
+    function buildFoxgloveURL(droneType, droneId, layoutId = null) {
         let websocketPort;
         
         // Determine websocket port based on drone type and ID
