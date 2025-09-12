@@ -1,0 +1,155 @@
+/* Base View container styling 
+ * This styles defines the background image and all other properties of the base view container
+*/
+.view-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    background-image: url('../resources/drone_img.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* View title styling 
+ * This styles the current view Title in the Top layer of the page
+*/
+.view-title {
+    background: rgba(217, 217, 217, 0.95);
+    color: #333;
+    font-size: 30px;
+    font-weight: bold;
+    padding: 40px 15px 25px 15px;
+    border-radius: 100px;
+    margin: -15px 0 55px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    position: relative;
+    width: 100%;
+    text-align: center;
+    z-index: 10;
+    cursor: default;
+}
+
+/* Content Title Styles to manage container titles 
+* This styles the content titles - it will be used majorly inside content containers
+*/
+.content-title {
+    background: #1565C0;
+    color: white;
+    border: none;
+    margin: 0px auto 30px auto;
+    border-radius: 25px;
+    padding: 15px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    max-width: 150px;
+    text-align: center;
+    cursor: default;
+}
+
+/* Confirmation dialog styling */
+.confirmation-dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 300px;
+}
+
+.confirmation-dialog h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.confirmation-dialog .dialog-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.confirmation-dialog button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.confirmation-dialog .confirm-btn {
+    background-color: #1565C0;
+    color: white;
+}
+
+.confirmation-dialog .cancel-btn {
+    background-color: #666;
+    color: white;
+}
+
+/* Master view specific styling */
+.button-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.view-button {
+    background-color: #1565C0;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    min-width: 120px;
+}
+
+.view-button:hover {
+    background-color: #0D47A1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.view-button.open {
+    background-color: #D32F2F;
+}
+
+.view-button.open:hover {
+    background-color: #B71C1C;
+}
+
+#map_canvas {
+    width: 100%;
+    height: 100vh;
+    background: transparent;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .button-panel {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .control-button {
+        min-width: 200px;
+    }
+}

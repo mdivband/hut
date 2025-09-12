@@ -16,6 +16,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonObject;
+
 /**
  * This is the core code for the mainloop and loading of the simulator
  * @author Feng Wu
@@ -1199,5 +1201,15 @@ public class Simulator {
 
     public void incrementCompletedTargets() {
         completedTargets++;
+    }
+
+    // Getter method for the latest DDS message
+    public String getLatestDDSMessage() {
+        return this.ddsController.getLatestDDSMessage();
+    }
+
+    // Getter method for the Hub status from DDS
+    public JsonObject getHubStatus() {
+        return this.ddsController.getHubStatus();
     }
 }

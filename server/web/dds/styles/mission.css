@@ -1,0 +1,171 @@
+/* Reset body margins and ensure full coverage */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+.ui-layout-center {
+    background-image: none !important;
+}
+
+/* Mission Parameter View Styles */
+.mission-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    max-width: 1200px;
+    width: 100%;
+    position: relative;
+    padding: 0 20px;
+}
+
+/* Hub Container Styles */
+.hub-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: static;
+}
+
+/* Status Panel Styles */
+.status-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    min-width: 300px;
+    max-width: 350px;
+    position: relative;
+}
+
+.status-section {
+    margin-bottom: 25px;
+}
+
+.status-section:last-child {
+    margin-bottom: 0;
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.status-label {
+    font-weight: bold;
+    color: #333;
+}
+
+.vehicle-type {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1565C0;
+    margin-bottom: 10px;
+}
+
+.status-value {
+    color: #666;
+}
+
+/* 
+* Controls Container Styles 
+* Contains the Manage mission texts, buttons, and abort button
+*/
+.controls-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-left: 50px;
+    position: relative;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Defines the spacing between manage mission buttons except for abort */
+    gap: 80px 40px;                 
+    min-width: 350px;
+}
+
+.mission-button {
+    background: linear-gradient(135deg, #1565C0, #2196F3);
+    color: white;
+    border: none;
+    border-radius: 40px;
+    padding: 15px 20px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    min-width: 120px;
+    min-height: 80px;
+}
+
+.mission-button:hover {
+    background: linear-gradient(135deg, #0D47A1, #1976D2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(21, 101, 192, 0.4);
+}
+
+/* Abort Button Styles 
+ * Abort has its own container that controls its position in the controls container
+*/
+.abort-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Always add the gap from controls-container */
+    margin: 60px auto 5px; 
+    width: 100%;
+}
+
+.abort-button {
+    background: linear-gradient(135deg, #FF4444, #FF6666) !important;
+    font-size: 30px;
+    font-weight: bold;
+    padding: 50px;
+    border-radius: 50px;
+    min-width: 150px;
+    min-height: 150px;
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3) !important;
+}
+
+.abort-button:hover {
+    background: linear-gradient(135deg, #CC0000, #FF3333) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 68, 68, 0.4) !important;
+}
+
+/* Mission View Responsive Design */
+@media (max-width: 768px) {
+    .mission-content {
+        flex-direction: column;
+        align-items: center;
+        padding: 0 10px;
+    }
+    
+    .controls-container {
+        margin-left: 0;
+    }
+    
+    .top-buttons {
+        position: static;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .controls-grid {
+        grid-template-columns: 1fr;
+        min-width: 250px;
+    }
+}

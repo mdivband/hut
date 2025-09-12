@@ -15,8 +15,25 @@ A setup script is now provided for automated setup on linux.
 This script will install all required dependencies and provide the running `jar` command.
 
 **To use this script, run the following**
+```bash
+wget https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs_dev/server/scripts/haris/setup_haris_linux.sh -O setup_haris.sh
+chmod +x setup_haris.sh
+./setup_haris.sh
 ```
-wget https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs/server/scripts/haris/setup_haris_linux.sh -O setup_haris.sh
+
+## macOS
+A setup script is also available for automated setup on macOS.
+
+This script will install all required dependencies using Homebrew (or MacPorts) and provide the running `jar` command.
+
+**Prerequisites:** Install Homebrew first (if not already installed):
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**To use the macOS setup script, run the following:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs_dev/server/scripts/haris/setup_haris_mac.sh -o setup_haris.sh
 chmod +x setup_haris.sh
 ./setup_haris.sh
 ```

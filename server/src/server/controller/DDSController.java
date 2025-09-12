@@ -6,11 +6,15 @@ import server.model.agents.Agent;
 import server.model.agents.AgentVirtual;
 import server.model.State;
 import tool.DDSListener;
+import tool.DDSUtils;
 import tool.PythonExecutor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 import tool.GsonUtils;
 
@@ -28,6 +32,7 @@ public class DDSController extends AbstractController {
     private volatile boolean dataReceived = false;
     private volatile boolean isProcessing = false;
     private String dataBuffer = "";
+    private String latestDDSMsg = "";
     private final Object dataLock = new Object();
     private double executionRate = 0.1; // Executor thread sleep rate in seconds
     
@@ -39,6 +44,7 @@ public class DDSController extends AbstractController {
     [agentId, lat, lng, heading, altitude, batteryLevel]
     */
     private List<List<Object>> agentDataList = new ArrayList<>();
+    private java.util.HashMap<String, Object> extractedDDSData = new java.util.HashMap<>();
     
     // Mapping of DDS agent IDs to simulator agent IDs
     private java.util.Map<String, String> ddsToSimulatorAgentIdMap = new java.util.HashMap<>();
@@ -49,13 +55,38 @@ public class DDSController extends AbstractController {
         this.publisherExecutor = new PythonExecutor();
     }
 
+    // Return the extracted DDS data hashmap
+    public java.util.HashMap<String, Object> getExtractedDDSData() {
+        synchronized (dataLock) {
+            return new java.util.HashMap<>(extractedDDSData);
+        }
+    }
+
     /**
-     * Gets the current agent data list
+     * Gets the current agent data list (for backward compatibility)
      * @return List of agent data where each agent is represented as a list of objects
      */
     public List<List<Object>> getAgentDataList() {
         synchronized (dataLock) {
-            return new ArrayList<>(agentDataList); // Return a copy for thread safety
+            List<List<Object>> agentDataList = new ArrayList<>();
+            Object agentsObj = extractedDDSData.get("agents");
+            if (agentsObj instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<java.util.HashMap<String, Object>> agents = 
+                    (List<java.util.HashMap<String, Object>>) agentsObj;
+                
+                for (java.util.HashMap<String, Object> agent : agents) {
+                    List<Object> agentData = new ArrayList<>();
+                    agentData.add(agent.get("agent_id"));
+                    agentData.add(agent.get("lat"));
+                    agentData.add(agent.get("lng"));
+                    agentData.add(agent.get("heading"));
+                    agentData.add(agent.get("altitude"));
+                    agentData.add(agent.get("battery_level"));
+                    agentDataList.add(agentData);
+                }
+            }
+            return agentDataList;
         }
     }
 
@@ -160,7 +191,9 @@ public class DDSController extends AbstractController {
      */
     public void stop() {
         isRunning = false;
-        
+        // Update message to stopped state
+        updateLatestDDSMessage("", "stopped");
+
         // Stop the persistent Python listener first
         try {
             ddsListener.stopPersistentListener();
@@ -184,10 +217,10 @@ public class DDSController extends AbstractController {
             }
         }
         
-        // Clear DDS agent mapping
+        // Clear DDS agent mapping and extracted data
         synchronized (dataLock) {
             ddsToSimulatorAgentIdMap.clear();
-            agentDataList.clear();
+            extractedDDSData.clear();
         }
         
         LOGGER.info(String.format("%s; DDSSTP; DDS Controller stopped", 
@@ -375,8 +408,10 @@ public class DDSController extends AbstractController {
                 if (pythonOutput.contains(
                     "No data received - publisher may not be active")) {
                     handleNoPublisherWarning();
+                    updateLatestDDSMessage(pythonOutput, "no_publisher");
                 } else if (pythonOutput.contains("No data received")) {
                     handleNoDataWarning();
+                    updateLatestDDSMessage(pythonOutput, "no_data");
                 } else if (pythonOutput.contains("FlatBuffer Data received for") ||
                            pythonOutput.contains("String Data:")) {
                     // Actual data received - update buffer and flag
@@ -389,6 +424,8 @@ public class DDSController extends AbstractController {
                             simulator.getState().getTime(), 
                             pythonOutput.length()));
                     }
+                    // Update message after parsing data
+                    updateLatestDDSMessage(pythonOutput, "valid_data");
                 } else {
                     // Log unrecognized patterns for debugging
                     LOGGER.fine(String.format(
@@ -449,86 +486,45 @@ public class DDSController extends AbstractController {
     }
 
     /**
-     * Parses JSON data and extracts agent information into the class member agentDataList
+     * Parses JSON data and extracts agent information using DDSUtils HashMap approach
      * @param data The raw DDS data containing JSON
      * @return true if parsing was successful, false otherwise
      */
     private boolean parseAndExtractAgentData(String data) {
         try {
-            // Extract JSON part from the data (skip the header line)
-            String jsonData = data;
-            if (data.contains("{")) {
-                jsonData = data.substring(data.indexOf("{"));
+            // Use DDSUtils to extract data into HashMap
+            java.util.HashMap<String, Object> newExtractedData = DDSUtils.extractDDSData(data);
+            
+            if (newExtractedData.isEmpty()) {
+                LOGGER.warning(String.format(
+                    "%s; DDSWRN; Failed to extract DDS data - validation failed or invalid format",
+                    simulator.getState().getTime()));
+                return false;
             }
             
-            // Parse the JSON data using GsonUtils
-            Object jsonObject = GsonUtils.fromJson(jsonData);
-            
-            // Extract agents array
-            Object agentsArray = GsonUtils.getValue(jsonObject, "agents");
-            
-            if (agentsArray instanceof java.util.List) {
-                java.util.List<?> agentsList = (java.util.List<?>) agentsArray;
+            // Update the class member with extracted data
+            synchronized (dataLock) {
+                extractedDDSData.clear();
+                extractedDDSData.putAll(newExtractedData);
                 
-                // Clear previous data and update the class member
-                synchronized (dataLock) {
-                    agentDataList.clear();
-                    
-                    // Process each agent
-                    for (Object agentElement : agentsList) {
-                        if (agentElement instanceof java.util.Map) {
-                            java.util.Map<?, ?> agent = (java.util.Map<?, ?>) agentElement;
-                            
-                            // Extract agent data using GsonUtils
-                            String agentId = (String) GsonUtils.getValue(agent, "agent_id");
-                            Object coordinateObj = GsonUtils.getValue(agent, "coordinate");
-                            
-                            double lat = 0.0, lng = 0.0;
-                            if (coordinateObj instanceof java.util.Map) {
-                                java.util.Map<?, ?> coordinate = (java.util.Map<?, ?>) coordinateObj;
-                                lat = ((Number) GsonUtils.getValue(coordinate, "lat")).doubleValue();
-                                lng = ((Number) GsonUtils.getValue(coordinate, "lng")).doubleValue();
-                            }
-                            
-                            double heading = ((Number) GsonUtils.getValue(agent, "heading")).doubleValue();
-                            double altitude = ((Number) GsonUtils.getValue(agent, "altitude")).doubleValue();
-                            double batteryLevel = ((Number) GsonUtils.getValue(
-                                    agent, "battery_level")).doubleValue();
-                            
-                            // Create list for this agent's data
-                            List<Object> agentData = new ArrayList<>();
-                            agentData.add(agentId);
-                            agentData.add(lat);
-                            agentData.add(lng);
-                            agentData.add(heading);
-                            agentData.add(altitude);
-                            agentData.add(batteryLevel);
-                            
-                            agentDataList.add(agentData);
-                            
-                            // Print agent information instead of logging
-                            // System.out.printf(
-                            //     "Agent: %s, Coordinate: (%.6f, %.6f), Heading: %.1f°, Altitude: %.1fm, Battery: %.1f%%%n",
-                            //     agentId, lat, lng, heading, altitude, batteryLevel * 100);
-                        }
-                    }
-                    
-                    // Print success message instead of logging
-                    // System.out.printf(
-                    //     "Successfully processed %d agents from DDS data%n", 
-                    //     agentDataList.size());
+                // Log success
+                Object agentsObj = extractedDDSData.get("agents");
+                int agentCount = 0;
+                if (agentsObj instanceof List) {
+                    agentCount = ((List<?>) agentsObj).size();
                 }
                 
-                return true; // Success
+                LOGGER.info(String.format(
+                    "%s; DDSEX; Successfully extracted %d agents from DDS data", 
+                    simulator.getState().getTime(), agentCount));
             }
             
-            return false; // No agents array found
+            return true; // Success
                 
         } catch (Exception e) {
             LOGGER.severe(String.format(
-                "%s; DDSER; Failed to parse DDS JSON data; %s",
+                "%s; DDSER; Failed to parse DDS data using DDSUtils; %s",
                 simulator.getState().getTime(), e.getMessage()));
-            // System.out.println("Raw data: " + data);
             return false; // Failure
         }
     }
@@ -556,33 +552,29 @@ public class DDSController extends AbstractController {
     }
 
     /**
-     * Updates the simulator with agent data from DDS
-     * Creates new agents if they don't exist, or adds coordinates to existing agent routes
-     * Expected agentDataList structure: [agentId, lat, lng, heading, altitude, batteryLevel]
+     * Updates the simulator with agent data from DDS using the extracted HashMap data
      * @return true if simulator was updated successfully, false if no agent data to process
      */
     public boolean updateSimulator() {
         synchronized (dataLock) {
-            if (agentDataList.isEmpty()) {
+            Object agentsObj = extractedDDSData.get("agents");
+            if (!(agentsObj instanceof List) || ((List<?>) agentsObj).isEmpty()) {
                 return false; // No agent data to process
             }
 
-            for (List<Object> agentData : agentDataList) {
-                if (agentData.size() < 6) {
-                    LOGGER.warning(String.format(
-                        "%s; DDSWRN; Invalid agent data structure, expected 6 elements, got %d", 
-                        simulator.getState().getTime(), agentData.size()));
-                    continue;
-                }
+            @SuppressWarnings("unchecked")
+            List<java.util.HashMap<String, Object>> agents = 
+                (List<java.util.HashMap<String, Object>>) agentsObj;
 
+            for (java.util.HashMap<String, Object> agentData : agents) {
                 try {
-                    // Extract agent data
-                    String ddsAgentId = (String) agentData.get(0);
-                    double lat = ((Number) agentData.get(1)).doubleValue();
-                    double lng = ((Number) agentData.get(2)).doubleValue();
-                    double heading = ((Number) agentData.get(3)).doubleValue();
-                    double altitude = ((Number) agentData.get(4)).doubleValue();
-                    double batteryLevel = ((Number) agentData.get(5)).doubleValue();
+                    // Extract agent data from HashMap
+                    String ddsAgentId = (String) agentData.get("agent_id");
+                    double lat = (Double) agentData.get("lat");
+                    double lng = (Double) agentData.get("lng");
+                    double heading = (Double) agentData.get("heading");
+                    double altitude = (Double) agentData.get("altitude");
+                    double batteryLevel = ((Integer) agentData.get("battery_level")).doubleValue();
 
                     // Create coordinate for this agent
                     Coordinate agentCoordinate = new Coordinate(lat, lng);
@@ -634,7 +626,7 @@ public class DDSController extends AbstractController {
 
             LOGGER.info(String.format(
                 "%s; DDSSIM; Updated simulator with %d agents from DDS data", 
-                simulator.getState().getTime(), agentDataList.size()));
+                simulator.getState().getTime(), agents.size()));
             return true; // Successfully updated simulator
         }
     }
@@ -662,6 +654,129 @@ public class DDSController extends AbstractController {
                 "%s; DDSND; No DDS data received - publisher may be inactive", 
                 simulator.getState().getTime()));
             lastNoDataWarningTime = currentTime;
+        }
+    }
+
+
+    /**
+     * Updates the latest DDS message based on controller state and data
+     * @param rawMessage The raw message from the DDS listener for error reporting if needed
+     * @param messageType Type of message: "stopped", "no_publisher", "no_data", "valid_data"
+     */
+    private void updateLatestDDSMessage(String rawMessage, String messageType) {
+        synchronized (dataLock) {
+            String timestamp = DDSUtils.parseTime(simulator.getState().getTime());
+            
+            switch (messageType) {
+                case "stopped":
+                    latestDDSMsg = "DDS Controller Stopped";
+                    break;
+                    
+                case "no_publisher":
+                    latestDDSMsg = "Publisher may not be active";
+                    break;
+                    
+                case "no_data":
+                    latestDDSMsg = String.format(
+                        "[%s] No DDS data received - waiting for publisher", 
+                        timestamp);
+                    break;
+                    
+                case "valid_data":
+                    // Format the JSON message with timestamp and agent count
+                    try {
+                        // Get agent count from extracted data
+                        int agentCount = 0;
+                        Object agentsObj = extractedDDSData.get("agents");
+                        if (agentsObj instanceof List) {
+                            agentCount = ((List<?>) agentsObj).size();
+                        }
+                        
+                        // Use DDSUtils to build formatted message
+                        String formattedMessage = DDSUtils.buildDDSMsgString(extractedDDSData);
+                        latestDDSMsg = String.format("[%s] DDS Data received - %d agents: %s", 
+                            timestamp, agentCount, formattedMessage);
+                    } catch (Exception e) {
+                        latestDDSMsg = String.format(
+                            "[%s] DDS Data received (parsing error): %s", 
+                            timestamp, rawMessage.substring(
+                                0, Math.min(100, rawMessage.length())));
+                    }
+                    break;
+                    
+                default:
+                    latestDDSMsg = String.format("[%s] Unknown DDS status: %s", 
+                                                 timestamp, rawMessage);
+                    break;
+            }
+        }
+    }
+
+    /** Compile the hub status json object
+        Example expected data:
+        {
+        "location": "(37.7749, -122.4194)",
+        "operators": 2,
+        "sta": { "active": 3, "inactive": 1, "ready": 2 },
+        "fsa": { "active": 1, "inactive": 2, "ready": 1 }
+        }
+        @return JsonObject representing the hub status
+      */
+    public JsonObject getHubStatus() {
+        JsonObject hubStatus = new JsonObject();
+        hubStatus.addProperty("location", this.simulator.getState().getGameCentre().toString());
+        hubStatus.addProperty("operators", 2);
+
+        int staActive = 0, staInactive = 0, staReady = 0;
+        int fsaActive = 0, fsaInactive = 0, fsaReady = 0;
+
+        synchronized (dataLock) {
+            Object agentsObj = extractedDDSData.get("agents");
+            if (agentsObj instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<java.util.HashMap<String, Object>> agents = (List<java.util.HashMap<String, Object>>) agentsObj;
+                for (java.util.HashMap<String, Object> agent : agents) {
+                    String agentId = (String) agent.get("agent_id");
+                    // Assuming status: 0=active, 1=inactive, 2=ready
+                    Integer status = (Integer) agent.get("status");
+                    if (agentId != null) {
+                        if (agentId.toUpperCase().contains("STA")) {
+                            if (status != null) {
+                                if (status == 0) staActive++;
+                                else if (status == 1) staInactive++;
+                                else if (status == 2) staReady++;
+                            }
+                        } else if (agentId.toUpperCase().contains("FSA")) {
+                            if (status != null) {
+                                if (status == 0) fsaActive++;
+                                else if (status == 1) fsaInactive++;
+                                else if (status == 2) fsaReady++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        JsonObject sta = new JsonObject();
+        sta.addProperty("active", staActive);
+        sta.addProperty("inactive", staInactive);
+        sta.addProperty("ready", staReady);
+        hubStatus.add("sta", sta);
+
+        JsonObject fsa = new JsonObject();
+        fsa.addProperty("active", fsaActive);
+        fsa.addProperty("inactive", fsaInactive);
+        fsa.addProperty("ready", fsaReady);
+        hubStatus.add("fsa", fsa);
+
+        return hubStatus;
+    }
+
+    // Return the latest DDS message
+    public String getLatestDDSMessage() {
+        synchronized (dataLock) {
+            return latestDDSMsg;
         }
     }
 }

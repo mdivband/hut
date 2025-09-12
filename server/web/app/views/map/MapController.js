@@ -16,16 +16,17 @@ var MapController = {
      */
     bind: function (context) {
         this.bindEvents = _.bind(this.bindEvents, context);
-        this.onRunAutoAllocationClick = _.bind(this.onRunAutoAllocationClick, context);
-        this.onAllocationUndoClick = _.bind(this.onAllocationUndoClick, context);
-        this.onAllocationRedoClick = _.bind(this.onAllocationRedoClick, context);
-        this.onAllocationResetClick = _.bind(this.onAllocationResetClick, context);
-        this.onConfirmAllocationClick = _.bind(this.onConfirmAllocationClick, context);
-        this.onViewModePressed = _.bind(this.onViewModePressed, context);
-        this.onMonitorModePressed = _.bind(this.onMonitorModePressed, context);
-        this.onScanModePressed = _.bind(this.onScanModePressed, context)
-        this.onEditModePressed = _.bind(this.onEditModePressed, context);
+        // this.onRunAutoAllocationClick = _.bind(this.onRunAutoAllocationClick, context);
+        // this.onAllocationUndoClick = _.bind(this.onAllocationUndoClick, context);
+        // this.onAllocationRedoClick = _.bind(this.onAllocationRedoClick, context);
+        // this.onAllocationResetClick = _.bind(this.onAllocationResetClick, context);
+        // this.onConfirmAllocationClick = _.bind(this.onConfirmAllocationClick, context);
+        // this.onViewModePressed = _.bind(this.onViewModePressed, context);
+        // this.onMonitorModePressed = _.bind(this.onMonitorModePressed, context);
+        // this.onScanModePressed = _.bind(this.onScanModePressed, context)
+        // this.onEditModePressed = _.bind(this.onEditModePressed, context);
         this.swapMode = _.bind(this.swapMode, context);
+        this.showMap = _.bind(this.showMap, context);
         this.onTick = _.bind(this.onTick, context);
         this.onMapLeftClick = _.bind(this.onMapLeftClick, context);
         this.onMapRightClick = _.bind(this.onMapRightClick, context);
@@ -35,9 +36,9 @@ var MapController = {
         this.onTempAllocationChange = _.bind(this.onTempAllocationChange, context);
         this.onUndoRedoAvailableChange = _.bind(this.onUndoRedoAvailableChange, context);
         this.updateUIFeatures = _.bind(this.updateUIFeatures, context);
-        this.onCancelAllocationClick = _.bind(this.onCancelAllocationClick, context);
-        this.onAbortMissionClick = _.bind(this.onAbortMissionClick, context);
-        this.abortAllocation = _.bind(this.abortAllocation, context);
+        // this.onCancelAllocationClick = _.bind(this.onCancelAllocationClick, context);
+        // this.onAbortMissionClick = _.bind(this.onAbortMissionClick, context);
+        // this.abortAllocation = _.bind(this.abortAllocation, context);
         this.processWaypointChange = _.bind(this.processWaypointChange, context);
         this.processWaypointDelete = _.bind(this.processWaypointDelete, context);
         this.isHeatmapMode = _.bind(this.isHeatmapMode, context);
@@ -119,83 +120,83 @@ var MapController = {
         $("#remove_agent").on('click', function () {
             MapController.onRemoveAgentClick()
         });
-        this.state.on("change:scoreInfo", function () {
-            self.updateScorePanel();
-        });
-        this.state.on("change:workloadLevel change:dynamicUIFeatures", function () {
-            MapAgentController.updateAllAgentMarkerIcons(true);
-            MapTaskController.updateAllTaskIcons(true);
-        });
-        this.state.on("change:riskMapWeights", function () {
-            if(MapController.isEnabledUIOption("heatMapToggle")){
-                MapController.updateRiskMapHexBin();
-            } else {
-                MapController.updateRiskMapHeatMap();
-            }
-        })
-        $('#prediction_slider').on('change', function() {
-            if ($(this).val() === $(this).prop('max')) {
-                MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
-            } else if ($(this).val() === $(this).prop('min')) {
-                MapController.showPredictedPaths(0);
-            } else {
-                MapController.showPredictedPaths($(this).val());
-            }
-        });
-        $('#risk_map_slider').on('change', function() {
-            if(MapController.isEnabledUIOption('heatMapToggle')){
-                MapController.setRiskHexBinThreshold($(this).val());
-            } else {
-                MapController.setRiskHeatMapConfig('radius', $(this).val());
-            }
-        });
-        $('#FIRE_slider').on('change', function() {
-            MapController.setHexBinWeight("FIRE", $(this).val());
-        });
-        $('#Cities_slider').on('change', function() {
-            MapController.setHexBinWeight("Cities", $(this).val());
-        });
-        $('#NDVI_slider').on('change', function() {
-            MapController.setHexBinWeight("NDVI", $(this).val());
-        });
-        $('#Roads_slider').on('change', function() {
-            MapController.setHexBinWeight("Roads", $(this).val());
-        });
-        $('#Trails_slider').on('change', function() {
-            MapController.setHexBinWeight("Trails", $(this).val());
-        });
-        $('#aspect_slider').on('change', function() {
-            MapController.setHexBinWeight("aspect", $(this).val());
-        });
-        $('#elevation_slider').on('change', function() {
-            MapController.setHexBinWeight("elevation", $(this).val());
-        });
-        $('#slope_slider').on('change', function() {
-            MapController.setHexBinWeight("slope", $(this).val());
-        });
-        $('#risk_features_reset').on('click', function() {
-            let weights = self.state.getRiskMapWeights();
+        // this.state.on("change:scoreInfo", function () {
+        //     self.updateScorePanel();
+        // });
+        // this.state.on("change:workloadLevel change:dynamicUIFeatures", function () {
+        //     MapAgentController.updateAllAgentMarkerIcons(true);
+        //     MapTaskController.updateAllTaskIcons(true);
+        // });
+        // this.state.on("change:riskMapWeights", function () {
+        //     if(MapController.isEnabledUIOption("heatMapToggle")){
+        //         MapController.updateRiskMapHexBin();
+        //     } else {
+        //         MapController.updateRiskMapHeatMap();
+        //     }
+        // })
+        // $('#prediction_slider').on('change', function() {
+        //     if ($(this).val() === $(this).prop('max')) {
+        //         MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
+        //     } else if ($(this).val() === $(this).prop('min')) {
+        //         MapController.showPredictedPaths(0);
+        //     } else {
+        //         MapController.showPredictedPaths($(this).val());
+        //     }
+        // });
+        // $('#risk_map_slider').on('change', function() {
+        //     if(MapController.isEnabledUIOption('heatMapToggle')){
+        //         MapController.setRiskHexBinThreshold($(this).val());
+        //     } else {
+        //         MapController.setRiskHeatMapConfig('radius', $(this).val());
+        //     }
+        // });
+        // $('#FIRE_slider').on('change', function() {
+        //     MapController.setHexBinWeight("FIRE", $(this).val());
+        // });
+        // $('#Cities_slider').on('change', function() {
+        //     MapController.setHexBinWeight("Cities", $(this).val());
+        // });
+        // $('#NDVI_slider').on('change', function() {
+        //     MapController.setHexBinWeight("NDVI", $(this).val());
+        // });
+        // $('#Roads_slider').on('change', function() {
+        //     MapController.setHexBinWeight("Roads", $(this).val());
+        // });
+        // $('#Trails_slider').on('change', function() {
+        //     MapController.setHexBinWeight("Trails", $(this).val());
+        // });
+        // $('#aspect_slider').on('change', function() {
+        //     MapController.setHexBinWeight("aspect", $(this).val());
+        // });
+        // $('#elevation_slider').on('change', function() {
+        //     MapController.setHexBinWeight("elevation", $(this).val());
+        // });
+        // $('#slope_slider').on('change', function() {
+        //     MapController.setHexBinWeight("slope", $(this).val());
+        // });
+        // $('#risk_features_reset').on('click', function() {
+        //     let weights = self.state.getRiskMapWeights();
 
-            Object.keys(weights).forEach(weight => {
-                MapController.setHexBinWeight(weight, 100);
-                $(`#${weight}_slider`).val(100);
-            });
-        });
-        $('#workload_slider').on('change', function() {
-            self.state.workloadLevel = $(this).val();
-            $.post("/review/report/workload", {
-                level: self.state.getWorkloadLevel()
-            });
-            //console.log("level = " + MapController.workloadLevel)
-            MapAgentController.updateAllAgentMarkerIcons(true);
-            MapTaskController.updateAllTaskIcons(true);
-        });
-        $('#uncertainties_toggle').change(function () {
-            MapController.toggleUIOption('uncertainties', $(this).is(":checked"))
-        });
-        $('#ranges_toggle').change(function () {
-            MapController.toggleUIOption('ranges', $(this).is(":checked"))
-        });
+        //     Object.keys(weights).forEach(weight => {
+        //         MapController.setHexBinWeight(weight, 100);
+        //         $(`#${weight}_slider`).val(100);
+        //     });
+        // });
+        // $('#workload_slider').on('change', function() {
+        //     self.state.workloadLevel = $(this).val();
+        //     $.post("/review/report/workload", {
+        //         level: self.state.getWorkloadLevel()
+        //     });
+        //     //console.log("level = " + MapController.workloadLevel)
+        //     MapAgentController.updateAllAgentMarkerIcons(true);
+        //     MapTaskController.updateAllTaskIcons(true);
+        // });
+        // $('#uncertainties_toggle').change(function () {
+        //     MapController.toggleUIOption('uncertainties', $(this).is(":checked"))
+        // });
+        // $('#ranges_toggle').change(function () {
+        //     MapController.toggleUIOption('ranges', $(this).is(":checked"))
+        // });
         $('#heat_map_toggle').change(function () {
             MapController.toggleUIOption('heatMapToggle', $(this).is(":checked"))
         });
@@ -231,15 +232,15 @@ var MapController = {
             if(lat !== 0 || lng !== 0)
                 self.map.setCenter(new google.maps.LatLng(lat, lng));
         });
-        this.state.on("change:tempAllocation", function () {
-            MapController.onTempAllocationChange();
-        });
-        this.state.on("change:allocationUndoAvailable change:allocationRedoAvailable", function () {
-            MapController.onUndoRedoAvailableChange();
-        });
-        this.state.on("change:editMode", function () {
-            MapController.swapMode(self.state.getEditMode(), false);
-        });
+        // this.state.on("change:tempAllocation", function () {
+        //     MapController.onTempAllocationChange();
+        // });
+        // this.state.on("change:allocationUndoAvailable change:allocationRedoAvailable", function () {
+        //     MapController.onUndoRedoAvailableChange();
+        // });
+        // this.state.on("change:editMode", function () {
+        //     MapController.showMap(true);
+        // });
         this.state.on("change:uiOptions", function () {
             MapController.updateUIFeatures();
         });
@@ -265,40 +266,40 @@ var MapController = {
         //MapController.toggleUIOption('predictions', setting)
         MapController.predictionLength = setting;
     },
-    onRunAutoAllocationClick: function () {
-        $.post("/allocation/auto-allocate");
-    },
-    onAllocationUndoClick: function () {
-        var self = this;
-        $.post("/allocation/undo", function () {
-            self.state.fetch({});
-        });
-    },
-    onAllocationRedoClick: function () {
-        var self = this;
-        $.post("/allocation/redo", function () {
-            self.state.fetch({});
-        });
-    },
-    onAllocationResetClick: function () {
-        var self = this;
-        $.post("/allocation/reset", function () {
-            self.state.fetch({});
-        });
-    },
-    onConfirmAllocationClick: function () {
-        var self = this;
-        $.post("/allocation/confirm", function () {
-            self.state.fetch({
-                success: function () {
-                    MapController.swapMode(1, true);
-                }
-            });
-        });
-    },
-    onCancelAllocationClick: function () {
-        MapController.abortAllocation();
-    },
+    // onRunAutoAllocationClick: function () {
+    //     $.post("/allocation/auto-allocate");
+    // },
+    // onAllocationUndoClick: function () {
+    //     var self = this;
+    //     $.post("/allocation/undo", function () {
+    //         self.state.fetch({});
+    //     });
+    // },
+    // onAllocationRedoClick: function () {
+    //     var self = this;
+    //     $.post("/allocation/redo", function () {
+    //         self.state.fetch({});
+    //     });
+    // },
+    // onAllocationResetClick: function () {
+    //     var self = this;
+    //     $.post("/allocation/reset", function () {
+    //         self.state.fetch({});
+    //     });
+    // },
+    // onConfirmAllocationClick: function () {
+    //     var self = this;
+    //     $.post("/allocation/confirm", function () {
+    //         self.state.fetch({
+    //             success: function () {
+    //                 MapController.showMap(true);
+    //             }
+    //         });
+    //     });
+    // },
+    // onCancelAllocationClick: function () {
+    //     MapController.abortAllocation();
+    // },
     onAbortMissionClick: function () {
         $.post("/agents/allhome");
     },
@@ -307,36 +308,6 @@ var MapController = {
     },
     onRemoveAgentClick: function () {
         $.post("/agents/hubdespawn");
-    },
-    onViewModePressed: function (viewModeValue) {
-        if (viewModeValue === "monitor")
-            MapController.onMonitorModePressed();
-        else if (viewModeValue === "editmode")
-            MapController.onEditModePressed();
-        else {
-            MapController.onScanModePressed();
-        }
-    },
-    onMonitorModePressed: function () {
-        if(this.state.getEditMode() === 2) {
-            var mainAllocation = this.state.getAllocation();
-            var tempAllocation = this.state.getTempAllocation();
-            if (_.compareAllocations(mainAllocation, tempAllocation))
-                MapController.swapMode(1, true);
-            else
-                MapController.abortAllocation();
-        } else if (this.state.getEditMode() !== 1) {
-            MapController.swapMode(1, true);
-        }
-    },
-    onEditModePressed: function () {
-        if(this.state.getEditMode() !== 2) {
-            try {
-                MapController.swapMode(2, true);
-            } catch (e) {
-                console.log("EMP : " + e);
-            }
-        }
     },
     updateAllocationVisibility: function (setting){
         // An attempt to remove points of interest
@@ -373,14 +344,14 @@ var MapController = {
             alert(e);
         }
     },
-    onScanModePressed: function () {
-        if(this.state.getEditMode() !== 3)
-            try {
-                MapController.swapMode(3, true);
-            } catch (e) {
-                console.log("SMP : " + e);
-            }
-    },
+    // onScanModePressed: function () {
+    //     if(this.state.getEditMode() !== 3)
+    //         try {
+    //             MapController.swapMode(3, true);
+    //         } catch (e) {
+    //             console.log("SMP : " + e);
+    //         }
+    // },
     onTick: function () {
         var time = $.fromTime(this.state.getTime());
         if (MapController.overrideVisible)
@@ -389,7 +360,7 @@ var MapController = {
         var simTime = $.fromTime(this.state.getTime() * this.state.getGameSpeed());
         //var simTimeLimit = $.fromTime( this.state.getTimeLimit() * this.state.getGameSpeed());
         $("#game_time").html("Time: " + time + "/" + limit);
-        $("#sim_time").html("Sim Time: " + simTime);
+        // $("#sim_time").html("Sim Time: " + simTime);
         if (this.state.isInProgress()) {
             this.updateAllocationRendering();
         }
@@ -417,7 +388,7 @@ var MapController = {
         MapHazardController.updateHeatmap(0);
         MapHazardController.updateHeatmap(1);
 
-        this.views.camera.miniUpdate();
+        // this.views.camera.miniUpdate();
     },
     onMapLeftClick: function (event) {
         if (this.views.clickedAgent != null)
@@ -520,22 +491,11 @@ var MapController = {
     updateUIFeatures: function () {
         console.log("UI Update")
         const arrayOfPairs = [
-            ['monitor', ['monitor_wrapper']],
-            ['editmode', ['editmode_wrapper']],
-            ['scans', ['scan_button_group']],
             ['explored', ['explored_wrapper_div'], "explored_overlay_toggle"],
-            ['hazard', ['hazard_wrapper_div'], "hazard_overlay_toggle"],
-            ['predictions', ['prediction_wrapper_div']],
             ['uncertainties', ['uncertainties_wrapper_div'], "uncertainties_toggle"],
             ['ranges', ['ranges_wrapper_div'], "ranges_toggle"],
-            ['workloadSlider', ['wk_sld_wrapper']],
-            ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
-            ['scanButtons', ['scan_buttons']],
-            ['triageButtons', ['triage_buttons']],
-            ['riskMapSlider', ['risk_wrapper_div']],
-            ['heatMapToggle', ['heatmap_wrapper_div'], 'heat_map_toggle']
         ];
-
+        // ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
         arrayOfPairs.forEach((pair) => {
             if (Array.isArray(pair[1])) {
                 pair[1].forEach((p) => {
@@ -561,9 +521,9 @@ var MapController = {
 
         });
 
-        MapHazardController.setHeatmapVisibility(-1, MapController.isEnabledUIOption("explored"));
-        MapHazardController.setHeatmapVisibility(0, MapController.isEnabledUIOption("hazard"));
-        MapHazardController.setHeatmapVisibility(1, MapController.isEnabledUIOption("hazard"));
+        // MapHazardController.setHeatmapVisibility(-1, MapController.isEnabledUIOption("explored"));
+        // MapHazardController.setHeatmapVisibility(0, MapController.isEnabledUIOption("hazard"));
+        // MapHazardController.setHeatmapVisibility(1, MapController.isEnabledUIOption("hazard"));
 
         // TODO this toggle is broken since we need to "async await" state change before changing update function
         // extra risk map update for ui toggles
@@ -571,24 +531,24 @@ var MapController = {
 
 
         // Boxes to be shown or not as per modes
-        if (this.state.getModelStyle() === "off") {
-            $("#prediction_canvas").hide();
-            $("#mission_prediction_canvas").hide();
-            $("#bounded_prediction_canvas").hide();
-            $("#accordion_smallview").accordion({
-                collapsible: true
-            });
-            $("#addRemAgentButton").hide()
-        } else {
-            $("#prediction_canvas").show();
-            $("#mission_prediction_canvas").show();
-            $("#bounded_prediction_canvas").show();
-            $("#accordion_smallview").accordion({
-                collapsible: true,
-                active: false
-            });
-            $("#addRemAgentButton").show()
-        }
+        // if (this.state.getModelStyle() === "off") {
+        //     $("#prediction_canvas").hide();
+        //     $("#mission_prediction_canvas").hide();
+        //     $("#bounded_prediction_canvas").hide();
+        //     $("#accordion_smallview").accordion({
+        //         collapsible: true
+        //     });
+        //     $("#addRemAgentButton").hide()
+        // } else {
+        //     $("#prediction_canvas").show();
+        //     $("#mission_prediction_canvas").show();
+        //     $("#bounded_prediction_canvas").show();
+        //     $("#accordion_smallview").accordion({
+        //         collapsible: true,
+        //         active: false
+        //     });
+        //     $("#addRemAgentButton").show()
+        // }
 
         /*
         this.state.getUiOptions().forEach(function (option) {
@@ -620,12 +580,27 @@ var MapController = {
 
 
         */
-        MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
-        MapController.communicationRange = this.state.getCommunicationRange();
+        // MapController.uncertaintyRadius = this.state.getUncertaintyRadius();
+        // MapController.communicationRange = this.state.getCommunicationRange();
+    },
+    /**
+     * Show the map only mode which is the base for DDSMode.
+     * This is the mode where the map is shown without any other UI elements.
+     * @param sendUpdate - If true, the current state value will be pushed to backend.
+     */
+    showMap: function (sendUpdate) {
+        self = this;
+        $("#map_canvas").show();
+        this.drawing.setDrawingMode(null);
+        this.hideForGametype();
+        MapAgentController.updateAllAgentMarkerIcons(true)
+
+        if(sendUpdate)
+            this.state.pushMode(0);
     },
     /**
      * Swaps the UI mode (typically monitor/task view)
-     * I have added a check for UI options specified in the scenario file -WH
+     * Fallback just to do nothing
      * @param modeFlag
      * @param sendUpdate
      */
@@ -635,71 +610,14 @@ var MapController = {
         //          2 = edit
         //          3 = images
         self = this;
+        
+        // This is a new map only mode that will be the base for DDSMode
+        $("#monitor_accordions").hide();
+        $("#edit_contexts").hide();
+        $("#edit_buttons_sub").hide();
+        $("#sandbox_buttons_sub").hide();
 
-        if(modeFlag === 2) {  // edit
-            $("#monitor_accordions").hide();
-            $("#edit_contexts").show();
-            $("#edit_buttons_sub").show();
-            $("#sandbox_buttons_sub").show();
-            MapController.onUndoRedoAvailableChange();
-            $("#scan_view").hide();
-
-            $("#map_canvas").show();
-            $("#image_review").hide();
-            $("#review_panel").hide();
-
-
-            $('#scanmode').prop("checked", false);
-            $('#editmode').prop("checked", true);
-            $('#monitor').prop("checked", false);
-        } else if (modeFlag === 1) { // monitor
-            $("#monitor_accordions").show();
-            $("#edit_contexts").hide();
-            $("#edit_buttons_sub").hide();
-            $("#sandbox_buttons_sub").hide();
-            $("#scan_view").hide();
-
-            $("#map_canvas").show();
-            $("#image_review").hide();
-            $("#review_panel").hide();
-
-            $('#scanmode').prop("checked", false);
-            $('#editmode').prop("checked", false);
-            $('#monitor').prop("checked", true);
-        } else if (modeFlag === 3) {  // scans
-            $("#monitor_accordions").hide();
-            $("#edit_contexts").hide();
-            $("#edit_buttons_sub").hide();
-            $("#sandbox_buttons_sub").hide();
-            $("#scan_view").show();
-
-            $("#map_canvas").hide();
-            $("#image_review").show();
-            $("#review_panel").show();
-
-            self.views.images.checkAndUpdateDeepButton();
-            MapImageController.resetCurrentImageData();
-            self.views.review.update();
-
-            $('#scanmode').prop("checked", true);
-            $('#editmode').prop("checked", false);
-            $('#monitor').prop("checked", false);
-        } else if (modeFlag === 0) { 
-            // This is a new map only mode that will be the base for DDSMode
-            $("#monitor_accordions").hide();
-            $("#edit_contexts").hide();
-            $("#edit_buttons_sub").hide();
-            $("#sandbox_buttons_sub").hide();
-            $("#scan_view").hide();
-
-            $("#map_canvas").show();
-            $("#image_review").hide();
-            $("#review_panel").hide();
-
-            $('#scanmode').prop("checked", false);
-            $('#editmode').prop("checked", false);
-            $('#monitor').prop("checked", true);
-        }
+        $("#map_canvas").show();
 
         this.drawing.setDrawingMode(null);
         this.hideForGametype();
@@ -860,7 +778,7 @@ var MapController = {
         else
             cancelConfirmed = confirm("This will result with an empty allocation. Continue?");
         if(cancelConfirmed)
-            MapController.swapMode(1, true);
+            MapController.showMap(true);
     },
     processWaypointChange: function(agentId, polyline, vertex, insert) {
         var path = polyline.getPath();
@@ -918,9 +836,9 @@ var MapController = {
         });
     },
     isHeatmapMode: function () {
-        if (this.state.getDynamicUIFeatures() !== null && this.state.getDynamicUIFeatures().length > 0) {
-            return this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")
-        }
+        // if (this.state.getDynamicUIFeatures() !== null && this.state.getDynamicUIFeatures().length > 0) {
+        //     return this.state.getDynamicUIFeatures()[this.state.getWorkloadLevel() - 1].includes("heatmap")
+        // }
         return false
     },
     isToggleableUIOption: function (featureName) {

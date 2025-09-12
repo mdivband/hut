@@ -95,6 +95,9 @@ $LAB.setOptions({
     .script("app/models/targets.js")
     .script("app/models/state.js")
 
+    // ----- DDS Controllers -----
+    .script("dds/controls/master.js")
+
     // ----- Main -----
     .script("app/main.js")
 

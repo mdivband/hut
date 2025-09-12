@@ -11,7 +11,7 @@ public class ErrorHandler {
      * @param exception The exception that occurred (can be null)
      * @throws RuntimeException with appropriate error message based on the type of error detected
      */
-    public void checkForErrors(String output, Exception exception) {
+    public static void checkForErrors(String output, Exception exception) {
         // Check for Python not found errors
         if (isPythonNotFoundError(output, exception)) {
             throw new RuntimeException(
@@ -55,17 +55,22 @@ public class ErrorHandler {
     /**
      * Checks if the output message is related to data availability (not an error)
      */
-    public boolean isDataAvailabilityMessage(String output) {
+    public static boolean isDataAvailabilityMessage(String output) {
         return output.contains("No data received") ||
                output.contains("Empty Data:") ||
                output.contains("Empty data received") ||
                output.contains("DDS Listener started, waiting for");
     }
+
+    // Checks if a line is a header line that precedes JSON data
+    public static boolean isHeaderLine(String line) {
+        return line.contains("FlatBuffer Data") || line.contains("String Data");
+    }
     
     /**
      * Checks if the error is related to Python not being found
      */
-    private boolean isPythonNotFoundError(String output, Exception exception) {
+    private static boolean isPythonNotFoundError(String output, Exception exception) {
         return containsErrorPattern(output, exception, "python", 
                 new String[]{"not found", "is not recognized", "command not found"});
     }
@@ -73,7 +78,7 @@ public class ErrorHandler {
     /**
      * Checks if the error is related to the script file not being found
      */
-    private boolean isScriptNotFoundError(String output, Exception exception) {
+    private static boolean isScriptNotFoundError(String output, Exception exception) {
         return containsErrorPattern(output, exception, ".py",
                 new String[]{"no such file", "file not found", "cannot find"}) ||
                containsErrorPattern(output, exception, "FileNotFoundError", new String[]{""});
@@ -82,8 +87,8 @@ public class ErrorHandler {
     /**
      * Checks if the error is related to permission issues
      */
-    private boolean isPermissionError(String output, Exception exception) {
-        return containsErrorPattern(output, exception, "permission", 
+    private static boolean isPermissionError(String output, Exception exception) {
+        return containsErrorPattern(output, exception, "permission",
                 new String[]{"denied", "access denied"}) ||
                containsErrorPattern(output, exception, "PermissionError", new String[]{""});
     }
@@ -91,7 +96,7 @@ public class ErrorHandler {
     /**
      * Checks if the error is related to missing Python modules
      */
-    private boolean isModuleImportError(String output, Exception exception) {
+    private static boolean isModuleImportError(String output, Exception exception) {
         return containsErrorPattern(output, exception, "ModuleNotFoundError", new String[]{""}) ||
                containsErrorPattern(output, exception, "ImportError", new String[]{""}) ||
                containsErrorPattern(output, exception, "No module named", new String[]{""});
@@ -100,7 +105,7 @@ public class ErrorHandler {
     /**
      * Helper method to check if output or exception contains specific error patterns
      */
-    private boolean containsErrorPattern(
+    private static boolean containsErrorPattern(
         String output, Exception exception, String keyword, String[] patterns) {
         String[] sources = new String[2];
         sources[0] = output != null ? output.toLowerCase() : "";

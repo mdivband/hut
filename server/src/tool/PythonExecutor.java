@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 public class PythonExecutor {
     private static final Logger LOGGER = Logger.getLogger(PythonExecutor.class.getName());
     
-    private final ErrorHandler errorHandler = new ErrorHandler();
     private final String[] defaultPythonCommands = {"py", "python", "python3"};
     private String customPythonPath = null;
     private String cachedWorkingCommand = null; // Cache the working Python command
@@ -103,7 +102,7 @@ public class PythonExecutor {
     public boolean executeScript(String scriptPath, String... args) {
         String pythonCommand = findWorkingPythonCommand();
         if (pythonCommand == null) {
-            errorHandler.checkForErrors(null, 
+            ErrorHandler.checkForErrors(null, 
                 new RuntimeException(
                     "Python is not available in this environment"));
             return false;
@@ -114,7 +113,7 @@ public class PythonExecutor {
         
         // Validate that the script exists
         if (!isPathValid(scriptPath)) {
-            errorHandler.checkForErrors(null, 
+            ErrorHandler.checkForErrors(null, 
                 new RuntimeException("Script file not found or not accessible: " + scriptPath));
             return false;
         }        
@@ -148,12 +147,12 @@ public class PythonExecutor {
             reader.close();
             
             // Check for errors in the output
-            errorHandler.checkForErrors(output.toString(), null);
+            ErrorHandler.checkForErrors(output.toString(), null);
             
             return exitCode == 0;
             
         } catch (IOException e) {
-            errorHandler.checkForErrors(null, e);
+            ErrorHandler.checkForErrors(null, e);
             return false;
         } catch (InterruptedException e) {
             LOGGER.warning("Python script execution was interrupted: " + e.getMessage());
@@ -171,7 +170,7 @@ public class PythonExecutor {
     public String executeScriptAndGetOutput(String scriptPath, String... args) {
         String pythonCommand = findWorkingPythonCommand();
         if (pythonCommand == null) {
-            errorHandler.checkForErrors(null, 
+            ErrorHandler.checkForErrors(null, 
                 new RuntimeException("Python is not available in this environment"));
             return null;
         }
@@ -181,7 +180,7 @@ public class PythonExecutor {
         
         // Validate that the script exists
         if (!isPathValid(scriptPath)) {
-            errorHandler.checkForErrors(null, 
+            ErrorHandler.checkForErrors(null, 
                 new RuntimeException("Script file not found or not accessible: " + scriptPath));
             return null;
         } 
@@ -217,12 +216,12 @@ public class PythonExecutor {
             String outputStr = output.toString();
             
             // Check for errors in the output
-            errorHandler.checkForErrors(outputStr, null);
+            ErrorHandler.checkForErrors(outputStr, null);
             
             return exitCode == 0 ? outputStr : null;
             
         } catch (IOException e) {
-            errorHandler.checkForErrors(null, e);
+            ErrorHandler.checkForErrors(null, e);
             return null;
         } catch (InterruptedException e) {
             LOGGER.warning("Python script execution was interrupted: " + e.getMessage());
@@ -244,7 +243,7 @@ public class PythonExecutor {
         
         String pythonCommand = findWorkingPythonCommand();
         if (pythonCommand == null) {
-            errorHandler.checkForErrors(null, 
+            ErrorHandler.checkForErrors(null, 
                 new RuntimeException("Python is not available in this environment"));
             return false;
         }
@@ -254,7 +253,7 @@ public class PythonExecutor {
         
         // Validate that the script exists
         if (!isPathValid(scriptPath)) {
-            errorHandler.checkForErrors(null, 
+            ErrorHandler.checkForErrors(null, 
                 new RuntimeException("Script file not found or not accessible: " + scriptPath));
             return false;
         } 
@@ -310,9 +309,9 @@ public class PythonExecutor {
                 
                 // Handle the error
                 if (!errorOutput.isEmpty()) {
-                    errorHandler.checkForErrors(errorOutput, null);
+                    ErrorHandler.checkForErrors(errorOutput, null);
                 } else {
-                    errorHandler.checkForErrors(null, 
+                    ErrorHandler.checkForErrors(null, 
                         new RuntimeException(
                             "Python process failed to start. Exit code: " + exitCode));
                 }
@@ -323,7 +322,7 @@ public class PythonExecutor {
             return true;
             
         } catch (IOException e) {
-            errorHandler.checkForErrors(null, e);
+            ErrorHandler.checkForErrors(null, e);
             return false;
         }
     }
@@ -447,7 +446,7 @@ public class PythonExecutor {
         
         // Validate that the script exists
         if (!isPathValid(scriptPath)) {
-            errorHandler.checkForErrors(null, 
+            ErrorHandler.checkForErrors(null, 
                 new RuntimeException("Script file not found or not accessible: " + scriptPath));
             return false;
         } 
@@ -512,9 +511,9 @@ public class PythonExecutor {
                 
                 // Handle the error
                 if (!errorOutput.isEmpty()) {
-                    errorHandler.checkForErrors(errorOutput, null);
+                    ErrorHandler.checkForErrors(errorOutput, null);
                 } else {
-                    errorHandler.checkForErrors(null, 
+                    ErrorHandler.checkForErrors(null, 
                         new RuntimeException(
                             "Python process failed to start. Exit code: " + processExitCode));
                 }

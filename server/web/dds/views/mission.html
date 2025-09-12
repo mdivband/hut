@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Management View</title>
+    <link rel="stylesheet" href="../styles/master.css">
+    <link rel="stylesheet" href="../styles/mission.css">
+</head>
+<body>
+    <div class="ui-layout-center">
+        <div class="view-container">
+            <div class="view-title">Mission Management View</div>
+            
+            <div class="mission-content">
+                <div class="hub-container">
+                    <div class="content-title">Hub Information</div>
+                    <div class="status-panel">
+                        <div class="status-row">
+                            <span class="status-label">Position:</span>
+                            <span class="status-value" id="positionValue">Loading...</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label">Operator(s):</span>
+                            <span class="status-value" id="operatorValue">Loading...</span>
+                        </div>
+                        
+                        <div class="status-section">
+                            <div class="vehicle-type">STA</div>
+                            <div class="status-row">
+                                <span class="status-label">Active:</span>
+                                <span class="status-value" id="staActive">0</span>
+                            </div>
+                            <div class="status-row">
+                                <span class="status-label">Inactive:</span>
+                                <span class="status-value" id="staInactive">0</span>
+                            </div>
+                            <div class="status-row">
+                                <span class="status-label">Ready:</span>
+                                <span class="status-value" id="staReady">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="status-section">
+                            <div class="vehicle-type">FSA</div>
+                            <div class="status-row">
+                                <span class="status-label">Active:</span>
+                                <span class="status-value" id="fsaActive">0</span>
+                            </div>
+                            <div class="status-row">
+                                <span class="status-label">Inactive:</span>
+                                <span class="status-value" id="fsaInactive">0</span>
+                            </div>
+                            <div class="status-row">
+                                <span class="status-label">Ready:</span>
+                                <span class="status-value" id="fsaReady">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls-container">
+                    <div class="content-title">Manage Mission</div>
+                    <div class="controls-grid">
+                        <button class="mission-button" id="deploySTABtn">Deploy STA</button>
+                        <button class="mission-button" id="deployFSABtn">Deploy FSA</button>
+                        <button class="mission-button" id="deployAllBtn">Deploy All</button>
+                        <button class="mission-button" id="generateReportBtn">Generate Mission Report</button>
+                    </div>
+                    <div class="abort-container">
+                        <button class="mission-button abort-button" id="abortMissionBtn">ABORT MISSION</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../controls/mission.js"></script>
+</body>
+</html>
