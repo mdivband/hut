@@ -41,8 +41,8 @@ body {
     padding: 30px;
     min-width: 85%;
     max-width: 85%;
-    min-height: 370px;
-    max-height: 370px;
+    min-height: 55vh;
+    max-height: 55vh;
     position: relative;
     display: flex;
     flex-direction: column;
