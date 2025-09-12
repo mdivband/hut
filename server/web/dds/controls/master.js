@@ -20,6 +20,7 @@ $(document).ready(function() {
     function openWindow(buttonId) {
         let url = '';
         let windowName = '';
+        let orgId = 'aive'; // Default organization ID
 
         switch(buttonId) {
             case 'open-dds-log':
@@ -31,12 +32,12 @@ $(document).ready(function() {
                 windowName = 'MissionView';
                 break;
             case 'open-STA-1-view':
-                url = buildFoxgloveURL('STA', 1, 'soorati-lab', null);
+                url = buildFoxgloveURL('STA', 1, orgId, null);
                 console.log('Opening Foxglove STA-1 URL:', url);
                 windowName = 'ws://localhost:9101 | Foxglove';
                 break;
             case 'open-FSA-1-view':
-                url = buildFoxgloveURL('FSA', 1, 'soorati-lab', null);
+                url = buildFoxgloveURL('FSA', 1, orgId, null);
                 console.log('Opening Foxglove FSA-1 URL:', url);
                 windowName = 'ws://localhost:9201 | Foxglove';
                 break;
@@ -203,8 +204,7 @@ $(document).ready(function() {
     }
 
     // Function to build Foxglove URL with drone type and ID
-    const orgId = 'aive';   //'soorati-lab'; // Default organization ID
-    function buildFoxgloveURL(droneType, droneId, layoutId = null) {
+    function buildFoxgloveURL(droneType, droneId, orgID, layoutId = null) {
         let websocketPort;
         
         // Determine websocket port based on drone type and ID
@@ -223,7 +223,7 @@ $(document).ready(function() {
         const websocketURL = `ws://localhost:${websocketPort}`;
         const encodedWebsocketURL = encodeURIComponent(websocketURL);
         
-        let url = `${baseURL}/${orgId}/view?ds=foxglove-websocket&ds.url=${encodedWebsocketURL}`;
+        let url = `${baseURL}/${orgID}/view?ds=foxglove-websocket&ds.url=${encodedWebsocketURL}`;
         
         // Add layout ID if provided
         if (layoutId) {
