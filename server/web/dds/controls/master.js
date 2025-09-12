@@ -203,7 +203,7 @@ $(document).ready(function() {
     }
 
     // Function to build Foxglove URL with drone type and ID
-    const orgId = 'AIVE';   //'soorati-lab'; // Default organization ID
+    const orgId = 'aive';   //'soorati-lab'; // Default organization ID
     function buildFoxgloveURL(droneType, droneId, layoutId = null) {
         let websocketPort;
         
