@@ -41,33 +41,6 @@ var simulator = {
         this.run();
     },
     
-    // Removed initializeButtons and handleButtonAction since master-view.js handles this
-    
-    toggleDroneView: function() {
-        // Implement drone view logic
-        // Add actual implementation here when needed
-    },
-    
-    toggleMissionView: function() {
-        // Implement mission view logic
-        // Add actual implementation here when needed
-    },
-    
-    toggleFireView: function() {
-        // Implement fire view logic
-        // Add actual implementation here when needed
-    },
-    
-    toggleDDSLog: function() {
-        // Implement DDS log logic
-        // Add actual implementation here when needed
-    },
-    
-    togglePathPlanningView: function() {
-        // Implement path planning view logic
-        // Add actual implementation here when needed
-    },
-    
     run: function () {
         try {
             var waitTime = 400;

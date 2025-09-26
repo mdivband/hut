@@ -13,7 +13,8 @@ $(document).ready(function() {
     const windowReferences = {
         'open-dds-log': null,
         'open-mission-view': null,
-        'open-drone-x-view': null
+        'open-drone-x-view': null,
+        'path-planning-view': null,
     };
 
     // Function to open windows based on button ID
@@ -30,6 +31,10 @@ $(document).ready(function() {
             case 'open-mission-view':
                 url = 'dds/views/mission.html';
                 windowName = 'MissionView';
+                break;
+            case 'path-planning-view':
+                url = 'dds/views/path_planning.html';
+                windowName = 'PathPlanningView';
                 break;
             case 'open-STA-1-view':
                 url = buildFoxgloveURL('STA', 1, orgId, null);
@@ -113,6 +118,7 @@ $(document).ready(function() {
                 buttonId === 'open-dds-log' ||
                 buttonId === 'open-mission-view' ||
                 buttonId === 'open-drone-x-view' ||
+                buttonId === 'path-planning-view' ||
                 buttonId === 'open-STA-1-view' ||
                 buttonId === 'open-FSA-1-view'
             ) {
@@ -137,7 +143,8 @@ $(document).ready(function() {
             
             // Handle window closing for supported buttons
             if ((buttonId === 'open-dds-log' || buttonId === 'open-mission-view' 
-                || buttonId === 'open-drone-x-view') && !skipWindowAction) {
+                || buttonId === 'open-drone-x-view' || buttonId === 'path-planning-view'
+                ) && !skipWindowAction) {
                 closeWindow(buttonId);
             }
             

@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Collection;
 
 import com.google.gson.JsonObject;
 
@@ -597,6 +598,25 @@ public class DDSController extends AbstractController {
                         // Store the mapping between DDS ID and simulator ID
                         ddsToSimulatorAgentIdMap.put(ddsAgentId, newAgent.getId());
                         
+                        // Check for waypoint data and add to route if available
+                        Object waypointObj = agentData.get("waypoint");
+                        if (waypointObj instanceof java.util.HashMap) {
+                            @SuppressWarnings("unchecked")
+                            java.util.HashMap<String, Object> waypoint = 
+                                (java.util.HashMap<String, Object>) waypointObj;
+                            
+                            double wpLat = (Double) waypoint.get("lat");
+                            double wpLng = (Double) waypoint.get("lng");
+                            Coordinate waypointCoordinate = new Coordinate(wpLat, wpLng);
+                            
+                            // Add waypoint to new agent's waypoints list
+                            newAgent.addWaypoint(waypointCoordinate);
+                            
+                            LOGGER.info(String.format(
+                                "%s; DDSWP; Added waypoint to new agent; DDS_ID=%s, Waypoint=(%.6f,%.6f)", 
+                                simulator.getState().getTime(), ddsAgentId, wpLat, wpLng));
+                        }
+                        
                         LOGGER.info(String.format(
                             "%s; DDSAG; Created new DDS agent; DDS_ID=%s, SIM_ID=%s, Position=(%.6f,%.6f), Heading=%.1f°", 
                             simulator.getState().getTime(), 
@@ -611,6 +631,27 @@ public class DDSController extends AbstractController {
                         existingAgent.setAltitude(altitude);
                         existingAgent.setBattery(batteryLevel);
                         
+                        // Check for waypoint data and update route if needed
+                        Object waypointObj = agentData.get("waypoint");
+                        if (waypointObj instanceof java.util.HashMap) {
+                            @SuppressWarnings("unchecked")
+                            java.util.HashMap<String, Object> waypoint = 
+                                (java.util.HashMap<String, Object>) waypointObj;
+                            
+                            double wpLat = (Double) waypoint.get("lat");
+                            double wpLng = (Double) waypoint.get("lng");
+                            Coordinate waypointCoordinate = new Coordinate(wpLat, wpLng);
+                            
+                            // Check if waypoint is already the last coordinate in the route
+                            List<Coordinate> currentRoute = existingAgent.getRoute();
+                            // Add waypoint to existing agent's waypoints list
+                            if (existingAgent.addWaypoint(waypointCoordinate)) {
+                                LOGGER.info(String.format(
+                                    "%s; DDSWP; Added new waypoint to existing agent; DDS_ID=%s, Waypoint=(%.6f,%.6f)", 
+                                    simulator.getState().getTime(), ddsAgentId, wpLat, wpLng));
+                            }
+                        }
+                        
                         LOGGER.fine(String.format(
                             "%s; DDSUP; Updated existing DDS agent; DDS_ID=%s, SIM_ID=%s, Position=(%.6f,%.6f), Heading=%.1f°", 
                             simulator.getState().getTime(), ddsAgentId, existingAgent.getId(), lat, lng, heading));
@@ -623,7 +664,9 @@ public class DDSController extends AbstractController {
                     return false; // Failure in processing agent data
                 }
             }
-
+            
+            // Get the waypoints so the code to print them can run
+            JsonObject waypoints = getAllAgentWaypoints();
             LOGGER.info(String.format(
                 "%s; DDSSIM; Updated simulator with %d agents from DDS data", 
                 simulator.getState().getTime(), agents.size()));
@@ -656,7 +699,6 @@ public class DDSController extends AbstractController {
             lastNoDataWarningTime = currentTime;
         }
     }
-
 
     /**
      * Updates the latest DDS message based on controller state and data
@@ -771,6 +813,51 @@ public class DDSController extends AbstractController {
         hubStatus.add("fsa", fsa);
 
         return hubStatus;
+    }
+
+    /**
+     * Get all the waypoints from all agents in the simulator
+     Example expected data:
+        {
+            "STA-1": { "0": "lat, lng", "1": "lat, lng", "2": "lat, lng" },
+            "FSA-1": { "0": "lat, lng", "1": "lat, lng", "2": "lat, lng" }
+        } or {} if no waypoints
+    * @return JsonObject containing all agent waypoints
+    */
+    public JsonObject getAllAgentWaypoints() {
+        JsonObject allWaypoints = new JsonObject();
+        
+        try {
+            Collection<Agent> allAgents = simulator.getState().getAgents();
+            
+            for (Agent agent : allAgents) {
+                String agentId = agent.getId();
+                JsonObject agentWaypoints = new JsonObject();
+                
+                List<Coordinate> waypoints = agent.getWaypoints();
+                
+                if (waypoints != null && !waypoints.isEmpty()) {
+                    for (int i = 0; i < waypoints.size(); i++) {
+                        Coordinate waypoint = waypoints.get(i);
+                        agentWaypoints.addProperty(String.valueOf(i), waypoint.toString());
+                    }
+                }
+                allWaypoints.add(agentId, agentWaypoints);
+                // System.out.println("Agent " + agentId + " waypoints: " + agentWaypoints.toString());
+            }
+            
+            LOGGER.fine(String.format(
+                "%s; DDSWP; Retrieved waypoints for %d agents", 
+                simulator.getState().getTime(), allAgents.size()));
+                
+        } catch (Exception e) {
+            LOGGER.severe(String.format(
+                "%s; DDSER; Failed to retrieve agent waypoints; %s", 
+                simulator.getState().getTime(), e.getMessage()));
+            return new JsonObject();
+        }
+        
+        return allWaypoints;
     }
 
     // Return the latest DDS message

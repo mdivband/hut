@@ -32,6 +32,8 @@ public abstract class Agent extends MObject implements Serializable {
     private boolean manuallyControlled = false;
     protected final List<Coordinate> route;
     private final List<Coordinate> tempRoute;
+    private final List<Coordinate> waypoints;
+    
     protected double speed;
     private String allocatedTaskId;
     private double timeInAir;
@@ -67,6 +69,7 @@ public abstract class Agent extends MObject implements Serializable {
         timeInAir = 0.0;
         route = new Vector<>();
         tempRoute = new Vector<>();
+        waypoints = new Vector<>();
         startSearching = false;
         working = false;
         allocatedTaskId = "";
@@ -247,6 +250,61 @@ public abstract class Agent extends MObject implements Serializable {
 
     public List<Coordinate> getRoute() {
         return route;
+    }
+
+    // Get DDS waypoints for this agent
+    public List<Coordinate> getWaypoints() {
+        return waypoints;
+    }
+
+    // Get the number of waypoints for this agent
+    public int getWaypointCount() {
+        synchronized (this.waypoints) {
+            return waypoints.size();
+        }
+    }
+
+    // Clear all waypoints for the agent
+    public void clearWaypoints() {
+        synchronized (this.waypoints) {
+            this.waypoints.clear();
+        }
+    }
+    
+    // Set the entire list of waypoints for the agent
+    public void setWaypoints(List<Coordinate> waypoints) {
+        synchronized (this.waypoints) {
+            this.waypoints.clear();
+            this.waypoints.addAll(waypoints);
+        }
+    }
+
+    /**
+     * Add a waypoint to the agent's waypoint list
+     * @param waypoint The waypoint coordinate to add
+     * @return true if the waypoint was added, false if it was a duplicate
+     */
+    public boolean addWaypoint(Coordinate waypoint) {
+        synchronized (this.waypoints) {
+            // Check if waypoint already exists to avoid duplicates
+            boolean exists = false;
+            for (Coordinate existing : waypoints) {
+                double latDiff = Math.abs(existing.getLatitude() - waypoint.getLatitude());
+                double lngDiff = Math.abs(existing.getLongitude() - waypoint.getLongitude());
+                double tolerance = 1e-6;
+                
+                if (latDiff < tolerance && lngDiff < tolerance) {
+                    exists = true;
+                    break;
+                }
+            }
+            
+            if (!exists) {
+                waypoints.add(waypoint);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
