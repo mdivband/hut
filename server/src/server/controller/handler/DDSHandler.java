@@ -39,6 +39,9 @@ public class DDSHandler extends RestHandler {
             case "/hubstatus":
                 handleHubStatus(resp);
                 break;
+            case "/waypoints":
+                handleWaypoints(resp);
+                break;
             default:
                 throw new UnregisteredPathException("No method for handling GET request on " + req.getPath());
         }
@@ -71,5 +74,12 @@ public class DDSHandler extends RestHandler {
         JsonObject status = this.simulator.getHubStatus();
         resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
         resp.send(200, status.toString());
+    }
+
+    // Handle waypoints request.
+    private void handleWaypoints(Response resp) throws IOException {
+        JsonObject waypoints = this.simulator.getAllAgentWaypoints(); 
+        resp.getHeaders().add("Content-type", "application/json; charset=utf-8");
+        resp.send(200, waypoints.toString());
     }
 }

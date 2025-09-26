@@ -11,7 +11,7 @@
   "simplePublisherPath": "scripts/pyDDS/simple_publisher.py",
   "fbsPublisherPath": "scripts/pyDDS/fbs_publisher.py",
   "gameCentre": {
-    "lat": 51.501123,
-    "lng": -0.142386
+    "lat": 30.65582,
+    "lng": -96.42533
   }
 }

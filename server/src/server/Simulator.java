@@ -1212,4 +1212,9 @@ public class Simulator {
     public JsonObject getHubStatus() {
         return this.ddsController.getHubStatus();
     }
+
+    // Getter method for the agent waypoints from DDS
+    public JsonObject getAllAgentWaypoints() {
+        return this.ddsController.getAllAgentWaypoints();
+    }
 }
