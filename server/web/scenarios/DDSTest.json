@@ -12,7 +12,7 @@
     }
   ],
   "useflatbuffers": true,
-  "pythonPath": "/home/ron0/python-envs/hut-dds/bin/python",
+  "pythonPath": "C:/Users/haris/python-envs/hut-dds/Scripts/python.exe",
   "simpleListenerPath": "scripts/pyDDS/simple_listener.py",
   "fbsListenerPath": "scripts/pyDDS/fbs_listener.py",
   "simplePublisherPath": "scripts/pyDDS/simple_publisher.py",
