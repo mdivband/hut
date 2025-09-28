@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="author" content="Feng Wu">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport"
+          content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width"/>
+
+    <title>Path Planning View</title>
+
+    <!-- Basic Styles -->
+    <link rel="stylesheet" href="../../style.css"/>
+    <link rel="stylesheet" href="../styles/master.css">
+    
+    <!-- Google Maps API -->
+    <script type="text/javascript"
+            src="//maps.googleapis.com/maps/api/js?key=AIzaSyApKa49vf32gNY9MgnxXsqijN7Me168GnU&sensor=true&libraries=drawing,geometry,visualization"></script>
+    
+    <!-- jQuery (only dependency) -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Our standalone DDS controller -->
+    <script type="text/javascript" src="../controls/path_planning.js"></script>
+</head>
+<body style="visibility: hidden;">
+<!-- Map Panel -->
+<div class="ui-layout-center">
+    <div id="map_canvas" style="height: 100vh; width: 100%;"></div>
+</div>
+</body>
+</html>

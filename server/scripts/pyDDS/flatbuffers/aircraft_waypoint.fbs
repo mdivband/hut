@@ -1,0 +1,20 @@
+// msgs/aircraft_waypoint.fbs
+
+include "common_types.fbs";
+
+namespace messages;
+
+table WaypointMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  accept_radius: float; // For LOITER watpoints, 1 = CW, -1 = CCW
+  pass_radius: float; // Ignored for LOITER waypoints
+  latitude: float;
+  longitude:float;
+  altitude:float;
+  autocontinue: bool;
+  heading: float; // only used for drop waypoints
+}
+
+root_type WaypointMessage;
