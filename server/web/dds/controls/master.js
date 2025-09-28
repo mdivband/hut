@@ -32,10 +32,6 @@ $(document).ready(function() {
                 url = 'dds/views/mission.html';
                 windowName = 'MissionView';
                 break;
-            case 'path-planning-view':
-                url = 'dds/views/path_planning.html';
-                windowName = 'PathPlanningView';
-                break;
             case 'open-STA-1-view':
                 url = buildFoxgloveURL('STA', 1, orgId, null);
                 console.log('Opening Foxglove STA-1 URL:', url);
@@ -100,6 +96,10 @@ $(document).ready(function() {
         const isOpen = buttonStates[buttonId];
         console.log(`Toggling button: ${buttonId}, Current state: ${isOpen}, Action: ${action}`);
 
+        if(buttonId === "path-planning-view"){
+            simulator.state.set('pathPlanning', !simulator.state.pathPlanning());
+        }
+
         if (!isOpen) {
             // Opening - change to red and update text
             button.addClass('open');
@@ -110,7 +110,7 @@ $(document).ready(function() {
             } else {
                 button.text('Close ' + action.replace('Open ', ''));
             }
-            
+
             buttonStates[buttonId] = true;
             
             // Handle window opening for supported buttons
@@ -118,7 +118,6 @@ $(document).ready(function() {
                 buttonId === 'open-dds-log' ||
                 buttonId === 'open-mission-view' ||
                 buttonId === 'open-drone-x-view' ||
-                buttonId === 'path-planning-view' ||
                 buttonId === 'open-STA-1-view' ||
                 buttonId === 'open-FSA-1-view'
             ) {
@@ -131,7 +130,7 @@ $(document).ready(function() {
                     return;
                 }
             }
-            
+
             // Console log only after confirmation
             console.log('Opening window for:', action);
             
@@ -143,11 +142,10 @@ $(document).ready(function() {
             
             // Handle window closing for supported buttons
             if ((buttonId === 'open-dds-log' || buttonId === 'open-mission-view' 
-                || buttonId === 'open-drone-x-view' || buttonId === 'path-planning-view'
-                ) && !skipWindowAction) {
+                || buttonId === 'open-drone-x-view') && !skipWindowAction) {
                 closeWindow(buttonId);
             }
-            
+
             // Console log only after confirmation
             console.log('Closing window for:', action);
         }

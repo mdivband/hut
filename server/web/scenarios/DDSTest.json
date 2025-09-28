@@ -4,8 +4,15 @@
   "modelStyle": "off",
   "flockingEnabled" : false,
   "loggingById": true,
+  "uIOptions": [
+    {
+      "name": "predictions",
+      "default": true,
+      "toggleable": true
+    }
+  ],
   "useflatbuffers": true,
-  "pythonPath": "C:/Users/haris/python-envs/hut-dds/Scripts/python.exe",
+  "pythonPath": "/home/ron0/python-envs/hut-dds/bin/python",
   "simpleListenerPath": "scripts/pyDDS/simple_listener.py",
   "fbsListenerPath": "scripts/pyDDS/fbs_listener.py",
   "simplePublisherPath": "scripts/pyDDS/simple_publisher.py",

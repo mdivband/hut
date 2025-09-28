@@ -48,6 +48,7 @@ App.Views.Map = Backbone.View.extend({
         MapHazardController.bind(this);
         MapTargetController.bind(this);
         MapImageController.bind(this);
+        MapWaypointController.bind(this);
 
         // The MapTypeId is the default setting (ROADMAP and SATELLITE are the standard two)
         // The _Control variables enable and disable buttons for the user to change this
@@ -136,6 +137,7 @@ App.Views.Map = Backbone.View.extend({
         MapHazardController.bindEvents();
         MapTargetController.bindEvents();
         MapImageController.bindEvents();
+        MapWaypointController.bindEvents();
 
         setTimeout(function () {
             self.setupROS();
@@ -557,70 +559,6 @@ App.Views.Map = Backbone.View.extend({
         //         }
         //     });
         // }
-    },
-    /**
-     * Draws the predicted route of this agent as an arrow on the map
-     * @param predDepth The maximum number of points of the route to draw
-     */
-    drawPredictedPath: function (predDepth){
-        try {
-            self = this;
-            this.state.agents.forEach(function (agent) {
-                var predId = agent.getId() + "_pred";
-                var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
-                var predPath = agent.getRoute();
-
-                // This statement later catches the invisble agent case
-                if (predPath.length !== 0 && agent.isVisible()){
-                    var newPath = [];
-                    newPath[0] = {lat: agent.getPosition().lat(), lng: agent.getPosition().lng()}
-                    predPath.forEach(function (item, index) {
-                        if (index < predDepth) {
-                            newPath[index + 1] = {lat: item.latitude, lng: item.longitude}
-                        }
-                    });
-
-                    if (polyline) {
-                        // We found a path line we've already drawn, let's update it
-                        polyline.setOptions({path: newPath})
-                        polyline.setOptions({visible: true}) // In case it was hidden by the clearUncertainties() method
-                    } else {
-                        // Otherwise make a new one
-                        self.$el.gmap("addShape", "Polyline", {
-                            path: newPath,
-                            id: predId,
-                            icons: [self.polylineIcon],
-                            strokeOpacity: 0.8,
-                            strokeColor: '#a91f1f',
-                            strokeWeight: 1,
-                            zIndex: 2,
-                            visible: true,
-                        });
-
-                    }
-                } else {
-                    if (polyline) {
-                        // Hide the old line, as no route planned. It will be revealed again if it is updated
-                        polyline.setOptions({visible: false});
-                    }
-                }
-            });
-        } catch (e) {
-            alert("Prediction drawing error: " + e)
-        }
-    },
-    /**
-     * To clear the existing predictions from the UI
-     */
-    clearPredictions: function () {
-        self = this
-        this.state.agents.each(function (agent) {
-            var predId = agent.getId() + "_pred";
-            var polyline = self.$el.gmap("get", "overlays > Polyline", [])[predId];
-            if (polyline) {
-                polyline.setOptions({visible: false});
-            }
-        });
     },
     /**
      * Draws persistent markers on the map for reference
