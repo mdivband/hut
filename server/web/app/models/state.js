@@ -53,7 +53,8 @@ App.Models.State  = Backbone.Model.extend({
         riskMap: {}, // Added riskMap here, which should copy the original
         riskMapWeights: {},
         riskMapWeightsConst: {},
-        DDSMode: null // Default to null, can be set to true for DDS mode and false for non-DDS mode
+        DDSMode: null, // Default to null, can be set to true for DDS mode and false for non-DDS mode
+        pathPlanning: false
     },
     url: function () {
         return "state.json?" + _.time();
@@ -262,5 +263,8 @@ App.Models.State  = Backbone.Model.extend({
     // Add getter for DDSMode
     getDDSMode: function () {
         return this.get("DDSMode");
+    },
+    pathPlanning: function () {
+        return this.get("pathPlanning");
     }
 });

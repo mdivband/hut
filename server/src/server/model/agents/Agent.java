@@ -301,6 +301,7 @@ public abstract class Agent extends MObject implements Serializable {
             
             if (!exists) {
                 waypoints.add(waypoint);
+                setRoute(new ArrayList<>(this.waypoints));
                 return true;
             }
         }
