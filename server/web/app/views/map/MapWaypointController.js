@@ -19,10 +19,34 @@ var MapWaypointController = {
      * Binds listeners for state changes using the correct context.
      */
     bindEvents: function () {
-        this.context.state.on("change:time", function () {
-            this.clearAllRoutes();
+        const onAgentChange = (agent) => {
             if (this.context.state.get('pathPlanning')) {
+                this.drawAgentRoute(agent);
+            } else {
+                this.clearAgentRoute(agent);
+            }
+        };
+
+        this.context.state.agents.each((agent) => {
+            agent.on('change:coordinate change:route', onAgentChange, this);
+        });
+
+        this.context.state.agents.on('add', (agent) => {
+            agent.on('change:coordinate change:route', onAgentChange, this);
+            onAgentChange(agent);
+        }, this);
+
+        this.context.state.agents.on('remove', (agent) => {
+            agent.off('change:coordinate change:route', onAgentChange, this);
+            this.clearAgentRoute(agent);
+        }, this);
+
+
+        this.context.state.on('change:pathPlanning', (model, isEnabled) => {
+            if (isEnabled) {
                 this.renderAllRoutes();
+            } else {
+                this.clearAllRoutes();
             }
         }, this);
     },
@@ -41,71 +65,96 @@ var MapWaypointController = {
         }
     },
 
-    drawAgentRoute: function(agent) {
-        this.clearAgentWaypointMarkers(agent); // Clear dots
-
-        var fullRoute = agent.getRoute();
-        var predictionDepth = MapController.predictionLength;
-        var routeToDraw = fullRoute ? fullRoute.slice(0, predictionDepth) : [];
-
-        if (!routeToDraw || routeToDraw.length === 0) {
-            this.clearAgentRoute(agent);
-            return;
+    // TODO: cache last waypoint index
+    _findCurrentWaypointIndex: function(agentPosition, fullRoute) {
+        if (!fullRoute || fullRoute.length === 0) {
+            return -1;
+        }
+        if (fullRoute.length === 1) {
+            return 0;
         }
 
-        var routeId = agent.getId() + "_route";
-        var polyline = this.context.$el.gmap("get", "overlays > Polyline", [])[routeId];
+        // some projection calculations to locate within a segment
+        const getProjectionOnSegment = (p, v, w) => {
+            const l2 = google.maps.geometry.spherical.computeDistanceBetween(v, w);
+            if (l2 === 0.0) return { point: v, distance: google.maps.geometry.spherical.computeDistanceBetween(p, v), onSegment: true };
 
-        var path = routeToDraw.map(function(c) {
-            return new google.maps.LatLng(c.latitude, c.longitude);
-        });
-        let hash = MapWaypointController.generateHash(agent.getId());
+            const heading_vw = google.maps.geometry.spherical.computeHeading(v, w);
+            const heading_vp = google.maps.geometry.spherical.computeHeading(v, p);
+            const dist_vp = google.maps.geometry.spherical.computeDistanceBetween(v, p);
 
-        if (path.length < 2) {
-            this.clearAgentRoute(agent);
-        } else {
-            if (polyline) {
-                polyline.setPath(path);
-                polyline.setMap(this.context.map);
+            const angle = (heading_vp - heading_vw) * (Math.PI / 180.0);
+            const projectionDistance = Math.cos(angle) * dist_vp;
+
+            let closestPoint;
+            let onSegment = false;
+            if (projectionDistance < 0) {
+                closestPoint = v;
+            } else if (projectionDistance > l2) {
+                closestPoint = w;
             } else {
-                this.context.$el.gmap("addShape", "Polyline", {
-                    id: routeId, path: path, strokeColor: '#000000',
-                    strokeOpacity: 0.5+(hash/2), strokeWeight: 4, zIndex: 1,
-                    icons: [{ icon: { path: google.maps.SymbolPath.FORWARD_OPEN_ARROW }, offset: '100%' }]
-                });
+                closestPoint = google.maps.geometry.spherical.computeOffset(v, projectionDistance, heading_vw);
+                onSegment = true;
+            }
+
+            const perpendicularDistance = google.maps.geometry.spherical.computeDistanceBetween(p, closestPoint);
+            return { point: closestPoint, distance: perpendicularDistance, onSegment: onSegment };
+        };
+
+        for (let i = 0; i < fullRoute.length - 1; i++) {
+            const startWpPos = new google.maps.LatLng(fullRoute[i].latitude, fullRoute[i].longitude);
+            const endWpPos = new google.maps.LatLng(fullRoute[i+1].latitude, fullRoute[i+1].longitude);
+
+            const segmentLength = google.maps.geometry.spherical.computeDistanceBetween(startWpPos, endWpPos);
+            const tolerance = segmentLength / 20;
+
+            const projection = getProjectionOnSegment(agentPosition, startWpPos, endWpPos);
+
+            if (projection.distance <= tolerance && projection.onSegment) {
+                return i;
             }
         }
 
-        routeToDraw.forEach((waypoint, index) => {
-            var waypointId = agent.getId() + "_waypoint_" + index;
-            this.context.$el.gmap("addShape", "Circle", {
-                id: waypointId,
-                center: new google.maps.LatLng(waypoint.latitude, waypoint.longitude),
-                radius: 5, fillColor: '#000000', fillOpacity: 0.5+(hash/2),
-                strokeColor: '#FFFFFF', strokeWeight: 1,
-                clickable: false, zIndex: 2
-            });
+        // Fallback
+        let closestIndex = 0;
+        let minDistance = Number.MAX_VALUE;
+        fullRoute.forEach((waypoint, index) => {
+            const waypointPosition = new google.maps.LatLng(waypoint.latitude, waypoint.longitude);
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(agentPosition, waypointPosition);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestIndex = index;
+            }
         });
+        return closestIndex;
     },
 
     drawAgentRoute: function(agent) {
         this.clearAgentWaypointMarkers(agent);
 
-        var fullRoute = agent.getRoute();
-        var predictionDepth = MapController.predictionLength;
-        var routeToDraw = fullRoute ? fullRoute.slice(0, predictionDepth) : [];
+        const fullRoute = agent.getRoute();
+        const agentPosition = agent.getPosition();
+        const predictionDistance = MapController.predictionLength;
 
-        if (!routeToDraw || routeToDraw.length === 0) {
+        if (!fullRoute || fullRoute.length === 0) {
             this.clearAgentRoute(agent);
             return;
         }
 
+        const currentIndex = this._findCurrentWaypointIndex(agentPosition, fullRoute);
+        if (currentIndex === -1) {
+            this.clearAgentRoute(agent);
+            return;
+        }
+
+        const startIndex = Math.max(0, currentIndex - predictionDistance);
+        const endIndex = Math.min(fullRoute.length - 1, currentIndex + predictionDistance);
+
+        const routeToDraw = fullRoute.slice(startIndex, endIndex + 1);
+
         const allAgents = this.context.state.agents;
         const totalAgents = allAgents.length;
-
         const agentIndex = allAgents.indexOf(agent);
-
-        // calculate opacity
         const minOpacity = 0.3;
         const maxOpacity = 1.0;
         let opacity;
@@ -118,29 +167,27 @@ var MapWaypointController = {
             opacity = minOpacity + (agentIndex * step);
         }
 
-        var path = routeToDraw.map(function(c) {
+        const waypointLatLngs = routeToDraw.map(function(c) {
             return new google.maps.LatLng(c.latitude, c.longitude);
         });
 
-        if (path.length < 2) {
+        const displayPath = [agentPosition, ...waypointLatLngs];
+
+        if (displayPath.length < 2) {
             this.clearAgentRoute(agent);
             return;
         }
 
         var polylineOptions = {
-            path: path,
+            path: displayPath,
             strokeColor: '#000000',
             strokeOpacity: opacity,
             strokeWeight: 2,
             zIndex: 1,
-            icons: [
-                {
-                    icon: {
-                        path: google.maps.SymbolPath.FORWARD_OPEN_ARROW
-                    },
-                    offset: '100%'
-                }
-            ]
+            icons: [{
+                icon: { path: google.maps.SymbolPath.FORWARD_OPEN_ARROW },
+                offset: '100%'
+            }]
         };
 
         var polyline = this.context.$el.gmap("get", "overlays > Polyline", [])[agent.getId() + "_route"];
@@ -154,10 +201,10 @@ var MapWaypointController = {
             });
         }
 
-        routeToDraw.forEach((waypoint, index) => {
-            var waypointId = agent.getId() + "_waypoint_" + index;
+        waypointLatLngs.forEach((waypoint, index) => {
+            var waypointId = agent.getId() + "_waypoint_" + (startIndex + index);
             var circleOptions = {
-                center: new google.maps.LatLng(waypoint.latitude, waypoint.longitude),
+                center: waypoint,
                 radius: 7,
                 fillColor: '#000000',
                 fillOpacity: 0.0,

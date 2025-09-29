@@ -143,6 +143,8 @@ var MapController = {
                 MapController.showPredictedPaths($(this).val());
             }
             $("#prediction_length").html("Path Prediction Length: " + MapController.predictionLength);
+            if (self.state.pathPlanning())
+                MapWaypointController.renderAllRoutes();
         });
         // $('#risk_map_slider').on('change', function() {
         //     if(MapController.isEnabledUIOption('heatMapToggle')){
