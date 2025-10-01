@@ -20,7 +20,7 @@ def generate_sample_data():
     SECONDS_PER_STEP = 0.5  # Match the combine_interval from listener (default 0.5)
     TOTAL_STEPS = 300       # Reduced to match typical use case
     # Waypoint configuration
-    WAYPOINT_INTERVAL = 10  # Provide new waypoint every N steps
+    WAYPOINT_INTERVAL = 50  # Provide new waypoint every N steps
     
     # Noise control
     USE_NOISE = False        # Enable for more realistic data
