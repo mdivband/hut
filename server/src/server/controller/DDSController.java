@@ -605,16 +605,17 @@ public class DDSController extends AbstractController {
                             java.util.HashMap<String, Object> waypoint = 
                                 (java.util.HashMap<String, Object>) waypointObj;
                             
-                            double wpLat = (Double) waypoint.get("lat");
-                            double wpLng = (Double) waypoint.get("lng");
-                            Coordinate waypointCoordinate = new Coordinate(wpLat, wpLng);
+                            // At the begining, we set the first waypoint as the current position
+                            // double wpLat = (Double) waypoint.get("lat");
+                            // double wpLng = (Double) waypoint.get("lng");
+                            Coordinate waypointCoordinate = new Coordinate(lat, lng);
                             
                             // Add waypoint to new agent's waypoints list
                             newAgent.addWaypoint(waypointCoordinate);
                             
                             LOGGER.info(String.format(
-                                "%s; DDSWP; Added waypoint to new agent; DDS_ID=%s, Waypoint=(%.6f,%.6f)", 
-                                simulator.getState().getTime(), ddsAgentId, wpLat, wpLng));
+                                "%s; DDSWP; Set the inital position as first waypoint to new agent; DDS_ID=%s, Waypoint=(%.6f,%.6f)", 
+                                simulator.getState().getTime(), ddsAgentId, lat, lng));
                         }
                         
                         LOGGER.info(String.format(

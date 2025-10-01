@@ -4,6 +4,13 @@
   "modelStyle": "off",
   "flockingEnabled" : false,
   "loggingById": true,
+  "uIOptions": [
+    {
+      "name": "predictions",
+      "default": true,
+      "toggleable": true
+    }
+  ],
   "useflatbuffers": true,
   "pythonPath": "C:/Users/haris/python-envs/hut-dds/Scripts/python.exe",
   "simpleListenerPath": "scripts/pyDDS/simple_listener.py",

@@ -84,6 +84,7 @@ $LAB.setOptions({
     .script("app/views/map/MapHazardController.js")
     .script("app/views/map/MapTargetController.js")
     .script("app/views/map/MapImageController.js")
+    .script("app/views/map/MapWaypointController.js")
 
 
     // ----- Models -----

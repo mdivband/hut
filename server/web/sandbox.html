@@ -34,7 +34,6 @@
         <button type="button" id="open-dds-log" class="view-button" data-action="Open DDS Log">Open DDS Log</button>
         <button type="button" id="path-planning-view" class="view-button" data-action="Path Planning View">Path Planning View</button>
     </div>
-    
     <div id="optimise">
         <button type="button" id="optimal" style="display:none">Optimise</button>
     </div>
@@ -46,6 +45,12 @@
     <div id="game_info" style="margin: 2px;">
         <div id="game_id" class="game_info_item"></div>
         <div id="game_time" class="game_info_item">Time: 00:00:00</div>
+        <div class="game_info_item", style="text-align: left;">
+            <div id="prediction_wrapper_div" class="edit_buttons_sub" style="display:none">
+                <input id="prediction_slider" type="range" min="0" max="7" value="5" class="slider"></input>
+                <div id="prediction_length" class="game_info_item">Path Prediction Length: 5</div>
+            </div>
+        </div>
     </div>
 
     <script type="text/template" id="scenario_end_panel">
