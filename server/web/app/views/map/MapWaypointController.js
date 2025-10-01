@@ -1,5 +1,6 @@
 var MapWaypointController = {
     context: null,
+    lastRoutes: {}, // Cache to store last routes for comparison
 
     /**
      * Binds all methods to the provided context (the map view).
@@ -13,6 +14,7 @@ var MapWaypointController = {
         this.renderAllRoutes = _.bind(this.renderAllRoutes, this);
         this.clearAllRoutes = _.bind(this.clearAllRoutes, this);
         this.clearAgentWaypointMarkers = _.bind(this.clearAgentWaypointMarkers, this);
+        this.getRouteHash = _.bind(this.getRouteHash, this);
     },
 
     /**
@@ -20,10 +22,20 @@ var MapWaypointController = {
      */
     bindEvents: function () {
         const onAgentChange = (agent) => {
-            if (this.context.state.get('pathPlanning')) {
-                this.drawAgentRoute(agent);
-            } else {
-                this.clearAgentRoute(agent);
+            const agentId = agent.getId();
+            const currentRoute = agent.getRoute();
+            const currentRouteHash = this.getRouteHash(currentRoute);
+            const lastRouteHash = this.lastRoutes[agentId];
+
+            // Only render if route has changed
+            if (currentRouteHash !== lastRouteHash) {
+                this.lastRoutes[agentId] = currentRouteHash;
+                
+                if (this.context.state.get('pathPlanning')) {
+                    this.drawAgentRoute(agent);
+                } else {
+                    this.clearAgentRoute(agent);
+                }
             }
         };
 
@@ -39,8 +51,9 @@ var MapWaypointController = {
         this.context.state.agents.on('remove', (agent) => {
             agent.off('change:coordinate change:route', onAgentChange, this);
             this.clearAgentRoute(agent);
+            // Clean up cached route for removed agent
+            delete this.lastRoutes[agent.getId()];
         }, this);
-
 
         this.context.state.on('change:pathPlanning', (model, isEnabled) => {
             if (isEnabled) {
@@ -110,8 +123,9 @@ var MapWaypointController = {
 
             const projection = getProjectionOnSegment(agentPosition, startWpPos, endWpPos);
 
+            // If within tolerance and on segment, return next waypoint index
             if (projection.distance <= tolerance && projection.onSegment) {
-                return i;
+                return i+1;
             }
         }
 
@@ -149,7 +163,7 @@ var MapWaypointController = {
 
         const startIndex = Math.max(0, currentIndex - predictionDistance);
         const endIndex = Math.min(fullRoute.length - 1, currentIndex + predictionDistance);
-
+        
         const routeToDraw = fullRoute.slice(startIndex, endIndex + 1);
 
         const allAgents = this.context.state.agents;
@@ -233,15 +247,33 @@ var MapWaypointController = {
     },
 
     renderAllRoutes: function() {
+        // Clear cache when rendering all routes to ensure fresh render
+        this.lastRoutes = {};
         this.context.state.agents.each(this.drawAgentRoute, this);
     },
 
     clearAllRoutes: function() {
+        // Clear cache when clearing all routes
+        this.lastRoutes = {};
         this.context.state.agents.each(this.clearAgentRoute, this);
     },
 
+    // Generate a hash for a route to detect changes
+    getRouteHash: function(route) {
+        if (!route || route.length === 0) {
+            return 'empty';
+        }
+        
+        // Create a string representation of the route
+        const routeString = route.map(waypoint => 
+            `${waypoint.latitude.toFixed(6)},${waypoint.longitude.toFixed(6)}`
+        ).join('|');
+        
+        return this.generateHash(routeString);
+    },
+
     // hash between 0 and 1
-    generateHash: (string) => {
+    generateHash: function(string) {
         let hash = 0;
         for (const char of string) {
             hash = (hash << 5) - hash + char.charCodeAt(0);
