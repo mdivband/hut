@@ -69,7 +69,7 @@ def check_flatbuffers(type_based=True):
     try:
         import flatbuffers
         if type_based:
-            from messages import PositionMessage, VelocityMessage, HeadingMessage
+            from messages import PositionMessage, VelocityMessage, HeadingMessage, FireMessage
             from messages import Type  # Import Type from the generated messages module
         else:
             from DDSSchema import DDSMessage, AgentData, Coordinate, Velocity, Attitude, Status

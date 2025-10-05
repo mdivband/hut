@@ -64,43 +64,6 @@ var simulator = {
                         });
                         $.blockWithContent(scenario_end_panel);
                     }
-
-
-                    // mock data for the fire data. simply following the agent
-                    var agents = self.state.agents;
-                    var fires = self.state.fires;
-
-                    // the constant distance for the offset.
-                    const FIRE_OFFSET_METERS = 100.0;
-
-                    var newFireData = [];
-
-                    agents.each(function(agent) {
-                        var agentPos = agent.getPosition();
-
-                        var randomHeading = Math.random() * 360;
-
-                        // Geometry library to calculate the new position.
-                        var fireLatLng = google.maps.geometry.spherical.computeOffset(
-                            agentPos,           // Starting point (agent LatLng)
-                            FIRE_OFFSET_METERS,
-                            randomHeading
-                        );
-
-                        // data object for the new fire using the calculated coordinates.
-                        newFireData.push({
-                            id: agent.getId() + "_fire", // ID for the fire
-                            coordinate: {
-                                latitude: fireLatLng.lat(),  // new latitude
-                                longitude: fireLatLng.lng() // new longitude
-                            },
-                            visible: agent.isVisible() // mirror the agent visibility
-                        });
-                    });
-
-                    fires.update(newFireData, {parse: true});
-
-
                 })
                 .always(function () {
                     if (self.state.isInProgress()) {

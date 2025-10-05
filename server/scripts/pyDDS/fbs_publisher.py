@@ -24,7 +24,7 @@ from utils import *
 FLATBUFFERS_AVAILABLE = check_flatbuffers()
 if FLATBUFFERS_AVAILABLE:
     import flatbuffers
-    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage
+    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage, FireMessage
     print("FlatBuffers support enabled")
 
 # Global dictionary to store publishers
@@ -86,6 +86,18 @@ def create_waypoint_message(aircraft_type, aircraft_id, lat, lng, alt, heading):
     WaypointMessage.WaypointMessageAddAltitude(builder, alt)
     WaypointMessage.WaypointMessageAddHeading(builder, heading)
     message_offset = WaypointMessage.WaypointMessageEnd(builder)
+    builder.Finish(message_offset)
+    return builder.Output()
+
+def create_fire_message(fire_id, lat, lng):
+    """Create a FireMessage FlatBuffer"""
+    builder = flatbuffers.Builder(128)
+    FireMessage.FireMessageStart(builder)
+    FireMessage.FireMessageAddTimestamp(builder, int(time.time() * 1000))
+    FireMessage.FireMessageAddId(builder, int(fire_id))
+    FireMessage.FireMessageAddLatitude(builder, lat)
+    FireMessage.FireMessageAddLongitude(builder, lng)
+    message_offset = FireMessage.FireMessageEnd(builder)
     builder.Finish(message_offset)
     return builder.Output()
 
@@ -187,6 +199,23 @@ def generate_random_aircraft_data(aircraft_id):
     }
     return position_data, velocity_data, heading_data
 
+def publish_fire_data(session, fire_id, lat, lng, format_type):
+    """Publish fire data to a dedicated topic"""
+    fire_topic = "fires/events"
+
+    if fire_topic not in publishers_cache:
+        publishers_cache[fire_topic] = session.declare_publisher(fire_topic)
+
+    if format_type == 'flatbuffer':
+        fire_msg = create_fire_message(fire_id, lat, lng)
+        publishers_cache[fire_topic].put(fire_msg)
+        print(f"Published fire event FlatBuffer for fire ID {fire_id}")
+    else:
+        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}"
+        publishers_cache[fire_topic].put(fire_str)
+        print(f"Published fire event string: {fire_str}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='DDS Publisher for Aircraft Messages with FlatBuffers support')
@@ -239,36 +268,43 @@ def main():
                             step_data = csv_data[current_step]
                             print(f"\n--- Publishing Step {current_step} ({len(step_data)} agents) ---")
                             for row in step_data:
-                                aircraft_id = row['agent_id']
                                 aircraft_type = row.get('aircraft_type', args.aircraft_type)
-                                position_data = {
-                                    'lat': float(row['latitude']),
-                                    'lng': float(row['longitude']),
-                                    'alt': float(row['altitude'])
-                                }
-                                velocity_data = {
-                                    'x': float(row['vel_x']),
-                                    'y': float(row['vel_y']),
-                                    'z': float(row['vel_z'])
-                                }
-                                heading_data = {
-                                    'heading': float(row['heading'])
-                                }
-                                # Prepare waypoint data if available
-                                waypoint_data = None
-                                if (row.get('waypoint_latitude') and row.get('waypoint_longitude')
-                                    and row.get('waypoint_altitude') and row.get('waypoint_heading')):
-                                    waypoint_data = {
-                                        'lat': float(row['waypoint_latitude']),
-                                        'lng': float(row['waypoint_longitude']),
-                                        'alt': float(row['waypoint_altitude']),
-                                        'heading': float(row['waypoint_heading'])
+
+                                if aircraft_type == 'FIRE':
+                                    fire_id = row['agent_id'] # Reusing agent_id column
+                                    lat = float(row['latitude'])
+                                    lng = float(row['longitude'])
+                                    publish_fire_data(session, fire_id, lat, lng, args.format)
+                                else:
+                                    aircraft_id = row['agent_id']
+                                    position_data = {
+                                        'lat': float(row['latitude']),
+                                        'lng': float(row['longitude']),
+                                        'alt': float(row['altitude'])
                                     }
-                                publish_aircraft_data(
-                                    session, aircraft_type, aircraft_id,
-                                    position_data, velocity_data, heading_data,
-                                    args.format, waypoint_data
-                                )
+                                    velocity_data = {
+                                        'x': float(row['vel_x']),
+                                        'y': float(row['vel_y']),
+                                        'z': float(row['vel_z'])
+                                    }
+                                    heading_data = {
+                                        'heading': float(row['heading'])
+                                    }
+                                    # Prepare waypoint data if available
+                                    waypoint_data = None
+                                    if (row.get('waypoint_latitude') and row.get('waypoint_longitude')
+                                        and row.get('waypoint_altitude') and row.get('waypoint_heading')):
+                                        waypoint_data = {
+                                            'lat': float(row['waypoint_latitude']),
+                                            'lng': float(row['waypoint_longitude']),
+                                            'alt': float(row['waypoint_altitude']),
+                                            'heading': float(row['waypoint_heading'])
+                                        }
+                                    publish_aircraft_data(
+                                        session, aircraft_type, aircraft_id,
+                                        position_data, velocity_data, heading_data,
+                                        args.format, waypoint_data
+                                    )
                             current_step += 1
                             if current_step > max(csv_data.keys()):
                                 current_step = 1  # Loop back to first step

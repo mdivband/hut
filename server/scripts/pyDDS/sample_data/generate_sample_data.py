@@ -58,7 +58,10 @@ def generate_sample_data():
     # Coordinate conversion (approximate for UK latitude)
     LAT_METERS_PER_DEGREE = 111000        # meters per degree latitude
     LON_METERS_PER_DEGREE = 80000         # meters per degree longitude
-    
+
+    FIRE_EVENT_PROBABILITY = 0.05  # 5% chance to generate a fire event per step
+    FIRE_RADIUS_METERS = 1000      # 1km radius around an agent
+
     # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
         '1': {'speed': 20, 'start_step': 1, 'mission': 'Alpha', 'start_heading': 270, 'type': 'STA'},
@@ -67,7 +70,7 @@ def generate_sample_data():
         '4': {'speed': 20, 'start_step': 50, 'mission': 'Delta', 'start_heading': 216, 'type': 'FSA'},
         '5': {'speed': 18, 'start_step': 80, 'mission': 'Echo', 'start_heading': 330, 'type': 'FSA'}
     }
-        
+
     # Initialize agent states
     agent_states = {}
     for agent_id, config in agents.items():
@@ -194,6 +197,8 @@ def generate_sample_data():
               'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
     data.append(header)
 
+    fire_id_counter = 1
+
     # Generate TOTAL_STEPS steps
     for step in range(1, TOTAL_STEPS + 1):
         for agent_id, config in agents.items():
@@ -251,6 +256,39 @@ def generate_sample_data():
             ]
 
             data.append(row)
+
+        if random.random() < FIRE_EVENT_PROBABILITY:
+            # gets all agents active in the current step
+            active_agents = [
+                agent_id for agent_id, config in agents.items() if step >= config['start_step']
+            ]
+
+            if active_agents:
+                # picks a random agent to spawn the fire near
+                random_agent_id = random.choice(active_agents)
+                agent_state = agent_positions[random_agent_id][step - 1]
+
+                # generate a random offset from the agent's position
+                random_angle = random.uniform(0, 2 * math.pi)
+                random_distance = random.uniform(0, FIRE_RADIUS_METERS)
+
+                # convert distance and angle to lat/lon offsets
+                lat_offset = (random_distance * math.cos(random_angle)) / LAT_METERS_PER_DEGREE
+                lon_offset = (random_distance * math.sin(random_angle)) / LON_METERS_PER_DEGREE
+
+                fire_lat = agent_state['lat'] + lat_offset
+                fire_lon = agent_state['lon'] + lon_offset
+
+                fire_row = [
+                    step,
+                    fire_id_counter,    # fire counter for the ID
+                    'FIRE',             # name to identify this row
+                    round(fire_lat, 13),
+                    round(fire_lon, 13),
+                    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '' # unused columns
+                ]
+                data.append(fire_row)
+                fire_id_counter += 1
     
     # Print summary using actual constants
     print("\nData generation summary:")

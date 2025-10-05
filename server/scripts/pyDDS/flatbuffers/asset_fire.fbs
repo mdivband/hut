@@ -1,0 +1,10 @@
+namespace messages;
+
+table FireMessage {
+  timestamp:long;
+  id:uint;
+  latitude:float;
+  longitude:float;
+}
+
+root_type FireMessage;
