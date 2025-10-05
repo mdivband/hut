@@ -11,6 +11,7 @@ import argparse
 import csv
 import os
 import sys
+from collections import defaultdict
 
 # Add the script folder and generated folder to path
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -101,23 +102,34 @@ def create_fire_message(fire_id, lat, lng):
     builder.Finish(message_offset)
     return builder.Output()
 
-def load_csv_data(csv_file_path):
-    """Load CSV data and organize by steps"""
-    csv_data = {}
+def load_csv_data(agent_csv_path, fire_csv_path):
+    """Load and merge agent and fire data, adding a 'type' key for dispatching."""
+    merged_data = defaultdict(list)
+
     try:
-        with open(csv_file_path, 'r', newline='') as csvfile:
+        # Load agent data
+        with open(agent_csv_path, 'r', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 step = int(row['step'])
-                if step not in csv_data:
-                    csv_data[step] = []
-                csv_data[step].append(row)
-        print(f"Loaded CSV data with {len(csv_data)} steps")
-        for step, agents in csv_data.items():
-            print(f"  Step {step}: {len(agents)} agents")
-        return csv_data
+                # manually add 'type' key for clarity
+                row['type'] = row['aircraft_type']
+                merged_data[step].append(row)
+        print(f"Loaded {sum(len(v) for v in merged_data.values())} agent data rows.")
+
+        # Load and merge fire data
+        with open(fire_csv_path, 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                step = int(row['step'])
+                # manually add 'type' key for clarity
+                row['type'] = 'FIRE'
+                merged_data[step].append(row)
+        print(f"Loaded and merged fire data.")
+
+        return merged_data
     except Exception as e:
-        print(f"Error loading CSV file: {e}")
+        print(f"Error loading or merging CSV files: {e}")
         return None
 
 def publish_aircraft_data(
@@ -247,8 +259,9 @@ def main():
     # Load CSV data if requested
     csv_data = None
     if args.use_csv:
-        csv_file_path = os.path.join(script_dir, 'sample_data', 'sample_data.csv')
-        csv_data = load_csv_data(csv_file_path)
+        agent_csv = os.path.join(script_dir, 'sample_data', 'agents_data.csv')
+        fire_csv = os.path.join(script_dir, 'sample_data', 'fires_data.csv')
+        csv_data = load_csv_data(agent_csv, fire_csv)
         if csv_data is None:
             print("Failed to load CSV data, using random values instead")
             args.use_csv = False
@@ -266,17 +279,18 @@ def main():
                         # CSV mode - publish data for all agents in current step
                         if current_step in csv_data:
                             step_data = csv_data[current_step]
-                            print(f"\n--- Publishing Step {current_step} ({len(step_data)} agents) ---")
+                            print(f"\n--- Publishing Step {current_step} ({len(step_data)} items) ---")
                             for row in step_data:
-                                aircraft_type = row.get('aircraft_type', args.aircraft_type)
+                                row_type = row.get('type')
 
-                                if aircraft_type == 'FIRE':
-                                    fire_id = row['agent_id'] # Reusing agent_id column
+                                if row_type == 'FIRE':
+                                    fire_id = row['fire_id']
                                     lat = float(row['latitude'])
                                     lng = float(row['longitude'])
                                     publish_fire_data(session, fire_id, lat, lng, args.format)
                                 else:
                                     aircraft_id = row['agent_id']
+                                    aircraft_type = row['aircraft_type']
                                     position_data = {
                                         'lat': float(row['latitude']),
                                         'lng': float(row['longitude']),

@@ -188,14 +188,18 @@ def generate_sample_data():
             })
     
     # Generate data
-    data = []
+    agent_data = []
+    fire_data = []
     
     # Header - updated to include aircraft_type for better compatibility and waypoint columns
-    header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading', 
+    agent_header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading',
               'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level', 
               'signal_strength', 'status', 'custom_data',
               'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
-    data.append(header)
+    fire_header = ['step', 'fire_id', 'latitude', 'longitude']
+
+    agent_data.append(agent_header)
+    fire_data.append(fire_header)
 
     fire_id_counter = 1
 
@@ -255,7 +259,7 @@ def generate_sample_data():
                 waypoint_heading
             ]
 
-            data.append(row)
+            agent_data.append(row)
 
         if random.random() < FIRE_EVENT_PROBABILITY:
             # gets all agents active in the current step
@@ -282,12 +286,10 @@ def generate_sample_data():
                 fire_row = [
                     step,
                     fire_id_counter,    # fire counter for the ID
-                    'FIRE',             # name to identify this row
                     round(fire_lat, 13),
                     round(fire_lon, 13),
-                    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '' # unused columns
                 ]
-                data.append(fire_row)
+                fire_data.append(fire_row)
                 fire_id_counter += 1
     
     # Print summary using actual constants
@@ -300,7 +302,7 @@ def generate_sample_data():
     print(f"- Noise enabled: {USE_NOISE}")
     print(f"- Compatible with FlatBuffers schemas")
     
-    return data
+    return agent_data, fire_data
 
 def save_to_csv(data, filename='sample_data.csv'):
     """Save the generated data to a CSV file"""
@@ -315,7 +317,8 @@ def save_to_csv(data, filename='sample_data.csv'):
 
 if __name__ == "__main__":
     # Generate the data
-    sample_data = generate_sample_data()
+    agents_sample_data, fires_sample_data = generate_sample_data()
     
     # Save to CSV file
-    save_to_csv(sample_data, 'sample_data.csv')
+    save_to_csv(agents_sample_data, 'agents_data.csv')
+    save_to_csv(fires_sample_data, 'fires_data.csv')
