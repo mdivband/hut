@@ -5,6 +5,7 @@ table FireMessage {
   id:uint;
   latitude:float;
   longitude:float;
+  image:string; // base64
 }
 
 root_type FireMessage;

@@ -153,3 +153,30 @@
         min-width: 200px;
     }
 }
+
+
+
+/* fire view styles... */
+.fire-popup-content {
+    padding: 0;
+    margin: 0;
+}
+
+/*
+ * This targets the default container that Google Maps wraps your content in.
+ * It removes the white background, padding, and shadow.
+ */
+.gm-style-iw-c {
+    padding: 0 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.gm-style-iw-d {
+    overflow: hidden !important; /* Prevents scrollbars */
+}
+
+/* This removes the small "close" (X) button from the top right of the InfoWindow */
+.gm-ui-hover-effect {
+    display: none !important;
+}

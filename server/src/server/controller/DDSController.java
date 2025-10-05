@@ -577,6 +577,7 @@ public class DDSController extends AbstractController {
                         int ddsFireId = (Integer) fireData.get("id");
                         double lat = (Double) fireData.get("latitude");
                         double lng = (Double) fireData.get("longitude");
+                        String imageBase64 = (String) fireData.get("image");
 
                         String simulatorFireId = ddsToSimulatorFireIdMap.get(ddsFireId);
                         Fire existingFire = null;
@@ -588,7 +589,7 @@ public class DDSController extends AbstractController {
                         if (existingFire == null) {
                             // Fire doesn't exist, create it.
                             String newId = simulator.getFireController().generateUID(ddsFireId);
-                            Fire newFire = simulator.getFireController().addFire(newId, lat, lng);
+                            Fire newFire = simulator.getFireController().addFire(newId, lat, lng,  imageBase64);
 
                             // Store the mapping for future updates.
                             ddsToSimulatorFireIdMap.put(ddsFireId, newId);
@@ -599,6 +600,7 @@ public class DDSController extends AbstractController {
                         } else {
                             // Fire exists, update its position.
                             existingFire.setCoordinate(new Coordinate(lat, lng));
+                            existingFire.setImage(imageBase64);
 
                             LOGGER.fine(String.format(
                                     "%s; DDSFIREUP; Updated existing DDS fire; SIM_ID=%s, Position=(%.6f,%.6f)",
