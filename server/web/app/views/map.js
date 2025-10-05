@@ -49,6 +49,7 @@ App.Views.Map = Backbone.View.extend({
         MapTargetController.bind(this);
         MapImageController.bind(this);
         MapWaypointController.bind(this);
+        MapFireViewController.bind(this);
 
         // The MapTypeId is the default setting (ROADMAP and SATELLITE are the standard two)
         // The _Control variables enable and disable buttons for the user to change this
@@ -138,6 +139,7 @@ App.Views.Map = Backbone.View.extend({
         MapTargetController.bindEvents();
         MapImageController.bindEvents();
         MapWaypointController.bindEvents();
+        MapFireViewController.bindEvents();
 
         setTimeout(function () {
             self.setupROS();
