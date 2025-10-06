@@ -14,9 +14,34 @@ This setup uses the `zenoh.io` pub/sub framework with `flatbuffers` for data ser
 ---
 
 ### Automated Setup
-Setup scripts are now available for **macOS** and **linux** systems.
+Setup scripts are now available for **Windows**, **macOS** and **Linux** systems.
 
-This script will install all required dependencies using the available package manager and provide the running `jar` command.
+These scripts will install all required dependencies using the available package manager and provide the running `jar` command.
+
+## Windows
+**Prerequisites:** Open PowerShell as Administrator
+
+**Run the following in PowerShell:**
+```powershell
+$Branch = "xprize_mcs"  # Change this to your desired branch
+$ScriptUrl = "https://raw.githubusercontent.com/SooratiLab/haris/$Branch/server/scripts/haris/setup_haris_win.ps1"
+Invoke-WebRequest -Uri $ScriptUrl -OutFile setup_haris_win.ps1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\setup_haris_win.ps1 $Branch
+```
+
+**Alternative one-liner:**
+```powershell
+# For xprize_mcs branch
+iex "& { $(irm https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs/server/scripts/haris/setup_haris_win.ps1) } xprize_mcs"
+```
+
+**Usage with different branches:**
+```powershell
+.\setup_haris_win.ps1 main
+.\setup_haris_win.ps1 xprize_mcs_dev
+.\setup_haris_win.ps1 feature-branch
+```
 
 ## macOS
 **Prerequisites:** Install `Homebrew` first (if not already installed):
@@ -39,8 +64,8 @@ chmod +x setup_haris.sh
 ./setup_haris.sh
 ```
 
-### Manual Setup (Windows or for Dev)
-IntelliJ is the preferred IDE if you want to setup the Simulator manually on `Windows` or for development.
+### Manual Setup (for Development)
+IntelliJ is the preferred IDE if you want to setup the Simulator manually for development.
 
 The following steps have been provided to acheive this:
 
@@ -161,4 +186,5 @@ python server/scripts/pyDDS/sample_data/generate_sample_data.py
 | Listener fails to start | Missing Python dependencies | Ensure `zenoh` and `flatbuffers` are installed. |
 | Python script not found | Incorrect IntelliJ project path or missing files | Set the correct working directory in IntelliJ. Confirm `pyDDS` file structure is intact. |
 | `pythonPath` not working | Incorrect or missing path in `DDSTest.json` | Make sure it's set to the full path of the virtual environment's Python executable. |
-
+| PowerShell execution policy error | Script execution blocked by Windows | Run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` in PowerShell as Administrator |
+| Branch not found error | Specified branch doesn't exist | Check available branches or use a valid branch name like `main`, `xprize_mcs`, or `xprize_mcs_dev` |

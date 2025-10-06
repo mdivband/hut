@@ -32,6 +32,11 @@ function Test-RemoteBranch {
     }
 }
 
+# Function to refresh environment variables
+function Refresh-Environment {
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
+}
+
 # -------------------------------
 # Step 0: Check for package managers
 # -------------------------------
@@ -55,6 +60,7 @@ if ($HasChocolatey) {
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     $PkgManager = "chocolatey"
     Write-Host "Chocolatey installed successfully"
+    Refresh-Environment
 }
 
 # -------------------------------
@@ -70,11 +76,10 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     Write-Host "Git not found. Installing..."
     switch ($PkgManager) {
         "chocolatey" { choco install git -y }
-        "winget" { winget install --id Git.Git -e --source winget }
+        "winget" { winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements }
         "scoop" { scoop install git }
     }
-    # Refresh PATH
-    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
+    Refresh-Environment
 }
 
 # Verify branch exists before proceeding
@@ -97,140 +102,119 @@ if (-not (Test-RemoteBranch -Repo $Repository -BranchName $Branch)) {
 }
 Write-Host "Branch '$Branch' found in repository." -ForegroundColor Green
 
-# Java
+# Java - Check multiple possible commands
 Write-Host "Checking for Java..."
 $JavaInstalled = $false
-try {
-    $JavaVersion = java -version 2>&1
-    if ($JavaVersion -match 'version "(\d+)') {
-        $JavaMajorVersion = [int]$matches[1]
-        if ($JavaMajorVersion -ge 17) {
-            Write-Host "Found Java version $JavaMajorVersion (compatible)"
-            $JavaInstalled = $true
-        } else {
-            Write-Host "Found Java version $JavaMajorVersion but need version 17+. Installing..."
+$JavaCommands = @("java", "java.exe")
+
+foreach ($JavaCmd in $JavaCommands) {
+    if (Get-Command $JavaCmd -ErrorAction SilentlyContinue) {
+        try {
+            $JavaVersion = & $JavaCmd -version 2>&1
+            if ($JavaVersion -match 'version "(\d+)' -or $JavaVersion -match 'openjdk (\d+)') {
+                $JavaMajorVersion = [int]$matches[1]
+                if ($JavaMajorVersion -ge 17) {
+                    Write-Host "Found Java version $JavaMajorVersion (compatible)"
+                    $JavaInstalled = $true
+                    break
+                } else {
+                    Write-Host "Found Java version $JavaMajorVersion but need version 17+."
+                }
+            }
+        } catch {
+            # Continue checking other commands
         }
     }
-} catch {
-    Write-Host "Java not found. Installing OpenJDK 17..."
 }
 
 if (-not $JavaInstalled) {
+    Write-Host "Java 17+ not found. Installing OpenJDK 17..."
     switch ($PkgManager) {
-        "chocolatey" { choco install openjdk17 -y }
-        "winget" { winget install --id Microsoft.OpenJDK.17 -e --source winget }
+        "chocolatey" { 
+            choco install openjdk17 -y 
+            Refresh-Environment
+        }
+        "winget" { 
+            Write-Host "Note: winget may require user interaction for Java installation."
+            winget install --id Microsoft.OpenJDK.17 -e --source winget --accept-package-agreements --accept-source-agreements --silent
+            Refresh-Environment
+        }
         "scoop" { 
             scoop bucket add java
             scoop install openjdk17
+            Refresh-Environment
         }
     }
-    # Refresh PATH
-    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
 }
 
-# Python
+# Python - Check multiple possible commands
 Write-Host "Checking for Python..."
 $PythonInstalled = $false
-try {
-    $PythonVersion = python --version 2>&1
-    if ($PythonVersion -match 'Python (\d+)\.(\d+)') {
-        $PyMajor = [int]$matches[1]
-        $PyMinor = [int]$matches[2]
-        if ($PyMajor -eq 3 -and $PyMinor -ge 7) {
-            Write-Host "Found Python $($matches[0])"
-            $PythonInstalled = $true
-        } else {
-            Write-Host "Python version < 3.7 detected. Installing newer Python..."
+$PythonCommands = @("python", "python3", "py")
+
+foreach ($PyCmd in $PythonCommands) {
+    if (Get-Command $PyCmd -ErrorAction SilentlyContinue) {
+        try {
+            $PythonVersion = & $PyCmd --version 2>&1
+            if ($PythonVersion -match 'Python (\d+)\.(\d+)') {
+                $PyMajor = [int]$matches[1]
+                $PyMinor = [int]$matches[2]
+                if ($PyMajor -eq 3 -and $PyMinor -ge 7) {
+                    Write-Host "Found Python $($matches[0]) using command '$PyCmd'"
+                    $PythonInstalled = $true
+                    $PythonCommand = $PyCmd
+                    break
+                }
+            }
+        } catch {
+            # Continue checking other commands
         }
     }
-} catch {
-    Write-Host "Python not found. Installing Python..."
 }
 
 if (-not $PythonInstalled) {
+    Write-Host "Python 3.7+ not found. Installing Python..."
     switch ($PkgManager) {
-        "chocolatey" { choco install python3 -y }
-        "winget" { winget install --id Python.Python.3.12 -e --source winget }
-        "scoop" { scoop install python }
+        "chocolatey" { 
+            choco install python3 -y 
+            Refresh-Environment
+        }
+        "winget" { 
+            Write-Host "Note: winget may require user interaction for Python installation."
+            winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements --silent
+            Refresh-Environment
+        }
+        "scoop" { 
+            scoop install python
+            Refresh-Environment
+        }
     }
-    # Refresh PATH
-    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
+    
+    # Re-check for Python after installation
+    foreach ($PyCmd in $PythonCommands) {
+        if (Get-Command $PyCmd -ErrorAction SilentlyContinue) {
+            $PythonCommand = $PyCmd
+            break
+        }
+    }
 }
 
-# Python pip (usually comes with Python on Windows)
+# Use the found Python command or default to 'python'
+if (-not $PythonCommand) {
+    $PythonCommand = "python"
+}
+
+# Python pip
 Write-Host "Checking for pip..."
 try {
-    $PipVersion = python -m pip --version
+    $PipVersion = & $PythonCommand -m pip --version
     Write-Host "Found pip: $PipVersion"
 } catch {
     Write-Host "pip not found. Installing..."
-    python -m ensurepip --upgrade
+    & $PythonCommand -m ensurepip --upgrade
 }
 
-# FlatBuffers compiler (flatc)
-Write-Host "Checking for flatc..."
-$FlatcInstalled = $false
-try {
-    $FlatcOutput = flatc --version 2>&1
-    if ($FlatcOutput -match '(\d+)\.(\d+)\.(\d+)') {
-        $FlatcMajor = [int]$matches[1]
-        $FlatcMinor = [int]$matches[2]
-        if ($FlatcMajor -gt 25 -or ($FlatcMajor -eq 25 -and $FlatcMinor -ge 2)) {
-            Write-Host "Found flatc v$($matches[0]) (meets requirement v25.2+)"
-            $FlatcInstalled = $true
-        } else {
-            Write-Host "Found flatc v$($matches[0]) but need v25.2+. Installing newer version..."
-        }
-    }
-} catch {
-    Write-Host "flatc not found. Installing v25.2.10..."
-}
-
-if (-not $FlatcInstalled) {
-    $FlatcVersion = "25.2.10"
-    $FlatcUrl = "https://github.com/google/flatbuffers/releases/download/v$FlatcVersion/Windows.flatc.binary.zip"
-    $TempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
-    
-    Write-Host "Downloading flatc v$FlatcVersion from $FlatcUrl..."
-    $ZipPath = Join-Path $TempDir "flatc.zip"
-    Invoke-WebRequest -Uri $FlatcUrl -OutFile $ZipPath
-    
-    # Extract
-    Expand-Archive -Path $ZipPath -DestinationPath $TempDir
-    
-    # Find flatc.exe and install to a location in PATH
-    $FlatcExe = Get-ChildItem -Path $TempDir -Name "flatc.exe" -Recurse | Select-Object -First 1
-    if ($FlatcExe) {
-        $FlatcSource = Join-Path $TempDir $FlatcExe
-        $InstallDir = "C:\Program Files\flatc"
-        New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
-        Copy-Item $FlatcSource -Destination $InstallDir
-        
-        # Add to PATH if not already there
-        $CurrentPath = [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
-        if ($CurrentPath -notlike "*$InstallDir*") {
-            [System.Environment]::SetEnvironmentVariable("PATH", "$CurrentPath;$InstallDir", "Machine")
-            $env:PATH += ";$InstallDir"
-        }
-        
-        Write-Host "flatc installed to $InstallDir"
-    } else {
-        Write-Host "flatc.exe not found in downloaded archive!"
-        exit 1
-    }
-    
-    # Cleanup
-    Remove-Item -Path $TempDir -Recurse -Force
-    
-    # Verify installation
-    try {
-        $NewFlatcVersion = flatc --version 2>&1
-        Write-Host "flatc installed successfully"
-    } catch {
-        Write-Host "Failed to install flatc"
-        exit 1
-    }
-}
+# FlatBuffers compiler (flatc) - Will be installed via PyDDS setup_env.py
 
 # -------------------------------
 # Step 2: Setup or update haris repo
@@ -281,31 +265,50 @@ if (Test-Path "haris") {
 $EnvDir = Join-Path $env:USERPROFILE "python-envs"
 New-Item -ItemType Directory -Path $EnvDir -Force | Out-Null
 Set-Location $EnvDir
-python -m venv hut-dds
+
+# Remove existing environment if it exists
+if (Test-Path "hut-dds") {
+    Write-Host "Removing existing virtual environment..."
+    Remove-Item -Path "hut-dds" -Recurse -Force
+}
+
+Write-Host "Creating new virtual environment..."
+& $PythonCommand -m venv hut-dds
 
 # Activate virtual environment
 $ActivateScript = Join-Path $EnvDir "hut-dds\Scripts\Activate.ps1"
-& $ActivateScript
+if (Test-Path $ActivateScript) {
+    & $ActivateScript
+    Write-Host "Virtual environment activated"
+} else {
+    Write-Host "Warning: Could not find activation script at $ActivateScript"
+}
 
 # -------------------------------
 # Step 4: Setup the PyDDS environment
 # -------------------------------
 $HarisPath = Join-Path $env:USERPROFILE "haris"
-python (Join-Path $HarisPath "server\scripts\pyDDS\setup_env.py")
-python (Join-Path $HarisPath "server\scripts\pyDDS\sample_data\generate_sample_data.py")
+Write-Host "Setting up PyDDS environment..."
+& $PythonCommand (Join-Path $HarisPath "server\scripts\pyDDS\setup_env.py")
+& $PythonCommand (Join-Path $HarisPath "server\scripts\pyDDS\sample_data\generate_sample_data.py")
 
 # -------------------------------
 # Step 5: Setup Haris
 # -------------------------------
-$PythonPath = (Get-Command python).Source
+$PythonPath = (Get-Command $PythonCommand).Source
 $ScenarioPath = Join-Path $HarisPath "server\web\scenarios"
 Set-Location $ScenarioPath
 
 # Update DDSTest.json with Python path
 $ConfigFile = "DDSTest.json"
-$Config = Get-Content $ConfigFile | ConvertFrom-Json
-$Config.pythonPath = $PythonPath.Replace('\', '\\')  # Escape backslashes for JSON
-$Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile
+if (Test-Path $ConfigFile) {
+    $Config = Get-Content $ConfigFile | ConvertFrom-Json
+    $Config.pythonPath = $PythonPath.Replace('\', '\\')  # Escape backslashes for JSON
+    $Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile
+    Write-Host "Updated $ConfigFile with Python path: $PythonPath"
+} else {
+    Write-Host "Warning: $ConfigFile not found"
+}
 
 # -------------------------------
 # Finish up
@@ -313,6 +316,8 @@ $Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile
 Write-Host ""
 Write-Host "Haris setup complete!" -ForegroundColor Green
 Write-Host "Branch: $Branch" -ForegroundColor Cyan
+Write-Host "Python Command: $PythonCommand" -ForegroundColor Cyan
+Write-Host ""
 Write-Host "Run the following command to start Haris:"
 Write-Host "cd $HarisPath\server && java -jar hut.jar 44101 DDSTest.json"
 Write-Host ""
