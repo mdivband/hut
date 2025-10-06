@@ -23,17 +23,10 @@ These scripts will install all required dependencies using the available package
 
 **Run the following in PowerShell:**
 ```powershell
-$Branch = "xprize_mcs"  # Change this to your desired branch
-$ScriptUrl = "https://raw.githubusercontent.com/SooratiLab/haris/$Branch/server/scripts/haris/setup_haris_win.ps1"
+$ScriptUrl = "https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs_dev/server/scripts/haris/setup_haris_win.ps1"
 Invoke-WebRequest -Uri $ScriptUrl -OutFile setup_haris_win.ps1
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\setup_haris_win.ps1 $Branch
-```
-
-**Alternative one-liner:**
-```powershell
-# For xprize_mcs branch
-iex "& { $(irm https://raw.githubusercontent.com/SooratiLab/haris/xprize_mcs/server/scripts/haris/setup_haris_win.ps1) } xprize_mcs"
+.\setup_haris_win.ps1
 ```
 
 **Usage with different branches:**

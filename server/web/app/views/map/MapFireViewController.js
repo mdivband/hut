@@ -39,7 +39,7 @@ var MapFireViewController = {
             id: id,
             marker: MarkerWithLabel,
             labelContent: id,
-            labelAnchor: new google.maps.Point(-4, -45),
+            labelAnchor: new google.maps.Point(-2, -45),
             labelClass: "labels",
             labelStyle: { opacity: 1.0},
             position: fire.getPosition(),
@@ -107,11 +107,11 @@ var MapFireViewController = {
     updateFireMarkerIcon: function (fire) {
         var marker = this.context.$el.gmap("get", "markers")[fire.getId()];
         if (marker) {
-            var icon = this.context.icons.TargetFireOverlay;
+            var icon = this.context.icons.TargetFire;
             if (icon) {
                 marker.setIcon(icon.Image);
             } else {
-                console.warn("Icon 'TargetFireOverlay' not found in map.js icons configuration.");
+                console.warn("Icon 'TargetFire' not found in map.js icons configuration.");
             }
         }
     },
