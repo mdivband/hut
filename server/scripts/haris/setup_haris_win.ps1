@@ -7,7 +7,7 @@
 
 param(
     [Parameter(Mandatory=$true, Position=0)]
-    [string]$Branch,
+    [string]$Branch = "xprize_mcs",
     [Parameter(Position=1)]
     [string]$LocalFolderName = "haris",
     [Parameter()]
@@ -108,67 +108,48 @@ if (-not (Test-RemoteBranch -Repo $Repository -BranchName $Branch)) {
 }
 Write-Host "Branch '$Branch' found in repository." -ForegroundColor Green
 
-Write-Host "Checking for Java..."
-$JavaInstalled = $false
-$JavaCommands = @("java", "java.exe")
+# TODO: Fix Java detection
+# Write-Host "Checking for Java..."
+# $JavaInstalled = $false
+# $JavaCommands = @("java", "java.exe")
 
-foreach ($JavaCmd in $JavaCommands) {
-    if (Get-Command $JavaCmd -ErrorAction SilentlyContinue) {
-        try {
-            $JavaVersion = & $JavaCmd --version 2>&1
-            Write-Host "Java output: $JavaVersion" -ForegroundColor Gray
-            
-            # Handle different Java version output formats
-            if ($JavaVersion -match 'openjdk (\d+)\.(\d+)\.(\d+)') {
-                $JavaMajorVersion = [int]$matches[1]
-            } elseif ($JavaVersion -match 'version "(\d+)\.(\d+)') {
-                $JavaMajorVersion = [int]$matches[1]
-            } elseif ($JavaVersion -match 'version "1\.(\d+)') {
-                $JavaMajorVersion = [int]$matches[1]
-            } elseif ($JavaVersion -match 'java (\d+)\.(\d+)') {
-                $JavaMajorVersion = [int]$matches[1]
-            } else {
-                Write-Host "Could not parse Java version from: $JavaVersion" -ForegroundColor Yellow
-                continue
-            }
-            
-            # Handle legacy versioning (1.8 = Java 8)
-            if ($JavaMajorVersion -eq 1 -and $matches.Count -ge 2) {
-                $JavaMajorVersion = [int]$matches[2]
-            }
-            
-            if ($JavaMajorVersion -ge 17) {
-                Write-Host "Found Java version $JavaMajorVersion (compatible)" -ForegroundColor Green
-                $JavaInstalled = $true
-                break
-            } else {
-                Write-Host "Found Java version $JavaMajorVersion but need version 17+." -ForegroundColor Yellow
-            }
-        } catch {
-            Write-Host "Error checking Java version: $_" -ForegroundColor Yellow
-        }
-    }
-}
+# foreach ($JavaCmd in $JavaCommands) {
+#     if (Get-Command $JavaCmd -ErrorAction SilentlyContinue) {
+#         try {
+#             $JavaVersion = & $JavaCmd --version 2>&1
+#             # Write-Host "Java output: $JavaVersion" -ForegroundColor Gray
 
-if (-not $JavaInstalled) {
-    Write-Host "Java 17+ not found. Installing OpenJDK 17..."
-    switch ($PkgManager) {
-        "chocolatey" { 
-            choco install openjdk17 -y 
-            Refresh-Environment
-        }
-        "winget" { 
-            Write-Host "Note: winget may require user interaction for Java installation."
-            winget install --id Microsoft.OpenJDK.17 -e --source winget --accept-package-agreements --accept-source-agreements --silent
-            Refresh-Environment
-        }
-        "scoop" { 
-            scoop bucket add java
-            scoop install openjdk17
-            Refresh-Environment
-        }
-    }
-}
+#             if ($JavaVersion -match "openjdk") {
+#                 $matches.1
+#                 Write-Host "Matches array:" $matches.0 -ForegroundColor Gray
+#                 exit 1
+#             }
+
+#         } catch {
+#             Write-Host "Error checking Java version: $_" -ForegroundColor Yellow
+#         }
+#     }
+# }
+
+# if (-not $JavaInstalled) {
+#     Write-Host "Java 17+ not found. Installing OpenJDK 17..."
+#     switch ($PkgManager) {
+#         "chocolatey" { 
+#             choco install openjdk17 -y 
+#             Refresh-Environment
+#         }
+#         "winget" { 
+#             Write-Host "Note: winget may require user interaction for Java installation."
+#             winget install --id Microsoft.OpenJDK.17 -e --source winget --accept-package-agreements --accept-source-agreements --silent
+#             Refresh-Environment
+#         }
+#         "scoop" { 
+#             scoop bucket add java
+#             scoop install openjdk17
+#             Refresh-Environment
+#         }
+#     }
+# }
 
 # Python - Check multiple possible commands
 Write-Host "Checking for Python..."
