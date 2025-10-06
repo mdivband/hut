@@ -5,7 +5,8 @@ _.provide("App.Collections.Fires");
 App.Models.Fire = App.Models.MObject.extend({
     defaults: {
         intensity: 1.0,
-        visible: true
+        visible: true,
+        image: ""
     },
     destroy: function() {
         this.trigger('destroy', this, this.collection);
@@ -15,6 +16,9 @@ App.Models.Fire = App.Models.MObject.extend({
     },
     isVisible: function() {
         return this.get("visible");
+    },
+    getImage: function() {
+        return this.get("image");
     }
 });
 

@@ -2,6 +2,38 @@ import csv
 import math
 import os
 import random
+from PIL import Image
+import base64
+import io
+
+def generate_gradient_image_base64(width=500, height=500):
+    """ Generates a 500x500 image with a random gradient and returns it as a Base64 string"""
+    # Two random colors
+    color1 = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
+    color2 = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
+
+    # Create a new blank image
+    img = Image.new('RGB', (width, height))
+
+    for x in range(width):
+        # Calculate the ratio for linear interpolation
+        ratio = x / (width - 1)
+
+        r = int((1 - ratio) * color1[0] + ratio * color2[0])
+        g = int((1 - ratio) * color1[1] + ratio * color2[1])
+        b = int((1 - ratio) * color1[2] + ratio * color2[2])
+
+        for y in range(height):
+            img.putpixel((x, y), (r, g, b))
+
+    # Save the image to a memory buffer
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+
+    # Get the byte value of the image and encode it in Base64
+    img_bytes = buffered.getvalue()
+    return base64.b64encode(img_bytes).decode('utf-8')
+
 
 def generate_sample_data():
     """
@@ -198,7 +230,7 @@ def generate_sample_data():
               'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level', 
               'signal_strength', 'status', 'custom_data',
               'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
-    fire_header = ['step', 'fire_id', 'latitude', 'longitude']
+    fire_header = ['step', 'fire_id', 'latitude', 'longitude', 'image']
 
     agent_data.append(agent_header)
     fire_data.append(fire_header)
@@ -285,11 +317,14 @@ def generate_sample_data():
                 fire_lat = agent_state['lat'] + lat_offset
                 fire_lon = agent_state['lon'] + lon_offset
 
+                image_base64 = generate_gradient_image_base64()
+
                 fire_row = [
                     step,
                     fire_id_counter,    # fire counter for the ID
                     round(fire_lat, 13),
                     round(fire_lon, 13),
+                    image_base64
                 ]
                 fire_data.append(fire_row)
                 fire_id_counter += 1

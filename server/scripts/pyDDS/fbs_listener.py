@@ -128,7 +128,8 @@ def deserialize_fire_message(data):
             "timestamp": msg.Timestamp(),
             "id": msg.Id(),
             "latitude": msg.Latitude(),
-            "longitude": msg.Longitude()
+            "longitude": msg.Longitude(),
+            "image": msg.Image().decode('utf-8')
         }
     except Exception as e:
         logger.error(f"Failed to deserialize FireMessage: {e}")

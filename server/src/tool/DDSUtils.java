@@ -282,6 +282,12 @@ public class DDSUtils {
                         fireData.put("latitude", ((Number) GsonUtils.getValue(fire, "latitude")).doubleValue());
                         fireData.put("longitude", ((Number) GsonUtils.getValue(fire, "longitude")).doubleValue());
 
+                        if (GsonUtils.hasKey(fire, "image")) {
+                            fireData.put("image", (String) GsonUtils.getValue(fire, "image"));
+                        } else {
+                            fireData.put("image", ""); // Default to empty string if not present
+                        }
+
                         fireDataList.add(fireData);
                     }
                 }

@@ -90,14 +90,18 @@ def create_waypoint_message(aircraft_type, aircraft_id, lat, lng, alt, heading):
     builder.Finish(message_offset)
     return builder.Output()
 
-def create_fire_message(fire_id, lat, lng):
+def create_fire_message(fire_id, lat, lng, image_base64):
     """Create a FireMessage FlatBuffer"""
-    builder = flatbuffers.Builder(128)
+    builder = flatbuffers.Builder(1024)
+
+    image_offset = builder.CreateString(image_base64)
+
     FireMessage.FireMessageStart(builder)
     FireMessage.FireMessageAddTimestamp(builder, int(time.time() * 1000))
     FireMessage.FireMessageAddId(builder, int(fire_id))
     FireMessage.FireMessageAddLatitude(builder, lat)
     FireMessage.FireMessageAddLongitude(builder, lng)
+    FireMessage.FireMessageAddImage(builder, image_offset)
     message_offset = FireMessage.FireMessageEnd(builder)
     builder.Finish(message_offset)
     return builder.Output()
@@ -211,19 +215,19 @@ def generate_random_aircraft_data(aircraft_id):
     }
     return position_data, velocity_data, heading_data
 
-def publish_fire_data(session, fire_id, lat, lng, format_type):
-    """Publish fire data to a dedicated topic"""
+def publish_fire_data(session, fire_id, lat, lng, image_base64, format_type):
+    """Publish fire data to a dedicated topic."""
     fire_topic = "fires/events"
 
     if fire_topic not in publishers_cache:
         publishers_cache[fire_topic] = session.declare_publisher(fire_topic)
 
     if format_type == 'flatbuffer':
-        fire_msg = create_fire_message(fire_id, lat, lng)
+        fire_msg = create_fire_message(fire_id, lat, lng, image_base64)
         publishers_cache[fire_topic].put(fire_msg)
-        print(f"Published fire event FlatBuffer for fire ID {fire_id}")
+        print(f"Published fire event FlatBuffer for fire ID {fire_id} (with image)")
     else:
-        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}"
+        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}, Image: [data]"
         publishers_cache[fire_topic].put(fire_str)
         print(f"Published fire event string: {fire_str}")
 
@@ -287,7 +291,8 @@ def main():
                                     fire_id = row['fire_id']
                                     lat = float(row['latitude'])
                                     lng = float(row['longitude'])
-                                    publish_fire_data(session, fire_id, lat, lng, args.format)
+                                    image_base64 = row['image']
+                                    publish_fire_data(session, fire_id, lat, lng, image_base64, args.format)
                                 else:
                                     aircraft_id = row['agent_id']
                                     aircraft_type = row['aircraft_type']
