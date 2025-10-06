@@ -13,7 +13,8 @@ $(document).ready(function() {
     const windowReferences = {
         'open-dds-log': null,
         'open-mission-view': null,
-        'open-drone-x-view': null
+        'open-drone-x-view': null,
+        'path-planning-view': null,
     };
 
     // Function to open windows based on button ID
@@ -95,6 +96,14 @@ $(document).ready(function() {
         const isOpen = buttonStates[buttonId];
         console.log(`Toggling button: ${buttonId}, Current state: ${isOpen}, Action: ${action}`);
 
+        if(buttonId === "path-planning-view"){
+            simulator.state.set('pathPlanning', !simulator.state.pathPlanning());
+        }
+
+        if(buttonId === "open-fire-view"){
+            simulator.state.set("fireView", !simulator.state.fireView());
+        }
+
         if (!isOpen) {
             // Opening - change to red and update text
             button.addClass('open');
@@ -105,7 +114,7 @@ $(document).ready(function() {
             } else {
                 button.text('Close ' + action.replace('Open ', ''));
             }
-            
+
             buttonStates[buttonId] = true;
             
             // Handle window opening for supported buttons
@@ -125,7 +134,7 @@ $(document).ready(function() {
                     return;
                 }
             }
-            
+
             // Console log only after confirmation
             console.log('Opening window for:', action);
             
@@ -140,7 +149,7 @@ $(document).ready(function() {
                 || buttonId === 'open-drone-x-view') && !skipWindowAction) {
                 closeWindow(buttonId);
             }
-            
+
             // Console log only after confirmation
             console.log('Closing window for:', action);
         }

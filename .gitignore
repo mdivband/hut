@@ -164,8 +164,14 @@ server/processedLogs/
 # Ignore all pycache files
 **/__pycache__/
 
+# Ignore simulator.run folder
+**/simulator.run/
+
 # Ignore /flatbuffers/generated folder
 **/flatbuffers/generated/
+
+# Ignore the simulator.run folder
+**/simulator.run/
 
 # Ignore flatc.exe and flatc
 **/flatc.exe

@@ -19,13 +19,15 @@ def generate_sample_data():
     # Time and step configuration
     SECONDS_PER_STEP = 0.5  # Match the combine_interval from listener (default 0.5)
     TOTAL_STEPS = 300       # Reduced to match typical use case
+    # Waypoint configuration
+    WAYPOINT_INTERVAL = 50  # Provide new waypoint every N steps
     
     # Noise control
     USE_NOISE = False        # Enable for more realistic data
     
     # Starting position for new agents (agents 4 and 5)
-    START_LAT = 51.501123
-    START_LON = -0.142386
+    START_LAT = 30.65582
+    START_LON = -96.42533
 
     # Position variation for existing agents (agents 1-3)
     EXISTING_AGENT_POS_VARIATION = 0.004  # degrees
@@ -56,7 +58,12 @@ def generate_sample_data():
     # Coordinate conversion (approximate for UK latitude)
     LAT_METERS_PER_DEGREE = 111000        # meters per degree latitude
     LON_METERS_PER_DEGREE = 80000         # meters per degree longitude
-    
+
+    FIRE_EVENT_PROBABILITY = 0.05  # 5% chance to generate a fire event per step
+    MIN_FIRE_DISTANCE_METERS = 1000   # Minimum distance from an agent to spawn a fire
+    FIRE_RADIUS_METERS = 5000      # 5km radius around an agent
+    N_FIRE_EVENTS = 5               # Max number of fire events to generate
+
     # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
         '1': {'speed': 20, 'start_step': 1, 'mission': 'Alpha', 'start_heading': 270, 'type': 'STA'},
@@ -65,7 +72,7 @@ def generate_sample_data():
         '4': {'speed': 20, 'start_step': 50, 'mission': 'Delta', 'start_heading': 216, 'type': 'FSA'},
         '5': {'speed': 18, 'start_step': 80, 'mission': 'Echo', 'start_heading': 330, 'type': 'FSA'}
     }
-        
+
     # Initialize agent states
     agent_states = {}
     for agent_id, config in agents.items():
@@ -113,74 +120,123 @@ def generate_sample_data():
             'type': config['type']
         }
     
+    # Precompute all agent positions for lookahead
+    agent_positions = {agent_id: [] for agent_id in agents}
+    agent_states_copy = {k: v.copy() for k, v in agent_states.items()}
+
+    for step in range(1, TOTAL_STEPS + 11):  # +10 for lookahead
+        for agent_id, config in agents.items():
+            if step < config['start_step']:
+                agent_positions[agent_id].append(None)
+                continue
+
+            state = agent_states_copy[agent_id]
+
+            speed_ms = config['speed']
+            distance_per_step = speed_ms * SECONDS_PER_STEP
+
+            lat_per_meter = 1.0 / LAT_METERS_PER_DEGREE
+            lon_per_meter = 1.0 / LON_METERS_PER_DEGREE
+
+            heading_change = random.uniform(
+                -MAX_HEADING_CHANGE_PER_STEP, MAX_HEADING_CHANGE_PER_STEP) if USE_NOISE else 0
+            state['heading'] = (state['heading'] + heading_change) % 360
+
+            heading_rad = math.radians(state['heading'])
+            velocity_noise_x = random.uniform(-VELOCITY_NOISE, VELOCITY_NOISE) if USE_NOISE else 0
+            velocity_noise_y = random.uniform(-VELOCITY_NOISE, VELOCITY_NOISE) if USE_NOISE else 0
+            velocity_noise_z = random.uniform(-VELOCITY_NOISE, VELOCITY_NOISE) if USE_NOISE else 0
+
+            state['vel_x'] = speed_ms * math.cos(heading_rad) + velocity_noise_x
+            state['vel_y'] = speed_ms * math.sin(heading_rad) + velocity_noise_y
+            state['vel_z'] = velocity_noise_z
+
+            lat_change = distance_per_step * math.cos(heading_rad) * lat_per_meter
+            lon_change = distance_per_step * math.sin(heading_rad) * lon_per_meter
+
+            state['lat'] += lat_change
+            state['lon'] += lon_change
+
+            altitude_change = random.uniform(-ALTITUDE_CHANGE_RANGE, ALTITUDE_CHANGE_RANGE) if USE_NOISE else 0
+            state['altitude'] += altitude_change
+            state['altitude'] = max(MIN_ALTITUDE, min(MAX_ALTITUDE, state['altitude']))
+
+            state['roll'] = random.uniform(-MAX_ROLL_PITCH, MAX_ROLL_PITCH) if USE_NOISE else 0
+            state['pitch'] = random.uniform(-MAX_ROLL_PITCH, MAX_ROLL_PITCH) if USE_NOISE else 0
+            state['yaw'] = state['heading']
+
+            battery_drain = random.uniform(MIN_BATTERY_DRAIN, MAX_BATTERY_DRAIN) if USE_NOISE else (MIN_BATTERY_DRAIN + MAX_BATTERY_DRAIN) / 2
+            state['battery'] = max(MIN_BATTERY_LEVEL, state['battery'] - battery_drain)
+
+            signal_change = random.uniform(-SIGNAL_VARIATION, SIGNAL_VARIATION) if USE_NOISE else 0
+            state['signal'] += signal_change
+            state['signal'] = max(MIN_SIGNAL, min(MAX_SIGNAL, state['signal']))
+
+            # Store a copy of the state for this step
+            agent_positions[agent_id].append({
+                'lat': state['lat'],
+                'lon': state['lon'],
+                'altitude': state['altitude'],
+                'heading': state['heading'],
+                'vel_x': state['vel_x'],
+                'vel_y': state['vel_y'],
+                'vel_z': state['vel_z'],
+                'roll': state['roll'],
+                'pitch': state['pitch'],
+                'yaw': state['yaw'],
+                'battery': state['battery'],
+                'signal': state['signal'],
+                'type': state['type']
+            })
+    
     # Generate data
-    data = []
+    agent_data = []
+    fire_data = []
     
-    # Header - updated to include aircraft_type for better compatibility
-    header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading', 
+    # Header - updated to include aircraft_type for better compatibility and waypoint columns
+    agent_header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading',
               'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level', 
-              'signal_strength', 'status', 'custom_data']
-    data.append(header)
-    
+              'signal_strength', 'status', 'custom_data',
+              'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
+    fire_header = ['step', 'fire_id', 'latitude', 'longitude']
+
+    agent_data.append(agent_header)
+    fire_data.append(fire_header)
+
+    fire_id_counter = 1
+
     # Generate TOTAL_STEPS steps
     for step in range(1, TOTAL_STEPS + 1):
         for agent_id, config in agents.items():
             # Skip if agent hasn't started yet
             if step < config['start_step']:
                 continue
-                
-            state = agent_states[agent_id]
-            
-            # Calculate movement based on speed and time interval
-            speed_ms = config['speed']  # m/s
-            distance_per_step = speed_ms * SECONDS_PER_STEP  # distance in meters
 
-            # Convert distance to approximate lat/lon changes
-            lat_per_meter = 1.0 / LAT_METERS_PER_DEGREE
-            lon_per_meter = 1.0 / LON_METERS_PER_DEGREE
+            state = agent_positions[agent_id][step - 1]
+
+            # Default waypoint columns
+            waypoint_lat = ''
+            waypoint_lon = ''
+            waypoint_alt = ''
+            waypoint_heading = ''
+
+            # Calculate which waypoint "block" this step belongs to
+            # Steps 1-N use waypoint at step N, steps N+1-N*2 use waypoint at step N*2, etc.
+            waypoint_block = ((step - 1) // WAYPOINT_INTERVAL) + 1
+            waypoint_step = waypoint_block * WAYPOINT_INTERVAL
             
-            # Generate somewhat random but realistic movement
-            heading_change = random.uniform(
-                -MAX_HEADING_CHANGE_PER_STEP, MAX_HEADING_CHANGE_PER_STEP) if USE_NOISE else 0
-            state['heading'] = (state['heading'] + heading_change) % 360
-            
-            # Calculate velocity components
-            heading_rad = math.radians(state['heading'])
-            velocity_noise_x = random.uniform(-VELOCITY_NOISE, VELOCITY_NOISE) if USE_NOISE else 0
-            velocity_noise_y = random.uniform(-VELOCITY_NOISE, VELOCITY_NOISE) if USE_NOISE else 0
-            velocity_noise_z = random.uniform(-VELOCITY_NOISE, VELOCITY_NOISE) if USE_NOISE else 0
-            
-            state['vel_x'] = speed_ms * math.cos(heading_rad) + velocity_noise_x
-            state['vel_y'] = speed_ms * math.sin(heading_rad) + velocity_noise_y
-            state['vel_z'] = velocity_noise_z
-            
-            # Update position
-            lat_change = distance_per_step * math.cos(heading_rad) * lat_per_meter
-            lon_change = distance_per_step * math.sin(heading_rad) * lon_per_meter
-            
-            state['lat'] += lat_change
-            state['lon'] += lon_change
-            
-            # Update altitude slightly
-            altitude_change = random.uniform(-ALTITUDE_CHANGE_RANGE, ALTITUDE_CHANGE_RANGE) if USE_NOISE else 0
-            state['altitude'] += altitude_change
-            state['altitude'] = max(MIN_ALTITUDE, min(MAX_ALTITUDE, state['altitude']))
-            
-            # Update orientation
-            state['roll'] = random.uniform(-MAX_ROLL_PITCH, MAX_ROLL_PITCH) if USE_NOISE else 0
-            state['pitch'] = random.uniform(-MAX_ROLL_PITCH, MAX_ROLL_PITCH) if USE_NOISE else 0
-            state['yaw'] = state['heading']
-            
-            # Update battery (gradual decrease)
-            battery_drain = random.uniform(MIN_BATTERY_DRAIN, MAX_BATTERY_DRAIN) if USE_NOISE else (MIN_BATTERY_DRAIN + MAX_BATTERY_DRAIN) / 2
-            state['battery'] = max(MIN_BATTERY_LEVEL, state['battery'] - battery_drain)
-            
-            # Update signal strength
-            signal_change = random.uniform(-SIGNAL_VARIATION, SIGNAL_VARIATION) if USE_NOISE else 0
-            state['signal'] += signal_change
-            state['signal'] = max(MIN_SIGNAL, min(MAX_SIGNAL, state['signal']))
-            
-            # Create row data - added aircraft_type column
+            # Fill waypoint columns if the waypoint step exists and agent is active
+            if (waypoint_step <= TOTAL_STEPS and 
+                waypoint_step >= config['start_step'] and
+                waypoint_step - 1 < len(agent_positions[agent_id]) and 
+                agent_positions[agent_id][waypoint_step - 1] is not None):
+                
+                future_state = agent_positions[agent_id][waypoint_step - 1]
+                waypoint_lat = round(future_state['lat'], 13)
+                waypoint_lon = round(future_state['lon'], 13)
+                waypoint_alt = round(future_state['altitude'], 1)
+                waypoint_heading = round(future_state['heading'], 1)
+
             row = [
                 step,
                 agent_id,
@@ -198,10 +254,45 @@ def generate_sample_data():
                 round(state['battery'], 2),
                 round(state['signal'], 2),
                 'ACTIVE',
-                f"Mission {config['mission']} Step {step}"
+                f"Mission {config['mission']} Step {step}",
+                waypoint_lat,
+                waypoint_lon,
+                waypoint_alt,
+                waypoint_heading
             ]
-            
-            data.append(row)
+
+            agent_data.append(row)
+
+        if random.random() < FIRE_EVENT_PROBABILITY and fire_id_counter <= N_FIRE_EVENTS:
+            # gets all agents active in the current step
+            active_agents = [
+                agent_id for agent_id, config in agents.items() if step >= config['start_step']
+            ]
+
+            if active_agents:
+                # picks a random agent to spawn the fire near
+                random_agent_id = random.choice(active_agents)
+                agent_state = agent_positions[random_agent_id][step - 1]
+
+                # generate a random offset from the agent's position
+                random_angle = random.uniform(0, 2 * math.pi)
+                random_distance = random.uniform(MIN_FIRE_DISTANCE_METERS, FIRE_RADIUS_METERS)
+
+                # convert distance and angle to lat/lon offsets
+                lat_offset = (random_distance * math.cos(random_angle)) / LAT_METERS_PER_DEGREE
+                lon_offset = (random_distance * math.sin(random_angle)) / LON_METERS_PER_DEGREE
+
+                fire_lat = agent_state['lat'] + lat_offset
+                fire_lon = agent_state['lon'] + lon_offset
+
+                fire_row = [
+                    step,
+                    fire_id_counter,    # fire counter for the ID
+                    round(fire_lat, 13),
+                    round(fire_lon, 13),
+                ]
+                fire_data.append(fire_row)
+                fire_id_counter += 1
     
     # Print summary using actual constants
     print("\nData generation summary:")
@@ -213,7 +304,7 @@ def generate_sample_data():
     print(f"- Noise enabled: {USE_NOISE}")
     print(f"- Compatible with FlatBuffers schemas")
     
-    return data
+    return agent_data, fire_data
 
 def save_to_csv(data, filename='sample_data.csv'):
     """Save the generated data to a CSV file"""
@@ -228,7 +319,8 @@ def save_to_csv(data, filename='sample_data.csv'):
 
 if __name__ == "__main__":
     # Generate the data
-    sample_data = generate_sample_data()
+    agents_sample_data, fires_sample_data = generate_sample_data()
     
     # Save to CSV file
-    save_to_csv(sample_data, 'sample_data.csv')
+    save_to_csv(agents_sample_data, 'agents_data.csv')
+    save_to_csv(fires_sample_data, 'fires_data.csv')

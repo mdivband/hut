@@ -48,6 +48,7 @@ public class Simulator {
 
     private MissionController missionController = null;
     private final HazardController hazardController;
+    private final FireController fireController;
 
     private DDSController ddsController;
     private final Allocator allocator;
@@ -80,6 +81,7 @@ public class Simulator {
         scoreController = new ScoreController(this);
         riskMapController = new RiskMapController(this);
         ddsController = new DDSController(this);
+        fireController = new FireController(this);
         //modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
@@ -564,6 +566,7 @@ public class Simulator {
         state.reset();
         agentController.resetAgentNumbers();
         hazardController.resetHazardNumbers();
+        fireController.reset();
         targetController.resetTargetNumbers();
         taskController.resetTaskNumbers();
         scoreController.reset();
@@ -1211,5 +1214,14 @@ public class Simulator {
     // Getter method for the Hub status from DDS
     public JsonObject getHubStatus() {
         return this.ddsController.getHubStatus();
+    }
+
+    // Getter method for the agent waypoints from DDS
+    public JsonObject getAllAgentWaypoints() {
+        return this.ddsController.getAllAgentWaypoints();
+    }
+
+    public FireController getFireController() {
+        return fireController;
     }
 }

@@ -1,6 +1,6 @@
 var MapController = {
     overrideVisible: true,
-    predictionLength: 0,
+    predictionLength: 5,
     uncertaintyRadius: 10,
     communicationRange: 100,
     heatmap: null,
@@ -134,15 +134,18 @@ var MapController = {
         //         MapController.updateRiskMapHeatMap();
         //     }
         // })
-        // $('#prediction_slider').on('change', function() {
-        //     if ($(this).val() === $(this).prop('max')) {
-        //         MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
-        //     } else if ($(this).val() === $(this).prop('min')) {
-        //         MapController.showPredictedPaths(0);
-        //     } else {
-        //         MapController.showPredictedPaths($(this).val());
-        //     }
-        // });
+        $('#prediction_slider').on('change', function() {
+            if ($(this).val() === $(this).prop('max')) {
+                MapController.showPredictedPaths(100);  // hardcoded max of 100 steps for performance simplicity
+            } else if ($(this).val() === $(this).prop('min')) {
+                MapController.showPredictedPaths(0);
+            } else {
+                MapController.showPredictedPaths($(this).val());
+            }
+            $("#prediction_length").html("Path Prediction Length: " + MapController.predictionLength);
+            if (self.state.pathPlanning())
+                MapWaypointController.renderAllRoutes();
+        });
         // $('#risk_map_slider').on('change', function() {
         //     if(MapController.isEnabledUIOption('heatMapToggle')){
         //         MapController.setRiskHexBinThreshold($(this).val());
@@ -263,7 +266,7 @@ var MapController = {
         });
     },
     showPredictedPaths: function (setting) {
-        //MapController.toggleUIOption('predictions', setting)
+        MapController.toggleUIOption('predictions', setting)
         MapController.predictionLength = setting;
     },
     // onRunAutoAllocationClick: function () {
@@ -365,10 +368,10 @@ var MapController = {
             this.updateAllocationRendering();
         }
         if (MapController.predictionLength > 0) {
-            this.drawPredictedPath(MapController.predictionLength);
-            this.drawPredictedGhostPath(MapController.predictionLength);
+            //this.drawPredictedPath(MapController.predictionLength);
+            //this.drawPredictedGhostPath(MapController.predictionLength);
         } else {
-            this.clearPredictions();
+            //this.clearPredictions();
         }
         if (MapController.isEnabledUIOption('uncertainties')) {
             this.drawUncertainties(MapController.uncertaintyRadius);
@@ -494,6 +497,7 @@ var MapController = {
             ['explored', ['explored_wrapper_div'], "explored_overlay_toggle"],
             ['uncertainties', ['uncertainties_wrapper_div'], "uncertainties_toggle"],
             ['ranges', ['ranges_wrapper_div'], "ranges_toggle"],
+            ['predictions', ['prediction_wrapper_div']]
         ];
         // ['reviewPanel', ['review_panel', 'image_review', 'scan_button_group']],
         arrayOfPairs.forEach((pair) => {
