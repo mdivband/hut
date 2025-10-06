@@ -16,6 +16,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Always start in user directory
+Set-Location $env:USERPROFILE
+
 Write-Host "Setting up Haris from branch: $Branch"
 Write-Host "Repository: $Repository"
 Write-Host "Local folder: $LocalFolderName"
@@ -105,7 +108,6 @@ if (-not (Test-RemoteBranch -Repo $Repository -BranchName $Branch)) {
 }
 Write-Host "Branch '$Branch' found in repository." -ForegroundColor Green
 
-# Java - Check multiple possible commands
 Write-Host "Checking for Java..."
 $JavaInstalled = $false
 $JavaCommands = @("java", "java.exe")
@@ -117,27 +119,30 @@ foreach ($JavaCmd in $JavaCommands) {
             Write-Host "Java output: $JavaVersion" -ForegroundColor Gray
             
             # Handle different Java version output formats
-            if ($JavaVersion -match 'openjdk (\d+)\.(\d+)\.(\d+)' -or 
-                $JavaVersion -match 'version "(\d+)\.(\d+)' -or 
-                $JavaVersion -match 'version "1\.(\d+)' -or
-                $JavaVersion -match 'java (\d+)\.(\d+)') {
-                
+            if ($JavaVersion -match 'openjdk (\d+)\.(\d+)\.(\d+)') {
                 $JavaMajorVersion = [int]$matches[1]
-                
-                # Handle legacy versioning (1.8 = Java 8)
-                if ($JavaMajorVersion -eq 1 -and $matches.Count -ge 2) {
-                    $JavaMajorVersion = [int]$matches[2]
-                }
-                
-                if ($JavaMajorVersion -ge 17) {
-                    Write-Host "Found Java version $JavaMajorVersion (compatible)" -ForegroundColor Green
-                    $JavaInstalled = $true
-                    break
-                } else {
-                    Write-Host "Found Java version $JavaMajorVersion but need version 17+." -ForegroundColor Yellow
-                }
+            } elseif ($JavaVersion -match 'version "(\d+)\.(\d+)') {
+                $JavaMajorVersion = [int]$matches[1]
+            } elseif ($JavaVersion -match 'version "1\.(\d+)') {
+                $JavaMajorVersion = [int]$matches[1]
+            } elseif ($JavaVersion -match 'java (\d+)\.(\d+)') {
+                $JavaMajorVersion = [int]$matches[1]
             } else {
                 Write-Host "Could not parse Java version from: $JavaVersion" -ForegroundColor Yellow
+                continue
+            }
+            
+            # Handle legacy versioning (1.8 = Java 8)
+            if ($JavaMajorVersion -eq 1 -and $matches.Count -ge 2) {
+                $JavaMajorVersion = [int]$matches[2]
+            }
+            
+            if ($JavaMajorVersion -ge 17) {
+                Write-Host "Found Java version $JavaMajorVersion (compatible)" -ForegroundColor Green
+                $JavaInstalled = $true
+                break
+            } else {
+                Write-Host "Found Java version $JavaMajorVersion but need version 17+." -ForegroundColor Yellow
             }
         } catch {
             Write-Host "Error checking Java version: $_" -ForegroundColor Yellow
@@ -321,7 +326,7 @@ Set-Location $ScenarioPath
 $ConfigFile = "DDSTest.json"
 if (Test-Path $ConfigFile) {
     $Config = Get-Content $ConfigFile | ConvertFrom-Json
-    $Config.pythonPath = $VenvPythonPath.Replace('\', '\\')  # Escape backslashes for JSON
+    $Config.pythonPath = $VenvPythonPath.Replace('\', '/')
     $Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile
     Write-Host "Updated $ConfigFile with virtual environment Python path: $VenvPythonPath"
 } else {
