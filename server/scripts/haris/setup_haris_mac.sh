@@ -224,13 +224,11 @@ mkdir -p ~/python-envs
 cd ~/python-envs
 python3 -m venv hut-dds
 source hut-dds/bin/activate
-pip install --upgrade pip
-pip install eclipse-zenoh flatbuffers
 
 # -------------------------------
-# Step 4: Compile FlatBuffers
+# Step 4: Setup the PyDDS environment
 # -------------------------------
-python ~/haris/server/scripts/pyDDS/flatbuffers/setup_flatbuffers.py
+python ~/haris/server/scripts/pyDDS/setup_env.py
 python ~/haris/server/scripts/pyDDS/sample_data/generate_sample_data.py
 
 # -------------------------------
