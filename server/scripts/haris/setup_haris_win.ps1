@@ -3,11 +3,13 @@
 # - Java 17
 # - Python 3.7+
 # - DDS instance with pixi support setup (or Python 3.7+)
-# - flatc v25.2+ (FlatBuffers compiler)
+# - flatc v25.2+ (FlatBuffers compiler) - to be installed via PyDDS setup_env.py
 
 param(
     [Parameter(Mandatory=$true, Position=0)]
     [string]$Branch,
+    [Parameter(Position=1)]
+    [string]$LocalFolderName = "haris",
     [Parameter()]
     [string]$Repository = "https://github.com/SooratiLab/haris.git"
 )
@@ -16,6 +18,7 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "Setting up Haris from branch: $Branch"
 Write-Host "Repository: $Repository"
+Write-Host "Local folder: $LocalFolderName"
 Write-Host ""
 
 # Function to check if remote branch exists
@@ -110,19 +113,34 @@ $JavaCommands = @("java", "java.exe")
 foreach ($JavaCmd in $JavaCommands) {
     if (Get-Command $JavaCmd -ErrorAction SilentlyContinue) {
         try {
-            $JavaVersion = & $JavaCmd -version 2>&1
-            if ($JavaVersion -match 'version "(\d+)' -or $JavaVersion -match 'openjdk (\d+)') {
+            $JavaVersion = & $JavaCmd --version 2>&1
+            Write-Host "Java output: $JavaVersion" -ForegroundColor Gray
+            
+            # Handle different Java version output formats
+            if ($JavaVersion -match 'openjdk (\d+)\.(\d+)\.(\d+)' -or 
+                $JavaVersion -match 'version "(\d+)\.(\d+)' -or 
+                $JavaVersion -match 'version "1\.(\d+)' -or
+                $JavaVersion -match 'java (\d+)\.(\d+)') {
+                
                 $JavaMajorVersion = [int]$matches[1]
+                
+                # Handle legacy versioning (1.8 = Java 8)
+                if ($JavaMajorVersion -eq 1 -and $matches.Count -ge 2) {
+                    $JavaMajorVersion = [int]$matches[2]
+                }
+                
                 if ($JavaMajorVersion -ge 17) {
-                    Write-Host "Found Java version $JavaMajorVersion (compatible)"
+                    Write-Host "Found Java version $JavaMajorVersion (compatible)" -ForegroundColor Green
                     $JavaInstalled = $true
                     break
                 } else {
-                    Write-Host "Found Java version $JavaMajorVersion but need version 17+."
+                    Write-Host "Found Java version $JavaMajorVersion but need version 17+." -ForegroundColor Yellow
                 }
+            } else {
+                Write-Host "Could not parse Java version from: $JavaVersion" -ForegroundColor Yellow
             }
         } catch {
-            # Continue checking other commands
+            Write-Host "Error checking Java version: $_" -ForegroundColor Yellow
         }
     }
 }
@@ -217,14 +235,14 @@ try {
 # FlatBuffers compiler (flatc) - Will be installed via PyDDS setup_env.py
 
 # -------------------------------
-# Step 2: Setup or update haris repo
+# Step 2: Setup or update repository
 # -------------------------------
 Set-Location $env:USERPROFILE
 
-if (Test-Path "haris") {
-    if (Test-Path "haris\.git") {
-        Write-Host "Found existing haris git repository. Updating to branch '$Branch'..."
-        Set-Location haris
+if (Test-Path $LocalFolderName) {
+    if (Test-Path "$LocalFolderName\.git") {
+        Write-Host "Found existing $LocalFolderName git repository. Updating to branch '$Branch'..."
+        Set-Location $LocalFolderName
         
         # Fetch all remote branches
         git fetch
@@ -247,16 +265,16 @@ if (Test-Path "haris") {
         # Pull latest changes
         git pull
     } else {
-        Write-Host "Found existing haris folder but it's not a git repository. Removing..."
-        Remove-Item -Path haris -Recurse -Force
-        Write-Host "Cloning haris repository (branch: $Branch)..."
-        git clone -b $Branch --single-branch $Repository
-        Set-Location haris
+        Write-Host "Found existing $LocalFolderName folder but it's not a git repository. Removing..."
+        Remove-Item -Path $LocalFolderName -Recurse -Force
+        Write-Host "Cloning repository to '$LocalFolderName' (branch: $Branch)..."
+        git clone -b $Branch --single-branch $Repository $LocalFolderName
+        Set-Location $LocalFolderName
     }
 } else {
-    Write-Host "Cloning haris repository (branch: $Branch)..."
-    git clone -b $Branch --single-branch $Repository
-    Set-Location haris
+    Write-Host "Cloning repository to '$LocalFolderName' (branch: $Branch)..."
+    git clone -b $Branch --single-branch $Repository $LocalFolderName
+    Set-Location $LocalFolderName
 }
 
 # -------------------------------
@@ -287,25 +305,25 @@ if (Test-Path $ActivateScript) {
 # -------------------------------
 # Step 4: Setup the PyDDS environment
 # -------------------------------
-$HarisPath = Join-Path $env:USERPROFILE "haris"
+$LocalRepoPath = Join-Path $env:USERPROFILE $LocalFolderName
 Write-Host "Setting up PyDDS environment..."
-& $PythonCommand (Join-Path $HarisPath "server\scripts\pyDDS\setup_env.py")
-& $PythonCommand (Join-Path $HarisPath "server\scripts\pyDDS\sample_data\generate_sample_data.py")
+& $PythonCommand (Join-Path $LocalRepoPath "server\scripts\pyDDS\setup_env.py")
+& $PythonCommand (Join-Path $LocalRepoPath "server\scripts\pyDDS\sample_data\generate_sample_data.py")
 
 # -------------------------------
 # Step 5: Setup Haris
 # -------------------------------
-$PythonPath = (Get-Command $PythonCommand).Source
-$ScenarioPath = Join-Path $HarisPath "server\web\scenarios"
+$VenvPythonPath = Join-Path $EnvDir "hut-dds\Scripts\python.exe"
+$ScenarioPath = Join-Path $LocalRepoPath "server\web\scenarios"
 Set-Location $ScenarioPath
 
 # Update DDSTest.json with Python path
 $ConfigFile = "DDSTest.json"
 if (Test-Path $ConfigFile) {
     $Config = Get-Content $ConfigFile | ConvertFrom-Json
-    $Config.pythonPath = $PythonPath.Replace('\', '\\')  # Escape backslashes for JSON
+    $Config.pythonPath = $VenvPythonPath.Replace('\', '\\')  # Escape backslashes for JSON
     $Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile
-    Write-Host "Updated $ConfigFile with Python path: $PythonPath"
+    Write-Host "Updated $ConfigFile with virtual environment Python path: $VenvPythonPath"
 } else {
     Write-Host "Warning: $ConfigFile not found"
 }
@@ -316,12 +334,13 @@ if (Test-Path $ConfigFile) {
 Write-Host ""
 Write-Host "Haris setup complete!" -ForegroundColor Green
 Write-Host "Branch: $Branch" -ForegroundColor Cyan
+Write-Host "Local folder: $LocalFolderName" -ForegroundColor Cyan
 Write-Host "Python Command: $PythonCommand" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Run the following command to start Haris:"
-Write-Host "cd $HarisPath\server && java -jar hut.jar 44101 DDSTest.json"
+Write-Host "cd $LocalRepoPath\server && java -jar hut.jar 44101 DDSTest.json"
 Write-Host ""
 Write-Host "If you do not have a DDS instance with pixi support, you can run:"
-Write-Host "cd $HarisPath\server && java -jar hut.jar 44101 DDSTest.json dev"
+Write-Host "cd $LocalRepoPath\server && java -jar hut.jar 44101 DDSTest.json dev"
 Write-Host ""
 Write-Host "Visualize the simulator at: http://127.0.0.1:44101"
