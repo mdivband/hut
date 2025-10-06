@@ -7,6 +7,7 @@ import com.google.gson.JsonSerializer;
 import server.Allocator;
 import server.Simulator;
 import server.model.agents.*;
+import server.model.fire.Fire;
 import server.model.hazard.Hazard;
 import server.model.target.Target;
 import server.model.task.Task;
@@ -59,6 +60,7 @@ public class State {
     private final Collection<Task> tasks;
     private final Collection<Task> completedTasks;
     private final Collection<Hazard> hazards;
+    private final Collection<Fire> fires;
 
     //State information for scenarios
     private Coordinate gameCentre;
@@ -129,6 +131,7 @@ public class State {
         completedTasks = new ArrayList<>();
         targets = new ArrayList<>();
         hazards = new ArrayList<>();
+        fires = new ArrayList<>();
         allocation = new ConcurrentHashMap<>();
         tempAllocation = new ConcurrentHashMap<>();
         droppedAllocation = new ConcurrentHashMap<>();
@@ -188,6 +191,7 @@ public class State {
         completedTasks.clear();
         targets.clear();
         hazards.clear();
+        fires.clear();
         allocation.clear();
         tempAllocation.clear();
         hazardHits.clear();
@@ -251,6 +255,8 @@ public class State {
         return getById(hazards, hazardId);
     }
 
+    public Fire getFire(String fireId) { return getById(fires, fireId); }
+
     public void add(IdObject item) {
         if(item instanceof Target)
             add(targets, (Target) item);
@@ -267,6 +273,8 @@ public class State {
             add(agents, (Agent) item);
         else if(item instanceof Hazard)
             add(hazards, (Hazard) item);
+        else if(item instanceof Fire)
+            add(fires, (Fire) item);
         else
             throw new RuntimeException("Cannot add item to state, unrecognised class - " + item.getClass().getSimpleName());
 
@@ -287,6 +295,8 @@ public class State {
             synchronized (agents) {
                 remove(agents, (Agent) item);
             }
+        else if(item instanceof Fire)
+            remove(fires, (Fire) item);
         else
             throw new RuntimeException("Cannot remove item from state, unrecognised class - " + item.getClass().getSimpleName());
     }
@@ -475,6 +485,10 @@ public class State {
 
     public Collection<Hazard> getHazards() {
         return hazards;
+    }
+
+    public Collection<Fire> getFires() {
+        return fires;
     }
 
     public void setAllocation(Map<String, String> allocation) {

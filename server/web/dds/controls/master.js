@@ -100,6 +100,10 @@ $(document).ready(function() {
             simulator.state.set('pathPlanning', !simulator.state.pathPlanning());
         }
 
+        if(buttonId === "open-fire-view"){
+            simulator.state.set("fireView", !simulator.state.fireView());
+        }
+
         if (!isOpen) {
             // Opening - change to red and update text
             button.addClass('open');

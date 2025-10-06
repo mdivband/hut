@@ -11,6 +11,7 @@ import argparse
 import csv
 import os
 import sys
+from collections import defaultdict
 
 # Add the script folder and generated folder to path
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +25,7 @@ from utils import *
 FLATBUFFERS_AVAILABLE = check_flatbuffers()
 if FLATBUFFERS_AVAILABLE:
     import flatbuffers
-    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage
+    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage, FireMessage
     print("FlatBuffers support enabled")
 
 # Global dictionary to store publishers
@@ -89,23 +90,46 @@ def create_waypoint_message(aircraft_type, aircraft_id, lat, lng, alt, heading):
     builder.Finish(message_offset)
     return builder.Output()
 
-def load_csv_data(csv_file_path):
-    """Load CSV data and organize by steps"""
-    csv_data = {}
+def create_fire_message(fire_id, lat, lng):
+    """Create a FireMessage FlatBuffer"""
+    builder = flatbuffers.Builder(128)
+    FireMessage.FireMessageStart(builder)
+    FireMessage.FireMessageAddTimestamp(builder, int(time.time() * 1000))
+    FireMessage.FireMessageAddId(builder, int(fire_id))
+    FireMessage.FireMessageAddLatitude(builder, lat)
+    FireMessage.FireMessageAddLongitude(builder, lng)
+    message_offset = FireMessage.FireMessageEnd(builder)
+    builder.Finish(message_offset)
+    return builder.Output()
+
+def load_csv_data(agent_csv_path, fire_csv_path):
+    """Load and merge agent and fire data, adding a 'type' key for dispatching."""
+    merged_data = defaultdict(list)
+
     try:
-        with open(csv_file_path, 'r', newline='') as csvfile:
+        # Load agent data
+        with open(agent_csv_path, 'r', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 step = int(row['step'])
-                if step not in csv_data:
-                    csv_data[step] = []
-                csv_data[step].append(row)
-        print(f"Loaded CSV data with {len(csv_data)} steps")
-        for step, agents in csv_data.items():
-            print(f"  Step {step}: {len(agents)} agents")
-        return csv_data
+                # manually add 'type' key for clarity
+                row['type'] = row['aircraft_type']
+                merged_data[step].append(row)
+        print(f"Loaded {sum(len(v) for v in merged_data.values())} agent data rows.")
+
+        # Load and merge fire data
+        with open(fire_csv_path, 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                step = int(row['step'])
+                # manually add 'type' key for clarity
+                row['type'] = 'FIRE'
+                merged_data[step].append(row)
+        print(f"Loaded and merged fire data.")
+
+        return merged_data
     except Exception as e:
-        print(f"Error loading CSV file: {e}")
+        print(f"Error loading or merging CSV files: {e}")
         return None
 
 def publish_aircraft_data(
@@ -187,6 +211,23 @@ def generate_random_aircraft_data(aircraft_id):
     }
     return position_data, velocity_data, heading_data
 
+def publish_fire_data(session, fire_id, lat, lng, format_type):
+    """Publish fire data to a dedicated topic"""
+    fire_topic = "fires/events"
+
+    if fire_topic not in publishers_cache:
+        publishers_cache[fire_topic] = session.declare_publisher(fire_topic)
+
+    if format_type == 'flatbuffer':
+        fire_msg = create_fire_message(fire_id, lat, lng)
+        publishers_cache[fire_topic].put(fire_msg)
+        print(f"Published fire event FlatBuffer for fire ID {fire_id}")
+    else:
+        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}"
+        publishers_cache[fire_topic].put(fire_str)
+        print(f"Published fire event string: {fire_str}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='DDS Publisher for Aircraft Messages with FlatBuffers support')
@@ -218,8 +259,9 @@ def main():
     # Load CSV data if requested
     csv_data = None
     if args.use_csv:
-        csv_file_path = os.path.join(script_dir, 'sample_data', 'sample_data.csv')
-        csv_data = load_csv_data(csv_file_path)
+        agent_csv = os.path.join(script_dir, 'sample_data', 'agents_data.csv')
+        fire_csv = os.path.join(script_dir, 'sample_data', 'fires_data.csv')
+        csv_data = load_csv_data(agent_csv, fire_csv)
         if csv_data is None:
             print("Failed to load CSV data, using random values instead")
             args.use_csv = False
@@ -237,38 +279,46 @@ def main():
                         # CSV mode - publish data for all agents in current step
                         if current_step in csv_data:
                             step_data = csv_data[current_step]
-                            print(f"\n--- Publishing Step {current_step} ({len(step_data)} agents) ---")
+                            print(f"\n--- Publishing Step {current_step} ({len(step_data)} items) ---")
                             for row in step_data:
-                                aircraft_id = row['agent_id']
-                                aircraft_type = row.get('aircraft_type', args.aircraft_type)
-                                position_data = {
-                                    'lat': float(row['latitude']),
-                                    'lng': float(row['longitude']),
-                                    'alt': float(row['altitude'])
-                                }
-                                velocity_data = {
-                                    'x': float(row['vel_x']),
-                                    'y': float(row['vel_y']),
-                                    'z': float(row['vel_z'])
-                                }
-                                heading_data = {
-                                    'heading': float(row['heading'])
-                                }
-                                # Prepare waypoint data if available
-                                waypoint_data = None
-                                if (row.get('waypoint_latitude') and row.get('waypoint_longitude')
-                                    and row.get('waypoint_altitude') and row.get('waypoint_heading')):
-                                    waypoint_data = {
-                                        'lat': float(row['waypoint_latitude']),
-                                        'lng': float(row['waypoint_longitude']),
-                                        'alt': float(row['waypoint_altitude']),
-                                        'heading': float(row['waypoint_heading'])
+                                row_type = row.get('type')
+
+                                if row_type == 'FIRE':
+                                    fire_id = row['fire_id']
+                                    lat = float(row['latitude'])
+                                    lng = float(row['longitude'])
+                                    publish_fire_data(session, fire_id, lat, lng, args.format)
+                                else:
+                                    aircraft_id = row['agent_id']
+                                    aircraft_type = row['aircraft_type']
+                                    position_data = {
+                                        'lat': float(row['latitude']),
+                                        'lng': float(row['longitude']),
+                                        'alt': float(row['altitude'])
                                     }
-                                publish_aircraft_data(
-                                    session, aircraft_type, aircraft_id,
-                                    position_data, velocity_data, heading_data,
-                                    args.format, waypoint_data
-                                )
+                                    velocity_data = {
+                                        'x': float(row['vel_x']),
+                                        'y': float(row['vel_y']),
+                                        'z': float(row['vel_z'])
+                                    }
+                                    heading_data = {
+                                        'heading': float(row['heading'])
+                                    }
+                                    # Prepare waypoint data if available
+                                    waypoint_data = None
+                                    if (row.get('waypoint_latitude') and row.get('waypoint_longitude')
+                                        and row.get('waypoint_altitude') and row.get('waypoint_heading')):
+                                        waypoint_data = {
+                                            'lat': float(row['waypoint_latitude']),
+                                            'lng': float(row['waypoint_longitude']),
+                                            'alt': float(row['waypoint_altitude']),
+                                            'heading': float(row['waypoint_heading'])
+                                        }
+                                    publish_aircraft_data(
+                                        session, aircraft_type, aircraft_id,
+                                        position_data, velocity_data, heading_data,
+                                        args.format, waypoint_data
+                                    )
                             current_step += 1
                             if current_step > max(csv_data.keys()):
                                 current_step = 1  # Loop back to first step
