@@ -120,7 +120,7 @@ App.Views.Map = Backbone.View.extend({
             TargetDismissed: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
             TruckMarker: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
             TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
-            TargetFire: $.loadIcon("icons/used/fire.png", "icons/used/fire.png", 0, 0), // TODO: make fire shadow
+            TargetFire: $.loadIcon("icons/used/fire.png", "icons/used/fire.png", 10, 10), // TODO: make fire shadow
 
 
 

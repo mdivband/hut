@@ -60,7 +60,9 @@ def generate_sample_data():
     LON_METERS_PER_DEGREE = 80000         # meters per degree longitude
 
     FIRE_EVENT_PROBABILITY = 0.05  # 5% chance to generate a fire event per step
-    FIRE_RADIUS_METERS = 1000      # 1km radius around an agent
+    MIN_FIRE_DISTANCE_METERS = 1000   # Minimum distance from an agent to spawn a fire
+    FIRE_RADIUS_METERS = 5000      # 5km radius around an agent
+    N_FIRE_EVENTS = 5               # Max number of fire events to generate
 
     # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
@@ -261,7 +263,7 @@ def generate_sample_data():
 
             agent_data.append(row)
 
-        if random.random() < FIRE_EVENT_PROBABILITY:
+        if random.random() < FIRE_EVENT_PROBABILITY and fire_id_counter <= N_FIRE_EVENTS:
             # gets all agents active in the current step
             active_agents = [
                 agent_id for agent_id, config in agents.items() if step >= config['start_step']
@@ -274,7 +276,7 @@ def generate_sample_data():
 
                 # generate a random offset from the agent's position
                 random_angle = random.uniform(0, 2 * math.pi)
-                random_distance = random.uniform(0, FIRE_RADIUS_METERS)
+                random_distance = random.uniform(MIN_FIRE_DISTANCE_METERS, FIRE_RADIUS_METERS)
 
                 # convert distance and angle to lat/lon offsets
                 lat_offset = (random_distance * math.cos(random_angle)) / LAT_METERS_PER_DEGREE

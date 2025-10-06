@@ -26,7 +26,7 @@ public class FireController extends AbstractController {
     }
 
     public String generateUID(int ddsId) {
-        return "Fire-" + ddsId;
+        return "FIRE-" + ddsId;
     }
 
     public synchronized void reset() {

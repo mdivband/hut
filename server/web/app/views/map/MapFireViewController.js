@@ -38,9 +38,9 @@ var MapFireViewController = {
             id: id,
             marker: MarkerWithLabel,
             labelContent: id,
-            labelAnchor: new google.maps.Point(22, -18),
+            labelAnchor: new google.maps.Point(-4, -45),
             labelClass: "labels",
-            labelStyle: { opacity: 0.75 },
+            labelStyle: { opacity: 1.0},
             position: fire.getPosition(),
             draggable: false,
             // Set initial visibility based on the global toggle and the fire's own property

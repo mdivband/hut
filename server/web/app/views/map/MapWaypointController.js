@@ -219,7 +219,7 @@ var MapWaypointController = {
             var waypointId = agent.getId() + "_waypoint_" + (startIndex + index);
             var circleOptions = {
                 center: waypoint,
-                radius: 7,
+                radius: 20,
                 fillColor: '#000000',
                 fillOpacity: 0.0,
                 strokeColor: '#000000',
