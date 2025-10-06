@@ -49,6 +49,7 @@ App.Views.Map = Backbone.View.extend({
         MapTargetController.bind(this);
         MapImageController.bind(this);
         MapWaypointController.bind(this);
+        MapFireViewController.bind(this);
 
         // The MapTypeId is the default setting (ROADMAP and SATELLITE are the standard two)
         // The _Control variables enable and disable buttons for the user to change this
@@ -120,6 +121,7 @@ App.Views.Map = Backbone.View.extend({
             TruckMarker: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
             TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
             TargetFire: $.loadIcon("icons/used/fire.png", "icons/used/fire.png", 0, 0), // TODO: make fire shadow
+            TargetFireOverlay: $.loadIcon("icons/used/fire_overlay.png", "icons/used/fire_overlay.png", 0, 0),
 
 
 
@@ -138,6 +140,7 @@ App.Views.Map = Backbone.View.extend({
         MapTargetController.bindEvents();
         MapImageController.bindEvents();
         MapWaypointController.bindEvents();
+        MapFireViewController.bindEvents();
 
         setTimeout(function () {
             self.setupROS();

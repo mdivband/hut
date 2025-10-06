@@ -17,7 +17,7 @@ logger = setup_logging('fbs_listener.log')
 # FlatBuffers imports (will be available after running setup_flatbuffers.py)
 FLATBUFFERS_AVAILABLE = check_flatbuffers(type_based=True)
 if FLATBUFFERS_AVAILABLE:
-    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage
+    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage, FireMessage
     print("FlatBuffers support enabled", flush=True)
     logger.info("FlatBuffers support enabled")
 else:
@@ -31,6 +31,7 @@ aircraft_data = defaultdict(lambda: {
     'waypoint': None,
     'last_update': None
 })
+fire_events = deque(maxlen=200)
 
 # Buffer for recent updates
 message_buffer = deque(maxlen=1000)
@@ -119,7 +120,22 @@ def deserialize_waypoint_message(data):
         logger.error(f"Failed to deserialize WaypointMessage: {e}")
         return {"error": f"Failed to deserialize WaypointMessage: {e}"}
 
-def combine_aircraft_data(data_timeout):
+def deserialize_fire_message(data):
+    """Deserialize FireMessage FlatBuffer"""
+    try:
+        msg = FireMessage.FireMessage.GetRootAs(data, 0)
+        return {
+            "timestamp": msg.Timestamp(),
+            "id": msg.Id(),
+            "latitude": msg.Latitude(),
+            "longitude": msg.Longitude(),
+            "image": msg.Image().decode('utf-8')
+        }
+    except Exception as e:
+        logger.error(f"Failed to deserialize FireMessage: {e}")
+        return {"error": f"Failed to deserialize FireMessage: {e}"}
+
+def combine_all_data(data_timeout):
     """Combine collected aircraft data into the desired JSON format"""
     current_time = int(time.time() * 1000)  # Current timestamp in milliseconds
 
@@ -128,7 +144,8 @@ def combine_aircraft_data(data_timeout):
         "timestamp": current_time,
         "message_id": f"combined_message_{current_time}",
         "source": "aircraft_listener",
-        "agents": []
+        "agents": [],
+        "fires": []
     }
 
     current_time_sec = time.time()
@@ -188,6 +205,14 @@ def combine_aircraft_data(data_timeout):
                 }
 
             result["agents"].append(agent_data)
+
+    for event in list(fire_events): # Iterate over a copy
+        if current_time_sec - event['timestamp'] < data_timeout:
+            result["fires"].append(event['data'])
+        else:
+            # Remove old events from the left of the deque
+            if fire_events and fire_events[0] == event:
+                fire_events.popleft()
 
     return result
 
@@ -249,6 +274,18 @@ if __name__ == "__main__":
         try:
             # Parse the topic key
             aircraft_type, aircraft_id, message_type = parse_topic_key(sample.key_expr)
+
+            if str(sample.key_expr) == 'fires/events':
+                payload_bytes = sample.payload.to_bytes()
+                message_data = deserialize_fire_message(payload_bytes)
+                if "error" not in message_data:
+                    logger.info(f"Received fire event for fire ID {message_data['id']}")
+                    # Append a dictionary containing the data and a timestamp for expiry checks
+                    fire_events.append({'data': message_data, 'timestamp': time.time()})
+                else:
+                    logger.error(f"Invalid fire event data: {message_data['error']}")
+                return # We've handled the fire event, so we can exit now.
+
 
             if not aircraft_type or not aircraft_id or not message_type:
                 logger.warning(f"Invalid topic format: {sample.key_expr}")
@@ -331,6 +368,7 @@ if __name__ == "__main__":
             velocity_sub = session.declare_subscriber('aircraft/*/*/velocity', listener)
             heading_sub = session.declare_subscriber('aircraft/*/*/heading', listener)
             waypoint_sub = session.declare_subscriber('aircraft/*/*/waypoint', listener)
+            fire_sub = session.declare_subscriber('fires/events', listener)
 
             if args.continuous:
                 try:
@@ -340,13 +378,19 @@ if __name__ == "__main__":
 
                         # Output combined data at intervals
                         if current_time - last_combine_time >= args.combine_interval:
-                            combined_data = combine_aircraft_data(args.data_timeout)
-                            if combined_data["agents"]:
-                                msg = f"FlatBuffer Data received for {len(combined_data['agents'])} "
-                                msg += f"agent{'s' if len(combined_data['agents']) != 1 else ''}"
+                            combined_data = combine_all_data(args.data_timeout)
+                            if combined_data["agents"] or combined_data["fires"]:
+                                agent_count = len(combined_data['agents'])
+                                fire_count = len(combined_data['fires'])
+                                parts = []
+                                if agent_count > 0:
+                                    parts.append(f"{agent_count} agent{'s' if agent_count != 1 else ''}")
+                                if fire_count > 0:
+                                    parts.append(f"{fire_count} fire event{'s' if fire_count != 1 else ''}")
+
+                                msg = f"FlatBuffer Data received for { ' and '.join(parts) }"
                                 print(f"{msg}:", flush=True)
-                                print(format_output(combined_data, is_flatbuffer),
-                                      flush=True)
+                                print(format_output(combined_data, True), flush=True)
                                 logger.info(msg)
                             else:
                                 msg = f"No data received to combine - publishers may not be active"
@@ -364,7 +408,7 @@ if __name__ == "__main__":
                 time.sleep(args.wait_time)
 
                 # Output combined data
-                combined_data = combine_aircraft_data(args.data_timeout)
+                combined_data = combine_all_data(args.data_timeout)
                 if combined_data["agents"]:
                     msg = f"FlatBuffer Data received and combined for {len(combined_data['agents'])} "
                     msg += f"agent{'s' if len(combined_data['agents']) != 1 else ''}"

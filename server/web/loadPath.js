@@ -85,6 +85,7 @@ $LAB.setOptions({
     .script("app/views/map/MapTargetController.js")
     .script("app/views/map/MapImageController.js")
     .script("app/views/map/MapWaypointController.js")
+    .script("app/views/map/MapFireViewController.js")
 
 
     // ----- Models -----
@@ -95,6 +96,7 @@ $LAB.setOptions({
     .script("app/models/hazards.js")
     .script("app/models/targets.js")
     .script("app/models/state.js")
+    .script("app/models/fires.js")
 
     // ----- DDS Controllers -----
     .script("dds/controls/path_planning.js")

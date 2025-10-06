@@ -54,7 +54,8 @@ App.Models.State  = Backbone.Model.extend({
         riskMapWeights: {},
         riskMapWeightsConst: {},
         DDSMode: null, // Default to null, can be set to true for DDS mode and false for non-DDS mode
-        pathPlanning: false
+        pathPlanning: false,
+        fireView: false,
     },
     url: function () {
         return "state.json?" + _.time();
@@ -66,6 +67,7 @@ App.Models.State  = Backbone.Model.extend({
         this.completedTasks = new App.Collections.CompletedTasks();
         this.hazards = new App.Collections.Hazards();
         this.targets = new App.Collections.Targets();
+        this.fires = new App.Collections.Fires();
     },
     parse: function (resp) {
         //Pass lists straight onto collections
@@ -79,6 +81,7 @@ App.Models.State  = Backbone.Model.extend({
         this.completedTasks.update(resp.completedTasks, {parse: true});
         this.hazards.update(resp.hazards, {parse: true});
         this.targets.update(resp.targets, {parse: true});
+        this.fires.update(resp.fires, {parse: true});
 
         delete resp.agents;
         delete resp.ghosts;
@@ -86,6 +89,7 @@ App.Models.State  = Backbone.Model.extend({
         delete resp.completedTasks;
         delete resp.hazards;
         delete resp.targets;
+        delete resp.fires;
 
         return resp;
     },
@@ -99,6 +103,7 @@ App.Models.State  = Backbone.Model.extend({
         attrs.completedTasks = this.completedTasks.toJSON();
         attrs.hazards = this.hazards.toJSON();
         attrs.targets = this.targets.toJSON();
+        attrs.fires = this.fires.toJSON();
         return attrs;
     },
     getProvDoc: function () {
@@ -266,5 +271,8 @@ App.Models.State  = Backbone.Model.extend({
     },
     pathPlanning: function () {
         return this.get("pathPlanning");
+    },
+    fireView: function () {
+        return this.get("fireView");
     }
 });

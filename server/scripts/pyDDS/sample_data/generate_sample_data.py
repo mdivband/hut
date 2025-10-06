@@ -2,6 +2,38 @@ import csv
 import math
 import os
 import random
+from PIL import Image
+import base64
+import io
+
+def generate_gradient_image_base64(width=500, height=500):
+    """ Generates a 500x500 image with a random gradient and returns it as a Base64 string"""
+    # Two random colors
+    color1 = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
+    color2 = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
+
+    # Create a new blank image
+    img = Image.new('RGB', (width, height))
+
+    for x in range(width):
+        # Calculate the ratio for linear interpolation
+        ratio = x / (width - 1)
+
+        r = int((1 - ratio) * color1[0] + ratio * color2[0])
+        g = int((1 - ratio) * color1[1] + ratio * color2[1])
+        b = int((1 - ratio) * color1[2] + ratio * color2[2])
+
+        for y in range(height):
+            img.putpixel((x, y), (r, g, b))
+
+    # Save the image to a memory buffer
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+
+    # Get the byte value of the image and encode it in Base64
+    img_bytes = buffered.getvalue()
+    return base64.b64encode(img_bytes).decode('utf-8')
+
 
 def generate_sample_data():
     """
@@ -58,7 +90,10 @@ def generate_sample_data():
     # Coordinate conversion (approximate for UK latitude)
     LAT_METERS_PER_DEGREE = 111000        # meters per degree latitude
     LON_METERS_PER_DEGREE = 80000         # meters per degree longitude
-    
+
+    FIRE_EVENT_PROBABILITY = 0.05  # 5% chance to generate a fire event per step
+    FIRE_RADIUS_METERS = 1000      # 1km radius around an agent
+
     # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
         '1': {'speed': 20, 'start_step': 1, 'mission': 'Alpha', 'start_heading': 270, 'type': 'STA'},
@@ -67,7 +102,7 @@ def generate_sample_data():
         '4': {'speed': 20, 'start_step': 50, 'mission': 'Delta', 'start_heading': 216, 'type': 'FSA'},
         '5': {'speed': 18, 'start_step': 80, 'mission': 'Echo', 'start_heading': 330, 'type': 'FSA'}
     }
-        
+
     # Initialize agent states
     agent_states = {}
     for agent_id, config in agents.items():
@@ -185,14 +220,20 @@ def generate_sample_data():
             })
     
     # Generate data
-    data = []
+    agent_data = []
+    fire_data = []
     
     # Header - updated to include aircraft_type for better compatibility and waypoint columns
-    header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading', 
+    agent_header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading',
               'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level', 
               'signal_strength', 'status', 'custom_data',
               'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
-    data.append(header)
+    fire_header = ['step', 'fire_id', 'latitude', 'longitude', 'image']
+
+    agent_data.append(agent_header)
+    fire_data.append(fire_header)
+
+    fire_id_counter = 1
 
     # Generate TOTAL_STEPS steps
     for step in range(1, TOTAL_STEPS + 1):
@@ -250,7 +291,41 @@ def generate_sample_data():
                 waypoint_heading
             ]
 
-            data.append(row)
+            agent_data.append(row)
+
+        if random.random() < FIRE_EVENT_PROBABILITY:
+            # gets all agents active in the current step
+            active_agents = [
+                agent_id for agent_id, config in agents.items() if step >= config['start_step']
+            ]
+
+            if active_agents:
+                # picks a random agent to spawn the fire near
+                random_agent_id = random.choice(active_agents)
+                agent_state = agent_positions[random_agent_id][step - 1]
+
+                # generate a random offset from the agent's position
+                random_angle = random.uniform(0, 2 * math.pi)
+                random_distance = random.uniform(0, FIRE_RADIUS_METERS)
+
+                # convert distance and angle to lat/lon offsets
+                lat_offset = (random_distance * math.cos(random_angle)) / LAT_METERS_PER_DEGREE
+                lon_offset = (random_distance * math.sin(random_angle)) / LON_METERS_PER_DEGREE
+
+                fire_lat = agent_state['lat'] + lat_offset
+                fire_lon = agent_state['lon'] + lon_offset
+
+                image_base64 = generate_gradient_image_base64()
+
+                fire_row = [
+                    step,
+                    fire_id_counter,    # fire counter for the ID
+                    round(fire_lat, 13),
+                    round(fire_lon, 13),
+                    image_base64
+                ]
+                fire_data.append(fire_row)
+                fire_id_counter += 1
     
     # Print summary using actual constants
     print("\nData generation summary:")
@@ -262,7 +337,7 @@ def generate_sample_data():
     print(f"- Noise enabled: {USE_NOISE}")
     print(f"- Compatible with FlatBuffers schemas")
     
-    return data
+    return agent_data, fire_data
 
 def save_to_csv(data, filename='sample_data.csv'):
     """Save the generated data to a CSV file"""
@@ -277,7 +352,8 @@ def save_to_csv(data, filename='sample_data.csv'):
 
 if __name__ == "__main__":
     # Generate the data
-    sample_data = generate_sample_data()
+    agents_sample_data, fires_sample_data = generate_sample_data()
     
     # Save to CSV file
-    save_to_csv(sample_data, 'sample_data.csv')
+    save_to_csv(agents_sample_data, 'agents_data.csv')
+    save_to_csv(fires_sample_data, 'fires_data.csv')

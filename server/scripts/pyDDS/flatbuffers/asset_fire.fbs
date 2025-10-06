@@ -1,0 +1,11 @@
+namespace messages;
+
+table FireMessage {
+  timestamp:long;
+  id:uint;
+  latitude:float;
+  longitude:float;
+  image:string; // base64
+}
+
+root_type FireMessage;

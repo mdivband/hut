@@ -262,6 +262,38 @@ public class DDSUtils {
                 extractedData.put("agents", agentDataList);
             }
 
+
+            Object firesObj = GsonUtils.getValue(messageObj, "fires");
+            if (firesObj instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Object> fires = (List<Object>) firesObj;
+
+                java.util.List<java.util.HashMap<String, Object>> fireDataList = new java.util.ArrayList<>();
+
+                for (Object fireElement : fires) {
+                    if (fireElement instanceof java.util.Map) {
+                        @SuppressWarnings("unchecked")
+                        java.util.Map<String, Object> fire = (java.util.Map<String, Object>) fireElement;
+
+                        java.util.HashMap<String, Object> fireData = new java.util.HashMap<>();
+
+                        // Extract fire info (id, latitude, longitude)
+                        fireData.put("id", ((Number) GsonUtils.getValue(fire, "id")).intValue());
+                        fireData.put("latitude", ((Number) GsonUtils.getValue(fire, "latitude")).doubleValue());
+                        fireData.put("longitude", ((Number) GsonUtils.getValue(fire, "longitude")).doubleValue());
+
+                        if (GsonUtils.hasKey(fire, "image")) {
+                            fireData.put("image", (String) GsonUtils.getValue(fire, "image"));
+                        } else {
+                            fireData.put("image", ""); // Default to empty string if not present
+                        }
+
+                        fireDataList.add(fireData);
+                    }
+                }
+                extractedData.put("fires", fireDataList);
+            }
+
             return extractedData;
 
         } catch (Exception e) {
