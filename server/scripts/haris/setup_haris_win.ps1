@@ -6,7 +6,7 @@
 # - flatc v25.2+ (FlatBuffers compiler) - to be installed via PyDDS setup_env.py
 
 param(
-    [Parameter(Mandatory=$true, Position=0)]
+    [Parameter(Position=0)]
     [string]$Branch = "xprize_mcs",
     [Parameter(Position=1)]
     [string]$LocalFolderName = "haris",
