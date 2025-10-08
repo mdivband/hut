@@ -108,6 +108,7 @@ if (-not (Test-RemoteBranch -Repo $Repository -BranchName $Branch)) {
 }
 Write-Host "Branch '$Branch' found in repository." -ForegroundColor Green
 
+Write-Host "Java is required for HARIS to run. Please ensure Java 17+ is installed."
 # TODO: Fix Java detection
 # Write-Host "Checking for Java..."
 # $JavaInstalled = $false
