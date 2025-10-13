@@ -350,39 +350,33 @@ var MapAgentController = {
         this.hidePolyline('manual_allocation')
     },
     updateAgentMarkerIcon: function (agent) {
+        var self = this;
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         var icon;
-        if (agent.getId() === this.views.clickedAgent && agent.getType() !== "groundAgent")
-            icon = this.icons.UAVSelected;
-        else {
-            icon = this.icons[agent.getMarker()];
-            console.log("Agent marker: " + agent.getMarker() + " icon: " + icon);
 
-            // This used to be a core part of the visualisation but now we define markers in the backend. Keep it
-            //  around in case something doesn't work as expected.
-            /*
-            if(agent.getType() === "hub") {
-                icon = this.icons.FLAG;
-                marker.setOptions({clickable: false, draggable: false})
-            } else if (agent.getType() === "ghost") {
-                icon = this.icons.UAVTimedOut;
-                marker.setOptions({clickable: false, draggable: false})
-            } else if (agent.getManuallyControlled()) {
-                icon = this.icons.UAVSelected;
-                marker.setOptions({clickable: false, draggable: false})
-            } else if (agent.getType() === "groundAgent") {
-                icon = this.icons.TruckMarker;`
-            } else if (agent.getType() === "withpack") {
-                icon = this.icons.UAVWithPack;
-            } else if(agent.isTimedOut()) {
-                icon = this.icons.UAVTimedOut;
-            } else {
-                icon = this.icons.UAV;
-            }
-
-             */
-
+        // for blue, cyan, green, orange, pink, purple, red, yellow
+        console.log("Updating icon for agent " + agent.getId() + " to type " + agent.getMarker());
+        var markerType = agent.getMarker();
+        if (markerType === "UAV-blue") {
+            icon = self.icons.UAVblue;
+        } else if (markerType === "UAV-cyan") {
+            icon = self.icons.UAVcyan;
+        } else if (markerType === "UAV-green") {
+            icon = self.icons.UAVgreen;
+        } else if (markerType === "UAV-orange") {
+            icon = self.icons.UAVorange;
+        } else if (markerType === "UAV-pink") {
+            icon = self.icons.UAVpink;
+        } else if (markerType === "UAV-purple") {
+            icon = self.icons.UAVpurple;
+        } else if (markerType === "UAV-red") {
+            icon = self.icons.UAVred;
+        } else if (markerType === "UAV-yellow") {
+            icon = self.icons.UAVyellow;
+        } else {
+            icon = self.icons.UAVTimedOut;
         }
+
         marker.setIcon(icon.Image);
         marker.setPosition(agent.getPosition());
         //Rotate agent marker - seems clunky but GoogleMapsAPI doesn't allow for marker rotation...

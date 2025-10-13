@@ -127,6 +127,16 @@ App.Views.Map = Backbone.View.extend({
             TruckMarker: $.loadIcon("icons/truck.png", "icons/man.shadow.png", 30, 30),
             TargetFound: $.loadIcon("icons/used/man.png", "icons/man.shadow.png", 30, 30),
 
+            UAVblue: $.loadIcon("icons/used/uav-blue.png", "icons/plane.shadow.png", 30, 30),
+            UAVcyan: $.loadIcon("icons/used/uav-cyan.png", "icons/plane.shadow.png", 30, 30),
+            UAVgreen: $.loadIcon("icons/used/uav-green.png", "icons/plane.shadow.png", 30, 30),
+            UAVorange: $.loadIcon("icons/used/uav-orange.png", "icons/plane.shadow.png", 30, 30),
+            UAVpink: $.loadIcon("icons/used/uav-pink.png", "icons/plane.shadow.png", 30, 30),
+            UAVpurple: $.loadIcon("icons/used/uav-purple.png", "icons/plane.shadow.png", 30, 30),
+            UAVred: $.loadIcon("icons/used/uav-red.png", "icons/plane.shadow.png", 30, 30),
+            UAVyellow: $.loadIcon("icons/used/uav-yellow.png", "icons/plane.shadow.png", 30, 30),
+
+
 
             FLAG: $.loadIcon("icons/flag_up.png", "icons/man.shadow.png", 15, 15)
         };

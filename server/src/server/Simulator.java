@@ -172,14 +172,9 @@ public class Simulator {
         int sleepTime;
 
         episodeController.setTriggerTime(-1d);
-        double degradationTriggerTime = -1d; // Time to trigger degradation if applicable
+        double degradationTriggerTime = -1d; // next scheduled disappearance
+        changeView(1); // Start directly in EPISODE mode (no review/cooldown)
 
-// Mode flags:
-// -9: External trigger (e.g., slider clicked)
-// -2: Review mode (waiting)
-// -1: Cooldown
-//  1: Episode
-        changeView(-1); // Start in cooldown mode
 
         do {
 
@@ -207,144 +202,81 @@ public class Simulator {
                 break;
             }
 
-            // 2. Set the initial trigger time if we haven't yet.
+            // --- Fast deck timing (no review/cooldown) ---
             if (episodeController.getTriggerTime() == -1d) {
-                // Set initial cooldown time
-                episodeController.setTriggerTime(state.getTime() + episodeController.peekNextEpisodeCooldown());
-                degradationTriggerTime = -1d; // Reset degradation trigger time
+                // First episode
+                if (episodeController.hasEpisodes()) {
+                    changeView(1);
+                    episodeController.incrementEpisode();
+                    this.softReset();
 
-                // 3. Check degradation condition
-            } else if (degradationTriggerTime > 0 && state.getTime() >= degradationTriggerTime) {
-                System.out.println("Triggering degradation at time: " + state.getTime());
+                    spawnEpisodeAgentsAndTask(); // helper added below
 
-                // Select a random agent for degradation
-                state.getAgents().stream()
-                        .filter(agent -> agent instanceof AgentVirtual av && av.isAlive() && av.getTask() == null)
-                        .findAny()
-                        .ifPresent(agent -> {
-                            this.agentController.deleteAgent(agent.getId());
-                            LOGGER.info(String.format("%s; DEGTR; Degradation triggered for agent; %s ", state.getTime(), agent.getId()));
-                        });
-
-                degradationTriggerTime = -1d; // Reset to prevent repeated triggering
-
-                // 4. Check for external signal (mode -9) regardless of time-based triggers
-            } else if (state.getEditMode() == -9) {
-                if (allEpisodesUsed) {
-                    // External signal during final review: terminate simulation.
-                    LOGGER.info(String.format("%s; EPEND; Final review complete. Terminating simulation.", state.getTime()));
+                    // schedule end + disappearance
+                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
+                    degradationTriggerTime = state.getTime() + episodeController.getDegradationTime();
+                } else {
+                    // No episodes: end
                     episodeController.closeLogger();
                     LogProcessor.processLogFile("logs/" + state.getUserName() + "-" + state.getGameId() + ".log");
                     this.reset(false);
-                    break;
-                } else {
-                    // Normal episode end: process external signal and switch to cooldown.
-                    LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s", state.getTime(), state.getWorkloadLevel()));
-                    LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s", state.getTime(), state.getSubjPerfLevel()));
-                    LOGGER.info(String.format("%s; EPEND; Episode end", state.getTime()));
-                    changeView(-1);
-                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeCooldownLimit());
+                    return;
                 }
-            // 5. Handle time-based transitions if no external signal was received
+
             } else if (state.getTime() >= episodeController.getTriggerTime()) {
-                if (state.getEditMode() == 1) { // Episode just finished
-                    // Switch to review mode (or if you want to go directly to cooldown, you could change mode here)
-                    changeView(-2);
-                    System.out.println("Switching to review mode");
-                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeCooldownLimit());
+                // Episode finished → immediately start next (no review/cooldown)
+                if (episodeController.hasEpisodes()) {
+                    changeView(1);
+                    episodeController.incrementEpisode();
+                    this.softReset();
 
-                } else if (state.getEditMode() == -2) {
-                    // In review mode: do nothing and wait (hold in review)
+                    spawnEpisodeAgentsAndTask(); // helper
 
-                } else if (state.getEditMode() == -1) { // Cooldown just finished
-                    if (episodeController.hasEpisodes()) {
-                        // Switch to next episode
-                        System.out.println("Next ep");
-                        changeView(1);
-                        episodeController.incrementEpisode();
-                        this.softReset();
-
-                        Coordinate c = episodeController.getAgentCoord();
-                        Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
-                        int numAgents = episodeController.getNumAgents();
-
-                        List<Coordinate> placedAgents = new ArrayList<>();
-                        placedAgents.add(c); // Add hero agent position first
-
-                        Coordinate targetLocation = episodeController.getTargetCoord();
-                        double angle = heroAgent.getCoordinate().getAngle(targetLocation);
-                        Coordinate newTaskLocation = targetLocation.getCoordinate(100000, angle);
-                        heroAgent.setHeading(Math.toDegrees(angle));
-
-                        int separationDist = state.isComplexFlocking() ? 150 : 150;
-
-                        // Place each additional agent
-                        for (int i = 1; i < numAgents; i++) {
-                            Coordinate newCoord = null;
-                            boolean validPlacement = false;
-                            int attempts = 0;
-
-                            while (!validPlacement && attempts < 50) { // Limit attempts to prevent infinite loops
-                                List<Agent> agentList = new ArrayList<>(state.getAgents());
-                                Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
-
-                                double spawnAngle = 2 * Math.PI * random.nextDouble();
-                                double offset = (separationDist * 1.5) / 111139d; // 250 meters to degrees conversion
-                                double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(spawnAngle);
-                                double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(spawnAngle)
-                                        / Math.cos(existingAgentCoord.getLatitude());
-
-                                newCoord = new Coordinate(newLat, newLng);
-                                validPlacement = true;
-
-                                // Verify minimum separation distance
-                                for (Coordinate placedCoord : placedAgents) {
-                                    if (placedCoord.getDistance(newCoord) < separationDist) {
-                                        validPlacement = false;
-                                        break;
-                                    }
-                                }
-                                attempts++;
-                            }
-
-                            if (validPlacement) {
-                                // I actually don't quite know why this needs 180 degrees added, but it does
-                                Agent agent = agentController.addVirtualAgent(newCoord.getLatitude(), newCoord.getLongitude(), 180 + Math.toDegrees(angle));
-                                placedAgents.add(newCoord); // Add to valid agents list
-                            } else {
-                                System.out.println("Failed to place an agent after 50 attempts.");
-                            }
-                        }
-
-                        Task task = taskController.createTask(0, newTaskLocation.getLatitude(), newTaskLocation.getLongitude());
-                        allocator.putInTempAllocation(heroAgent.getId(), task.getId());
-                        allocator.confirmAllocation(state.getTempAllocation());
-
-                        episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
-                        // Check if degradation should be triggered for next episode
-                        if (episodeController.isDegradationMatch()) {
-                            degradationTriggerTime = state.getTime() + episodeController.peekDegradationTime();
-                        }
-                    } else if (state.getEditMode() == -1) { // Cooldown just finished
-                        if (episodeController.hasEpisodes()) {
-                            // Switch to next episode...
-                            System.out.println("Next ep");
-                            changeView(1);
-                            // [episode initialization code …]
-                            episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
-                            if (episodeController.isDegradationMatch()) {
-                                degradationTriggerTime = state.getTime() + episodeController.peekDegradationTime();
-                            }
-                        } else {
-                            // Final episode: switch to review mode and wait indefinitely
-                            changeView(-2);
-                            System.out.println("Entering final review mode");
-                            // Do not update trigger time – let it remain unchanged so that no further transition happens automatically.
-                        }
-                    }
-
+                    episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
+                    degradationTriggerTime = state.getTime() + episodeController.getDegradationTime();
+                } else {
+                    // Finished last episode
+                    episodeController.closeLogger();
+                    LogProcessor.processLogFile("logs/" + state.getUserName() + "-" + state.getGameId() + ".log");
+                    this.reset(false);
+                    return;
                 }
             }
+
+// Independent disappearance trigger at the configured time
+            if (degradationTriggerTime > 0 && state.getTime() >= degradationTriggerTime) {
+                String degColour = episodeController.getDegColour(); // e.g., "blue"
+                String wantedMarker = (degColour != null) ? ("UAV-" + degColour) : null;
+
+                Optional<Agent> victim = Optional.empty();
+
+                if (wantedMarker != null) {
+                    victim = state.getAgents().stream()
+                            .filter(a -> a instanceof AgentVirtual av && av.isAlive() && av.getTask() == null)
+                            .filter(a -> wantedMarker.equals(a.getMarker()))
+                            .findAny();
+                }
+
+                if (victim.isEmpty()) {
+                    // Fallback: any alive, un-tasked agent
+                    victim = state.getAgents().stream()
+                            .filter(a -> a instanceof AgentVirtual av && av.isAlive() && av.getTask() == null)
+                            .findAny();
+                }
+
+                victim.ifPresent(agent -> {
+                    agentController.deleteAgent(agent.getId());
+                    LOGGER.info(String.format(
+                            "%s; DEGTR; Degradation triggered (agentId, marker, targetDegColour); %s;%s;%s",
+                            state.getTime(), agent.getId(), agent.getMarker(), degColour
+                    ));
+                });
+
+                degradationTriggerTime = -1d; // fire once per episode
+            }
+
+
+
             // 6. If in review mode (-2) and no other condition applies, do nothing (hold)
             else if (state.getEditMode() == -2) {
                 // In review mode: waiting for user action to trigger mode change to -9.
@@ -496,6 +428,85 @@ public class Simulator {
             }
         } while (sleep(sleepTime));
     }
+
+    private void spawnEpisodeAgentsAndTask() {
+        // --- Get colours for this episode (one per agent) ---
+        List<String> epColours = new ArrayList<>(episodeController.getColours());
+        int numAgents = episodeController.getNumAgents();
+
+        if (epColours.size() != numAgents) {
+            // Fallback: synthesize a balanced list if JSON is missing/mismatched
+            epColours.clear();
+            String[] palette = {"red","green","blue","yellow"};
+            for (int i = 0; i < numAgents; i++) epColours.add(palette[i % palette.length]);
+        }
+
+        // --- Place hero agent ---
+        Coordinate c = episodeController.getAgentCoord();
+        Agent heroAgent = agentController.addVirtualAgent(c.getLatitude(), c.getLongitude(), 0);
+        // Set hero's colour (index 0)
+        heroAgent.setMarker("UAV-" + epColours.get(0));
+
+        List<Coordinate> placedAgents = new ArrayList<>();
+        placedAgents.add(c);
+
+        // --- Heading/task as before ---
+        Coordinate targetLocation = episodeController.getTargetCoord();
+        double angle = heroAgent.getCoordinate().getAngle(targetLocation);
+        Coordinate newTaskLocation = targetLocation.getCoordinate(100000, angle);
+        heroAgent.setHeading(Math.toDegrees(angle));
+
+        int separationDist = state.isComplexFlocking() ? 150 : 150;
+
+        // --- Spawn remaining agents (1..N-1) with colours[i] ---
+        for (int i = 1; i < numAgents; i++) {
+            Coordinate newCoord = null;
+            boolean validPlacement = false;
+            int attempts = 0;
+
+            while (!validPlacement && attempts < 50) {
+                List<Agent> agentList = new ArrayList<>(state.getAgents());
+                Coordinate existingAgentCoord = agentList.get(random.nextInt(agentList.size())).getCoordinate();
+
+                double spawnAngle = 2 * Math.PI * random.nextDouble();
+                double offset = (separationDist * 1.5) / 111139d; // ~250m in degrees
+                double newLat = existingAgentCoord.getLatitude() + offset * Math.cos(spawnAngle);
+                double newLng = existingAgentCoord.getLongitude() + offset * Math.sin(spawnAngle)
+                        / Math.cos(existingAgentCoord.getLatitude());
+
+                newCoord = new Coordinate(newLat, newLng);
+                validPlacement = true;
+
+                for (Coordinate placedCoord : placedAgents) {
+                    if (placedCoord.getDistance(newCoord) < separationDist) {
+                        validPlacement = false;
+                        break;
+                    }
+                }
+                attempts++;
+            }
+
+            if (validPlacement) {
+                Agent agent = agentController.addVirtualAgent(
+                        newCoord.getLatitude(), newCoord.getLongitude(),
+                        180 + Math.toDegrees(angle)
+                );
+                placedAgents.add(newCoord);
+
+                // Set this agent's colour from the episode list
+                agent.setMarker("UAV-" + epColours.get(i));
+            } else {
+                System.out.println("Failed to place an agent after 50 attempts.");
+            }
+        }
+
+        // --- Create/confirm task as before ---
+        Task task = taskController.createTask(0, newTaskLocation.getLatitude(), newTaskLocation.getLongitude());
+        allocator.putInTempAllocation(heroAgent.getId(), task.getId());
+        allocator.confirmAllocation(state.getTempAllocation());
+    }
+
+
 
     /**
      * Runs the model for the current setup
@@ -853,31 +864,56 @@ public class Simulator {
             List<Object> episodesJson = GsonUtils.getValue(obj, "episodes");
             if (episodesJson != null) {
                 for (Object episode : episodesJson) {
-                    double episodeLength = GsonUtils.getValue(episode, "episodeLength");
-                    double episodeCooldown = GsonUtils.getValue(episode, "episodeCooldown");
-                    double reviewPeriod = GsonUtils.getValue(episode, "reviewPeriod");
-                    String agentPos = GsonUtils.getValue(episode, "agentPos");
-                    String targetPos = GsonUtils.getValue(episode, "targetPos");
-                    double numAgents = GsonUtils.getValue(episode, "numAgents");
-                    boolean isDegradationMatch = GsonUtils.getValue(episode, "degradationMatch");
-                    double degradationTime = GsonUtils.getValue(episode, "degradationTime");
-                    String episodeCode = GsonUtils.getValue(episode, "episodeCode");
-                    List<Object> markers = GsonUtils.getValue(episode, "markers");
+                    int episodeLength = ((Double) GsonUtils.getValue(episode, "episodeLength")).intValue();
+
+                    // Optional legacy fields (default 0)
+                    int episodeCooldown = GsonUtils.hasKey(episode, "episodeCooldown")
+                            ? ((Double) GsonUtils.getValue(episode, "episodeCooldown")).intValue() : 0;
+                    int reviewPeriod = GsonUtils.hasKey(episode, "reviewPeriod")
+                            ? ((Double) GsonUtils.getValue(episode, "reviewPeriod")).intValue() : 0;
+
+                    String agentPos = GsonUtils.hasKey(episode, "agentPos") ? GsonUtils.getValue(episode, "agentPos") : "C";
+                    String targetPos = GsonUtils.hasKey(episode, "targetPos") ? GsonUtils.getValue(episode, "targetPos") : "R";
+
+                    int numAgents = ((Double) GsonUtils.getValue(episode, "numAgents")).intValue();
+
+                    // Always-on degradation: read time only
+                    double degradationTime = GsonUtils.hasKey(episode, "degradationTime")
+                            ? ((Double) GsonUtils.getValue(episode, "degradationTime"))
+                            : 4.0; // sensible default
+
+                    String episodeCode = GsonUtils.hasKey(episode, "episodeCode") ? GsonUtils.getValue(episode, "episodeCode") : "EP-?-?";
+
+                    // Optional extras
+                    Integer prevAgents = GsonUtils.hasKey(episode, "prevAgents")
+                            ? ((Double) GsonUtils.getValue(episode, "prevAgents")).intValue()
+                            : 0;
+
+                    ArrayList<String> colours = null;
+                    if (GsonUtils.hasKey(episode, "colours")) {
+                        List<Object> cols = GsonUtils.getValue(episode, "colours");
+                        colours = new ArrayList<>();
+                        for (Object c : cols) colours.add(c.toString());
+                    }
+                    String degColour = GsonUtils.hasKey(episode, "degColour") ? GsonUtils.getValue(episode, "degColour") : null;
+
+                    // Markers (unchanged)
+                    List<Object> markersJson = GsonUtils.getValue(episode, "markers");
                     ArrayList<String> markerList = new ArrayList<>();
-                    if (markers != null) {
-                        for (Object markerJson : markers) {
+                    if (markersJson != null) {
+                        for (Object markerJson : markersJson) {
                             String shape = GsonUtils.getValue(markerJson, "shape");
-                            if (Objects.equals(shape, "circle")) {
+                            if ("circle".equals(shape)) {
                                 Double cLat = GsonUtils.getValue(markerJson, "centreLat");
                                 Double cLng = GsonUtils.getValue(markerJson, "centreLng");
                                 Double radius = GsonUtils.getValue(markerJson, "radius");
                                 markerList.add(shape + "," + cLat + "," + cLng + "," + radius);
-                            } else if (Objects.equals(shape, "textMarker")) {
+                            } else if ("textMarker".equals(shape)) {
                                 Double lat = GsonUtils.getValue(markerJson, "lat");
                                 Double lng = GsonUtils.getValue(markerJson, "lng");
                                 String text = GsonUtils.getValue(markerJson, "text");
                                 markerList.add(shape + "," + lat + "," + lng + "," + text);
-                            } else if (Objects.equals(shape, "banner")) {
+                            } else if ("banner".equals(shape)) {
                                 String colourBg = GsonUtils.getValue(markerJson, "colorBg");
                                 String colourTxt = GsonUtils.getValue(markerJson, "colourTxt");
                                 String text = GsonUtils.getValue(markerJson, "text");
@@ -885,10 +921,17 @@ public class Simulator {
                             }
                         }
                     }
-                    // Add the episode including reviewPeriod
-                    this.episodeController.addEpisode((int) episodeLength, (int) episodeCooldown, (int) reviewPeriod, agentPos, targetPos, (int) numAgents, isDegradationMatch, degradationTime, episodeCode, markerList);
+
+                    // NOTE: isDegradationMatch parameter kept for signature, but unused (always true)
+                    this.episodeController.addEpisode(
+                            episodeLength, episodeCooldown, reviewPeriod,
+                            agentPos, targetPos, numAgents,
+                            true, degradationTime, episodeCode, markerList,
+                            prevAgents, colours, degColour
+                    );
                 }
             }
+
 
             if(GsonUtils.hasKey(obj,"complexFlocking")) {
                 this.state.setComplexFlocking(GsonUtils.getValue(obj, "complexFlocking"));
