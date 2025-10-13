@@ -1,0 +1,1216 @@
+{
+  "episodes": [
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 3,
+      "colours": [
+        "yellow",
+        "blue",
+        "green",
+        "red"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 3,
+      "colours": [
+        "blue",
+        "green",
+        "green",
+        "red",
+        "red",
+        "yellow",
+        "yellow",
+        "green",
+        "red",
+        "blue",
+        "blue",
+        "yellow"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 4,
+      "colours": [
+        "yellow",
+        "yellow",
+        "blue",
+        "blue",
+        "red",
+        "green",
+        "green",
+        "red",
+        "blue",
+        "red",
+        "red",
+        "green",
+        "yellow",
+        "yellow",
+        "blue",
+        "green",
+        "yellow",
+        "green",
+        "red",
+        "blue"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 5,
+      "colours": [
+        "green",
+        "red",
+        "red",
+        "yellow",
+        "red",
+        "blue",
+        "blue",
+        "green",
+        "yellow",
+        "yellow",
+        "green",
+        "blue",
+        "green",
+        "blue",
+        "yellow",
+        "red"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 5,
+      "colours": [
+        "yellow",
+        "blue",
+        "yellow",
+        "green",
+        "yellow",
+        "blue",
+        "red",
+        "red",
+        "green",
+        "blue",
+        "red",
+        "green"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 3,
+      "colours": [
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "red",
+        "yellow",
+        "blue",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 5,
+      "colours": [
+        "red",
+        "blue",
+        "red",
+        "blue",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "yellow",
+        "yellow",
+        "green",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 5,
+      "colours": [
+        "yellow",
+        "yellow",
+        "red",
+        "red",
+        "blue",
+        "blue",
+        "red",
+        "yellow",
+        "red",
+        "blue",
+        "blue",
+        "yellow",
+        "green",
+        "green",
+        "green",
+        "green"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 3,
+      "colours": [
+        "blue",
+        "yellow",
+        "red",
+        "green",
+        "green",
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 3,
+      "colours": [
+        "red",
+        "green",
+        "red",
+        "red",
+        "yellow",
+        "green",
+        "green",
+        "red",
+        "yellow",
+        "yellow",
+        "yellow",
+        "blue",
+        "yellow",
+        "blue",
+        "blue",
+        "blue",
+        "green",
+        "green",
+        "red",
+        "blue"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 3,
+      "colours": [
+        "blue",
+        "green",
+        "green",
+        "blue",
+        "red",
+        "yellow",
+        "yellow",
+        "red"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "green",
+        "yellow",
+        "red"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 5,
+      "colours": [
+        "yellow",
+        "yellow",
+        "green",
+        "blue",
+        "blue",
+        "red",
+        "green",
+        "red"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 4,
+      "colours": [
+        "green",
+        "blue",
+        "green",
+        "yellow",
+        "blue",
+        "blue",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "yellow",
+        "red",
+        "red",
+        "red",
+        "yellow",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 3,
+      "colours": [
+        "yellow",
+        "blue",
+        "red",
+        "green"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 4,
+      "colours": [
+        "green",
+        "green",
+        "red",
+        "blue",
+        "red",
+        "red",
+        "green",
+        "green",
+        "yellow",
+        "yellow",
+        "blue",
+        "blue",
+        "blue",
+        "yellow",
+        "yellow",
+        "red"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "yellow",
+        "red",
+        "blue",
+        "blue",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "red",
+        "green",
+        "yellow",
+        "yellow",
+        "red",
+        "blue",
+        "green"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "yellow",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "red",
+        "yellow",
+        "blue",
+        "green",
+        "green",
+        "red"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 4,
+      "colours": [
+        "red",
+        "yellow",
+        "blue",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 4,
+      "colours": [
+        "yellow",
+        "red",
+        "green",
+        "green",
+        "red",
+        "red",
+        "blue",
+        "yellow",
+        "yellow",
+        "yellow",
+        "blue",
+        "blue",
+        "green",
+        "red",
+        "blue",
+        "blue",
+        "yellow",
+        "green",
+        "red",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 4,
+      "colours": [
+        "yellow",
+        "yellow",
+        "green",
+        "blue",
+        "red",
+        "yellow",
+        "blue",
+        "red",
+        "green",
+        "green",
+        "green",
+        "blue",
+        "red",
+        "yellow",
+        "red",
+        "blue"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "blue",
+        "yellow",
+        "red"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 4,
+      "colours": [
+        "blue",
+        "blue",
+        "yellow",
+        "red",
+        "green",
+        "red",
+        "green",
+        "yellow"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 3,
+      "colours": [
+        "yellow",
+        "blue",
+        "red",
+        "red",
+        "green",
+        "red",
+        "yellow",
+        "blue",
+        "yellow",
+        "blue",
+        "blue",
+        "green",
+        "green",
+        "yellow",
+        "red",
+        "green"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 5,
+      "colours": [
+        "red",
+        "yellow",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "yellow",
+        "red",
+        "green",
+        "green",
+        "blue",
+        "blue"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 5,
+      "colours": [
+        "yellow",
+        "green",
+        "blue",
+        "red"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "green",
+        "blue",
+        "red",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "blue",
+        "red",
+        "blue",
+        "yellow",
+        "green",
+        "green",
+        "yellow",
+        "yellow",
+        "red",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 3,
+      "colours": [
+        "red",
+        "blue",
+        "blue",
+        "yellow",
+        "yellow",
+        "red",
+        "green",
+        "red",
+        "yellow",
+        "red",
+        "yellow",
+        "green",
+        "green",
+        "blue",
+        "blue",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 3,
+      "colours": [
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "red",
+        "blue",
+        "yellow",
+        "blue",
+        "blue",
+        "yellow",
+        "yellow",
+        "yellow",
+        "blue",
+        "green",
+        "red",
+        "green",
+        "red",
+        "green",
+        "red",
+        "green"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 5,
+      "colours": [
+        "green",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 3,
+      "colours": [
+        "yellow",
+        "green",
+        "yellow",
+        "blue",
+        "yellow",
+        "red",
+        "blue",
+        "red",
+        "red",
+        "green",
+        "blue",
+        "green"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 5,
+      "colours": [
+        "yellow",
+        "blue",
+        "blue",
+        "blue",
+        "green",
+        "red",
+        "red",
+        "yellow",
+        "green",
+        "red",
+        "blue",
+        "green",
+        "red",
+        "yellow",
+        "red",
+        "blue",
+        "yellow",
+        "green",
+        "yellow",
+        "green"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "red",
+        "blue",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "yellow"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 5,
+      "colours": [
+        "red",
+        "green",
+        "green",
+        "blue",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "yellow",
+        "yellow",
+        "blue"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 5,
+      "colours": [
+        "green",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "yellow",
+        "red",
+        "blue"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 4,
+      "colours": [
+        "yellow",
+        "yellow",
+        "green",
+        "yellow",
+        "blue",
+        "blue",
+        "yellow",
+        "blue",
+        "green",
+        "green",
+        "red",
+        "red",
+        "green",
+        "red",
+        "blue",
+        "red",
+        "red",
+        "blue",
+        "yellow",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "red",
+        "yellow",
+        "blue",
+        "red",
+        "green",
+        "blue",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "yellow"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "red",
+        "yellow",
+        "green",
+        "blue",
+        "yellow",
+        "red",
+        "blue",
+        "blue",
+        "blue",
+        "yellow",
+        "yellow",
+        "red",
+        "green",
+        "green",
+        "red"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 3,
+      "colours": [
+        "yellow",
+        "yellow",
+        "green",
+        "red",
+        "blue",
+        "red",
+        "blue",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "red",
+        "yellow",
+        "green"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "green",
+        "red",
+        "yellow",
+        "green",
+        "blue",
+        "green",
+        "red",
+        "yellow",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 4,
+      "colours": [
+        "blue",
+        "blue",
+        "green",
+        "green",
+        "red",
+        "yellow",
+        "green",
+        "red",
+        "yellow",
+        "green",
+        "yellow",
+        "blue",
+        "red",
+        "blue",
+        "red",
+        "yellow"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 4,
+      "colours": [
+        "green",
+        "blue",
+        "yellow",
+        "red",
+        "red",
+        "blue",
+        "yellow",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 3,
+      "colours": [
+        "red",
+        "red",
+        "green",
+        "blue",
+        "blue",
+        "yellow",
+        "blue",
+        "green",
+        "yellow",
+        "yellow",
+        "red",
+        "red",
+        "blue",
+        "yellow",
+        "green",
+        "red",
+        "green",
+        "yellow",
+        "green",
+        "blue"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 4,
+      "colours": [
+        "yellow",
+        "blue",
+        "green",
+        "red"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "red",
+        "yellow",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "green"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 4,
+      "colours": [
+        "green",
+        "red",
+        "red",
+        "yellow",
+        "yellow",
+        "blue",
+        "green",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "blue"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "red",
+        "blue",
+        "green",
+        "blue",
+        "red",
+        "blue",
+        "yellow",
+        "blue",
+        "green",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "red",
+        "green",
+        "yellow",
+        "red",
+        "yellow",
+        "yellow"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 5,
+      "colours": [
+        "yellow",
+        "red",
+        "red",
+        "red",
+        "yellow",
+        "blue",
+        "blue",
+        "yellow",
+        "blue",
+        "green",
+        "green",
+        "green"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 4,
+      "colours": [
+        "red",
+        "blue",
+        "green",
+        "yellow"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 5,
+      "colours": [
+        "green",
+        "red",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "red",
+        "yellow",
+        "green",
+        "green",
+        "blue",
+        "green",
+        "blue",
+        "yellow",
+        "red",
+        "blue",
+        "blue",
+        "red",
+        "yellow",
+        "yellow"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 3,
+      "colours": [
+        "red",
+        "yellow",
+        "green",
+        "blue",
+        "yellow",
+        "blue",
+        "green",
+        "red"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 5,
+      "colours": [
+        "yellow",
+        "blue",
+        "green",
+        "red"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "yellow",
+        "yellow",
+        "blue",
+        "red",
+        "blue",
+        "green",
+        "red",
+        "green",
+        "yellow",
+        "green",
+        "red",
+        "green",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 20,
+      "degradationTime": 4,
+      "colours": [
+        "green",
+        "green",
+        "yellow",
+        "green",
+        "red",
+        "blue",
+        "yellow",
+        "green",
+        "red",
+        "red",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "blue",
+        "blue",
+        "blue",
+        "red",
+        "yellow",
+        "yellow"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 4,
+      "colours": [
+        "green",
+        "red",
+        "yellow",
+        "yellow",
+        "blue",
+        "green",
+        "red",
+        "yellow",
+        "green",
+        "red",
+        "blue",
+        "blue",
+        "blue",
+        "yellow",
+        "red",
+        "green"
+      ],
+      "degColour": "yellow"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 3,
+      "colours": [
+        "green",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "green",
+        "red",
+        "red",
+        "blue",
+        "yellow",
+        "yellow",
+        "blue"
+      ],
+      "degColour": "red"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 4,
+      "colours": [
+        "blue",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "yellow",
+        "red",
+        "green"
+      ],
+      "degColour": "blue"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 5,
+      "colours": [
+        "green",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "blue",
+        "red",
+        "red",
+        "yellow",
+        "yellow",
+        "green",
+        "blue",
+        "yellow",
+        "red",
+        "blue",
+        "green"
+      ],
+      "degColour": "green"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 4,
+      "degradationTime": 5,
+      "colours": [
+        "red",
+        "green",
+        "blue",
+        "yellow"
+      ],
+      "degColour": "blue"
+    }
+  ]
+}
