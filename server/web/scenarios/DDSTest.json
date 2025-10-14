@@ -12,10 +12,11 @@
                       }
                   ],
     "useflatbuffers":  true,
-    "pythonPath":  "C:/Users/haris/python-envs/hut-dds/Scripts/python.exe",
+    "pythonPath":  "/home/ron0/python-envs/hut-dds/bin/python",
     "simpleListenerPath":  "scripts/pyDDS/simple_listener.py",
     "fbsListenerPath":  "scripts/pyDDS/fbs_listener.py",
     "simplePublisherPath":  "scripts/pyDDS/simple_publisher.py",
+    "imagePublisherPath":  "scripts/pyDDS/image_publisher.py",
     "fbsPublisherPath":  "scripts/pyDDS/fbs_publisher.py",
     "gameCentre":  {
                        "lat":  30.65582,

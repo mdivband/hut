@@ -12,6 +12,7 @@ import csv
 import os
 import sys
 from collections import defaultdict
+import socket
 
 # Add the script folder and generated folder to path
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -90,7 +91,7 @@ def create_waypoint_message(aircraft_type, aircraft_id, lat, lng, alt, heading):
     builder.Finish(message_offset)
     return builder.Output()
 
-def create_fire_message(fire_id, lat, lng, image_base64):
+def create_fire_message(fire_id, lat, lng, image_base64=""):
     """Create a FireMessage FlatBuffer"""
     builder = flatbuffers.Builder(1024)
 
@@ -223,11 +224,11 @@ def publish_fire_data(session, fire_id, lat, lng, image_base64, format_type):
         publishers_cache[fire_topic] = session.declare_publisher(fire_topic)
 
     if format_type == 'flatbuffer':
-        fire_msg = create_fire_message(fire_id, lat, lng, image_base64)
+        fire_msg = create_fire_message(fire_id, lat, lng, "")
         publishers_cache[fire_topic].put(fire_msg)
         print(f"Published fire event FlatBuffer for fire ID {fire_id} (with image)")
     else:
-        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}, Image: [data]"
+        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}"
         publishers_cache[fire_topic].put(fire_str)
         print(f"Published fire event string: {fire_str}")
 

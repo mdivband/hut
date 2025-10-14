@@ -23,7 +23,9 @@ import tool.GsonUtils;
 public class DDSController extends AbstractController {
     private DDSListener ddsListener;
     private PythonExecutor publisherExecutor; // For dev mode publisher
+    private PythonExecutor imagePublisherExecutor;
     private String publisherScriptPath = "";
+    private String imagePublisherScriptPath = "";
     private long lastNoDataWarningTime = 0;
     private long lastNoPublisherWarningTime = 0;
     private long warningRateLimit = 10000; // 10 seconds in milliseconds
@@ -56,6 +58,7 @@ public class DDSController extends AbstractController {
         super(simulator, DDSController.class.getName());
         this.ddsListener = new DDSListener();
         this.publisherExecutor = new PythonExecutor();
+        this.imagePublisherExecutor = new PythonExecutor();
     }
 
     // Return the extracted DDS data hashmap
@@ -127,6 +130,7 @@ public class DDSController extends AbstractController {
             // Set the python path for the publisher executor as well if we are in dev mode
             if (simulator.getState().getDevMode()) {
                 publisherExecutor.setCustomPythonPath(pythonPath);
+                imagePublisherExecutor.setCustomPythonPath(pythonPath);
             }
         } catch (Exception e) {
             LOGGER.severe(String.format("%s; DDSER; Python path configuration failed; %s", 
@@ -160,6 +164,11 @@ public class DDSController extends AbstractController {
         LOGGER.info("DDS publisher script path set to: " + publisherScriptPath);
     }
 
+    public void setImagePublisherScriptPath(String imagePublisherScriptPath) {
+        this.imagePublisherScriptPath = imagePublisherScriptPath;
+        LOGGER.info("DDS image publisher script path set to: " + imagePublisherScriptPath);
+    }
+
     /**
      * Starts the DDS executor on a separate thread
      */
@@ -177,6 +186,10 @@ public class DDSController extends AbstractController {
                 "%s; DDSER; Failed to start persistent Python listener; %s", 
                 simulator.getState().getTime(), e.getMessage()));
             throw new RuntimeException("Failed to start DDS Controller", e);
+        }
+
+        if (simulator.getState().getDevMode()) {
+            startImagePublisher();
         }
 
         isRunning = true;
@@ -209,6 +222,10 @@ public class DDSController extends AbstractController {
         // Stop the DDS publisher if running in dev mode
         if (simulator.getState().getDevMode()) {
             stopDDSPublisher();
+        }
+
+        if (simulator.getState().getDevMode()) {
+            stopImagePublisher();
         }
         
         if (executorThread != null) {
@@ -267,6 +284,75 @@ public class DDSController extends AbstractController {
                 simulator.getState().getTime(), e.getMessage()));
         }
     }
+
+    public void startImagePublisher() {
+        if (imagePublisherScriptPath == null || imagePublisherScriptPath.trim().isEmpty()) {
+            LOGGER.warning(String.format(
+                    "%s; DDSWRN; DDS image publisher script path not set, cannot start publisher.",
+                    simulator.getState().getTime()));
+            return;
+        }
+
+        try {
+            // Start the script asynchronously
+            boolean success = imagePublisherExecutor.startAsyncScript(imagePublisherScriptPath);
+            if (success) {
+                LOGGER.info(String.format(
+                        "%s; DDSPUB; Image Publisher started successfully.",
+                        simulator.getState().getTime()));
+            } else {
+                Exception exception = imagePublisherExecutor.getAsyncScriptException();
+                String errorMsg = (exception != null) ? exception.getMessage() : "Unknown error during startup.";
+                LOGGER.severe(String.format(
+                        "%s; DDSER; Failed to start Image Publisher: %s",
+                        simulator.getState().getTime(), errorMsg));
+            }
+        } catch (Exception e) {
+            LOGGER.severe(String.format(
+                    "%s; DDSER; An unexpected exception occurred while starting Image Publisher: %s",
+                    simulator.getState().getTime(), e.getMessage()));
+        }
+    }
+
+    private void stopImagePublisher() {
+        try {
+            if (imagePublisherExecutor == null || !imagePublisherExecutor.isAsyncScriptRunning()) {
+                return; // Nothing to stop.
+            }
+
+            imagePublisherExecutor.stopAsyncScript();
+
+            // Retrieve final status information from the executor
+            Integer exitCode = imagePublisherExecutor.getAsyncScriptExitCode();
+            Exception exception = imagePublisherExecutor.getAsyncScriptException();
+
+            if (exception != null) {
+                LOGGER.warning(String.format(
+                        "%s; DDSWRN; Image Publisher encountered an error during execution: %s",
+                        simulator.getState().getTime(), exception.getMessage()));
+            } else if (exitCode != null) {
+                if (exitCode == 0) {
+                    LOGGER.info(String.format(
+                            "%s; DDSPUB; Image Publisher completed successfully (exit code: %d).",
+                            simulator.getState().getTime(), exitCode));
+                } else {
+                    String output = imagePublisherExecutor.getAsyncScriptOutput();
+                    LOGGER.warning(String.format(
+                            "%s; DDSWRN; Image Publisher finished with an error (exit code: %d). Output: %s",
+                            simulator.getState().getTime(), exitCode, output.trim()));
+                }
+                LOGGER.info(String.format(
+                        "%s; DDSPUB; Image Publisher process was stopped.",
+                        simulator.getState().getTime()));
+            }
+
+        } catch (Exception e) {
+            LOGGER.warning(String.format(
+                    "%s; DDSWRN; An error occurred while stopping the Image Publisher: %s",
+                    simulator.getState().getTime(), e.getMessage()));
+        }
+    }
+
     
     /**
      * Stops the DDS publisher in dev mode
@@ -336,6 +422,16 @@ public class DDSController extends AbstractController {
         }
     }
 
+    private void checkImagePublisherStatus() {
+        if (imagePublisherExecutor.isAsyncScriptFinished() && !imagePublisherExecutor.isAsyncScriptCompleted()) {
+            imagePublisherExecutor.stopAsyncScript(); // the final status
+            imagePublisherExecutor.markAsyncScriptCompleted();
+            LOGGER.info(String.format(
+                    "%s; DDSPUB; Image Publisher process has finished.",
+                    simulator.getState().getTime()));
+        }
+    }
+
     /**
      * Checks if new DDS data has been received
      * @return true if data is available for processing
@@ -371,7 +467,10 @@ public class DDSController extends AbstractController {
                 }
                 
                 // Check publisher status if in dev mode
-                checkPublisherStatus();
+                if (simulator.getState().getDevMode()) {
+                    checkPublisherStatus(); // Checks the DDS data publisher
+                    checkImagePublisherStatus(); // Checks the new image publisher
+                }
                 
                 // Sleep for the specified rate
                 Thread.sleep((long)(executionRate * 1000));

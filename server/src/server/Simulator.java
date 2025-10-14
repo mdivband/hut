@@ -691,6 +691,13 @@ public class Simulator {
                             }
                         }
                     }
+
+                    if (GsonUtils.hasKey(obj, "imagePublisherPath")) {
+                        String imagePublisherPath = GsonUtils.getValue(obj, "imagePublisherPath");
+                        if (imagePublisherPath != null && !imagePublisherPath.trim().isEmpty()) {
+                            ddsController.setImagePublisherScriptPath(imagePublisherPath);
+                        }
+                    }
                 }
             }
 
