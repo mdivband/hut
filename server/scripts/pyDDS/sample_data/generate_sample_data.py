@@ -95,6 +95,10 @@ def generate_sample_data():
     MIN_FIRE_DISTANCE_METERS = 1000   # Minimum distance from an agent to spawn a fire
     FIRE_RADIUS_METERS = 5000      # 5km radius around an agent
     N_FIRE_EVENTS = 5               # Max number of fire events to generate
+    FIRE_UPDATE_PROBABILITY = 0.6         # 60% chance for any given fire to have an update event
+    FIRE_UPDATE_MIN_DELAY = 50            # Min steps after creation to schedule an update
+    FIRE_UPDATE_MAX_DELAY = 100           # Max steps after creation to schedule an update
+    FIRE_UPDATE_POS_VARIATION = 0.001     # How far (in degrees) a fire can "move" during an update
 
     # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
@@ -236,6 +240,7 @@ def generate_sample_data():
     fire_data.append(fire_header)
 
     fire_id_counter = 1
+    created_fires = [] # keep track of created fires
 
     # Generate TOTAL_STEPS steps
     for step in range(1, TOTAL_STEPS + 1):
@@ -327,8 +332,50 @@ def generate_sample_data():
                     image_base64
                 ]
                 fire_data.append(fire_row)
+
+                created_fires.append({
+                    'id': fire_id_counter,
+                    'step': step,
+                    'lat': fire_lat,
+                    'lon': fire_lon
+                })
+
                 fire_id_counter += 1
-    
+
+
+
+    print("\nGenerating fire update events...")
+    for fire in created_fires:
+        if random.random() < FIRE_UPDATE_PROBABILITY:
+            # Schedule an update for this fire
+            update_delay = random.randint(FIRE_UPDATE_MIN_DELAY, FIRE_UPDATE_MAX_DELAY)
+            update_step = fire['step'] + update_delay
+
+            if update_step <= TOTAL_STEPS:
+                # Generate new data for the update
+                lat_offset = random.uniform(-FIRE_UPDATE_POS_VARIATION, FIRE_UPDATE_POS_VARIATION)
+                lon_offset = random.uniform(-FIRE_UPDATE_POS_VARIATION, FIRE_UPDATE_POS_VARIATION)
+                update_lat = fire['lat'] + lat_offset
+                update_lon = fire['lon'] + lon_offset
+
+                # Generate a new, different image
+                updated_image_base64 = generate_gradient_image_base64()
+
+                fire_update_row = [
+                    update_step,
+                    fire['id'],  # Use the SAME ID
+                    round(update_lat, 13),
+                    round(update_lon, 13),
+                    updated_image_base64
+                ]
+                fire_data.append(fire_update_row)
+                print(f"- Scheduling update for fire ID {fire['id']} at step {update_step}")
+
+    fire_header_row = fire_data[0]
+    fire_data_rows = fire_data[1:]
+    fire_data_rows.sort(key=lambda x: x[0]) # Sort by the first column (step)
+    fires_sample_data = [fire_header_row] + fire_data_rows
+
     # Print summary using actual constants
     print("\nData generation summary:")
     for agent_id, config in agents.items():
@@ -339,7 +386,7 @@ def generate_sample_data():
     print(f"- Noise enabled: {USE_NOISE}")
     print(f"- Compatible with FlatBuffers schemas")
     
-    return agent_data, fire_data
+    return agent_data, fires_sample_data
 
 def save_to_csv(data, filename='sample_data.csv'):
     """Save the generated data to a CSV file"""
