@@ -2,6 +2,8 @@
 import zenoh, time, argparse, sys
 import json
 from collections import defaultdict, deque
+import socket
+import threading
 
 # Add the script folder and generated folder to path
 import os
@@ -22,6 +24,47 @@ if FLATBUFFERS_AVAILABLE:
     logger.info("FlatBuffers support enabled")
 else:
     logger.warning("FlatBuffers not available - using string format")
+
+
+# a cache of images for recently received fires, to map to fire IDs from the DDS stream later down the line or catch up.
+image_cache = {}
+image_cache_lock = threading.Lock() # since we're multithreading now...
+
+# starts up the tcp receiver, forms a connection
+def tcp_server_thread(host, port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((host, port))
+        s.listen()
+        print(f"Image Caching Server listening on {host}:{port}", flush=True)
+        logger.info(f"Image Caching Server listening on {host}:{port}")
+
+        while True:
+            conn, addr = s.accept()
+            with conn:
+                # print(f"Connected by {addr}", flush=True)
+                data = b""
+                while True:
+                    chunk = conn.recv(4096)
+                    if not chunk:
+                        break
+                    data += chunk
+
+                if data:
+                    try:
+                        image_packet = json.loads(data.decode('utf-8'))
+                        fire_id = image_packet['fire_id']
+
+                        with image_cache_lock:
+                            # store the latest image for this fire ID
+                            image_cache[fire_id] = image_packet['image']
+
+                        logger.info(f"Cached image for fire ID {fire_id} from {addr}")
+
+                    except json.JSONDecodeError:
+                        logger.error(f"Received malformed JSON from {addr}")
+                    except KeyError:
+                        logger.error(f"Received JSON with missing keys from {addr}")
+
 
 # Global storage for aircraft data
 aircraft_data = defaultdict(lambda: {
@@ -129,7 +172,7 @@ def deserialize_fire_message(data):
             "id": msg.Id(),
             "latitude": msg.Latitude(),
             "longitude": msg.Longitude(),
-            "image": msg.Image().decode('utf-8')
+            "image": ""
         }
     except Exception as e:
         logger.error(f"Failed to deserialize FireMessage: {e}")
@@ -208,9 +251,15 @@ def combine_all_data(data_timeout):
 
     for event in list(fire_events): # Iterate over a copy
         if current_time_sec - event['timestamp'] < data_timeout:
-            result["fires"].append(event['data'])
+            fire_data = event['data']
+            fire_id = fire_data['id']
+
+            with image_cache_lock:
+                cached_image = image_cache.get(fire_id, "")
+                fire_data['image'] = cached_image
+
+            result["fires"].append(fire_data)
         else:
-            # Remove old events from the left of the deque
             if fire_events and fire_events[0] == event:
                 fire_events.popleft()
 
@@ -259,6 +308,12 @@ if __name__ == "__main__":
     parser.add_argument('--data_timeout', type=float, default=5.0,
                         help='Maximum age of data to include in combined output in seconds (default: 5.0)')
     args = parser.parse_args()
+
+
+    TCP_HOST = '127.0.0.1'
+    TCP_PORT = 65432
+    server = threading.Thread(target=tcp_server_thread, args=(TCP_HOST, TCP_PORT), daemon=True)
+    server.start()
 
     data_received = False
     is_flatbuffer = False

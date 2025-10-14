@@ -6,7 +6,7 @@ from PIL import Image
 import base64
 import io
 
-def generate_gradient_image_base64(width=500, height=500):
+def generate_gradient_image_base64(width=50, height=50):
     """ Generates a 500x500 image with a random gradient and returns it as a Base64 string"""
     # Two random colors
     color1 = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
@@ -35,28 +35,53 @@ def generate_gradient_image_base64(width=500, height=500):
     return base64.b64encode(img_bytes).decode('utf-8')
 
 
+# a hue shifting algorithm
+def shift_hue_of_base64_image(base64_string, shift_amount=32):
+    """
+    Decodes a Base64 image, shifts its hue using Pillow, and re-encodes it.
+    """
+    try:
+        img_bytes = base64.b64decode(base64_string)
+        img = Image.open(io.BytesIO(img_bytes))
+        img_hsv = img.convert('HSV') # RGB to HSV to easily manipulate hue
+        h, s, v = img_hsv.split()
+        h_shifted = h.point(lambda i: (i + shift_amount) % 256)
+        img_hsv_shifted = Image.merge('HSV', (h_shifted, s, v)) # merge channels
+        img_rgb_shifted = img_hsv_shifted.convert('RGB') # convert back to RGB
+        buffered = io.BytesIO()
+        img_rgb_shifted.save(buffered, format="PNG")
+        new_img_bytes = buffered.getvalue()
+        return base64.b64encode(new_img_bytes).decode('utf-8')
+
+    except Exception as e:
+        print(f"Error shifting hue: {e}. Returning original image.")
+        return base64_string
+
+
+
+
 def generate_sample_data():
     """
     Generate sample data for UAV simulation with specified agent speeds and timing:
     - Agent 1: 20 m/s (steps 1-80)
-    - Agent 2: 18 m/s (steps 1-80) 
+    - Agent 2: 18 m/s (steps 1-80)
     - Agent 3: 25 m/s (steps 1-80)
     - Agent 4: 20 m/s (steps 20-80)
     - Agent 5: 18 m/s (steps 40-80)
     - Compatible with FlatBuffers schemas
     """
-    
+
     # Setup the configurable parameters
-    
+
     # Time and step configuration
     SECONDS_PER_STEP = 0.5  # Match the combine_interval from listener (default 0.5)
     TOTAL_STEPS = 300       # Reduced to match typical use case
     # Waypoint configuration
     WAYPOINT_INTERVAL = 50  # Provide new waypoint every N steps
-    
+
     # Noise control
     USE_NOISE = False        # Enable for more realistic data
-    
+
     # Starting position for new agents (agents 4 and 5)
     START_LAT = 30.65582
     START_LON = -96.42533
@@ -64,29 +89,29 @@ def generate_sample_data():
     # Position variation for existing agents (agents 1-3)
     EXISTING_AGENT_POS_VARIATION = 0.004  # degrees
     NEW_AGENT_POS_VARIATION = 0.0002      # degrees
-    
+
     # Movement parameters
     MAX_HEADING_CHANGE_PER_STEP = 15      # degrees
     VELOCITY_NOISE = 2.0                  # m/s random variation
     ALTITUDE_CHANGE_RANGE = 5.0           # meters per step
     MIN_ALTITUDE = 100                    # meters
     MAX_ALTITUDE = 250                    # meters
-    
+
     # Orientation parameters
     MAX_ROLL_PITCH = 8.0                  # degrees
-    
+
     # Battery parameters (kept for compatibility)
     MIN_BATTERY_DRAIN = 0.005             # per step
     MAX_BATTERY_DRAIN = 0.015             # per step
     MIN_BATTERY_LEVEL = 0.1               # minimum battery level
-    
+
     # Signal strength parameters (kept for compatibility)
     SIGNAL_VARIATION = 0.05               # variation per step
     MIN_SIGNAL = 0.7                      # minimum signal strength
     MAX_SIGNAL = 0.98                     # maximum signal strength
     INITIAL_SIGNAL_MIN = 0.85             # initial signal range
     INITIAL_SIGNAL_MAX = 0.95
-    
+
     # Coordinate conversion (approximate for UK latitude)
     LAT_METERS_PER_DEGREE = 111000        # meters per degree latitude
     LON_METERS_PER_DEGREE = 80000         # meters per degree longitude
@@ -95,6 +120,9 @@ def generate_sample_data():
     MIN_FIRE_DISTANCE_METERS = 1000   # Minimum distance from an agent to spawn a fire
     FIRE_RADIUS_METERS = 5000      # 5km radius around an agent
     N_FIRE_EVENTS = 5               # Max number of fire events to generate
+    FIRE_UPDATE_INTERVAL_MIN = 5     # Min steps between updates for a fire
+    FIRE_UPDATE_INTERVAL_MAX = 20     # Max steps between updates for a fire
+    FIRE_UPDATE_POS_VARIATION = 0.001     # How far (in degrees) a fire can "move" during an update
 
     # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
@@ -136,7 +164,7 @@ def generate_sample_data():
             'lat': START_LAT + lat_offset,
             'lon': START_LON + lon_offset,
             'altitude': random.uniform(
-                MIN_ALTITUDE + 20, 
+                MIN_ALTITUDE + 20,
                 MAX_ALTITUDE - 50) if USE_NOISE else (MIN_ALTITUDE + MAX_ALTITUDE) / 2,
             'heading': start_heading,
             'vel_x': 0,
@@ -147,11 +175,11 @@ def generate_sample_data():
             'yaw': 0,
             'battery': 1.0,
             'signal': random.uniform(
-                INITIAL_SIGNAL_MIN, 
+                INITIAL_SIGNAL_MIN,
                 INITIAL_SIGNAL_MAX) if USE_NOISE else (INITIAL_SIGNAL_MIN + INITIAL_SIGNAL_MAX) / 2,
             'type': config['type']
         }
-    
+
     # Precompute all agent positions for lookahead
     agent_positions = {agent_id: [] for agent_id in agents}
     agent_states_copy = {k: v.copy() for k, v in agent_states.items()}
@@ -220,22 +248,23 @@ def generate_sample_data():
                 'signal': state['signal'],
                 'type': state['type']
             })
-    
+
     # Generate data
     agent_data = []
     fire_data = []
-    
+
     # Header - updated to include aircraft_type for better compatibility and waypoint columns
     agent_header = ['step', 'agent_id', 'aircraft_type', 'latitude', 'longitude', 'altitude', 'heading',
-              'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level', 
-              'signal_strength', 'status', 'custom_data',
-              'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
+                    'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level',
+                    'signal_strength', 'status', 'custom_data',
+                    'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
     fire_header = ['step', 'fire_id', 'latitude', 'longitude', 'image']
 
     agent_data.append(agent_header)
     fire_data.append(fire_header)
 
     fire_id_counter = 1
+    created_fires = [] # keep track of created fires
 
     # Generate TOTAL_STEPS steps
     for step in range(1, TOTAL_STEPS + 1):
@@ -256,13 +285,13 @@ def generate_sample_data():
             # Steps 1-N use waypoint at step N, steps N+1-N*2 use waypoint at step N*2, etc.
             waypoint_block = ((step - 1) // WAYPOINT_INTERVAL) + 1
             waypoint_step = waypoint_block * WAYPOINT_INTERVAL
-            
+
             # Fill waypoint columns if the waypoint step exists and agent is active
-            if (waypoint_step <= TOTAL_STEPS and 
-                waypoint_step >= config['start_step'] and
-                waypoint_step - 1 < len(agent_positions[agent_id]) and 
-                agent_positions[agent_id][waypoint_step - 1] is not None):
-                
+            if (waypoint_step <= TOTAL_STEPS and
+                    waypoint_step >= config['start_step'] and
+                    waypoint_step - 1 < len(agent_positions[agent_id]) and
+                    agent_positions[agent_id][waypoint_step - 1] is not None):
+
                 future_state = agent_positions[agent_id][waypoint_step - 1]
                 waypoint_lat = round(future_state['lat'], 13)
                 waypoint_lon = round(future_state['lon'], 13)
@@ -314,8 +343,9 @@ def generate_sample_data():
                 lat_offset = (random_distance * math.cos(random_angle)) / LAT_METERS_PER_DEGREE
                 lon_offset = (random_distance * math.sin(random_angle)) / LON_METERS_PER_DEGREE
 
-                fire_lat = agent_state['lat'] + lat_offset
-                fire_lon = agent_state['lon'] + lon_offset
+                ## for now we don't need the fires themself to move
+                fire_lat = agent_state['lat'] #+ lat_offset
+                fire_lon = agent_state['lon'] #+ lon_offset
 
                 image_base64 = generate_gradient_image_base64()
 
@@ -327,8 +357,60 @@ def generate_sample_data():
                     image_base64
                 ]
                 fire_data.append(fire_row)
+
+                created_fires.append({
+                    'id': fire_id_counter,
+                    'step': step,
+                    'lat': fire_lat,
+                    'lon': fire_lon,
+                    'img': image_base64
+                })
+
                 fire_id_counter += 1
-    
+
+
+    # every N steps, previously generated fires have their image/other data updated, like a real feed
+    print("\nGenerating continuous fire update events...")
+    for fire in created_fires:
+        update_interval = random.randint(FIRE_UPDATE_INTERVAL_MIN, FIRE_UPDATE_INTERVAL_MAX)
+
+        last_event_step = fire['step']
+        last_known_lat = fire['lat']
+        last_known_lon = fire['lon']
+        last_known_image = fire['img']
+
+        update_count = 0
+
+        # loops till TOTAL_STEPS roughly
+        while True:
+            next_update_step = last_event_step + update_interval
+
+            if next_update_step > TOTAL_STEPS:
+                break
+
+            # for now we're skipping actual movement of the fire
+            update_lat = last_known_lat #+ random.uniform(-FIRE_UPDATE_POS_VARIATION, FIRE_UPDATE_POS_VARIATION)
+            update_lon = last_known_lon #+ random.uniform(-FIRE_UPDATE_POS_VARIATION, FIRE_UPDATE_POS_VARIATION)
+            updated_image_base64 = shift_hue_of_base64_image(last_known_image, shift_amount=random.randint(16, 32))
+
+            fire_data.append([next_update_step, fire['id'], round(update_lat, 13), round(update_lon, 13), updated_image_base64])
+            update_count += 1
+
+            # keep a track of the last update
+            last_event_step = next_update_step
+            last_known_lat = update_lat
+            last_known_lon = update_lon
+            last_known_image = updated_image_base64
+
+        if update_count > 0:
+            print(f"- Scheduling {update_count} update(s) for fire ID {fire['id']} at a {update_interval}-step interval.")
+
+
+    fire_header_row = fire_data[0]
+    fire_data_rows = fire_data[1:]
+    fire_data_rows.sort(key=lambda x: x[0]) # sort by the step/timestamp for correctness
+    fires_sample_data = [fire_header_row] + fire_data_rows
+
     # Print summary using actual constants
     print("\nData generation summary:")
     for agent_id, config in agents.items():
@@ -338,8 +420,8 @@ def generate_sample_data():
     print(f"- Total steps: {TOTAL_STEPS}")
     print(f"- Noise enabled: {USE_NOISE}")
     print(f"- Compatible with FlatBuffers schemas")
-    
-    return agent_data, fire_data
+
+    return agent_data, fires_sample_data
 
 def save_to_csv(data, filename='sample_data.csv'):
     """Save the generated data to a CSV file"""
@@ -355,7 +437,8 @@ def save_to_csv(data, filename='sample_data.csv'):
 if __name__ == "__main__":
     # Generate the data
     agents_sample_data, fires_sample_data = generate_sample_data()
-    
+
     # Save to CSV file
     save_to_csv(agents_sample_data, 'agents_data.csv')
     save_to_csv(fires_sample_data, 'fires_data.csv')
+
