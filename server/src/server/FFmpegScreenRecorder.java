@@ -26,6 +26,10 @@ public class FFmpegScreenRecorder {
         return t;
     });
 
+    // Fine-tuning (seconds)
+    private static final double START_LEAD_S = 0.050;  // include a touch earlier
+    private static final double END_TRIM_S   = 0.100;  // cut off a touch earlier
+
     public FFmpegScreenRecorder(String ffmpegExe, Path outDir) {
         this.ffmpegExe = Objects.requireNonNull(ffmpegExe);
         this.outDir = Objects.requireNonNull(outDir);
@@ -42,19 +46,18 @@ public class FFmpegScreenRecorder {
 
         File log = outDir.resolve("ffmpeg-session.log").toFile();
 
-        // Important: enforce boring, steady timestamps from the start.
         ProcessBuilder pb = new ProcessBuilder(
                 ffmpegExe,
                 "-hide_banner", "-y",
                 "-f", "dshow",
                 "-rtbufsize", "256M",
                 "-thread_queue_size", "512",
-                "-use_wallclock_as_timestamps", "1",     // input PTS from wall clock
+                "-use_wallclock_as_timestamps", "1",
                 "-i", "video=OBS Virtual Camera",
-                "-fflags", "+genpts",                    // generate clean PTS
-                "-vsync", "cfr",                         // constant frame rate timeline
-                "-r", "60",                              // CFR @ 60fps
-                "-c:v", "libx264",                       // CPU; use h264_nvenc if you upgrade drivers
+                "-fflags", "+genpts",
+                "-vsync", "cfr",
+                "-r", "60",
+                "-c:v", "libx264",
                 "-preset", "ultrafast",
                 "-tune", "zerolatency",
                 "-crf", "23",
@@ -62,21 +65,25 @@ public class FFmpegScreenRecorder {
                 sessionFile.toString()
         );
         pb.redirectErrorStream(true);
-        pb.redirectOutput(log);                          // log file (no gobbler thread needed)
-        pb.redirectInput(ProcessBuilder.Redirect.PIPE);  // so we can send 'q'
+        pb.redirectOutput(log);
+        pb.redirectInput(ProcessBuilder.Redirect.PIPE);
+
+        // Record the wall time right at launch (earlier than before)
+        long launchWall = System.currentTimeMillis();
         proc = pb.start();
         procStdin = proc.getOutputStream();
         running = true;
 
-        // Wait until the file actually exists and has some data, then set the wall start
-        // so our wall clock aligns with *real* captured frames.
+        // (Optional) Wait briefly until the file appears, but don't delay the wall start
         try {
-            for (int i = 0; i < 60; i++) { // up to ~6s
-                if (Files.exists(sessionFile) && Files.size(sessionFile) > 512 * 1024) break;
+            for (int i = 0; i < 30; i++) { // up to ~3s
+                if (Files.exists(sessionFile) && Files.size(sessionFile) > 128 * 1024) break;
                 Thread.sleep(100);
             }
         } catch (InterruptedException ignored) {}
-        sessionWallStartMs = System.currentTimeMillis();
+
+        // Earlier session start aligns “startSec” slightly earlier; preroll covers any early margin
+        sessionWallStartMs = launchWall;
 
         // shutdown safety
         if (shutdownHook == null) {
@@ -96,7 +103,6 @@ public class FFmpegScreenRecorder {
         if (!running || proc == null) return;
 
         try {
-            // 1) Ask ffmpeg to stop nicely so it writes trailer (critical for MP4; still good for MKV)
             try {
                 if (procStdin != null) {
                     procStdin.write('q');
@@ -105,12 +111,9 @@ public class FFmpegScreenRecorder {
                 }
             } catch (IOException ignored) {}
 
-            // 2) Wait a bit for clean exit
             if (!proc.waitFor(4, TimeUnit.SECONDS)) {
-                // 3) Nudge
                 proc.destroy();
                 if (!proc.waitFor(2, TimeUnit.SECONDS)) {
-                    // 4) Last resort
                     proc.destroyForcibly();
                     proc.waitFor(2, TimeUnit.SECONDS);
                 }
@@ -132,32 +135,6 @@ public class FFmpegScreenRecorder {
         try { cutPool.awaitTermination(2, TimeUnit.SECONDS); } catch (InterruptedException ignored) {}
     }
 
-    /** (Kept for offline use) waits until file size stops growing. Not used during live recording anymore. */
-    @SuppressWarnings("unused")
-    private void waitForStableFile(Path file, long minBytes, long settleMillis, long timeoutMillis) throws IOException {
-        long start = System.currentTimeMillis();
-        long lastSize = -1;
-        long lastChange = System.currentTimeMillis();
-
-        while (System.currentTimeMillis() - start < timeoutMillis) {
-            if (!Files.exists(file)) {
-                sleep(100);
-                continue;
-            }
-            long size = Files.size(file);
-            if (size >= minBytes) {
-                if (size != lastSize) {
-                    lastSize = size;
-                    lastChange = System.currentTimeMillis();
-                } else {
-                    if (System.currentTimeMillis() - lastChange >= settleMillis) return; // stable
-                }
-            }
-            sleep(100);
-        }
-        // timeout reached; continue anyway
-    }
-
     // NEW: queue the cut on a background thread (non-blocking for the caller)
     public void cutEpisodeAsync(String epCode, int epIndex,
                                 long epWallStartMs, long epWallEndMs,
@@ -172,36 +149,36 @@ public class FFmpegScreenRecorder {
         });
     }
 
-    /** Cut an episode clip from the long session by wall clock times. (Blocking, used by async wrapper) */
+    /** Blocking cut (called by async wrapper). */
     public Path cutEpisode(String epCode, int epIndex,
                            long epWallStartMs, long epWallEndMs,
                            boolean reencode) throws IOException, InterruptedException {
         if (sessionFile == null) throw new IllegalStateException("Session not started");
 
-        // --- Compute absolute start and end (seconds from session start) ---
+        // Compute seconds from session start, and apply small lead/trim
         double startSec = Math.max(0.0, (epWallStartMs - sessionWallStartMs) / 1000.0);
         double endSec   = Math.max(startSec, (epWallEndMs   - sessionWallStartMs) / 1000.0);
 
-        // --- Guard: don't cut before the long MKV has those bytes recorded ---
+        startSec = Math.max(0.0, startSec - START_LEAD_S);
+        endSec   = Math.max(startSec, endSec - END_TRIM_S);
+
+        // Guard: minimal wait so we're not at a moving EOF
         long needWallMs = sessionWallStartMs + (long) Math.floor(endSec * 1000.0);
-        long safetyLagMs = 2000; // encoder/OS buffering slack
+        long safetyLagMs = 500; // was 2000; trim to reduce overrun
         long now = System.currentTimeMillis();
         if (now < needWallMs + safetyLagMs) {
             try { Thread.sleep((needWallMs + safetyLagMs) - now); } catch (InterruptedException ignored) {}
         }
 
-        // --- Tiny settle to avoid racing the tail of the file (kept short to reduce latency) ---
-        try { Thread.sleep(200); } catch (InterruptedException ignored) {}
+        // Tiny settle only
+        try { Thread.sleep(50); } catch (InterruptedException ignored) {}
 
         String stamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date(epWallEndMs));
         Path out = outDir.resolve(String.format("%s_%03d_%s.mp4", epCode, epIndex, stamp));
         File cutLog = outDir.resolve("ffmpeg-cut.log").toFile();
 
-        // --- Build ffmpeg args ---
         List<String> args = new ArrayList<>();
         args.addAll(List.of(ffmpegExe, "-hide_banner", "-y"));
-
-        // Decode-seek (accurate): put -ss AFTER -i, and use absolute -to
         args.addAll(List.of(
                 "-i", sessionFile.toString(),
                 "-ss", String.format(Locale.US, "%.3f", startSec),
@@ -210,8 +187,7 @@ public class FFmpegScreenRecorder {
 
         if (reencode) {
             args.addAll(List.of(
-                    // Tip: switch to h264_nvenc/h264_qsv/h264_amf if available for faster cuts
-                    "-c:v","libx264",
+                    "-c:v","libx264",         // consider h264_nvenc/h264_qsv/h264_amf if available
                     "-preset","veryfast",
                     "-crf","23",
                     "-pix_fmt","yuv420p",
@@ -221,7 +197,6 @@ public class FFmpegScreenRecorder {
                     "-movflags","+faststart"
             ));
         } else {
-            // Best-effort stream copy (keyframe-aligned)
             args.addAll(List.of(
                     "-c","copy",
                     "-movflags","+faststart",
@@ -246,7 +221,6 @@ public class FFmpegScreenRecorder {
             return out;
         }
 
-        // Probe the actual duration with ffprobe and warn if it’s far off.
         Double trueDur = probeDurationSeconds(out);
         if (trueDur != null) {
             System.out.printf("%s [FFMPEG] probe %s -> trueDuration=%.3fs (requested=%.3fs, delta=%.3fs)%n",
@@ -262,14 +236,12 @@ public class FFmpegScreenRecorder {
         return out;
     }
 
-    /** Try to find ffprobe next to ffmpeg, otherwise fall back to "ffprobe" on PATH. */
     private String ffprobeExe() {
         Path ff = Paths.get(ffmpegExe);
         String name = ff.getFileName().toString().toLowerCase(Locale.ROOT);
         if (name.contains("ffmpeg")) {
             Path sibling = ff.getParent() != null ? ff.getParent().resolve(name.replace("ffmpeg","ffprobe")) : null;
             if (sibling != null && Files.isRegularFile(sibling)) return sibling.toString();
-            // common Windows executable name
             sibling = ff.getParent() != null ? ff.getParent().resolve("ffprobe.exe") : null;
             if (sibling != null && Files.isRegularFile(sibling)) return sibling.toString();
             sibling = ff.getParent() != null ? ff.getParent().resolve("ffprobe") : null;
@@ -278,7 +250,6 @@ public class FFmpegScreenRecorder {
         return "ffprobe";
     }
 
-    /** Returns duration in seconds (Double) or null on failure. */
     private Double probeDurationSeconds(Path file) {
         try {
             ProcessBuilder pb = new ProcessBuilder(
@@ -305,7 +276,6 @@ public class FFmpegScreenRecorder {
     public long getSessionWallStartMs() { return sessionWallStartMs; }
     public Path getSessionFile() { return sessionFile; }
 
-    // --- helpers ---
     private static String ts() { return new Date().toString() + ";"; }
     private static void sleep(long ms) { try { Thread.sleep(ms); } catch (InterruptedException ignored) {} }
     private static void closeQuiet(Closeable c) { try { if (c != null) c.close(); } catch (IOException ignored) {} }

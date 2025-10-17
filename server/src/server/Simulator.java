@@ -66,7 +66,7 @@ public class Simulator {
 
     private Thread mainLoopThread;
     private int completedTargets = 0;
-    // ---- Video capture ----
+
     // ---- Video capture ----
     private FFmpegScreenRecorder screenRec;
     private boolean videoSessionStarted = false;
@@ -74,9 +74,10 @@ public class Simulator {
     private String  vidEpCode  = null;
     private long    vidEpWallStartMs = 0L;
 
-    // Tunables for cut margins (seconds)
-    private static final double VIDEO_PREROLL_S = 0.8;
-    private static final double VIDEO_POSTROLL_S = 0.0;
+    // Tunables for cut margins (seconds) — tightened defaults
+    private static final double VIDEO_PREROLL_S = 0.0;  // was 0.8 — start earlier
+    private static final double VIDEO_POSTROLL_S = 0.2; // was 0.8 — end sooner
+
 
 
 
@@ -196,24 +197,18 @@ public class Simulator {
         if (screenRec == null || !videoSessionStarted) return;
         vidEpCode = (epCode != null && !epCode.isBlank()) ? epCode : defaultEpCode();
         vidEpIndex = epIndex;
-        // Start a little earlier for visual cushion
         long prerollMs = (long) (VIDEO_PREROLL_S * 1000);
         vidEpWallStartMs = System.currentTimeMillis() - prerollMs;
         LOGGER.info(String.format("%s; VRUN; Episode running (code, idx, startWall); %s;%d;%d",
                 getState().getTime(), vidEpCode, vidEpIndex, vidEpWallStartMs));
     }
 
-
     private void videoOnEpisodeEndIfActive() {
         if (screenRec == null || !videoSessionStarted) return;
-        if (vidEpIndex == null) return; // nothing active
+        if (vidEpIndex == null) return;
         long wallEnd = System.currentTimeMillis() + (long)(VIDEO_POSTROLL_S * 1000);
         try {
-            // Non-blocking now: queue the cut on the recorder's executor
-            screenRec.cutEpisodeAsync(vidEpCode, vidEpIndex,
-                    vidEpWallStartMs, wallEnd,
-                    /*reencode=*/true
-            );
+            screenRec.cutEpisodeAsync(vidEpCode, vidEpIndex, vidEpWallStartMs, wallEnd, /*reencode=*/true);
             LOGGER.info(String.format("%s; VEND; Episode ended (code, idx, endWall); %s;%d;%d",
                     getState().getTime(), vidEpCode, vidEpIndex, wallEnd));
         } catch (Exception e) {
@@ -221,12 +216,12 @@ public class Simulator {
             LOGGER.warning(String.format("%s; VERR; Cut enqueue failed (code, idx); %s;%d",
                     getState().getTime(), vidEpCode, vidEpIndex));
         } finally {
-            // clear active
             vidEpIndex = null;
             vidEpCode = null;
             vidEpWallStartMs = 0L;
         }
     }
+
 
 
     private void videoStopSessionIfRunning() {
@@ -274,13 +269,14 @@ public class Simulator {
     private int    armedEpIndex;
     private long   armAtTick;
 
-    // arm to a future tick (at least one full loop later; two is safer)
+    // arm to a near-future tick (just one loop later)
     private void armVideoStart(String epCode, int epIndex) {
         armedEpCode = epCode;
         armedEpIndex = epIndex;
-        armAtTick = tickId + 2;   // +1 = next tick; +2 = after one full step of new scene
+        armAtTick = tickId + 1;   // was +2; start a tick earlier (~66ms at 15 Hz)
         videoStartArmed = true;
     }
+
 
     // fire only at/after the target tick
     private void maybeFireArmedVideoStart() {
