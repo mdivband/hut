@@ -18,6 +18,10 @@ import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+
+import java.nio.file.Paths;
+
+
 /**
  * This is the core code for the mainloop and loading of the simulator
  * @author Feng Wu
@@ -62,6 +66,19 @@ public class Simulator {
 
     private Thread mainLoopThread;
     private int completedTargets = 0;
+    // ---- Video capture ----
+    // ---- Video capture ----
+    private FFmpegScreenRecorder screenRec;
+    private boolean videoSessionStarted = false;
+    private Integer vidEpIndex = null;
+    private String  vidEpCode  = null;
+    private long    vidEpWallStartMs = 0L;
+
+    // Tunables for cut margins (seconds)
+    private static final double VIDEO_PREROLL_S = 0.8;
+    private static final double VIDEO_POSTROLL_S = 0.0;
+
+
 
     public Simulator() {
         instance = this;
@@ -78,6 +95,18 @@ public class Simulator {
         //modeller = new Modeller(this);
         modelCaller = new ModelCaller();
         random = new Random();
+
+        // Video recorder: adjust path & folder as needed
+        try {
+            screenRec = new FFmpegScreenRecorder(
+                    "C:\\Program Files (x86)\\ffmpeg\\bin\\ffmpeg.exe",   // <-- set your ffmpeg path
+                    Paths.get("recordings")          // <-- output folder
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            screenRec = null; // leave null if init failed; code below will skip recording safely
+        }
+
 
         imageController = new ImageController(this);
         episodeController = new EpisodeController();
@@ -137,6 +166,20 @@ public class Simulator {
     }
 
     public void startSimulation() {
+
+        // startSimulation()
+        if (screenRec != null && !videoSessionStarted) {
+            try {
+                screenRec.startSession();
+                videoSessionStarted = true;
+                LOGGER.info(String.format("%s; VIDST; Video session started", getState().getTime()));
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                LOGGER.warning(String.format("%s; VIDER; Failed to start video session", getState().getTime()));
+            }
+        }
+
+
         //state.setScenarioEndTime();
         //Heart beat all virtual agents to prevent time out when user is reading the description.
         for(Agent agent : this.state.getAgents())
@@ -148,6 +191,63 @@ public class Simulator {
         this.state.setInProgress(true);
         LOGGER.info(String.format("%s; SIMST; Simulation started", getState().getTime()));
     }
+
+    private void videoOnEpisodeStart(String epCode, int epIndex) {
+        if (screenRec == null || !videoSessionStarted) return;
+        vidEpCode = (epCode != null && !epCode.isBlank()) ? epCode : defaultEpCode();
+        vidEpIndex = epIndex;
+        // Start a little earlier for visual cushion
+        long prerollMs = (long) (VIDEO_PREROLL_S * 1000);
+        vidEpWallStartMs = System.currentTimeMillis() - prerollMs;
+        LOGGER.info(String.format("%s; VRUN; Episode running (code, idx, startWall); %s;%d;%d",
+                getState().getTime(), vidEpCode, vidEpIndex, vidEpWallStartMs));
+    }
+
+
+    private void videoOnEpisodeEndIfActive() {
+        if (screenRec == null || !videoSessionStarted) return;
+        if (vidEpIndex == null) return; // nothing active
+        long wallEnd = System.currentTimeMillis() + (long)(VIDEO_POSTROLL_S * 1000);
+        try {
+            // Non-blocking now: queue the cut on the recorder's executor
+            screenRec.cutEpisodeAsync(vidEpCode, vidEpIndex,
+                    vidEpWallStartMs, wallEnd,
+                    /*reencode=*/true
+            );
+            LOGGER.info(String.format("%s; VEND; Episode ended (code, idx, endWall); %s;%d;%d",
+                    getState().getTime(), vidEpCode, vidEpIndex, wallEnd));
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.warning(String.format("%s; VERR; Cut enqueue failed (code, idx); %s;%d",
+                    getState().getTime(), vidEpCode, vidEpIndex));
+        } finally {
+            // clear active
+            vidEpIndex = null;
+            vidEpCode = null;
+            vidEpWallStartMs = 0L;
+        }
+    }
+
+
+    private void videoStopSessionIfRunning() {
+        if (screenRec == null || !videoSessionStarted) return;
+        try {
+            screenRec.stopSessionGracefully();
+            LOGGER.info(String.format("%s; VSTOP; Video session stopped", getState().getTime()));
+        } catch (Exception ignored) {
+        } finally {
+            videoSessionStarted = false;
+        }
+    }
+
+    private String defaultEpCode() {
+        // Cheap, robust code prefix: scenario/gameId if present
+        String gid = (getState().getGameId() != null && !getState().getGameId().isBlank())
+                ? getState().getGameId()
+                : "EP";
+        return gid.replaceAll("[^A-Za-z0-9_-]", "_");
+    }
+
 
     public Map<String, String> getScenarioFileListWithGameIds() {
         Map<String, String> scenarios = new HashMap<>();
@@ -166,17 +266,46 @@ public class Simulator {
         return scenarios;
     }
 
+
+    // fields
+    private long tickId = 0;
+    private boolean videoStartArmed = false;
+    private String armedEpCode;
+    private int    armedEpIndex;
+    private long   armAtTick;
+
+    // arm to a future tick (at least one full loop later; two is safer)
+    private void armVideoStart(String epCode, int epIndex) {
+        armedEpCode = epCode;
+        armedEpIndex = epIndex;
+        armAtTick = tickId + 2;   // +1 = next tick; +2 = after one full step of new scene
+        videoStartArmed = true;
+    }
+
+    // fire only at/after the target tick
+    private void maybeFireArmedVideoStart() {
+        if (videoStartArmed && tickId >= armAtTick) {
+            videoOnEpisodeStart(armedEpCode, armedEpIndex);
+            videoStartArmed = false;
+        }
+    }
+
+
     private void mainLoop() {
-        final double waitTime = (int) (1000/(highTickRate)); //When gameSpeed is 1, should be 200ms.
-        int lowTickCounter = 0;  // Slightly clumsy, but a quick way to only check every 5th step for an addition
+        final int waitTimeMs = (int)Math.round(1000.0 / highTickRate); // (optional: round)
+        int lowTickCounter = 0;
         int sleepTime;
+
+        // video: simple counter to label clips 001, 002, ...
+        int epCounter = 0;
 
         episodeController.setTriggerTime(-1d);
         double degradationTriggerTime = -1d; // next scheduled disappearance
         changeView(1); // Start directly in EPISODE mode (no review/cooldown)
 
-
         do {
+            // 0) gate any armed starts for this tick *before* episode boundary logic
+            maybeFireArmedVideoStart();
 
             long startTime = System.currentTimeMillis();
             state.incrementTime(1 / highTickRate);
@@ -187,12 +316,14 @@ public class Simulator {
 
             if (inFinalReviewMode && (isOutOfTime ||
                     (state.getTime() >= episodeController.getTriggerTime() && episodeController.hasStarted() && allEpisodesUsed))) {
-                // Terminate simulation
-
-                // Normal episode end: process external signal and switch to cooldown.
+                // ---- Terminate simulation ----
                 LOGGER.info(String.format("%s; WKLD; User set workload level to (level); %s", state.getTime(), state.getWorkloadLevel()));
                 LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s", state.getTime(), state.getSubjPerfLevel()));
                 LOGGER.info(String.format("%s; EPEND; Episode end", state.getTime()));
+
+                // VIDEO: close active clip + stop session
+                videoOnEpisodeEndIfActive();
+                videoStopSessionIfRunning();
 
                 System.out.println("DONE BY TIME: " + state.getTime());
                 System.out.println("NOTE: Ending after final review completed.");
@@ -210,13 +341,22 @@ public class Simulator {
                     episodeController.incrementEpisode();
                     this.softReset();
 
-                    spawnEpisodeAgentsAndTask(); // helper added below
+                    spawnEpisodeAgentsAndTask(); // <-- prepare scene first
+
+                    // VIDEO: START first episode (no preroll needed)
+                    epCounter++;
+                    armVideoStart(defaultEpCode(), epCounter);
 
                     // schedule end + disappearance
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
                     degradationTriggerTime = state.getTime() + episodeController.getDegradationTime();
-                } else {
+                }
+                else {
                     // No episodes: end
+                    // VIDEO: ensure everything is stopped
+                    videoOnEpisodeEndIfActive();
+                    videoStopSessionIfRunning();
+
                     episodeController.closeLogger();
                     LogProcessor.processLogFile("logs/" + state.getUserName() + "-" + state.getGameId() + ".log");
                     this.reset(false);
@@ -226,16 +366,28 @@ public class Simulator {
             } else if (state.getTime() >= episodeController.getTriggerTime()) {
                 // Episode finished → immediately start next (no review/cooldown)
                 if (episodeController.hasEpisodes()) {
+                    // VIDEO: END previous
+                    videoOnEpisodeEndIfActive();
+
                     changeView(1);
                     episodeController.incrementEpisode();
                     this.softReset();
 
-                    spawnEpisodeAgentsAndTask(); // helper
+                    spawnEpisodeAgentsAndTask(); // <-- now set the new scene
+
+// VIDEO: START next (no preroll)=
+                    epCounter++;
+                    armVideoStart(defaultEpCode(), epCounter);
 
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
                     degradationTriggerTime = state.getTime() + episodeController.getDegradationTime();
+
                 } else {
                     // Finished last episode
+                    // VIDEO: END last + stop session
+                    videoOnEpisodeEndIfActive();
+                    videoStopSessionIfRunning();
+
                     episodeController.closeLogger();
                     LogProcessor.processLogFile("logs/" + state.getUserName() + "-" + state.getGameId() + ".log");
                     this.reset(false);
@@ -243,7 +395,7 @@ public class Simulator {
                 }
             }
 
-// Independent disappearance trigger at the configured time
+            // Independent disappearance trigger at the configured time
             if (degradationTriggerTime > 0 && state.getTime() >= degradationTriggerTime) {
                 String degColour = episodeController.getDegColour(); // e.g., "blue"
                 String wantedMarker = (degColour != null) ? ("UAV-" + degColour) : null;
@@ -275,15 +427,12 @@ public class Simulator {
                 degradationTriggerTime = -1d; // fire once per episode
             }
 
-
-
             // 6. If in review mode (-2) and no other condition applies, do nothing (hold)
             else if (state.getEditMode() == -2) {
                 // In review mode: waiting for user action to trigger mode change to -9.
             }
 
-
-        // Decide if we should spawn a new task
+            // Decide if we should spawn a new task
             lowTickCounter++;
             if (lowTickCounter == lowTickRate * highTickRate) {
                 if (missionController != null) {
@@ -292,21 +441,16 @@ public class Simulator {
                 lowTickCounter = 0;
             }
 
-
-
-            //if (Simulator.instance.getState().getTime() > gameSpeed * 5) {
+            // Main agent/task stepping
             if (true) {
-
                 if (state.getAllocationStyle().equals("dynamic")) {
-                    if (state.getTasks().size() == 0) {// && getState().getHub() instanceof AgentHub && ((AgentHub) getState().getHub()).allAgentsNear()) {
+                    if (state.getTasks().size() == 0) {
                         System.out.println("DONE BY COMPLETION: " + state.getTime());
                         System.out.println("agents = " + state.getAgents());
                         int numFailed = 0;
                         for (Agent a : state.getAgents()) {
                             if (a instanceof AgentVirtual av) {
-                                if (!av.isAlive()) {
-                                    numFailed++;
-                                }
+                                if (!av.isAlive()) numFailed++;
                             }
                         }
                         System.out.println("Num failed: " + numFailed);
@@ -318,18 +462,17 @@ public class Simulator {
                         for (Agent agent : state.getAgents()) {
                             if (agent instanceof AgentVirtual av) {
                                 if (agentController.modelFailure(av)) {
-                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                    // modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                 }
 
                                 if (agent.isTimedOut()) {
-                                    //System.out.println("timed out, passing");
+                                    // pass
                                 } else if (!av.isAlive() && (!av.isGoingHome() || av.isHome())) {
                                     av.charge();
                                 } else if (agent.getBattery() < 0.15 && av.isAlive()) {
-                                    //modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
+                                    // modeller.failRecord(agent.getId(), agent.getAllocatedTaskId());
                                     av.killBattery();
                                 } else if (av.getTask() != null || (av.isGoingHome() && !av.isHome())) {
-                                    //System.out.println(agent);
                                     av.step(state.isFlockingEnabled());
                                 } else {
                                     if (getAgentController().getScheduledRemovals() > 0) {
@@ -343,11 +486,7 @@ public class Simulator {
                                             av.setMarker("UAVWithPack");
                                         }
                                         Simulator.instance.getScoreController().incrementCompletedTask();
-                                        // In-runtime allocation model
-                                        //double successChance = modeller.calculateAll(agent);
-                                        //state.setSuccessChance(successChance);
                                     } else if (agent.getBattery() < 0.9 && av.isAlive()) {
-                                        // If no tasks available, charge up in case we need to replace it
                                         av.charge();
                                     } else {
                                         av.heartbeat();
@@ -359,9 +498,7 @@ public class Simulator {
 
                     agentsToRemove.forEach(a -> {
                         getState().getAgents().remove(a);
-
-                        // If an agent is removed or dies, update model and start thread
-                        //updateMissionModel();
+                        // updateMissionModel();
                     });
 
                 } else {
@@ -373,7 +510,6 @@ public class Simulator {
                     } else if (hub instanceof AgentHubProgrammed ahp) {
                         ahp.step(state.isFlockingEnabled());
                     }
-                    // ELSE no hub
                     state.getAgents().forEach(a -> a.step(state.isFlockingEnabled()));
                 }
 
@@ -388,46 +524,30 @@ public class Simulator {
                 synchronized (state.getTasks()) {
                     for (Task task : state.getTasks()) {
                         if (task.step()) {
-                            // If it's already tagged by a programmed agent, or if it gets completed by the step command
                             completedTasks.add(task);
-                            //System.out.println("Adding " + task.getId());
                         }
                     }
                 }
 
                 synchronized (Simulator.instance.getState().getCompletedTasks()) {
                     completedTasks.stream().filter(task -> task.getType() == 6).forEach(task -> task.getAgents().forEach(a -> a.setType("standard")));
-                    //if (!completedTasks.isEmpty()) {
-                        //completedTasks.forEach(t -> modeller.passRecords(t.getId()));
-                        completedTasks.forEach(Task::complete);
-                    //}
+                    completedTasks.forEach(Task::complete);
                 }
-
-                //if (!modeller.isStarted()) {
-                //    modeller.start();
-                //    updateMissionModel();
-                //}
-
             }
 
-            //scoreController.handleUpkeep();
-
-            // Step hazard hits
-            //this.state.decayHazardHits();
-
-            // Check and trigger images that are scheduled
-            //if (state.isShowReviewPanel()) {
+            // if (state.UIOptionIsAvailable("reviewPanel")) { imageController.checkForImages(); }
             if (state.UIOptionIsAvailable("reviewPanel")) {
                 imageController.checkForImages();
             }
 
             long endTime = System.currentTimeMillis();
-            sleepTime = (int) (waitTime - (endTime - startTime));
-            if (sleepTime < 0) {
-                sleepTime = 0;
-            }
+            sleepTime = (int)(waitTimeMs - (endTime - startTime));
+            if (sleepTime < 0) sleepTime = 0;
+
+            tickId++;              // bump at end of a fully completed loop
         } while (sleep(sleepTime));
     }
+
 
     private void spawnEpisodeAgentsAndTask() {
         // --- Get colours for this episode (one per agent) ---
@@ -620,6 +740,12 @@ public class Simulator {
         if (interruptMain && this.mainLoopThread != null) {
             this.mainLoopThread.interrupt();
          }
+
+        // stop any active capture cleanly
+        videoOnEpisodeEndIfActive();
+        videoStopSessionIfRunning();
+
+
         state.reset();
         agentController.resetAgentNumbers();
         hazardController.resetHazardNumbers();

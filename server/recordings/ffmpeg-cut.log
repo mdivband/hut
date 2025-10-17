@@ -1,0 +1,42 @@
+-vsync is deprecated. Use -fps_mode
+Input #0, matroska,webm, from 'recordings\session_20251017_150404.mkv':
+  Metadata:
+    ENCODER         : Lavf62.3.100
+  Duration: 00:00:27.85, start: 0.000000, bitrate: 3065 kb/s
+  Stream #0:0: Video: h264 (Constrained Baseline), yuv420p(tv, progressive), 1916x1024, 60 fps, 60 tbr, 1k tbn
+    Metadata:
+      ENCODER         : Lavc62.11.100 libx264
+      DURATION        : 00:00:27.850000000
+Stream mapping:
+  Stream #0:0 -> #0:0 (h264 (native) -> h264 (libx264))
+Press [q] to stop, [?] for help
+[libx264 @ 000001a7e8ceea40] using cpu capabilities: MMX2 SSE2Fast SSSE3 SSE4.2 AVX FMA3 BMI2 AVX2 AVX512
+[libx264 @ 000001a7e8ceea40] profile High, level 4.2, 4:2:0, 8-bit
+[libx264 @ 000001a7e8ceea40] 264 - core 165 r3222 b35605a - H.264/MPEG-4 AVC codec - Copyleft 2003-2025 - http://www.videolan.org/x264.html - options: cabac=1 ref=1 deblock=1:0:0 analyse=0x3:0x113 me=hex subme=2 psy=1 psy_rd=1.00:0.00 mixed_ref=0 me_range=16 chroma_me=1 trellis=0 8x8dct=1 cqm=0 deadzone=21,11 fast_pskip=1 chroma_qp_offset=0 threads=24 lookahead_threads=8 sliced_threads=0 nr=0 decimate=1 interlaced=0 bluray_compat=0 constrained_intra=0 bframes=3 b_pyramid=2 b_adapt=1 b_bias=0 direct=1 weightb=1 open_gop=0 weightp=1 keyint=250 keyint_min=25 scenecut=40 intra_refresh=0 rc_lookahead=10 rc=crf mbtree=1 crf=23.0 qcomp=0.60 qpmin=0 qpmax=69 qpstep=4 ip_ratio=1.40 aq=1:1.00
+Output #0, mp4, to 'recordings\Degradation_Test_Short_003_20251017_150431.mp4':
+  Metadata:
+    encoder         : Lavf62.3.100
+  Stream #0:0: Video: h264 (avc1 / 0x31637661), yuv420p(tv, progressive), 1916x1024, q=2-31, 60 fps, 15360 tbn
+    Metadata:
+      encoder         : Lavc62.11.100 libx264
+      DURATION        : 00:00:27.850000000
+    Side data:
+      cpb: bitrate max/min/avg: 0/0/0 buffer size: 0 vbv_delay: N/A
+frame=   45 fps=0.0 q=31.0 size=     256KiB time=00:00:00.71 bitrate=2926.8kbits/s dup=1 drop=0 speed=1.41x elapsed=0:00:00.50    frame=  364 fps=356 q=31.0 size=     768KiB time=00:00:06.03 bitrate=1042.8kbits/s dup=1 drop=0 speed= 5.9x elapsed=0:00:01.02    [mp4 @ 000001a7e82ab340] Starting second pass: moving the moov atom to the beginning of the file
+[out#0/mp4 @ 000001a7e82ab240] video:878KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.722415%
+frame=  473 fps=414 q=-1.0 Lsize=     885KiB time=00:00:07.85 bitrate= 923.2kbits/s dup=1 drop=0 speed=6.87x elapsed=0:00:01.14    
+[libx264 @ 000001a7e8ceea40] frame I:2     Avg QP:23.21  size:307505
+[libx264 @ 000001a7e8ceea40] frame P:122   Avg QP:27.30  size:  2084
+[libx264 @ 000001a7e8ceea40] frame B:349   Avg QP:32.28  size:    84
+[libx264 @ 000001a7e8ceea40] consecutive B-frames:  0.8%  1.3%  3.2% 94.7%
+[libx264 @ 000001a7e8ceea40] mb I  I16..4: 17.3%  4.1% 78.6%
+[libx264 @ 000001a7e8ceea40] mb P  I16..4:  0.1%  0.0%  0.3%  P16..4:  1.0%  0.1%  0.2%  0.0%  0.0%    skip:98.3%
+[libx264 @ 000001a7e8ceea40] mb B  I16..4:  0.0%  0.0%  0.0%  B16..8:  0.1%  0.0%  0.0%  direct: 0.0%  skip:99.9%  L0:43.4% L1:56.0% BI: 0.7%
+[libx264 @ 000001a7e8ceea40] 8x8 transform intra:3.8% inter:25.0%
+[libx264 @ 000001a7e8ceea40] coded y,uvDC,uvAC intra: 77.9% 78.6% 68.2% inter: 0.1% 0.2% 0.1%
+[libx264 @ 000001a7e8ceea40] i16 v,h,dc,p: 50% 46%  4%  1%
+[libx264 @ 000001a7e8ceea40] i8 v,h,dc,ddl,ddr,vr,hd,vl,hu: 12% 26% 15%  9%  5%  4%  6% 10% 13%
+[libx264 @ 000001a7e8ceea40] i4 v,h,dc,ddl,ddr,vr,hd,vl,hu: 16% 16% 11%  8%  9%  9%  9%  9% 11%
+[libx264 @ 000001a7e8ceea40] i8c dc,h,v,p: 55% 22% 16%  6%
+[libx264 @ 000001a7e8ceea40] Weighted P-Frames: Y:0.0% UV:0.0%
+[libx264 @ 000001a7e8ceea40] kb/s:911.95
