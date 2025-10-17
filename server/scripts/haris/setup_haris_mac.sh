@@ -10,6 +10,77 @@
 
 set -e
 
+# Default parameters
+BRANCH="xprize_mcs"
+LOCAL_FOLDER_NAME="haris"
+REPOSITORY="https://github.com/SooratiLab/haris.git"
+NO_PULL=false
+HAS_ERRORS=false
+
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo "Options:"
+    echo "  -b, --branch BRANCH         Branch to clone/switch to (default: xprize_mcs)"
+    echo "  -l, --local FOLDER          Local folder name (default: haris)"
+    echo "  -r, --repository URL        Repository URL (default: https://github.com/SooratiLab/haris.git)"
+    echo "  -n, --no-pull              Don't pull from remote if repo exists locally"
+    echo "  -h, --help                 Show this help message"
+    exit 0
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b|--branch)
+            BRANCH="$2"
+            shift 2
+            ;;
+        -l|--local|--path|--folder)
+            LOCAL_FOLDER_NAME="$2"
+            shift 2
+            ;;
+        -r|--repository)
+            REPOSITORY="$2"
+            shift 2
+            ;;
+        -n|--no-pull)
+            NO_PULL=true
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_usage
+            ;;
+    esac
+done
+
+# Function to check if remote branch exists
+check_remote_branch() {
+    local repo="$1"
+    local branch="$2"
+    
+    if git ls-remote --heads "$repo" | grep -q "refs/heads/$branch$"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+echo "Setting up Haris from branch: $BRANCH"
+echo "Repository: $REPOSITORY"
+echo "Local folder: $LOCAL_FOLDER_NAME"
+if [ "$NO_PULL" = true ]; then
+    echo "No-pull mode: Will not pull from remote if repo exists locally"
+fi
+echo
+
+# Start in home directory
+cd ~
+
 # -------------------------------
 # Step 0: Detect package manager
 # -------------------------------
@@ -40,9 +111,28 @@ if command -v git >/dev/null 2>&1; then
 else
   echo "Git not found. Installing..."
   $UPDATE_CMD
-  $INSTALL_CMD git
+  if $INSTALL_CMD git; then
+    echo "Git installed successfully"
+  else
+    echo "ERROR: Failed to install Git"
+    HAS_ERRORS=true
+  fi
 fi
 
+# Verify branch exists before proceeding (skip if no-pull mode)
+if [ "$NO_PULL" != true ]; then
+    echo "Checking if branch '$BRANCH' exists in repository..."
+    if check_remote_branch "$REPOSITORY" "$BRANCH"; then
+        echo "Branch '$BRANCH' found in repository."
+    else
+        echo "ERROR: Branch '$BRANCH' does not exist in repository '$REPOSITORY'"
+        echo "Available branches:"
+        git ls-remote --heads "$REPOSITORY" | sed 's/.*refs\/heads\//  - /' | sort
+        exit 1
+    fi
+fi
+
+# Java
 echo "Checking for Java..."
 if command -v java >/dev/null 2>&1; then
   JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' || echo "0")
@@ -64,21 +154,54 @@ fi
 if [ "$INSTALL_JAVA" = true ]; then
   case "$PKG_MANAGER" in
     brew)
-      brew install openjdk@17
-      sudo ln -sfn "$(brew --prefix openjdk@17)/libexec/openjdk.jdk" \
-        /Library/Java/JavaVirtualMachines/openjdk-17.jdk
-      export PATH="$(brew --prefix openjdk@17)/bin:$PATH"
-      echo "Add this to your shell profile (~/.zshrc or ~/.bashrc):"
-      echo "   export PATH=\"\$(brew --prefix openjdk@17)/bin:\$PATH\""
+      if brew install openjdk@17; then
+        sudo ln -sfn "$(brew --prefix openjdk@17)/libexec/openjdk.jdk" \
+          /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+        export PATH="$(brew --prefix openjdk@17)/bin:$PATH"
+        echo "Add this to your shell profile (~/.zshrc or ~/.bashrc):"
+        echo "   export PATH=\"\$(brew --prefix openjdk@17)/bin:\$PATH\""
+        echo "Java installed successfully"
+      else
+        echo "ERROR: Failed to install Java"
+        HAS_ERRORS=true
+      fi
       ;;
     port)
-      sudo port install openjdk17
+      if sudo port install openjdk17; then
+        echo "Java installed successfully"
+      else
+        echo "ERROR: Failed to install Java"
+        HAS_ERRORS=true
+      fi
       ;;
   esac
 fi
 
-# Python
+# Python - Check and deactivate existing virtual environment first
 echo "Checking for Python..."
+
+# First, check if we're in a virtual environment and try to deactivate it
+if [ -n "$VIRTUAL_ENV" ]; then
+    echo "Deactivating existing Python virtual environment..."
+    if command -v deactivate >/dev/null 2>&1; then
+        if deactivate; then
+            echo "Virtual environment deactivated successfully"
+        else
+            echo "ERROR: Cannot deactivate virtual environment."
+            echo "Please run 'deactivate' manually and try again."
+            exit 1
+        fi
+    else
+        echo "ERROR: Cannot deactivate virtual environment."
+        echo "Please run 'deactivate' manually and try again."
+        exit 1
+    fi
+    
+    # Clear environment variables
+    unset VIRTUAL_ENV
+    unset VIRTUAL_ENV_PROMPT
+fi
+
 if command -v python3 >/dev/null 2>&1; then
   PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
   PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
@@ -90,8 +213,22 @@ if command -v python3 >/dev/null 2>&1; then
     echo "Python version < 3.7 detected. Installing newer Python..."
     $UPDATE_CMD
     case "$PKG_MANAGER" in
-      brew) $INSTALL_CMD python@3.12 ;;
-      port) $INSTALL_CMD python312 ;;
+      brew) 
+        if $INSTALL_CMD python@3.12; then
+          echo "Python installed successfully"
+        else
+          echo "ERROR: Failed to install Python"
+          HAS_ERRORS=true
+        fi
+        ;;
+      port) 
+        if $INSTALL_CMD python312; then
+          echo "Python installed successfully"
+        else
+          echo "ERROR: Failed to install Python"
+          HAS_ERRORS=true
+        fi
+        ;;
     esac
     # Re-check version after installation
     PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
@@ -103,8 +240,22 @@ else
   echo "Python not found. Installing Python..."
   $UPDATE_CMD
   case "$PKG_MANAGER" in
-    brew) $INSTALL_CMD python@3.12 ;;
-    port) $INSTALL_CMD python312 ;;
+    brew) 
+      if $INSTALL_CMD python@3.12; then
+        echo "Python installed successfully"
+      else
+        echo "ERROR: Failed to install Python"
+        HAS_ERRORS=true
+      fi
+      ;;
+    port) 
+      if $INSTALL_CMD python312; then
+        echo "Python installed successfully"
+      else
+        echo "ERROR: Failed to install Python"
+        HAS_ERRORS=true
+      fi
+      ;;
   esac
   # Get version after installation
   PY_VERSION=$(python3 -V 2>&1 | awk '{print $2}')
@@ -120,29 +271,12 @@ if python3 -m venv --help >/dev/null 2>&1; then
 else
   echo "Python venv not available. This is unusual for Mac Python installations."
   echo "Please check your Python installation."
-fi
-
-# Python pip (usually comes with Python on Mac)
-echo "Checking for pip..."
-if python3 -m pip --version >/dev/null 2>&1; then
-  echo "Found pip: $(python3 -m pip --version)"
-else
-  echo "pip not found. Installing..."
-  # On Mac, try ensurepip first
-  if python3 -m ensurepip --upgrade >/dev/null 2>&1; then
-    echo "pip installed via ensurepip"
-  else
-    echo "ensurepip failed. Installing via package manager..."
-    $UPDATE_CMD
-    case "$PKG_MANAGER" in
-      brew) echo "pip should come with Python from Homebrew" ;;
-      port) $INSTALL_CMD py312-pip ;;
-    esac
-  fi
+  HAS_ERRORS=true
 fi
 
 # FlatBuffers compiler (flatc)
 echo "Checking for flatc..."
+INSTALL_FLATC=false
 if command -v flatc >/dev/null 2>&1; then
   FLATC_VERSION=$(flatc --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
   FLATC_MAJOR=$(echo "$FLATC_VERSION" | cut -d. -f1)
@@ -165,56 +299,121 @@ if [ "$INSTALL_FLATC" = true ]; then
   TEMP_DIR=$(mktemp -d)
 
   echo "Downloading flatc v$FLATC_VERSION from $FLATC_URL..."
-  curl -L "$FLATC_URL" -o "$TEMP_DIR/flatc.zip"
-
-  cd "$TEMP_DIR"
-  unzip -q flatc.zip
-
-  # Find flatc binary after unzip
-  if [ -f flatc ]; then
-    TARGET_DIR="/usr/local/bin"
-    [ -d "/opt/homebrew/bin" ] && TARGET_DIR="/opt/homebrew/bin"
-
-    echo "Installing flatc to $TARGET_DIR..."
-    sudo mv flatc "$TARGET_DIR/"
-    sudo chmod +x "$TARGET_DIR/flatc"
+  if curl -L "$FLATC_URL" -o "$TEMP_DIR/flatc.zip"; then
+    echo "flatc downloaded successfully"
   else
-    echo "flatc binary not found in archive!"
-    exit 1
+    echo "ERROR: Failed to download flatc"
+    HAS_ERRORS=true
   fi
 
-  rm -rf "$TEMP_DIR"
+  if [ "$HAS_ERRORS" != true ]; then
+    cd "$TEMP_DIR"
+    if unzip -q flatc.zip; then
+      # Find flatc binary after unzip
+      if [ -f flatc ]; then
+        TARGET_DIR="/usr/local/bin"
+        [ -d "/opt/homebrew/bin" ] && TARGET_DIR="/opt/homebrew/bin"
 
-  if command -v flatc >/dev/null 2>&1; then
-    echo "flatc $(flatc --version) installed successfully"
-  else
-    echo "Failed to install flatc"
-    exit 1
+        echo "Installing flatc to $TARGET_DIR..."
+        if sudo mv flatc "$TARGET_DIR/" && sudo chmod +x "$TARGET_DIR/flatc"; then
+          # Verify installation
+          if command -v flatc >/dev/null 2>&1; then
+            NEW_VERSION=$(flatc --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+            echo "flatc v$NEW_VERSION installed successfully"
+          else
+            echo "ERROR: Failed to verify flatc installation"
+            HAS_ERRORS=true
+          fi
+        else
+          echo "ERROR: Failed to install flatc"
+          HAS_ERRORS=true
+        fi
+      else
+        echo "ERROR: flatc binary not found in archive!"
+        HAS_ERRORS=true
+      fi
+    else
+      echo "ERROR: Failed to extract flatc archive"
+      HAS_ERRORS=true
+    fi
+
+    # Cleanup
+    rm -rf "$TEMP_DIR"
   fi
 fi
 
 # -------------------------------
-# Step 2: Setup or update haris repo
+# Step 2: Setup or update repository
 # -------------------------------
 cd ~
 
-if [[ -d "haris" ]]; then
-  if [[ -d "haris/.git" ]]; then
-    echo "Found existing haris git repository. Fetching updates..."
-    cd haris
-    git fetch
-    git switch xprize_mcs
-    git pull
+if [[ -d "$LOCAL_FOLDER_NAME" ]]; then
+  if [[ -d "$LOCAL_FOLDER_NAME/.git" ]]; then
+    if [ "$NO_PULL" != true ]; then
+      echo "Found existing $LOCAL_FOLDER_NAME git repository."
+      echo "Updating to branch '$BRANCH'..."
+      cd "$LOCAL_FOLDER_NAME"
+      
+      if git fetch; then
+        # Check if branch exists locally or remotely
+        if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+          # Local branch exists
+          if git switch "$BRANCH" && git pull; then
+            echo "Repository updated successfully"
+          else
+            echo "ERROR: Failed to switch to branch or pull updates"
+            HAS_ERRORS=true
+          fi
+        elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+          # Remote branch exists, create local tracking branch
+          if git switch -c "$BRANCH" "origin/$BRANCH"; then
+            echo "Repository updated successfully"
+          else
+            echo "ERROR: Failed to create local tracking branch"
+            HAS_ERRORS=true
+          fi
+        else
+          echo "ERROR: Branch '$BRANCH' not found after fetch"
+          HAS_ERRORS=true
+        fi
+      else
+        echo "ERROR: Failed to fetch from repository"
+        HAS_ERRORS=true
+      fi
+    else
+      cd "$LOCAL_FOLDER_NAME"
+    fi
   else
-    echo "Found existing haris folder but it's not a git repository. Removing..."
-    rm -rf haris
-    git clone -b xprize_mcs --single-branch https://github.com/SooratiLab/haris.git
-    cd haris
+    if [ "$NO_PULL" = true ]; then
+      echo "ERROR: Found existing '$LOCAL_FOLDER_NAME' folder but it's not a git repository."
+      echo "Cannot proceed with --no-pull flag. Please remove the folder or clone manually."
+      exit 1
+    else
+      echo "Found existing $LOCAL_FOLDER_NAME folder but it's not a git repository. Removing..."
+      if rm -rf "$LOCAL_FOLDER_NAME" && git clone -b "$BRANCH" --single-branch "$REPOSITORY" "$LOCAL_FOLDER_NAME"; then
+        cd "$LOCAL_FOLDER_NAME"
+        echo "Repository cloned successfully"
+      else
+        echo "ERROR: Failed to remove old folder or clone repository"
+        HAS_ERRORS=true
+      fi
+    fi
   fi
 else
-  echo "Cloning haris repository..."
-  git clone -b xprize_mcs --single-branch https://github.com/SooratiLab/haris.git
-  cd haris
+  if [ "$NO_PULL" = true ]; then
+    echo "ERROR: Local folder '$LOCAL_FOLDER_NAME' does not exist and --no-pull flag is set."
+    echo "Cannot proceed without cloning the repository. Please run without --no-pull flag first."
+    exit 1
+  else
+    echo "Cloning repository to '$LOCAL_FOLDER_NAME' (branch: $BRANCH)..."
+    if git clone -b "$BRANCH" --single-branch "$REPOSITORY" "$LOCAL_FOLDER_NAME"; then
+      cd "$LOCAL_FOLDER_NAME"
+      echo "Repository cloned successfully"
+    else
+      echo "ERROR: Failed to clone repository"
+      HAS_ERRORS=true
+    fi
+  fi
 fi
 
 # -------------------------------
@@ -222,37 +421,109 @@ fi
 # -------------------------------
 mkdir -p ~/python-envs
 cd ~/python-envs
-python3 -m venv hut-dds
-source hut-dds/bin/activate
+
+# Remove existing environment if it exists
+if [[ -d "hut-dds" ]]; then
+  echo "Removing existing virtual environment..."
+  if rm -rf hut-dds; then
+    echo "Existing environment removed"
+  else
+    echo "ERROR: Failed to remove existing environment"
+    HAS_ERRORS=true
+  fi
+fi
+
+if python3 -m venv hut-dds; then
+  echo "Virtual environment created successfully"
+else
+  echo "ERROR: Failed to create virtual environment"
+  HAS_ERRORS=true
+fi
+
+if source hut-dds/bin/activate; then
+  echo "Virtual environment activated"
+else
+  echo "ERROR: Failed to activate virtual environment"
+  HAS_ERRORS=true
+fi
 
 # -------------------------------
 # Step 4: Setup the PyDDS environment
 # -------------------------------
-python ~/haris/server/scripts/pyDDS/setup_env.py
-python ~/haris/server/scripts/pyDDS/sample_data/generate_sample_data.py
+echo "Setting up PyDDS environment..."
+
+VENV_PYTHON="$HOME/python-envs/hut-dds/bin/python"
+SETUP_ENV_SCRIPT="$HOME/$LOCAL_FOLDER_NAME/server/scripts/pyDDS/setup_env.py"
+SAMPLE_DATA_SCRIPT="$HOME/$LOCAL_FOLDER_NAME/server/scripts/pyDDS/sample_data/generate_sample_data.py"
+
+if [[ -f "$VENV_PYTHON" ]]; then
+  echo "Using virtual environment Python: $VENV_PYTHON"
+  
+  if "$VENV_PYTHON" "$SETUP_ENV_SCRIPT"; then
+    echo "PyDDS setup completed successfully"
+  else
+    echo "ERROR: PyDDS setup failed"
+    HAS_ERRORS=true
+  fi
+  
+  if "$VENV_PYTHON" "$SAMPLE_DATA_SCRIPT"; then
+    echo "Sample data generation completed successfully"
+  else
+    echo "ERROR: Sample data generation failed"
+    HAS_ERRORS=true
+  fi
+else
+  echo "ERROR: Virtual environment Python not found at: $VENV_PYTHON"
+  echo "Falling back to system Python"
+  if python3 "$SETUP_ENV_SCRIPT" && python3 "$SAMPLE_DATA_SCRIPT"; then
+    echo "PyDDS setup completed with system Python"
+  else
+    echo "ERROR: Failed to run PyDDS setup with system Python"
+    HAS_ERRORS=true
+  fi
+fi
 
 # -------------------------------
 # Step 5: Setup Haris
 # -------------------------------
-PYTHON_PATH=$(which python)
-cd ~/haris/server/web/scenarios
+cd "$HOME/$LOCAL_FOLDER_NAME/server/web/scenarios"
 
 if command -v jq >/dev/null 2>&1; then
-  jq --arg path "$PYTHON_PATH" '.pythonPath = $path' DDSTest.json > tmp.json && mv tmp.json DDSTest.json
+  if jq --arg path "$VENV_PYTHON" '.pythonPath = $path' DDSTest.json > tmp.json && mv tmp.json DDSTest.json; then
+    echo "Updated DDSTest.json with virtual environment Python path: $VENV_PYTHON"
+  else
+    echo "ERROR: Failed to update DDSTest.json with jq"
+    HAS_ERRORS=true
+  fi
 else
   # Different syntax as Mac uses BSD sed
-  sed -i '' "s|\"pythonPath\": \".*\"|\"pythonPath\": \"$PYTHON_PATH\"|" DDSTest.json
+  if sed -i '' "s|\"pythonPath\": \".*\"|\"pythonPath\": \"$VENV_PYTHON\"|" DDSTest.json; then
+    echo "Updated DDSTest.json with virtual environment Python path: $VENV_PYTHON"
+  else
+    echo "ERROR: Failed to update DDSTest.json with sed"
+    HAS_ERRORS=true
+  fi
 fi
 
 # -------------------------------
 # Finish up
 # -------------------------------
 echo
-echo "Haris setup complete!"
+if [ "$HAS_ERRORS" = true ]; then
+  echo "Haris setup completed with ERRORS!"
+  echo "Please review the error messages above and fix any issues."
+else
+  echo "Haris setup complete!"
+fi
+
+# Always end in the server directory
+SERVER_PATH="$HOME/$LOCAL_FOLDER_NAME/server"
+cd "$SERVER_PATH"
+
 echo "Run the following command to start Haris:"
-echo "cd ~/haris/server && java -jar hut.jar 44101 DDSTest.json"
+echo "cd $HOME/$LOCAL_FOLDER_NAME/server && java -jar hut.jar 44101 DDSTest.json"
 echo
 echo "If you do not have a DDS instance with pixi support, you can run:"
-echo "cd ~/haris/server && java -jar hut.jar 44101 DDSTest.json dev"
+echo "cd $HOME/$LOCAL_FOLDER_NAME/server && java -jar hut.jar 44101 DDSTest.json dev"
 echo
 echo "Visualize the simulator at: http://127.0.0.1:44101"

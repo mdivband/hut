@@ -10,6 +10,7 @@ public class Fire extends MObject {
 
     private double intensity;
     private boolean visible;
+    private int status; // e.g., 0 = ACTIVE, 1 = CONTAINED, 2 = EXTINGUISHED
     private String image;
 
     public Fire(String id, Coordinate coordinate) {
@@ -37,6 +38,14 @@ public class Fire extends MObject {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     public void setImage(String image) {

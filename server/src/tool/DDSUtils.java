@@ -239,20 +239,34 @@ public class DDSUtils {
                             agentData.put("lng", ((Number) GsonUtils.getValue(coordinate, "lng")).doubleValue());
                         }
                         
-                        // Extract waypoint data if available and add as HashMap to agent
-                        Object waypointObj = GsonUtils.getValue(agent, "waypoint");
-                        if (waypointObj instanceof java.util.Map) {
+                        // Extract waypoints array if available
+                        Object waypointsObj = GsonUtils.getValue(agent, "waypoints");
+                        if (waypointsObj instanceof List) {
                             @SuppressWarnings("unchecked")
-                            java.util.Map<String, Object> waypoint = (java.util.Map<String, Object>) waypointObj;
+                            List<Object> waypoints = (List<Object>) waypointsObj;
                             
-                            java.util.HashMap<String, Object> waypointData = new java.util.HashMap<>();
-                            waypointData.put("lat", ((Number) GsonUtils.getValue(waypoint, "lat")).doubleValue());
-                            waypointData.put("lng", ((Number) GsonUtils.getValue(waypoint, "lng")).doubleValue());
-                            waypointData.put("altitude", ((Number) GsonUtils.getValue(waypoint, "altitude")).doubleValue());
-                            waypointData.put("heading", ((Number) GsonUtils.getValue(waypoint, "heading")).doubleValue());
+                            java.util.List<java.util.HashMap<String, Object>> waypointsList = 
+                                new java.util.ArrayList<>();
                             
-                            // Add waypoint HashMap directly to the agent
-                            agentData.put("waypoint", waypointData);
+                            for (Object waypointElement : waypoints) {
+                                if (waypointElement instanceof java.util.Map) {
+                                    @SuppressWarnings("unchecked")
+                                    java.util.Map<String, Object> waypointMap = (java.util.Map<String, Object>) waypointElement;
+                                    
+                                    java.util.HashMap<String, Object> waypointData = new java.util.HashMap<>();
+                                    waypointData.put("timestamp", ((Number) GsonUtils.getValue(waypointMap, "timestamp")).longValue());
+                                    waypointData.put("type", ((Number) GsonUtils.getValue(waypointMap, "type")).intValue());
+                                    waypointData.put("id", ((Number) GsonUtils.getValue(waypointMap, "id")).intValue());
+                                    waypointData.put("latitude", ((Number) GsonUtils.getValue(waypointMap, "latitude")).doubleValue());
+                                    waypointData.put("longitude", ((Number) GsonUtils.getValue(waypointMap, "longitude")).doubleValue());
+                                    waypointData.put("altitude", ((Number) GsonUtils.getValue(waypointMap, "altitude")).doubleValue());
+                                    waypointData.put("heading", ((Number) GsonUtils.getValue(waypointMap, "heading")).doubleValue());
+                                    
+                                    waypointsList.add(waypointData);
+                                }
+                            }
+                            
+                            agentData.put("waypoints", waypointsList);
                         }
                         
                         agentDataList.add(agentData);
@@ -282,10 +296,10 @@ public class DDSUtils {
                         fireData.put("latitude", ((Number) GsonUtils.getValue(fire, "latitude")).doubleValue());
                         fireData.put("longitude", ((Number) GsonUtils.getValue(fire, "longitude")).doubleValue());
 
-                        if (GsonUtils.hasKey(fire, "image")) {
-                            fireData.put("image", (String) GsonUtils.getValue(fire, "image"));
+                        if (GsonUtils.hasKey(fire, "status")) {
+                            fireData.put("status", ((Number) GsonUtils.getValue(fire, "status")).intValue());
                         } else {
-                            fireData.put("image", ""); // Default to empty string if not present
+                            fireData.put("status", 2); // Default to 2 if not present
                         }
 
                         fireDataList.add(fireData);
@@ -350,22 +364,29 @@ public class DDSUtils {
                         agentId, lat, lng, heading, speed, altitude, batteryLevel, statusStr
                     ));
                     
-                    // Add waypoint information if available in the agent HashMap
-                    Object waypointObj = agent.get("waypoint");
-                    if (waypointObj instanceof java.util.HashMap) {
+                    // Add waypoints array information if available
+                    Object waypointsObj = agent.get("waypoints");
+                    if (waypointsObj instanceof List) {
                         @SuppressWarnings("unchecked")
-                        java.util.HashMap<String, Object> waypoint = 
-                            (java.util.HashMap<String, Object>) waypointObj;
+                        List<java.util.HashMap<String, Object>> waypoints = 
+                            (List<java.util.HashMap<String, Object>>) waypointsObj;
                         
-                        double wpLat = (Double) waypoint.get("lat");
-                        double wpLng = (Double) waypoint.get("lng");
-                        double wpAlt = (Double) waypoint.get("altitude");
-                        double wpHeading = (Double) waypoint.get("heading");
+                        result.append(String.format(", Waypoints[%d]:[", waypoints.size()));
                         
-                        result.append(String.format(
-                            ", Waypoint:[Lat:%.4f, Lng:%.4f, Alt:%.1f, Heading:%.1f]",
-                            wpLat, wpLng, wpAlt, wpHeading
-                        ));
+                        for (int i = 0; i < waypoints.size(); i++) {
+                            java.util.HashMap<String, Object> wp = waypoints.get(i);
+                            double wpLat = (Double) wp.get("latitude");
+                            double wpLng = (Double) wp.get("longitude");
+                            double wpAlt = (Double) wp.get("altitude");
+                            double wpHeading = (Double) wp.get("heading");
+                            
+                            if (i > 0) result.append(", ");
+                            result.append(String.format(
+                                "WP%d(%.4f,%.4f,%.1f,%.1f°)",
+                                i + 1, wpLat, wpLng, wpAlt, wpHeading
+                            ));
+                        }
+                        result.append("]");
                     }
                     
                     result.append("\n");

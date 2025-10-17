@@ -17,7 +17,9 @@ logger = setup_logging('fbs_listener.log')
 # FlatBuffers imports (will be available after running setup_flatbuffers.py)
 FLATBUFFERS_AVAILABLE = check_flatbuffers(type_based=True)
 if FLATBUFFERS_AVAILABLE:
-    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage, FireMessage
+    from messages import (PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage, 
+                         FireMessage, MissionMessage, TakeoffMessage, LandMessage, 
+                         Element, ElementWrapper)
     print("FlatBuffers support enabled", flush=True)
     logger.info("FlatBuffers support enabled")
 else:
@@ -29,6 +31,7 @@ aircraft_data = defaultdict(lambda: {
     'velocity': None,
     'heading': None,
     'waypoint': None,
+    'mission': None,
     'last_update': None
 })
 fire_events = deque(maxlen=200)
@@ -120,6 +123,165 @@ def deserialize_waypoint_message(data):
         logger.error(f"Failed to deserialize WaypointMessage: {e}")
         return {"error": f"Failed to deserialize WaypointMessage: {e}"}
 
+def deserialize_mission_element(element_wrapper):
+    """Deserialize a single mission element from ElementWrapper"""
+    try:
+        element_type = element_wrapper.EType()
+        element_table = element_wrapper.E()
+        
+        if element_type == Element.Element.TakeoffMessage:
+            takeoff_msg = TakeoffMessage.TakeoffMessage()
+            takeoff_msg.Init(element_table.Bytes, element_table.Pos)
+            return {
+                "type": "TAKEOFF",
+                "timestamp": takeoff_msg.Timestamp(),
+                "aircraft_type": takeoff_msg.Ttype(),
+                "id": takeoff_msg.Id(),
+                "climb_angle": takeoff_msg.ClimbAngle(),
+                "altitude": takeoff_msg.Altitude(),
+                "autocontinue": takeoff_msg.Autocontinue()
+            }
+        elif element_type == Element.Element.WaypointMessage:
+            waypoint_msg = WaypointMessage.WaypointMessage()
+            waypoint_msg.Init(element_table.Bytes, element_table.Pos)
+            return {
+                "type": "WAYPOINT",
+                "timestamp": waypoint_msg.Timestamp(),
+                "aircraft_type": waypoint_msg.Ttype(),
+                "id": waypoint_msg.Id(),
+                "accept_radius": waypoint_msg.AcceptRadius(),
+                "pass_radius": waypoint_msg.PassRadius(),
+                "latitude": waypoint_msg.Latitude(),
+                "longitude": waypoint_msg.Longitude(),
+                "altitude": waypoint_msg.Altitude(),
+                "autocontinue": waypoint_msg.Autocontinue(),
+                "heading": waypoint_msg.Heading()
+            }
+        elif element_type == Element.Element.LandMessage:
+            land_msg = LandMessage.LandMessage()
+            land_msg.Init(element_table.Bytes, element_table.Pos)
+            return {
+                "type": "LAND",
+                "timestamp": land_msg.Timestamp(),
+                "aircraft_type": land_msg.Ttype(),
+                "id": land_msg.Id(),
+                "abort_altitude": land_msg.AbortAltitude(),
+                "latitude": land_msg.Latitude(),
+                "longitude": land_msg.Longitude(),
+                "altitude": land_msg.Altitude(),
+                "autocontinue": land_msg.Autocontinue()
+            }
+        else:
+            return {"error": f"Unknown element type: {element_type}"}
+    except Exception as e:
+        logger.error(f"Failed to deserialize mission element: {e}")
+        return {"error": f"Failed to deserialize mission element: {e}"}
+
+def extract_waypoints_from_mission(mission_elements):
+    """Extract waypoints from mission elements in simplified format"""
+    waypoints = []
+    
+    for element in mission_elements:
+        element_type = element.get("type")
+
+        # We do not add takeoff elements as waypoints  
+        if element_type == "WAYPOINT":
+            # Convert waypoint to old format
+            waypoint = {
+                "timestamp": element.get("timestamp"),
+                "type": element.get("aircraft_type"),
+                "id": element.get("id"),
+                "latitude": element.get("latitude"),
+                "longitude": element.get("longitude"),
+                "altitude": element.get("altitude"),
+                "heading": element.get("heading")
+            }
+            waypoints.append(waypoint)
+            
+        elif element_type == "LAND":
+            # Check if land position is different from last waypoint
+            land_lat = element.get("latitude")
+            land_lng = element.get("longitude")
+            
+            # If we have waypoints and the land position is different, add it
+            if waypoints:
+                last_waypoint = waypoints[-1]
+                # Check if land position is significantly different (allow small rounding differences)
+                if (abs(land_lat - last_waypoint["latitude"]) > 0.000001 or 
+                    abs(land_lng - last_waypoint["longitude"]) > 0.000001):
+                    land_waypoint = {
+                        "timestamp": element.get("timestamp"),
+                        "type": element.get("aircraft_type"),
+                        "id": element.get("id"),
+                        "latitude": land_lat,
+                        "longitude": land_lng,
+                        "altitude": element.get("altitude", 0.0),
+                        "heading": 0.0  # Land heading not specified
+                    }
+                    waypoints.append(land_waypoint)
+            else:
+                # No waypoints yet, add land as waypoint
+                land_waypoint = {
+                    "timestamp": element.get("timestamp"),
+                    "type": element.get("aircraft_type"),
+                    "id": element.get("id"),
+                    "latitude": land_lat,
+                    "longitude": land_lng,
+                    "altitude": element.get("altitude", 0.0),
+                    "heading": 0.0
+                }
+                waypoints.append(land_waypoint)
+    
+    return waypoints
+
+def deserialize_mission_message(data, full_mission=True):
+    """Deserialize MissionMessage FlatBuffer"""
+    try:
+        msg = MissionMessage.MissionMessage.GetRootAs(data, 0)
+        
+        mission_elements = []
+        for i in range(msg.MissionLength()):
+            element_wrapper = msg.Mission(i)
+            element_data = deserialize_mission_element(element_wrapper)
+            if "error" not in element_data:
+                mission_elements.append(element_data)
+            else:
+                logger.error(f"Error in mission element {i}: {element_data['error']}")
+        
+        if full_mission:
+            # Return full mission data
+            takeoff_count = sum(1 for elem in mission_elements 
+                                if elem.get("type") == "TAKEOFF")
+            waypoint_count = sum(1 for elem in mission_elements 
+                                if elem.get("type") == "WAYPOINT")
+            land_count = sum(1 for elem in mission_elements 
+                             if elem.get("type") == "LAND")
+            return {
+                "timestamp": msg.Timestamp(),
+                "aircraft_type": msg.Ttype(),
+                "id": msg.Id(),
+                "mission_elements": mission_elements,
+                "element_count": {
+                    "takeoff": takeoff_count,
+                    "waypoints": waypoint_count,
+                    "land": land_count,
+                    "total": len(mission_elements)
+                }
+            }
+        else:
+            # Extract waypoints only - simplified style
+            waypoints = extract_waypoints_from_mission(mission_elements)
+            return {
+                "timestamp": msg.Timestamp(),
+                "aircraft_type": msg.Ttype(),
+                "id": msg.Id(),
+                "waypoints": waypoints,
+            }
+            
+    except Exception as e:
+        logger.error(f"Failed to deserialize MissionMessage: {e}")
+        return {"error": f"Failed to deserialize MissionMessage: {e}"}
+
 def deserialize_fire_message(data):
     """Deserialize FireMessage FlatBuffer"""
     try:
@@ -129,13 +291,13 @@ def deserialize_fire_message(data):
             "id": msg.Id(),
             "latitude": msg.Latitude(),
             "longitude": msg.Longitude(),
-            "image": msg.Image().decode('utf-8')
+            "status": msg.Status()  # Add this line
         }
     except Exception as e:
         logger.error(f"Failed to deserialize FireMessage: {e}")
         return {"error": f"Failed to deserialize FireMessage: {e}"}
 
-def combine_all_data(data_timeout):
+def combine_all_data(data_timeout, full_mission=True):
     """Combine collected aircraft data into the desired JSON format"""
     current_time = int(time.time() * 1000)  # Current timestamp in milliseconds
 
@@ -195,7 +357,7 @@ def combine_all_data(data_timeout):
             if data['heading']:
                 agent_data["heading"] = data['heading']['heading']
 
-            # Extract waypoint data if available
+            # Extract waypoint data if available (old style single waypoint)
             if data.get('waypoint'):
                 agent_data["waypoint"] = {
                     "lat": data['waypoint']['latitude'],
@@ -204,15 +366,33 @@ def combine_all_data(data_timeout):
                     "heading": data['waypoint']['heading']
                 }
 
+            # Extract mission data if available
+            if data.get('mission'):
+                if full_mission:
+                    # Include full mission data and metadata
+                    agent_data["mission"] = data['mission']
+                else:
+                    # Include waypoints array (simplified style)
+                    if "waypoints" in data['mission']:
+                        agent_data["waypoints"] = data['mission']['waypoints']
+
             result["agents"].append(agent_data)
 
-    for event in list(fire_events): # Iterate over a copy
+    unique_fires = {}
+    for event in list(fire_events):
         if current_time_sec - event['timestamp'] < data_timeout:
-            result["fires"].append(event['data'])
+            fire_id = event['data']['id']
+            # Only keep the most recent event for each fire_id
+            if fire_id not in unique_fires or event['timestamp'] > unique_fires[fire_id]['timestamp']:
+                unique_fires[fire_id] = event
         else:
-            # Remove old events from the left of the deque
+            # Remove old events
             if fire_events and fire_events[0] == event:
                 fire_events.popleft()
+
+    # Add unique fires to result
+    for fire_event in unique_fires.values():
+        result["fires"].append(fire_event['data'])
 
     return result
 
@@ -232,6 +412,9 @@ def update_aircraft_data(aircraft_type, aircraft_id, message_type, message_data)
         aircraft_data[aircraft_key]['last_update'] = current_time
     elif message_type == "waypoint" and "error" not in message_data:
         aircraft_data[aircraft_key]['waypoint'] = message_data
+        aircraft_data[aircraft_key]['last_update'] = current_time
+    elif message_type == "set_mission" and "error" not in message_data:
+        aircraft_data[aircraft_key]['mission'] = message_data
         aircraft_data[aircraft_key]['last_update'] = current_time
 
 def format_output(data, is_flatbuffer=False):
@@ -258,6 +441,8 @@ if __name__ == "__main__":
                         default=False, help='Log received messages to logger')
     parser.add_argument('--data_timeout', type=float, default=5.0,
                         help='Maximum age of data to include in combined output in seconds (default: 5.0)')
+    parser.add_argument('--full_mission', action='store_true',
+                        default=False, help='Include full mission data instead of extracting waypoints (default: False)')
     args = parser.parse_args()
 
     data_received = False
@@ -272,9 +457,7 @@ if __name__ == "__main__":
         last_check_time = time.time()
 
         try:
-            # Parse the topic key
-            aircraft_type, aircraft_id, message_type = parse_topic_key(sample.key_expr)
-
+            # Handle fire events separately
             if str(sample.key_expr) == 'fires/events':
                 payload_bytes = sample.payload.to_bytes()
                 message_data = deserialize_fire_message(payload_bytes)
@@ -286,6 +469,8 @@ if __name__ == "__main__":
                     logger.error(f"Invalid fire event data: {message_data['error']}")
                 return # We've handled the fire event, so we can exit now.
 
+            # Parse the topic key for aircraft messages
+            aircraft_type, aircraft_id, message_type = parse_topic_key(sample.key_expr)
 
             if not aircraft_type or not aircraft_id or not message_type:
                 logger.warning(f"Invalid topic format: {sample.key_expr}")
@@ -310,13 +495,30 @@ if __name__ == "__main__":
                             message_data = deserialize_heading_message(payload_bytes)
                         elif message_type == "waypoint":
                             message_data = deserialize_waypoint_message(payload_bytes)
+                        elif message_type == "set_mission":
+                            message_data = deserialize_mission_message(payload_bytes, args.full_mission)
                         else:
                             logger.error(f"Unknown message type: {message_type}")
                             raise Exception(f"Unknown message type: {message_type}")
 
                         if "error" not in message_data:
                             is_flatbuffer = True
-                            logger.info(f"Received {message_type} for {aircraft_type}/{aircraft_id}")
+                            
+                            # Special logging for mission messages
+                            if message_type == "set_mission":
+                                element_count = message_data.get('element_count', {})
+                                if args.full_mission:
+                                    logger.info(f"Received mission for {aircraft_type}/{aircraft_id}: "
+                                              f"{element_count.get('takeoff', 0)} takeoff, "
+                                              f"{element_count.get('waypoints', 0)} waypoints, "
+                                              f"{element_count.get('land', 0)} land elements")
+                                else:
+                                    waypoint_count = len(message_data.get('waypoints', []))
+                                    logger.info(f"Received mission for {aircraft_type}/{aircraft_id}: "
+                                              f"extracted {waypoint_count} waypoints")
+                            else:
+                                logger.info(f"Received {message_type} for {aircraft_type}/{aircraft_id}")
+                            
                             # Log messages as well if enabled
                             if args.log_messages:
                                 logger.info(f"{str.capitalize(message_type)} Message: "
@@ -351,7 +553,8 @@ if __name__ == "__main__":
         with zenoh.open(zenoh.Config()) as session:
             if args.continuous:
                 format_msg = f" (format: {args.format})" if args.format != 'auto' else ""
-                msg = f"Aircraft DDS Listener started in continuous mode{format_msg}"
+                mission_msg = f" (full_mission: {args.full_mission})"
+                msg = f"Aircraft DDS Listener started in continuous mode{format_msg}{mission_msg}"
                 print(msg, flush=True)
                 logger.info(msg)
             else:
@@ -363,11 +566,12 @@ if __name__ == "__main__":
             print(msg, flush=True)
             logger.info(msg)
 
-            # Subscribe to all aircraft topics
+            # Subscribe to all aircraft topics including missions
             position_sub = session.declare_subscriber('aircraft/*/*/position', listener)
             velocity_sub = session.declare_subscriber('aircraft/*/*/velocity', listener)
             heading_sub = session.declare_subscriber('aircraft/*/*/heading', listener)
             waypoint_sub = session.declare_subscriber('aircraft/*/*/waypoint', listener)
+            mission_sub = session.declare_subscriber('aircraft/*/*/set_mission', listener)
             fire_sub = session.declare_subscriber('fires/events', listener)
 
             if args.continuous:
@@ -378,13 +582,24 @@ if __name__ == "__main__":
 
                         # Output combined data at intervals
                         if current_time - last_combine_time >= args.combine_interval:
-                            combined_data = combine_all_data(args.data_timeout)
+                            combined_data = combine_all_data(args.data_timeout, args.full_mission)
                             if combined_data["agents"] or combined_data["fires"]:
                                 agent_count = len(combined_data['agents'])
                                 fire_count = len(combined_data['fires'])
+                                
+                                # Count agents with missions/waypoints
+                                if args.full_mission:
+                                    agents_with_missions = sum(1 for agent in combined_data['agents'] 
+                                                             if agent.get('mission'))
+                                    mission_info = f" ({agents_with_missions} with missions)" if agents_with_missions > 0 else ""
+                                else:
+                                    agents_with_waypoints = sum(1 for agent in combined_data['agents'] 
+                                                              if agent.get('waypoints'))
+                                    mission_info = f" ({agents_with_waypoints} with waypoints)" if agents_with_waypoints > 0 else ""
+                                
                                 parts = []
                                 if agent_count > 0:
-                                    parts.append(f"{agent_count} agent{'s' if agent_count != 1 else ''}")
+                                    parts.append(f"{agent_count} agent{'s' if agent_count != 1 else ''}{mission_info}")
                                 if fire_count > 0:
                                     parts.append(f"{fire_count} fire event{'s' if fire_count != 1 else ''}")
 
@@ -408,7 +623,7 @@ if __name__ == "__main__":
                 time.sleep(args.wait_time)
 
                 # Output combined data
-                combined_data = combine_all_data(args.data_timeout)
+                combined_data = combine_all_data(args.data_timeout, args.full_mission)
                 if combined_data["agents"]:
                     msg = f"FlatBuffer Data received and combined for {len(combined_data['agents'])} "
                     msg += f"agent{'s' if len(combined_data['agents']) != 1 else ''}"

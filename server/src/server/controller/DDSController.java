@@ -577,7 +577,7 @@ public class DDSController extends AbstractController {
                         int ddsFireId = (Integer) fireData.get("id");
                         double lat = (Double) fireData.get("latitude");
                         double lng = (Double) fireData.get("longitude");
-                        String imageBase64 = (String) fireData.get("image");
+                        int status = (Integer) fireData.get("status");
 
                         String simulatorFireId = ddsToSimulatorFireIdMap.get(ddsFireId);
                         Fire existingFire = null;
@@ -589,7 +589,7 @@ public class DDSController extends AbstractController {
                         if (existingFire == null) {
                             // Fire doesn't exist, create it.
                             String newId = simulator.getFireController().generateUID(ddsFireId);
-                            Fire newFire = simulator.getFireController().addFire(newId, lat, lng,  imageBase64);
+                            Fire newFire = simulator.getFireController().addFire(newId, lat, lng, status);
 
                             // Store the mapping for future updates.
                             ddsToSimulatorFireIdMap.put(ddsFireId, newId);
@@ -600,11 +600,11 @@ public class DDSController extends AbstractController {
                         } else {
                             // Fire exists, update its position.
                             existingFire.setCoordinate(new Coordinate(lat, lng));
-                            existingFire.setImage(imageBase64);
+                            existingFire.setStatus(status);
 
                             LOGGER.fine(String.format(
-                                    "%s; DDSFIREUP; Updated existing DDS fire; SIM_ID=%s, Position=(%.6f,%.6f)",
-                                    simulator.getState().getTime(), existingFire.getId(), lat, lng));
+                                    "%s; DDSFIREUP; Updated existing DDS fire; SIM_ID=%s, Position=(%.6f,%.6f), Status=%d",
+                                    simulator.getState().getTime(), existingFire.getId(), lat, lng, status));
                         }
 
                     } catch (Exception e) {
@@ -650,23 +650,35 @@ public class DDSController extends AbstractController {
                         // Store the mapping between DDS ID and simulator ID
                         ddsToSimulatorAgentIdMap.put(ddsAgentId, newAgent.getId());
                         
-                        // Check for waypoint data and add to route if available
-                        Object waypointObj = agentData.get("waypoint");
-                        if (waypointObj instanceof java.util.HashMap) {
+                        // Check for waypoints array and add to route if available
+                        Object waypointsObj = agentData.get("waypoints");
+                        if (waypointsObj instanceof List) {
                             @SuppressWarnings("unchecked")
-                            java.util.HashMap<String, Object> waypoint = 
-                                (java.util.HashMap<String, Object>) waypointObj;
+                            List<java.util.HashMap<String, Object>> waypoints = 
+                                (List<java.util.HashMap<String, Object>>) waypointsObj;
                             
-                            // At the begining, we set the first waypoint as the current position
-                            // double wpLat = (Double) waypoint.get("lat");
-                            // double wpLng = (Double) waypoint.get("lng");
+                            // Add current position as first waypoint
+                            Coordinate currentCoordinate = new Coordinate(lat, lng);
+                            newAgent.addWaypoint(currentCoordinate);
+                            
+                            // Add all waypoints from the DDS data
+                            for (java.util.HashMap<String, Object> waypoint : waypoints) {
+                                double wpLat = (Double) waypoint.get("latitude");
+                                double wpLng = (Double) waypoint.get("longitude");
+                                Coordinate waypointCoordinate = new Coordinate(wpLat, wpLng);
+                                newAgent.addWaypoint(waypointCoordinate);
+                            }
+                            
+                            LOGGER.info(String.format(
+                                "%s; DDSWP; Added %d waypoints to new agent; DDS_ID=%s", 
+                                simulator.getState().getTime(), waypoints.size(), ddsAgentId));
+                        } else {
+                            // No waypoints array, just add current position as waypoint
                             Coordinate waypointCoordinate = new Coordinate(lat, lng);
-                            
-                            // Add waypoint to new agent's waypoints list
                             newAgent.addWaypoint(waypointCoordinate);
                             
                             LOGGER.info(String.format(
-                                "%s; DDSWP; Set the inital position as first waypoint to new agent; DDS_ID=%s, Waypoint=(%.6f,%.6f)", 
+                                "%s; DDSWP; Set initial position as first waypoint for new agent; DDS_ID=%s, Waypoint=(%.6f,%.6f)", 
                                 simulator.getState().getTime(), ddsAgentId, lat, lng));
                         }
                         
@@ -684,24 +696,29 @@ public class DDSController extends AbstractController {
                         existingAgent.setAltitude(altitude);
                         existingAgent.setBattery(batteryLevel);
                         
-                        // Check for waypoint data and update route if needed
-                        Object waypointObj = agentData.get("waypoint");
-                        if (waypointObj instanceof java.util.HashMap) {
+                        // Check for waypoints array and update route if needed
+                        Object waypointsObj = agentData.get("waypoints");
+                        if (waypointsObj instanceof List) {
                             @SuppressWarnings("unchecked")
-                            java.util.HashMap<String, Object> waypoint = 
-                                (java.util.HashMap<String, Object>) waypointObj;
+                            List<java.util.HashMap<String, Object>> waypoints = 
+                                (List<java.util.HashMap<String, Object>>) waypointsObj;
                             
-                            double wpLat = (Double) waypoint.get("lat");
-                            double wpLng = (Double) waypoint.get("lng");
-                            Coordinate waypointCoordinate = new Coordinate(wpLat, wpLng);
+                            int addedWaypoints = 0;
+                            for (java.util.HashMap<String, Object> waypoint : waypoints) {
+                                double wpLat = (Double) waypoint.get("latitude");
+                                double wpLng = (Double) waypoint.get("longitude");
+                                Coordinate waypointCoordinate = new Coordinate(wpLat, wpLng);
+                                
+                                // Add waypoint to existing agent's waypoints list
+                                if (existingAgent.addWaypoint(waypointCoordinate)) {
+                                    addedWaypoints++;
+                                }
+                            }
                             
-                            // Check if waypoint is already the last coordinate in the route
-                            List<Coordinate> currentRoute = existingAgent.getRoute();
-                            // Add waypoint to existing agent's waypoints list
-                            if (existingAgent.addWaypoint(waypointCoordinate)) {
+                            if (addedWaypoints > 0) {
                                 LOGGER.info(String.format(
-                                    "%s; DDSWP; Added new waypoint to existing agent; DDS_ID=%s, Waypoint=(%.6f,%.6f)", 
-                                    simulator.getState().getTime(), ddsAgentId, wpLat, wpLng));
+                                    "%s; DDSWP; Added %d new waypoints to existing agent; DDS_ID=%s (total waypoints in array: %d)", 
+                                    simulator.getState().getTime(), addedWaypoints, ddsAgentId, waypoints.size()));
                             }
                         }
                         

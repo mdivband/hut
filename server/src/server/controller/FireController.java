@@ -18,9 +18,9 @@ public class FireController extends AbstractController {
         super(simulator, FireController.class.getName());
     }
 
-    public synchronized Fire addFire(String id, double lat, double lng, String image) {
+    public synchronized Fire addFire(String id, double lat, double lng, int status) {
         Fire fire = new Fire(id, new Coordinate(lat, lng));
-        fire.setImage(image);
+        fire.setStatus(status);
         simulator.getState().add(fire);
         LOGGER.info(String.format("Created new fire with ID: %s at (%.6f, %.6f)", id, lat, lng));
         return fire;

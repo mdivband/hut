@@ -1,0 +1,18 @@
+// msgs/aircraft_land.fbs
+
+include "common_types.fbs";
+
+namespace messages;
+
+table LandMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  abort_altitude: float;
+  latitude: float;
+  longitude:float;
+  altitude:float;
+  autocontinue: bool;
+}
+
+root_type LandMessage;

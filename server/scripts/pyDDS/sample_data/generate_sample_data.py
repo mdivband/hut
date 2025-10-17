@@ -2,38 +2,6 @@ import csv
 import math
 import os
 import random
-from PIL import Image
-import base64
-import io
-
-def generate_gradient_image_base64(width=500, height=500):
-    """ Generates a 500x500 image with a random gradient and returns it as a Base64 string"""
-    # Two random colors
-    color1 = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
-    color2 = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
-
-    # Create a new blank image
-    img = Image.new('RGB', (width, height))
-
-    for x in range(width):
-        # Calculate the ratio for linear interpolation
-        ratio = x / (width - 1)
-
-        r = int((1 - ratio) * color1[0] + ratio * color2[0])
-        g = int((1 - ratio) * color1[1] + ratio * color2[1])
-        b = int((1 - ratio) * color1[2] + ratio * color2[2])
-
-        for y in range(height):
-            img.putpixel((x, y), (r, g, b))
-
-    # Save the image to a memory buffer
-    buffered = io.BytesIO()
-    img.save(buffered, format="PNG")
-
-    # Get the byte value of the image and encode it in Base64
-    img_bytes = buffered.getvalue()
-    return base64.b64encode(img_bytes).decode('utf-8')
-
 
 def generate_sample_data():
     """
@@ -53,6 +21,15 @@ def generate_sample_data():
     TOTAL_STEPS = 300       # Reduced to match typical use case
     # Waypoint configuration
     WAYPOINT_INTERVAL = 50  # Provide new waypoint every N steps
+    
+    # Mission configuration
+    TAKEOFF_ALTITUDE = 100.0     # Takeoff target altitude
+    CLIMB_ANGLE = 15.0           # Takeoff climb angle in degrees
+    MISSION_ALTITUDE = 150.0     # Default mission altitude
+    LANDING_ALTITUDE = 0.0       # Landing altitude
+    ABORT_ALTITUDE = 50.0        # Abort altitude for landing
+    ACCEPT_RADIUS = 10.0         # Waypoint accept radius
+    PASS_RADIUS = 5.0           # Waypoint pass radius
     
     # Noise control
     USE_NOISE = False        # Enable for more realistic data
@@ -91,10 +68,15 @@ def generate_sample_data():
     LAT_METERS_PER_DEGREE = 111000        # meters per degree latitude
     LON_METERS_PER_DEGREE = 80000         # meters per degree longitude
 
+    # Fire parameters
     FIRE_EVENT_PROBABILITY = 0.05  # 5% chance to generate a fire event per step
     MIN_FIRE_DISTANCE_METERS = 1000   # Minimum distance from an agent to spawn a fire
     FIRE_RADIUS_METERS = 5000      # 5km radius around an agent
     N_FIRE_EVENTS = 5               # Max number of fire events to generate
+    
+    # Fire status progression
+    FIRE_CONTAINED_STEP = 20   # Step when Fire 1 and 2 become contained
+    FIRE_EXTINGUISHED_STEP = 50  # Step when Fire 1 and 2 become extinguished
 
     # Agent configurations - using numeric IDs for FlatBuffers compatibility
     agents = {
@@ -221,7 +203,57 @@ def generate_sample_data():
                 'type': state['type']
             })
     
-    # Generate data
+    # Generate mission data
+    mission_data = []
+    mission_header = ['aircraft_type', 'agent_id', 'mission_elements']
+    mission_data.append(mission_header)
+
+    for agent_id, config in agents.items():
+        mission_elements = []
+        
+        # Add TAKEOFF element (starting position)
+        start_state = agent_positions[agent_id][0]  # First position for this agent
+        takeoff_element = f"TAKEOFF:{CLIMB_ANGLE},{TAKEOFF_ALTITUDE},true"
+        mission_elements.append(takeoff_element)
+        
+        # Add WAYPOINT elements based on waypoint intervals
+        waypoint_steps = list(range(WAYPOINT_INTERVAL, TOTAL_STEPS + 1, WAYPOINT_INTERVAL))
+        
+        for waypoint_step in waypoint_steps:
+            # Check if agent is active at this step and waypoint exists
+            if (waypoint_step >= config['start_step'] and 
+                waypoint_step - 1 < len(agent_positions[agent_id]) and 
+                agent_positions[agent_id][waypoint_step - 1] is not None):
+                
+                waypoint_state = agent_positions[agent_id][waypoint_step - 1]
+                waypoint_element = (f"WAYPOINT:{ACCEPT_RADIUS},{PASS_RADIUS},"
+                                  f"{waypoint_state['lat']},{waypoint_state['lon']},"
+                                  f"{MISSION_ALTITUDE},true,{waypoint_state['heading']}")
+                mission_elements.append(waypoint_element)
+        
+        # Add LAND element (final position)
+        # Use the last valid position for this agent
+        last_step = min(TOTAL_STEPS, len(agent_positions[agent_id]))
+        if last_step > 0:
+            final_state = agent_positions[agent_id][last_step - 1]
+            land_element = (f"LAND:{ABORT_ALTITUDE},{final_state['lat']},"
+                          f"{final_state['lon']},{LANDING_ALTITUDE},true")
+            mission_elements.append(land_element)
+        
+        # Join all mission elements with semicolon
+        mission_string = ";".join(mission_elements)
+        
+        mission_row = [
+            config['type'],  # aircraft_type
+            agent_id,        # agent_id
+            mission_string   # mission_elements
+        ]
+        mission_data.append(mission_row)
+    
+    # Track generated fires and their status progression
+    generated_fires = {}  # fire_id -> {'step': spawn_step, 'lat': lat, 'lng': lng}
+    
+    # Generate regular agent and fire data
     agent_data = []
     fire_data = []
     
@@ -230,7 +262,8 @@ def generate_sample_data():
               'vel_x', 'vel_y', 'vel_z', 'roll', 'pitch', 'yaw', 'battery_level', 
               'signal_strength', 'status', 'custom_data',
               'waypoint_latitude', 'waypoint_longitude', 'waypoint_altitude', 'waypoint_heading']
-    fire_header = ['step', 'fire_id', 'latitude', 'longitude', 'image']
+    # Updated fire header to include status and remove image
+    fire_header = ['step', 'fire_id', 'latitude', 'longitude', 'status']
 
     agent_data.append(agent_header)
     fire_data.append(fire_header)
@@ -266,7 +299,7 @@ def generate_sample_data():
                 future_state = agent_positions[agent_id][waypoint_step - 1]
                 waypoint_lat = round(future_state['lat'], 13)
                 waypoint_lon = round(future_state['lon'], 13)
-                waypoint_alt = round(future_state['altitude'], 1)
+                waypoint_alt = round(MISSION_ALTITUDE, 1)  # Use mission altitude instead of computed altitude
                 waypoint_heading = round(future_state['heading'], 1)
 
             row = [
@@ -295,6 +328,7 @@ def generate_sample_data():
 
             agent_data.append(row)
 
+        # Generate new fire events
         if random.random() < FIRE_EVENT_PROBABILITY and fire_id_counter <= N_FIRE_EVENTS:
             # gets all agents active in the current step
             active_agents = [
@@ -317,17 +351,36 @@ def generate_sample_data():
                 fire_lat = agent_state['lat'] + lat_offset
                 fire_lon = agent_state['lon'] + lon_offset
 
-                image_base64 = generate_gradient_image_base64()
+                # Store fire information for status tracking
+                generated_fires[fire_id_counter] = {
+                    'step': step,
+                    'lat': fire_lat,
+                    'lng': fire_lon
+                }
 
-                fire_row = [
-                    step,
-                    fire_id_counter,    # fire counter for the ID
-                    round(fire_lat, 13),
-                    round(fire_lon, 13),
-                    image_base64
-                ]
-                fire_data.append(fire_row)
                 fire_id_counter += 1
+
+        # Add fire status updates for all generated fires
+        for fire_id, fire_info in generated_fires.items():
+            # Determine fire status based on step and fire ID
+            fire_status = 0  # Default: ACTIVE
+            
+            if fire_id in [1, 2]:  # Fire 1 and 2 have special progression
+                if step >= FIRE_EXTINGUISHED_STEP:
+                    fire_status = 2  # EXTINGUISHED
+                elif step >= FIRE_CONTAINED_STEP:
+                    fire_status = 1  # CONTAINED
+                # else remains ACTIVE (0)
+            # Other fires remain ACTIVE throughout
+
+            fire_row = [
+                step,
+                fire_id,
+                round(fire_info['lat'], 13),
+                round(fire_info['lng'], 13),
+                fire_status
+            ]
+            fire_data.append(fire_row)
     
     # Print summary using actual constants
     print("\nData generation summary:")
@@ -336,10 +389,14 @@ def generate_sample_data():
         print(f"- Agent {agent_id} ({config['type']}): {config['speed']} m/s, steps {config['start_step']}-{end_step}")
     print(f"- {SECONDS_PER_STEP} second intervals between steps")
     print(f"- Total steps: {TOTAL_STEPS}")
+    print(f"- Waypoint interval: {WAYPOINT_INTERVAL} steps")
+    print(f"- Mission altitude: {MISSION_ALTITUDE}m, Takeoff altitude: {TAKEOFF_ALTITUDE}m")
+    print(f"- Fire status progression: Fire 1&2 contained at step {FIRE_CONTAINED_STEP}, extinguished at step {FIRE_EXTINGUISHED_STEP}")
+    print(f"- Generated {len(generated_fires)} fire events")
     print(f"- Noise enabled: {USE_NOISE}")
     print(f"- Compatible with FlatBuffers schemas")
     
-    return agent_data, fire_data
+    return agent_data, fire_data, mission_data
 
 def save_to_csv(data, filename='sample_data.csv'):
     """Save the generated data to a CSV file"""
@@ -354,8 +411,9 @@ def save_to_csv(data, filename='sample_data.csv'):
 
 if __name__ == "__main__":
     # Generate the data
-    agents_sample_data, fires_sample_data = generate_sample_data()
+    agents_sample_data, fires_sample_data, missions_sample_data = generate_sample_data()
     
-    # Save to CSV file
+    # Save to CSV files
     save_to_csv(agents_sample_data, 'agents_data.csv')
     save_to_csv(fires_sample_data, 'fires_data.csv')
+    save_to_csv(missions_sample_data, 'missions_data.csv')

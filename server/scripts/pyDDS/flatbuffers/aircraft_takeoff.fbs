@@ -1,0 +1,16 @@
+// msgs/aircraft_takeoff.fbs
+
+include "common_types.fbs";
+
+namespace messages;
+
+table TakeoffMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  climb_angle: float;
+  altitude:float;
+  autocontinue: bool;
+}
+
+root_type TakeoffMessage;

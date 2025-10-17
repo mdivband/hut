@@ -7,14 +7,22 @@
 
 param(
     [Parameter(Position=0)]
+    [Alias("b")]
     [string]$Branch = "xprize_mcs",
     [Parameter(Position=1)]
+    [Alias("local", "path", "folder")]
     [string]$LocalFolderName = "haris",
     [Parameter()]
-    [string]$Repository = "https://github.com/SooratiLab/haris.git"
+    [string]$Repository = "https://github.com/SooratiLab/haris.git",
+    [Parameter()]
+    [Alias("no-pull", "n")]
+    [switch]$NoPull
 )
 
 $ErrorActionPreference = "Stop"
+
+# Initialize error tracking
+$HasErrors = $false
 
 # Always start in user directory
 Set-Location $env:USERPROFILE
@@ -22,6 +30,9 @@ Set-Location $env:USERPROFILE
 Write-Host "Setting up Haris from branch: $Branch"
 Write-Host "Repository: $Repository"
 Write-Host "Local folder: $LocalFolderName"
+if ($NoPull) {
+    Write-Host "No-pull mode: Will not pull from remote if repo exists locally" -ForegroundColor Yellow
+}
 Write-Host ""
 
 # Function to check if remote branch exists
@@ -80,80 +91,71 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     Write-Host "Found Git: $GitVersion"
 } else {
     Write-Host "Git not found. Installing..."
-    switch ($PkgManager) {
-        "chocolatey" { choco install git -y }
-        "winget" { winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements }
-        "scoop" { scoop install git }
+    try {
+        switch ($PkgManager) {
+            "chocolatey" { choco install git -y }
+            "winget" { winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements }
+            "scoop" { scoop install git }
+        }
+        Refresh-Environment
+        Write-Host "Git installed successfully" -ForegroundColor Green
+    } catch {
+        Write-Host "ERROR: Failed to install Git: $_" -ForegroundColor Red
+        $HasErrors = $true
     }
-    Refresh-Environment
 }
 
-# Verify branch exists before proceeding
-Write-Host "Checking if branch '$Branch' exists in repository..."
-if (-not (Test-RemoteBranch -Repo $Repository -BranchName $Branch)) {
-    Write-Host "ERROR: Branch '$Branch' does not exist in repository '$Repository'" -ForegroundColor Red
-    Write-Host "Available branches:" -ForegroundColor Yellow
-    try {
-        $RemoteRefs = git ls-remote --heads $Repository
-        $Branches = $RemoteRefs | ForEach-Object { 
-            if ($_ -match "refs/heads/(.+)$") { 
-                "  - $($matches[1])" 
+# Verify branch exists before proceeding (skip if no-pull mode)
+if (-not $NoPull) {
+    Write-Host "Checking if branch '$Branch' exists in repository..."
+    if (-not (Test-RemoteBranch -Repo $Repository -BranchName $Branch)) {
+        Write-Host "ERROR: Branch '$Branch' does not exist in repository '$Repository'" -ForegroundColor Red
+        Write-Host "Available branches:" -ForegroundColor Yellow
+        try {
+            $RemoteRefs = git ls-remote --heads $Repository
+            $Branches = $RemoteRefs | ForEach-Object { 
+                if ($_ -match "refs/heads/(.+)$") { 
+                    "  - $($matches[1])" 
+                }
             }
+            $Branches | Sort-Object | ForEach-Object { Write-Host $_ -ForegroundColor Yellow }
+        } catch {
+            Write-Host "Could not list available branches" -ForegroundColor Red
         }
-        $Branches | Sort-Object | ForEach-Object { Write-Host $_ -ForegroundColor Yellow }
-    } catch {
-        Write-Host "Could not list available branches" -ForegroundColor Red
+        exit 1
     }
-    exit 1
+    Write-Host "Branch '$Branch' found in repository." -ForegroundColor Green
 }
-Write-Host "Branch '$Branch' found in repository." -ForegroundColor Green
 
 Write-Host "Java is required for HARIS to run. Please ensure Java 17+ is installed."
-# TODO: Fix Java detection
-# Write-Host "Checking for Java..."
-# $JavaInstalled = $false
-# $JavaCommands = @("java", "java.exe")
-
-# foreach ($JavaCmd in $JavaCommands) {
-#     if (Get-Command $JavaCmd -ErrorAction SilentlyContinue) {
-#         try {
-#             $JavaVersion = & $JavaCmd --version 2>&1
-#             # Write-Host "Java output: $JavaVersion" -ForegroundColor Gray
-
-#             if ($JavaVersion -match "openjdk") {
-#                 $matches.1
-#                 Write-Host "Matches array:" $matches.0 -ForegroundColor Gray
-#                 exit 1
-#             }
-
-#         } catch {
-#             Write-Host "Error checking Java version: $_" -ForegroundColor Yellow
-#         }
-#     }
-# }
-
-# if (-not $JavaInstalled) {
-#     Write-Host "Java 17+ not found. Installing OpenJDK 17..."
-#     switch ($PkgManager) {
-#         "chocolatey" { 
-#             choco install openjdk17 -y 
-#             Refresh-Environment
-#         }
-#         "winget" { 
-#             Write-Host "Note: winget may require user interaction for Java installation."
-#             winget install --id Microsoft.OpenJDK.17 -e --source winget --accept-package-agreements --accept-source-agreements --silent
-#             Refresh-Environment
-#         }
-#         "scoop" { 
-#             scoop bucket add java
-#             scoop install openjdk17
-#             Refresh-Environment
-#         }
-#     }
-# }
 
 # Python - Check multiple possible commands
 Write-Host "Checking for Python..."
+
+# First, check if we're in a virtual environment and try to deactivate it
+if ($env:VIRTUAL_ENV) {    
+    # Try to deactivate
+    Write-Host "Deactivating existing Python virtual env..."
+    if (Get-Command deactivate -ErrorAction SilentlyContinue) {
+        try {
+            deactivate
+        } catch {
+            Write-Host "ERROR: Cannot deactivate virtual environment." -ForegroundColor Red
+            Write-Host "Please run 'deactivate' manually and try again." -ForegroundColor Red
+            exit 1
+        }
+    } else {
+        Write-Host "ERROR: Cannot deactivate virtual environment." -ForegroundColor Red
+        Write-Host "Please run 'deactivate' manually and try again." -ForegroundColor Red
+        exit 1
+    }
+    
+    # Clear environment variables and refresh PATH
+    $env:VIRTUAL_ENV = $null
+    $env:VIRTUAL_ENV_PROMPT = $null
+    Refresh-Environment
+}
+
 $PythonInstalled = $false
 $PythonCommands = @("python", "python3", "py")
 
@@ -179,89 +181,122 @@ foreach ($PyCmd in $PythonCommands) {
 
 if (-not $PythonInstalled) {
     Write-Host "Python 3.7+ not found. Installing Python..."
-    switch ($PkgManager) {
-        "chocolatey" { 
-            choco install python3 -y 
-            Refresh-Environment
+    try {
+        switch ($PkgManager) {
+            "chocolatey" { 
+                choco install python3 -y 
+                Refresh-Environment
+            }
+            "winget" { 
+                Write-Host "Note: winget may require user interaction for Python installation."
+                winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements --silent
+                Refresh-Environment
+            }
+            "scoop" { 
+                scoop install python
+                Refresh-Environment
+            }
         }
-        "winget" { 
-            Write-Host "Note: winget may require user interaction for Python installation."
-            winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements --silent
-            Refresh-Environment
+        
+        # Re-check for Python after installation
+        foreach ($PyCmd in $PythonCommands) {
+            if (Get-Command $PyCmd -ErrorAction SilentlyContinue) {
+                $PythonCommand = $PyCmd
+                $PythonInstalled = $true
+                Write-Host "Python installed successfully" -ForegroundColor Green
+                break
+            }
         }
-        "scoop" { 
-            scoop install python
-            Refresh-Environment
+        
+        if (-not $PythonInstalled) {
+            Write-Host "ERROR: Python installation appears to have failed" -ForegroundColor Red
+            $HasErrors = $true
         }
-    }
-    
-    # Re-check for Python after installation
-    foreach ($PyCmd in $PythonCommands) {
-        if (Get-Command $PyCmd -ErrorAction SilentlyContinue) {
-            $PythonCommand = $PyCmd
-            break
-        }
+    } catch {
+        Write-Host "ERROR: Failed to install Python: $_" -ForegroundColor Red
+        $HasErrors = $true
     }
 }
 
 # Use the found Python command or default to 'python'
 if (-not $PythonCommand) {
     $PythonCommand = "python"
-}
-
-# Python pip
-Write-Host "Checking for pip..."
-try {
-    $PipVersion = & $PythonCommand -m pip --version
-    Write-Host "Found pip: $PipVersion"
-} catch {
-    Write-Host "pip not found. Installing..."
-    & $PythonCommand -m ensurepip --upgrade
+    Write-Host "WARNING: Using default Python command 'python' - this may not work" -ForegroundColor Yellow
 }
 
 # FlatBuffers compiler (flatc) - Will be installed via PyDDS setup_env.py
 
-# -------------------------------
-# Step 2: Setup or update repository
-# -------------------------------
-Set-Location $env:USERPROFILE
-
 if (Test-Path $LocalFolderName) {
     if (Test-Path "$LocalFolderName\.git") {
-        Write-Host "Found existing $LocalFolderName git repository. Updating to branch '$Branch'..."
         Set-Location $LocalFolderName
-        
-        # Fetch all remote branches
-        git fetch
-        
-        # Check if branch exists locally
-        $LocalBranches = git branch --list $Branch
-        $RemoteBranches = git branch -r --list "origin/$Branch"
-        
-        if ($LocalBranches) {
-            # Local branch exists, switch to it
-            git switch $Branch
-        } elseif ($RemoteBranches) {
-            # Remote branch exists, create local tracking branch
-            git switch -c $Branch origin/$Branch
-        } else {
-            Write-Host "ERROR: Branch '$Branch' not found after fetch" -ForegroundColor Red
-            exit 1
+
+        if (-not $NoPull) {
+            Write-Host "Found existing $LocalFolderName git repository."
+            Write-Host "Updating to branch '$Branch'..."
+            
+            try {
+                # Fetch all remote branches
+                git fetch
+                
+                # Check if branch exists locally
+                $LocalBranches = git branch --list $Branch
+                $RemoteBranches = git branch -r --list "origin/$Branch"
+                
+                if ($LocalBranches) {
+                    # Local branch exists, switch to it
+                    git switch $Branch
+                } elseif ($RemoteBranches) {
+                    # Remote branch exists, create local tracking branch
+                    git switch -c $Branch origin/$Branch
+                } else {
+                    Write-Host "ERROR: Branch '$Branch' not found after fetch" -ForegroundColor Red
+                    $HasErrors = $true
+                }
+                
+                # Pull latest changes
+                git pull
+                Write-Host "Repository updated successfully" -ForegroundColor Green
+            } catch {
+                Write-Host "ERROR: Failed to update repository: $_" -ForegroundColor Red
+                $HasErrors = $true
+            }
         }
-        
-        # Pull latest changes
-        git pull
+        # No output when $NoPull is true and git repo exists
     } else {
-        Write-Host "Found existing $LocalFolderName folder but it's not a git repository. Removing..."
-        Remove-Item -Path $LocalFolderName -Recurse -Force
-        Write-Host "Cloning repository to '$LocalFolderName' (branch: $Branch)..."
-        git clone -b $Branch --single-branch $Repository $LocalFolderName
-        Set-Location $LocalFolderName
+        if ($NoPull) {
+            Write-Host "ERROR: Found existing '$LocalFolderName' folder but it's not a git repository." -ForegroundColor Red
+            Write-Host "Cannot proceed with -no-pull flag. Please remove the folder or clone manually." -ForegroundColor Red
+            exit 1
+        } else {
+            Write-Host "Found existing $LocalFolderName folder but it's not a git repository. Removing..."
+            try {
+                Remove-Item -Path $LocalFolderName -Recurse -Force
+                Write-Host "Cloning repository to '$LocalFolderName' (branch: $Branch)..."
+                git clone -b $Branch --single-branch $Repository $LocalFolderName
+                Set-Location $LocalFolderName
+                Write-Host "Repository cloned successfully" -ForegroundColor Green
+            } catch {
+                Write-Host "ERROR: Failed to clone repository: $_" -ForegroundColor Red
+                $HasErrors = $true
+            }
+        }
     }
 } else {
-    Write-Host "Cloning repository to '$LocalFolderName' (branch: $Branch)..."
-    git clone -b $Branch --single-branch $Repository $LocalFolderName
-    Set-Location $LocalFolderName
+    if ($NoPull) {
+        Write-Host "ERROR: Local folder '$LocalFolderName' does not exist and -no-pull flag is set." -ForegroundColor Red
+        Write-Host "Cannot proceed without cloning the repository. Please run without -no-pull flag first." -ForegroundColor Red
+        exit 1
+    } else {
+        Write-Host "Cloning repository to '$LocalFolderName' (branch: $Branch)..."
+        try {
+            git clone -b $Branch --single-branch $Repository $LocalFolderName
+            Set-Location $LocalFolderName
+            Write-Host "Repository cloned successfully" -ForegroundColor Green
+        } catch {
+            Write-Host "ERROR: Failed to clone repository: $_" -ForegroundColor Red
+            $HasErrors = $true
+        }
+    }
 }
 
 # -------------------------------
@@ -274,19 +309,39 @@ Set-Location $EnvDir
 # Remove existing environment if it exists
 if (Test-Path "hut-dds") {
     Write-Host "Removing existing virtual environment..."
-    Remove-Item -Path "hut-dds" -Recurse -Force
+    try {
+        Remove-Item -Path "hut-dds" -Recurse -Force
+    } catch {
+        Write-Host "ERROR: Failed to remove existing environment: $_" -ForegroundColor Red
+        $HasErrors = $true
+    }
 }
 
-Write-Host "Creating new virtual environment..."
-& $PythonCommand -m venv hut-dds
+try {
+    & $PythonCommand -m venv hut-dds
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Virtual environment created successfully" -ForegroundColor Green
+    } else {
+        Write-Host "ERROR: Virtual environment creation failed with exit code: $LASTEXITCODE" -ForegroundColor Red
+        $HasErrors = $true
+    }
+} catch {
+    Write-Host "ERROR: Failed to create virtual environment: $_" -ForegroundColor Red
+    $HasErrors = $true
+}
 
 # Activate virtual environment
 $ActivateScript = Join-Path $EnvDir "hut-dds\Scripts\Activate.ps1"
 if (Test-Path $ActivateScript) {
-    & $ActivateScript
-    Write-Host "Virtual environment activated"
+    try {
+        & $ActivateScript
+    } catch {
+        Write-Host "ERROR: Failed to activate virtual environment: $_" -ForegroundColor Red
+        $HasErrors = $true
+    }
 } else {
-    Write-Host "Warning: Could not find activation script at $ActivateScript"
+    Write-Host "ERROR: Could not find activation script at $ActivateScript" -ForegroundColor Red
+    $HasErrors = $true
 }
 
 # -------------------------------
@@ -294,36 +349,88 @@ if (Test-Path $ActivateScript) {
 # -------------------------------
 $LocalRepoPath = Join-Path $env:USERPROFILE $LocalFolderName
 Write-Host "Setting up PyDDS environment..."
-& $PythonCommand (Join-Path $LocalRepoPath "server\scripts\pyDDS\setup_env.py")
-& $PythonCommand (Join-Path $LocalRepoPath "server\scripts\pyDDS\sample_data\generate_sample_data.py")
+
+$SetupEnvScript = Join-Path $LocalRepoPath "server\scripts\pyDDS\setup_env.py"
+$SampleDataScript = Join-Path $LocalRepoPath "server\scripts\pyDDS\sample_data\generate_sample_data.py"
+
+# Use the virtual environment Python
+$VenvPythonPath = Join-Path $EnvDir "hut-dds\Scripts\python.exe"
+
+if (Test-Path $VenvPythonPath) {
+    Write-Host "Using virtual environment Python: $VenvPythonPath" -ForegroundColor Cyan
+    
+    try {
+        & $VenvPythonPath $SetupEnvScript
+        if ($LASTEXITCODE -eq 0) {
+        } else {
+            Write-Host "ERROR: PyDDS setup failed with exit code: $LASTEXITCODE" -ForegroundColor Red
+            $HasErrors = $true
+        }
+    } catch {
+        Write-Host "ERROR: Failed to run PyDDS setup: $_" -ForegroundColor Red
+        $HasErrors = $true
+    }
+    
+    try {
+        & $VenvPythonPath $SampleDataScript
+        if ($LASTEXITCODE -eq 0) {
+        } else {
+            Write-Host "ERROR: Sample data generation failed with exit code: $LASTEXITCODE" -ForegroundColor Red
+            $HasErrors = $true
+        }
+    } catch {
+        Write-Host "ERROR: Failed to generate sample data: $_" -ForegroundColor Red
+        $HasErrors = $true
+    }
+} else {
+    Write-Host "ERROR: Virtual environment Python not found at: $VenvPythonPath" -ForegroundColor Red
+    Write-Host "Falling back to system Python: $PythonCommand" -ForegroundColor Yellow
+    try {
+        & $PythonCommand $SetupEnvScript
+        & $PythonCommand $SampleDataScript
+    } catch {
+        Write-Host "ERROR: Failed to run PyDDS setup with system Python: $_" -ForegroundColor Red
+        $HasErrors = $true
+    }
+}
 
 # -------------------------------
 # Step 5: Setup Haris
 # -------------------------------
-$VenvPythonPath = Join-Path $EnvDir "hut-dds\Scripts\python.exe"
 $ScenarioPath = Join-Path $LocalRepoPath "server\web\scenarios"
 Set-Location $ScenarioPath
 
 # Update DDSTest.json with Python path
 $ConfigFile = "DDSTest.json"
 if (Test-Path $ConfigFile) {
-    $Config = Get-Content $ConfigFile | ConvertFrom-Json
-    $Config.pythonPath = $VenvPythonPath.Replace('\', '/')
-    $Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile
-    Write-Host "Updated $ConfigFile with virtual environment Python path: $VenvPythonPath"
+    try {
+        $Config = Get-Content $ConfigFile | ConvertFrom-Json
+        $Config.pythonPath = $VenvPythonPath.Replace('\', '/')
+        $Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile
+        Write-Host "Updated $ConfigFile with virtual environment Python path: $VenvPythonPath" -ForegroundColor Green
+    } catch {
+        Write-Host "ERROR: Failed to update ${ConfigFile}: $_" -ForegroundColor Red
+        $HasErrors = $true
+    }
 } else {
-    Write-Host "Warning: $ConfigFile not found"
+    Write-Host "WARNING: ${ConfigFile} not found" -ForegroundColor Yellow
 }
 
 # -------------------------------
 # Finish up
 # -------------------------------
 Write-Host ""
-Write-Host "Haris setup complete!" -ForegroundColor Green
-Write-Host "Branch: $Branch" -ForegroundColor Cyan
-Write-Host "Local folder: $LocalFolderName" -ForegroundColor Cyan
-Write-Host "Python Command: $PythonCommand" -ForegroundColor Cyan
-Write-Host ""
+if ($HasErrors) {
+    Write-Host "Haris setup completed with ERRORS!" -ForegroundColor Red
+    Write-Host "Please review the error messages above and fix any issues." -ForegroundColor Yellow
+} else {
+    Write-Host "Haris setup complete!" -ForegroundColor Green
+}
+
+# Always end in the server directory
+$ServerPath = Join-Path $LocalRepoPath "server"
+Set-Location $ServerPath
+
 Write-Host "Run the following command to start Haris:"
 Write-Host "cd $LocalRepoPath\server && java -jar hut.jar 44101 DDSTest.json"
 Write-Host ""

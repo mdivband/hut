@@ -1,0 +1,32 @@
+// msgs/aircraft_mission.fbs
+
+include "aircraft_waypoint.fbs";
+include "aircraft_land.fbs";
+include "aircraft_takeoff.fbs";
+
+namespace messages;
+
+enum WaypointType : byte {
+  TAKEOFF,
+  WAYPOINT,
+  LAND,
+}
+
+union Element {
+  TakeoffMessage,
+  WaypointMessage,
+  LandMessage,
+}
+
+table ElementWrapper {
+  e: Element;
+}
+
+table MissionMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  mission: [ElementWrapper];
+}
+
+root_type MissionMessage;

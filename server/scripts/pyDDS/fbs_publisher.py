@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 DDS Publisher with FlatBuffers support for Aircraft Messages
-This script publishes position, velocity, heading, and waypoint data using separate topics
+This script publishes position, velocity, heading, and mission data using separate topics
 """
 
 import zenoh
@@ -25,11 +25,19 @@ from utils import *
 FLATBUFFERS_AVAILABLE = check_flatbuffers()
 if FLATBUFFERS_AVAILABLE:
     import flatbuffers
-    from messages import PositionMessage, VelocityMessage, HeadingMessage, WaypointMessage, FireMessage
+    from messages import (PositionMessage, VelocityMessage, HeadingMessage, 
+                         MissionMessage, WaypointMessage, TakeoffMessage, LandMessage,
+                         FireMessage, Element, ElementWrapper, WaypointType)
     print("FlatBuffers support enabled")
 
 # Global dictionary to store publishers
 publishers_cache = {}
+
+# Global dictionary to store complete missions for each aircraft
+aircraft_missions = {}
+
+# Configuration for mission republishing
+MISSION_REPUBLISH_INTERVAL = 30  # Republish missions every 30 steps
 
 def create_position_message(aircraft_type, aircraft_id, lat, lng, alt):
     """Create a PositionMessage FlatBuffer"""
@@ -74,40 +82,146 @@ def create_heading_message(aircraft_type, aircraft_id, heading):
     builder.Finish(message_offset)
     return builder.Output()
 
-def create_waypoint_message(aircraft_type, aircraft_id, lat, lng, alt, heading):
-    """Create a WaypointMessage FlatBuffer"""
-    builder = flatbuffers.Builder(256)
-    aircraft_type = get_aircraft_type(aircraft_type)
+def create_takeoff_element(builder, aircraft_type, aircraft_id, climb_angle, altitude, autocontinue):
+    """Create a TakeoffMessage element"""
+    aircraft_type_enum = get_aircraft_type(aircraft_type)
+    TakeoffMessage.TakeoffMessageStart(builder)
+    TakeoffMessage.TakeoffMessageAddTimestamp(builder, int(time.time() * 1000))
+    TakeoffMessage.TakeoffMessageAddTtype(builder, aircraft_type_enum)
+    TakeoffMessage.TakeoffMessageAddId(builder, int(aircraft_id) if aircraft_id.isdigit() else 1)
+    TakeoffMessage.TakeoffMessageAddClimbAngle(builder, climb_angle)
+    TakeoffMessage.TakeoffMessageAddAltitude(builder, altitude)
+    TakeoffMessage.TakeoffMessageAddAutocontinue(builder, autocontinue)
+    return TakeoffMessage.TakeoffMessageEnd(builder)
+
+def create_waypoint_element(builder, aircraft_type, aircraft_id, accept_radius, pass_radius, lat, lng, alt, autocontinue, heading):
+    """Create a WaypointMessage element"""
+    aircraft_type_enum = get_aircraft_type(aircraft_type)
     WaypointMessage.WaypointMessageStart(builder)
     WaypointMessage.WaypointMessageAddTimestamp(builder, int(time.time() * 1000))
-    WaypointMessage.WaypointMessageAddTtype(builder, aircraft_type)
+    WaypointMessage.WaypointMessageAddTtype(builder, aircraft_type_enum)
     WaypointMessage.WaypointMessageAddId(builder, int(aircraft_id) if aircraft_id.isdigit() else 1)
+    WaypointMessage.WaypointMessageAddAcceptRadius(builder, accept_radius)
+    WaypointMessage.WaypointMessageAddPassRadius(builder, pass_radius)
     WaypointMessage.WaypointMessageAddLatitude(builder, lat)
     WaypointMessage.WaypointMessageAddLongitude(builder, lng)
     WaypointMessage.WaypointMessageAddAltitude(builder, alt)
+    WaypointMessage.WaypointMessageAddAutocontinue(builder, autocontinue)
     WaypointMessage.WaypointMessageAddHeading(builder, heading)
-    message_offset = WaypointMessage.WaypointMessageEnd(builder)
+    return WaypointMessage.WaypointMessageEnd(builder)
+
+def create_land_element(builder, aircraft_type, aircraft_id, abort_altitude, lat, lng, alt, autocontinue):
+    """Create a LandMessage element"""
+    aircraft_type_enum = get_aircraft_type(aircraft_type)
+    LandMessage.LandMessageStart(builder)
+    LandMessage.LandMessageAddTimestamp(builder, int(time.time() * 1000))
+    LandMessage.LandMessageAddTtype(builder, aircraft_type_enum)
+    LandMessage.LandMessageAddId(builder, int(aircraft_id) if aircraft_id.isdigit() else 1)
+    LandMessage.LandMessageAddAbortAltitude(builder, abort_altitude)
+    LandMessage.LandMessageAddLatitude(builder, lat)
+    LandMessage.LandMessageAddLongitude(builder, lng)
+    LandMessage.LandMessageAddAltitude(builder, alt)
+    LandMessage.LandMessageAddAutocontinue(builder, autocontinue)
+    return LandMessage.LandMessageEnd(builder)
+
+def create_mission_message(aircraft_type, aircraft_id, mission_elements):
+    """
+    Create a MissionMessage FlatBuffer containing the complete mission
+    mission_elements: list of tuples (element_type, element_data)
+    element_type: "TAKEOFF", "WAYPOINT", or "LAND"
+    element_data: tuple with element-specific parameters
+    """
+    builder = flatbuffers.Builder(2048)  # Increased buffer size for complete missions
+    aircraft_type_enum = get_aircraft_type(aircraft_type)
+    
+    # Create mission elements
+    element_offsets = []
+    for element_type, element_data in mission_elements:
+        if element_type == "TAKEOFF":
+            climb_angle, altitude, autocontinue = element_data
+            takeoff_offset = create_takeoff_element(builder, aircraft_type, aircraft_id, climb_angle, altitude, autocontinue)
+            
+            ElementWrapper.ElementWrapperStart(builder)
+            ElementWrapper.ElementWrapperAddEType(builder, Element.Element.TakeoffMessage)
+            ElementWrapper.ElementWrapperAddE(builder, takeoff_offset)
+            wrapper_offset = ElementWrapper.ElementWrapperEnd(builder)
+            element_offsets.append(wrapper_offset)
+            
+        elif element_type == "WAYPOINT":
+            accept_radius, pass_radius, lat, lng, alt, autocontinue, heading = element_data
+            waypoint_offset = create_waypoint_element(builder, aircraft_type, aircraft_id, accept_radius, pass_radius, lat, lng, alt, autocontinue, heading)
+            
+            ElementWrapper.ElementWrapperStart(builder)
+            ElementWrapper.ElementWrapperAddEType(builder, Element.Element.WaypointMessage)
+            ElementWrapper.ElementWrapperAddE(builder, waypoint_offset)
+            wrapper_offset = ElementWrapper.ElementWrapperEnd(builder)
+            element_offsets.append(wrapper_offset)
+            
+        elif element_type == "LAND":
+            abort_altitude, lat, lng, alt, autocontinue = element_data
+            land_offset = create_land_element(builder, aircraft_type, aircraft_id, abort_altitude, lat, lng, alt, autocontinue)
+            
+            ElementWrapper.ElementWrapperStart(builder)
+            ElementWrapper.ElementWrapperAddEType(builder, Element.Element.LandMessage)
+            ElementWrapper.ElementWrapperAddE(builder, land_offset)
+            wrapper_offset = ElementWrapper.ElementWrapperEnd(builder)
+            element_offsets.append(wrapper_offset)
+    
+    # Create mission vector - fixed deprecation warning
+    MissionMessage.MissionMessageStartMissionVector(builder, len(element_offsets))
+    for element_offset in reversed(element_offsets):
+        builder.PrependUOffsetTRelative(element_offset)
+    mission_vector = builder.EndVector()  # Fixed: removed deprecated numElems parameter
+    
+    # Create mission message
+    MissionMessage.MissionMessageStart(builder)
+    MissionMessage.MissionMessageAddTimestamp(builder, int(time.time() * 1000))
+    MissionMessage.MissionMessageAddTtype(builder, aircraft_type_enum)
+    MissionMessage.MissionMessageAddId(builder, int(aircraft_id) if aircraft_id.isdigit() else 1)
+    MissionMessage.MissionMessageAddMission(builder, mission_vector)
+    message_offset = MissionMessage.MissionMessageEnd(builder)
     builder.Finish(message_offset)
     return builder.Output()
 
-def create_fire_message(fire_id, lat, lng, image_base64):
+def create_fire_message(fire_id, lat, lng, status):
     """Create a FireMessage FlatBuffer"""
     builder = flatbuffers.Builder(1024)
-
-    image_offset = builder.CreateString(image_base64)
 
     FireMessage.FireMessageStart(builder)
     FireMessage.FireMessageAddTimestamp(builder, int(time.time() * 1000))
     FireMessage.FireMessageAddId(builder, int(fire_id))
     FireMessage.FireMessageAddLatitude(builder, lat)
     FireMessage.FireMessageAddLongitude(builder, lng)
-    FireMessage.FireMessageAddImage(builder, image_offset)
+    FireMessage.FireMessageAddStatus(builder, status)
     message_offset = FireMessage.FireMessageEnd(builder)
     builder.Finish(message_offset)
     return builder.Output()
 
-def load_csv_data(agent_csv_path, fire_csv_path):
-    """Load and merge agent and fire data, adding a 'type' key for dispatching."""
+def get_active_aircraft_from_csv(csv_data):
+    """Extract aircraft start steps from CSV data to determine when they become active"""
+    aircraft_info = {}
+    
+    for step_data in csv_data.values():
+        for row in step_data:
+            if row.get('type') not in ['FIRE', 'MISSION']:
+                aircraft_key = f"{row['aircraft_type']}/{row['agent_id']}"
+                step = int(row.get('step', 0))
+                
+                if aircraft_key not in aircraft_info:
+                    aircraft_info[aircraft_key] = {
+                        'start_step': step,
+                        'aircraft_type': row['aircraft_type'],
+                        'agent_id': row['agent_id']
+                    }
+                else:
+                    # Update start step to minimum seen
+                    aircraft_info[aircraft_key]['start_step'] = min(
+                        aircraft_info[aircraft_key]['start_step'], step)
+    
+    return aircraft_info
+
+def load_csv_data(agent_csv_path, fire_csv_path, mission_csv_path):
+    """Load and merge agent, fire, and mission data, building complete missions per aircraft."""
     merged_data = defaultdict(list)
 
     try:
@@ -116,34 +230,93 @@ def load_csv_data(agent_csv_path, fire_csv_path):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 step = int(row['step'])
-                # manually add 'type' key for clarity
                 row['type'] = row['aircraft_type']
                 merged_data[step].append(row)
         print(f"Loaded {sum(len(v) for v in merged_data.values())} agent data rows.")
 
-        # Load and merge fire data
+        # Load fire data
         with open(fire_csv_path, 'r', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 step = int(row['step'])
-                # manually add 'type' key for clarity
                 row['type'] = 'FIRE'
                 merged_data[step].append(row)
         print(f"Loaded and merged fire data.")
+
+        # Load and process mission data to build complete missions
+        if os.path.exists(mission_csv_path):
+            with open(mission_csv_path, 'r', newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    aircraft_key = f"{row['aircraft_type']}/{row['agent_id']}"
+                    mission_elements = parse_mission_elements(row['mission_elements'])
+                    
+                    # Store complete mission for this aircraft
+                    aircraft_missions[aircraft_key] = {
+                        'aircraft_type': row['aircraft_type'],
+                        'agent_id': row['agent_id'],
+                        'mission_elements': mission_elements
+                    }
+                    
+            print(f"Loaded complete missions for {len(aircraft_missions)} aircraft.")
+        else:
+            print(f"Mission CSV file not found: {mission_csv_path}")
 
         return merged_data
     except Exception as e:
         print(f"Error loading or merging CSV files: {e}")
         return None
 
+def parse_mission_elements(mission_string):
+    """
+    Parse mission elements from CSV string format
+    Expected format: "TAKEOFF:climb_angle,altitude,autocontinue;WAYPOINT:accept_radius,pass_radius,lat,lng,alt,autocontinue,heading;LAND:abort_altitude,lat,lng,alt,autocontinue"
+    """
+    elements = []
+    if not mission_string or mission_string.strip() == '':
+        return elements
+    
+    element_strings = mission_string.split(';')
+    for element_str in element_strings:
+        if ':' not in element_str:
+            continue
+        
+        element_type, params_str = element_str.split(':', 1)
+        params = params_str.split(',')
+        
+        if element_type == "TAKEOFF":
+            climb_angle = float(params[0])
+            altitude = float(params[1])
+            autocontinue = params[2].lower() == 'true'
+            elements.append((element_type, (climb_angle, altitude, autocontinue)))
+            
+        elif element_type == "WAYPOINT":
+            accept_radius = float(params[0])
+            pass_radius = float(params[1])
+            lat = float(params[2])
+            lng = float(params[3])
+            alt = float(params[4])
+            autocontinue = params[5].lower() == 'true'
+            heading = float(params[6])
+            elements.append((element_type, (accept_radius, pass_radius, lat, lng, alt, autocontinue, heading)))
+            
+        elif element_type == "LAND":
+            abort_altitude = float(params[0])
+            lat = float(params[1])
+            lng = float(params[2])
+            alt = float(params[3])
+            autocontinue = params[4].lower() == 'true'
+            elements.append((element_type, (abort_altitude, lat, lng, alt, autocontinue)))
+    
+    return elements
+
 def publish_aircraft_data(
         session, aircraft_type, aircraft_id, position_data, 
-        velocity_data, heading_data, format_type, waypoint_data=None):
-    """Publish aircraft data to separate topics, including waypoint if provided"""
+        velocity_data, heading_data, format_type):
+    """Publish aircraft data to separate topics"""
     position_topic = f"aircraft/{aircraft_type}/{aircraft_id}/position"
     velocity_topic = f"aircraft/{aircraft_type}/{aircraft_id}/velocity"
     heading_topic = f"aircraft/{aircraft_type}/{aircraft_id}/heading"
-    waypoint_topic = f"aircraft/{aircraft_type}/{aircraft_id}/waypoint"
 
     # Get or create publishers for this aircraft using global cache
     if position_topic not in publishers_cache:
@@ -152,8 +325,6 @@ def publish_aircraft_data(
         publishers_cache[velocity_topic] = session.declare_publisher(velocity_topic)
     if heading_topic not in publishers_cache:
         publishers_cache[heading_topic] = session.declare_publisher(heading_topic)
-    if waypoint_topic not in publishers_cache:
-        publishers_cache[waypoint_topic] = session.declare_publisher(waypoint_topic)
 
     if format_type == 'flatbuffer':
         if position_data:
@@ -173,13 +344,6 @@ def publish_aircraft_data(
                 aircraft_type, aircraft_id, heading_data['heading'])
             publishers_cache[heading_topic].put(head_msg)
             print(f"Published heading FlatBuffer for {aircraft_type}/{aircraft_id}")
-        if waypoint_data:
-            wp_msg = create_waypoint_message(
-                aircraft_type, aircraft_id,
-                waypoint_data['lat'], waypoint_data['lng'],
-                waypoint_data['alt'], waypoint_data['heading'])
-            publishers_cache[waypoint_topic].put(wp_msg)
-            print(f"Published waypoint FlatBuffer for {aircraft_type}/{aircraft_id}")
     else:
         if position_data:
             pos_str = f"Position - Lat: {position_data['lat']}, Lng: {position_data['lng']}, Alt: {position_data['alt']}"
@@ -193,10 +357,50 @@ def publish_aircraft_data(
             head_str = f"Heading: {heading_data['heading']}"
             publishers_cache[heading_topic].put(head_str)
             print(f"Published heading string for {aircraft_type}/{aircraft_id}: {head_str}")
-        if waypoint_data:
-            wp_str = f"Waypoint - Lat: {waypoint_data['lat']}, Lng: {waypoint_data['lng']}, Alt: {waypoint_data['alt']}, Heading: {waypoint_data['heading']}"
-            publishers_cache[waypoint_topic].put(wp_str)
-            print(f"Published waypoint string for {aircraft_type}/{aircraft_id}: {wp_str}")
+
+def publish_complete_mission(session, aircraft_type, aircraft_id, mission_elements, format_type):
+    """Publish complete mission data for an aircraft"""
+    mission_topic = f"aircraft/{aircraft_type}/{aircraft_id}/set_mission"
+    
+    if mission_topic not in publishers_cache:
+        publishers_cache[mission_topic] = session.declare_publisher(mission_topic)
+    
+    if format_type == 'flatbuffer':
+        mission_msg = create_mission_message(aircraft_type, aircraft_id, mission_elements)
+        publishers_cache[mission_topic].put(mission_msg)
+        
+        # Count elements by type for better logging
+        takeoff_count = sum(1 for elem in mission_elements if elem[0] == "TAKEOFF")
+        waypoint_count = sum(1 for elem in mission_elements if elem[0] == "WAYPOINT")
+        land_count = sum(1 for elem in mission_elements if elem[0] == "LAND")
+        
+        print(f"Published COMPLETE mission FlatBuffer for {aircraft_type}/{aircraft_id}: "
+              f"{takeoff_count} takeoff, {waypoint_count} waypoints, {land_count} land")
+    else:
+        mission_str = f"Complete Mission - Total elements: {len(mission_elements)}"
+        for i, (elem_type, elem_data) in enumerate(mission_elements):
+            mission_str += f"\n  {i+1}. {elem_type}: {elem_data}"
+        publishers_cache[mission_topic].put(mission_str)
+        print(f"Published complete mission string for {aircraft_type}/{aircraft_id}")
+
+def publish_missions_for_active_aircraft(session, current_step, aircraft_info, format_type):
+    """Publish missions for aircraft that are active at the current step"""
+    missions_published = 0
+    
+    for aircraft_key, mission_data in aircraft_missions.items():
+        # Check if this aircraft is active at the current step
+        if aircraft_key in aircraft_info:
+            start_step = aircraft_info[aircraft_key]['start_step']
+            if current_step >= start_step:
+                aircraft_type = mission_data['aircraft_type']
+                aircraft_id = mission_data['agent_id']
+                mission_elements = mission_data['mission_elements']
+                
+                if mission_elements:
+                    publish_complete_mission(session, aircraft_type, aircraft_id, mission_elements, format_type)
+                    missions_published += 1
+    
+    return missions_published
 
 def generate_random_aircraft_data(aircraft_id):
     """Generate random aircraft data for testing"""
@@ -215,7 +419,7 @@ def generate_random_aircraft_data(aircraft_id):
     }
     return position_data, velocity_data, heading_data
 
-def publish_fire_data(session, fire_id, lat, lng, image_base64, format_type):
+def publish_fire_data(session, fire_id, lat, lng, status, format_type):
     """Publish fire data to a dedicated topic."""
     fire_topic = "fires/events"
 
@@ -223,14 +427,13 @@ def publish_fire_data(session, fire_id, lat, lng, image_base64, format_type):
         publishers_cache[fire_topic] = session.declare_publisher(fire_topic)
 
     if format_type == 'flatbuffer':
-        fire_msg = create_fire_message(fire_id, lat, lng, image_base64)
+        fire_msg = create_fire_message(fire_id, lat, lng, status)
         publishers_cache[fire_topic].put(fire_msg)
-        print(f"Published fire event FlatBuffer for fire ID {fire_id} (with image)")
+        print(f"Published fire event FlatBuffer for fire ID {fire_id} (with status)")
     else:
-        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}, Image: [data]"
+        fire_str = f"Fire Event - ID: {fire_id}, Lat: {lat}, Lng: {lng}, Status: {status}"
         publishers_cache[fire_topic].put(fire_str)
         print(f"Published fire event string: {fire_str}")
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -255,6 +458,7 @@ def main():
     print(f"Starting Aircraft DDS Publisher")
     print(f"Aircraft: {args.aircraft_type}/{args.aircraft_id}")
     print(f"Format: {args.format}, Interval: {args.interval}s")
+    print(f"Mission republish interval: {MISSION_REPUBLISH_INTERVAL} steps")
 
     if args.format == 'flatbuffer' and not FLATBUFFERS_AVAILABLE:
         print("\n\n\nFlatBuffers not available, falling back to string format\n\n\n")
@@ -262,15 +466,22 @@ def main():
 
     # Load CSV data if requested
     csv_data = None
+    aircraft_info = {}
     if args.use_csv:
         agent_csv = os.path.join(script_dir, 'sample_data', 'agents_data.csv')
         fire_csv = os.path.join(script_dir, 'sample_data', 'fires_data.csv')
-        csv_data = load_csv_data(agent_csv, fire_csv)
+        mission_csv = os.path.join(script_dir, 'sample_data', 'missions_data.csv')
+        csv_data = load_csv_data(agent_csv, fire_csv, mission_csv)
         if csv_data is None:
             print("Failed to load CSV data, using random values instead")
             args.use_csv = False
         else:
             print(f"CSV mode enabled - will cycle through {len(csv_data)} steps")
+            print(f"Complete missions loaded for: {list(aircraft_missions.keys())}")
+            
+            # Extract aircraft information to determine when they become active
+            aircraft_info = get_active_aircraft_from_csv(csv_data)
+            print(f"Aircraft activity info: {aircraft_info}")
 
     try:
         with zenoh.open(zenoh.Config()) as session:
@@ -283,7 +494,19 @@ def main():
                         # CSV mode - publish data for all agents in current step
                         if current_step in csv_data:
                             step_data = csv_data[current_step]
-                            print(f"\n--- Publishing Step {current_step} ({len(step_data)} items) ---")
+                            
+                            # Check if we need to publish missions
+                            should_publish_missions = (current_step == 1 or 
+                                                     current_step % MISSION_REPUBLISH_INTERVAL == 0)
+                            
+                            mission_count = 0
+                            if should_publish_missions:
+                                mission_count = publish_missions_for_active_aircraft(
+                                    session, current_step, aircraft_info, args.format)
+                            
+                            print(f"\n--- Publishing Step {current_step} ({len(step_data)} telemetry items" +
+                                  (f", {mission_count} missions)" if should_publish_missions else ")") + " ---")
+                            
                             for row in step_data:
                                 row_type = row.get('type')
 
@@ -291,9 +514,11 @@ def main():
                                     fire_id = row['fire_id']
                                     lat = float(row['latitude'])
                                     lng = float(row['longitude'])
-                                    image_base64 = row['image']
-                                    publish_fire_data(session, fire_id, lat, lng, image_base64, args.format)
-                                else:
+                                    status = int(row['status'])
+                                    publish_fire_data(session, fire_id, lat, lng, status, args.format)
+
+                                elif row_type not in ['MISSION']:  # Skip MISSION type as we handle it separately
+                                    # Regular aircraft telemetry data
                                     aircraft_id = row['agent_id']
                                     aircraft_type = row['aircraft_type']
                                     position_data = {
@@ -309,20 +534,10 @@ def main():
                                     heading_data = {
                                         'heading': float(row['heading'])
                                     }
-                                    # Prepare waypoint data if available
-                                    waypoint_data = None
-                                    if (row.get('waypoint_latitude') and row.get('waypoint_longitude')
-                                        and row.get('waypoint_altitude') and row.get('waypoint_heading')):
-                                        waypoint_data = {
-                                            'lat': float(row['waypoint_latitude']),
-                                            'lng': float(row['waypoint_longitude']),
-                                            'alt': float(row['waypoint_altitude']),
-                                            'heading': float(row['waypoint_heading'])
-                                        }
                                     publish_aircraft_data(
                                         session, aircraft_type, aircraft_id,
                                         position_data, velocity_data, heading_data,
-                                        args.format, waypoint_data
+                                        args.format
                                     )
                             current_step += 1
                             if current_step > max(csv_data.keys()):
@@ -339,7 +554,7 @@ def main():
                         publish_aircraft_data(
                             session, args.aircraft_type, args.aircraft_id,
                             position_data, velocity_data, heading_data,
-                            args.format, None
+                            args.format
                         )
                         print()
                         time.sleep(args.interval)

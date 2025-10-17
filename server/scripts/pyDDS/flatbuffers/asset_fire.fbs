@@ -1,11 +1,13 @@
 namespace messages;
 
+enum FireStatus:byte { ACTIVE = 0, CONTAINED = 1, EXTINGUISHED = 2 }
+
 table FireMessage {
   timestamp:long;
   id:uint;
   latitude:float;
   longitude:float;
-  image:string; // base64
+  status:FireStatus = ACTIVE;
 }
 
 root_type FireMessage;
