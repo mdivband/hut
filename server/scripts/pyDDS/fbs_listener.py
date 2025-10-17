@@ -247,6 +247,8 @@ def deserialize_mission_message(data, full_mission=True):
                 mission_elements.append(element_data)
             else:
                 logger.error(f"Error in mission element {i}: {element_data['error']}")
+
+        logger.info(f"Received mission for {msg.Ttype()}/{msg.Id()}: \n{mission_elements}")
         
         if full_mission:
             # Return full mission data

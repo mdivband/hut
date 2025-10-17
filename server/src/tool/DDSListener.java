@@ -66,7 +66,7 @@ public class DDSListener {
      * Starts the persistent DDS listener process
      */
     public void startPersistentListener() {
-        boolean success = pythonExecutor.startPersistentScript(scriptPath, "--continuous");
+        boolean success = pythonExecutor.startPersistentScript(scriptPath, "--continuous", "--log_messages");
         if (!success) {
             throw new RuntimeException("Failed to start persistent DDS listener");
         }
