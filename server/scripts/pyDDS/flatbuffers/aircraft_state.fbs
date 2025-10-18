@@ -1,0 +1,22 @@
+// msgs/aircraft_state.fbs
+
+include "common_types.fbs";
+
+namespace messages;
+
+enum State : byte {
+  UNDEFINED,
+  ON_GROUND,
+  IN_AIR,
+  TAKEOFF,
+  LANDING,
+}
+
+table StateMessage {
+  timestamp:long;
+  ttype:Type;
+  id: uint8;
+  state: State;
+}
+
+root_type StateMessage;
