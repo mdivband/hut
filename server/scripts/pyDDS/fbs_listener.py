@@ -552,7 +552,11 @@ if __name__ == "__main__":
             logger.error(f"Error processing data from '{sample.key_expr}': {e}")
 
     try:
-        with zenoh.open(zenoh.Config()) as session:
+        conf = zenoh.Config()
+        connect_endpoints = ["tcp/127.0.0.1:7447"]  # This tells Zenoh to connect to the router
+        conf.insert_json5("connect/endpoints", json.dumps(connect_endpoints))
+        conf.insert_json5("mode","'peer'")
+        with zenoh.open(conf) as session:
             if args.continuous:
                 format_msg = f" (format: {args.format})" if args.format != 'auto' else ""
                 mission_msg = f" (full_mission: {args.full_mission})"

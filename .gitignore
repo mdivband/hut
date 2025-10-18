@@ -170,6 +170,9 @@ server/processedLogs/
 # Ignore /flatbuffers/generated folder
 **/flatbuffers/generated/
 
+# Ignore the simulator.run folder
+**/simulator.run/
+
 # Ignore flatc.exe and flatc
 **/flatc.exe
 **/flatc
