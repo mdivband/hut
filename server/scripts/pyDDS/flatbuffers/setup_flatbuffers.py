@@ -78,7 +78,7 @@ def generate_python_code():
     for schema_file in schema_files:
         try:
             # Generate Python code for each schema file
-            cmd = [flatc_cmd, "--python", "-o", output_dir, schema_file]
+            cmd = [flatc_cmd, "--gen-all", "--python", "-o", output_dir, schema_file]
             subprocess.check_call(cmd)
             print(f"Generated Python code from {schema_file}")
             success_count += 1
