@@ -103,11 +103,11 @@ var MapAgentController = {
         })
     },
     onAgentAdd: function (agent) {
-        console.log("Agent add")
+        //console.log("Agent add")
         if (MapController.isHeatmapMode()) {
             MapAgentController.heatmapAgentUpdateGeneric(true);
         } else {
-            console.log('Agent added ' + agent.getId());
+            //console.log('Agent added ' + agent.getId());
             var id = agent.getId();
 
             this.$el.gmap("addMarker", {
@@ -185,7 +185,7 @@ var MapAgentController = {
         this.updateTable();
     },
     onAgentRemove: function (agent) {
-        console.log('Agent removed ' + agent.getId());
+        //console.log('Agent removed ' + agent.getId());
         var marker = this.$el.gmap("get", "markers")[agent.getId()];
         if (marker) {
             marker.setMap(null);
@@ -355,7 +355,7 @@ var MapAgentController = {
         var icon;
 
         // for blue, cyan, green, orange, pink, purple, red, yellow
-        console.log("Updating icon for agent " + agent.getId() + " to type " + agent.getMarker());
+        //console.log("Updating icon for agent " + agent.getId() + " to type " + agent.getMarker());
         var markerType = agent.getMarker();
         if (markerType === "UAV-blue") {
             icon = self.icons.UAVblue;

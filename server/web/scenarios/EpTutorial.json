@@ -1,0 +1,227 @@
+{
+  "gameId": "EpTutorial",
+  "gameDescription": "Degradation Test",
+  "uIOptions": [
+    {
+      "name": "monitor",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "editmode",
+      "default": false,
+      "toggleable": false
+    },
+    {
+      "name": "reportPanel",
+      "default": true,
+      "toggleable": true
+    },
+    {
+      "name": "workloadSlider",
+      "default": true,
+      "toggleable": true
+    }
+  ],
+  "episodes": [
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red"
+      ],
+      "degColour": "yellow",
+      "prevAgents": 0,
+      "episodeCode": "EP-0-8-y-5"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 16,
+      "degradationTime": 4,
+      "colours": [
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red"
+      ],
+      "degColour": "green",
+      "prevAgents": 8,
+      "episodeCode": "EP-8-16-g-4"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 8,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red"
+      ],
+      "degColour": "yellow",
+      "prevAgents": 16,
+      "episodeCode": "EP-16-8-y-5"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 24,
+      "degradationTime": 5,
+      "colours": [
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red"
+      ],
+      "degColour": "yellow",
+      "prevAgents": 20,
+      "episodeCode": "EP-20-24-y-5"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 4,
+      "colours": [
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red"
+      ],
+      "degColour": "green",
+      "prevAgents": 24,
+      "episodeCode": "EP-24-12-g-4"
+    },
+    {
+      "episodeLength": 7.0,
+      "numAgents": 12,
+      "degradationTime": 4,
+      "colours": [
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "red"
+      ],
+      "degColour": "red",
+      "prevAgents": 12,
+      "episodeCode": "EP-12-12-r-4"
+    }
+  ],
+  "flockingEnabled": true,
+  "loggingById": true,
+  "gameCentre": {
+    "lat": 50.943033788203586,
+    "lng": -1.4305110955547788
+  },
+  "allocationMethod": "maxsum",
+  "allocationStyle": "manual",
+  "agents": [
+    {
+      "lat": 50.92880002299894,
+      "lng": -1.4094788872327502
+    },
+    {
+      "lat": 50.929378522204615,
+      "lng": -1.4078189690011413,
+      "battery": 1.0
+    },
+    {
+      "lat": 50.9318636656946,
+      "lng": -1.4065928983124234,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92780002299894,
+      "lng": -1.4094788872327502,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.93037852220461,
+      "lng": -1.4078189690011413,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.92775213234095,
+      "lng": -1.4071363295995343,
+      "battery": 1.0
+    },
+    {
+      "lat": 50.92875295435936,
+      "lng": -1.4060849036656964,
+      "battery": 0.75
+    },
+    {
+      "lat": 50.93007833416138,
+      "lng": -1.4094108428441632,
+      "battery": 1.0
+    },
+    {
+      "lat": 50.92948327035036,
+      "lng": -1.4108914222203839,
+      "battery": 1.0
+    },
+    {
+      "lat": 50.92826607066169,
+      "lng": -1.4111489142858136,
+      "battery": 1.0
+    }
+  ]
+}

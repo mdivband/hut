@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 
 public class FFmpegScreenRecorder {
     private final String ffmpegExe;
-    private final Path outDir;
+    private Path outDir;
 
     private volatile Process proc;
     private volatile OutputStream procStdin;
@@ -19,7 +19,7 @@ public class FFmpegScreenRecorder {
     private Thread shutdownHook;
     private volatile boolean running;
 
-    // NEW: single-thread pool to run cuts off the main loop
+    // Single-thread pool to run cuts off the main loop
     private final ExecutorService cutPool = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "ffmpeg-cuts");
         t.setDaemon(true);
@@ -28,7 +28,7 @@ public class FFmpegScreenRecorder {
 
     // Fine-tuning (seconds)
     private static final double START_LEAD_S = 0.050;  // include a touch earlier
-    private static final double END_TRIM_S   = 0.100;  // cut off a touch earlier
+    private static final double END_TRIM_S   = 0.000;  // no tail trim; aim for exact 7.0s
 
     public FFmpegScreenRecorder(String ffmpegExe, Path outDir) {
         this.ffmpegExe = Objects.requireNonNull(ffmpegExe);
@@ -68,13 +68,13 @@ public class FFmpegScreenRecorder {
         pb.redirectOutput(log);
         pb.redirectInput(ProcessBuilder.Redirect.PIPE);
 
-        // Record the wall time right at launch (earlier than before)
+        // Record the wall time right at launch
         long launchWall = System.currentTimeMillis();
         proc = pb.start();
         procStdin = proc.getOutputStream();
         running = true;
 
-        // (Optional) Wait briefly until the file appears, but don't delay the wall start
+        // (Optional) Wait briefly until the file appears
         try {
             for (int i = 0; i < 30; i++) { // up to ~3s
                 if (Files.exists(sessionFile) && Files.size(sessionFile) > 128 * 1024) break;
@@ -82,7 +82,6 @@ public class FFmpegScreenRecorder {
             }
         } catch (InterruptedException ignored) {}
 
-        // Earlier session start aligns “startSec” slightly earlier; preroll covers any early margin
         sessionWallStartMs = launchWall;
 
         // shutdown safety
@@ -135,22 +134,77 @@ public class FFmpegScreenRecorder {
         try { cutPool.awaitTermination(2, TimeUnit.SECONDS); } catch (InterruptedException ignored) {}
     }
 
-    // NEW: queue the cut on a background thread (non-blocking for the caller)
-    public void cutEpisodeAsync(String epCode, int epIndex,
+    // =======================================
+    // Naming helpers
+    // =======================================
+    private static String zeroPad(int value, int width) {
+        return String.format(Locale.US, "%0" + width + "d", value);
+    }
+
+    // In FFmpegScreenRecorder
+    public void stopClipAndWait(Process proc, long timeoutMs) {
+        try {
+            // Send 'q' on stdin or destroy gracefully
+            try (OutputStream os = proc.getOutputStream()) {
+                os.write('q');
+                os.flush();
+            } catch (IOException ignored) {}
+
+            if (!proc.waitFor(timeoutMs, TimeUnit.MILLISECONDS)) {
+                proc.destroy();
+                if (!proc.waitFor(500, TimeUnit.MILLISECONDS)) {
+                    proc.destroyForcibly();
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            proc.destroyForcibly();
+        }
+    }
+
+
+    /**
+     * Build filename:
+     *  - With total:  Video[<i>-<total>]-<EpCode>.mp4  (i is 1-based; both zero-padded to total's width)
+     *  - Without:     Video[<i>]-<EpCode>.mp4          (i is 1-based; 3-digit pad)
+     */
+    private static String makeVideoName(String epCode, int epIndexZeroBased, int totalVideos) {
+        int oneBased = Math.max(1, epIndexZeroBased + 1);
+        if (totalVideos > 0) {
+            int width = Integer.toString(totalVideos).length();
+            return "Video[" + zeroPad(oneBased, width) + "-" + zeroPad(totalVideos, width) + "]-" + epCode + ".mp4";
+        } else {
+            return String.format(Locale.US, "Video[%03d]-%s.mp4", oneBased, epCode);
+        }
+    }
+
+    // =======================================
+    // Cutting API
+    // =======================================
+
+    // Queue the cut on a background thread — with total count
+    public void cutEpisodeAsync(String epCode, int epIndex, int totalVideos,
                                 long epWallStartMs, long epWallEndMs,
                                 boolean reencode) {
         cutPool.submit(() -> {
             try {
-                cutEpisode(epCode, epIndex, epWallStartMs, epWallEndMs, reencode);
+                cutEpisode(epCode, epIndex, totalVideos, epWallStartMs, epWallEndMs, reencode);
             } catch (Exception e) {
-                System.out.printf("%s [FFMPEG] async cut failed (%s_%03d): %s%n",
-                        ts(), epCode, epIndex, e.toString());
+                System.out.printf("%s [FFMPEG] async cut failed (%s idx=%d/%d): %s%n",
+                        ts(), epCode, epIndex, totalVideos, e.toString());
             }
         });
     }
 
-    /** Blocking cut (called by async wrapper). */
-    public Path cutEpisode(String epCode, int epIndex,
+    // Back-compat overload (no total known)
+    public void cutEpisodeAsync(String epCode, int epIndex,
+                                long epWallStartMs, long epWallEndMs,
+                                boolean reencode) {
+        cutEpisodeAsync(epCode, epIndex, -1, epWallStartMs, epWallEndMs, reencode);
+    }
+
+    /** Blocking cut (called by async wrapper) — with total count. */
+    public Path cutEpisode(String epCode, int epIndex, int totalVideos,
                            long epWallStartMs, long epWallEndMs,
                            boolean reencode) throws IOException, InterruptedException {
         if (sessionFile == null) throw new IllegalStateException("Session not started");
@@ -162,9 +216,9 @@ public class FFmpegScreenRecorder {
         startSec = Math.max(0.0, startSec - START_LEAD_S);
         endSec   = Math.max(startSec, endSec - END_TRIM_S);
 
-        // Guard: minimal wait so we're not at a moving EOF
+        // Guard: wait until we’re safely past the desired end so the container has all frames
         long needWallMs = sessionWallStartMs + (long) Math.floor(endSec * 1000.0);
-        long safetyLagMs = 500; // was 2000; trim to reduce overrun
+        long safetyLagMs = 5000; // allow encoder/muxer to flush frames
         long now = System.currentTimeMillis();
         if (now < needWallMs + safetyLagMs) {
             try { Thread.sleep((needWallMs + safetyLagMs) - now); } catch (InterruptedException ignored) {}
@@ -173,16 +227,22 @@ public class FFmpegScreenRecorder {
         // Tiny settle only
         try { Thread.sleep(50); } catch (InterruptedException ignored) {}
 
-        String stamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date(epWallEndMs));
-        Path out = outDir.resolve(String.format("%s_%03d_%s.mp4", epCode, epIndex, stamp));
+        // Build output filename as requested
+        String fileName = makeVideoName(epCode, epIndex, totalVideos);
+        Path out = outDir.resolve(fileName);
         File cutLog = outDir.resolve("ffmpeg-cut.log").toFile();
+
+        // Build args
+        double durSec = Math.max(0.0, endSec - startSec);
 
         List<String> args = new ArrayList<>();
         args.addAll(List.of(ffmpegExe, "-hide_banner", "-y"));
+
+        // Accurate seeking with re-encode path: put -ss after -i
+        args.addAll(List.of("-i", sessionFile.toString()));
         args.addAll(List.of(
-                "-i", sessionFile.toString(),
                 "-ss", String.format(Locale.US, "%.3f", startSec),
-                "-to", String.format(Locale.US, "%.3f", endSec)
+                "-t",  String.format(Locale.US, "%.3f", durSec)
         ));
 
         if (reencode) {
@@ -194,9 +254,12 @@ public class FFmpegScreenRecorder {
                     "-vsync","cfr",
                     "-fflags","+genpts",
                     "-reset_timestamps","1",
-                    "-movflags","+faststart"
+                    "-movflags","+faststart",
+                    "-muxpreload","0",
+                    "-muxdelay","0"
             ));
         } else {
+            // NOTE: copy mode is fragile with dshow timestamps; prefer reencode=true
             args.addAll(List.of(
                     "-c","copy",
                     "-movflags","+faststart",
@@ -204,6 +267,7 @@ public class FFmpegScreenRecorder {
                     "-avoid_negative_ts","make_zero"
             ));
         }
+
         args.add(out.toString());
 
         ProcessBuilder pb = new ProcessBuilder(args);
@@ -212,9 +276,9 @@ public class FFmpegScreenRecorder {
         Process p = pb.start();
         int rc = p.waitFor();
 
-        double requestedDur = Math.max(0.0, endSec - startSec);
-        System.out.printf("%s [FFMPEG] cut %s (ss=%.3f,to=%.3f,reqDur=%.3f,reencode=%s,rc=%d)%n",
-                ts(), out.getFileName(), startSec, endSec, requestedDur, reencode, rc);
+        double requestedDur = durSec;
+        System.out.printf("%s [FFMPEG] cut %s (ss=%.3f,t=%.3f,reqDur=%.3f,reencode=%s,rc=%d)%n",
+                ts(), out.getFileName(), startSec, durSec, requestedDur, reencode, rc);
 
         if (rc != 0) {
             System.out.printf("%s [FFMPEG] Cut failed; see %s%n", ts(), cutLog.getPath());
@@ -234,6 +298,13 @@ public class FFmpegScreenRecorder {
         }
 
         return out;
+    }
+
+    // Back-compat overload (no total known)
+    public Path cutEpisode(String epCode, int epIndex,
+                           long epWallStartMs, long epWallEndMs,
+                           boolean reencode) throws IOException, InterruptedException {
+        return cutEpisode(epCode, epIndex, -1, epWallStartMs, epWallEndMs, reencode);
     }
 
     private String ffprobeExe() {
@@ -279,4 +350,23 @@ public class FFmpegScreenRecorder {
     private static String ts() { return new Date().toString() + ";"; }
     private static void sleep(long ms) { try { Thread.sleep(ms); } catch (InterruptedException ignored) {} }
     private static void closeQuiet(Closeable c) { try { if (c != null) c.close(); } catch (IOException ignored) {} }
+
+    // In FFmpegScreenRecorder
+    public synchronized void setOutDir(Path newOutDir) {
+        this.outDir = Objects.requireNonNull(newOutDir);
+    }
+
+    private static String safePathSegment(String s) {
+        if (s == null || s.isBlank()) return "unnamed";
+        // keep letters, numbers, dot, underscore, dash; replace the rest with "_"
+        return s.replaceAll("[^A-Za-z0-9._-]", "_");
+    }
+
+    /** Convenience: switch to /recordings/<gameId> (or whatever base you pass). */
+    public synchronized void useSubfolderFor(String baseFolder, String gameId) {
+        String safe = safePathSegment(gameId);
+        this.outDir = Paths.get(baseFolder).resolve(safe);
+    }
+
+
 }

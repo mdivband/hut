@@ -99,7 +99,7 @@ App.Views.Images = Backbone.View.extend({
 
                     } else if (deepIds.includes(id) && !self.addedDeepIds.includes(id)) {
                         // An update scan from shallow to deep
-                        console.log("Updating to deep " + id);
+                        //console.log("Updating to deep " + id);
                         var button = document.createElement("button");
                         button.id = id;
                         button.innerHTML = id + "(high)";

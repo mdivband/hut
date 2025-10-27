@@ -75,10 +75,8 @@ public class Simulator {
     private long    vidEpWallStartMs = 0L;
 
     // Tunables for cut margins (seconds) — tightened defaults
-    private static final double VIDEO_PREROLL_S = 0.0;  // was 0.8 — start earlier
-    private static final double VIDEO_POSTROLL_S = 0.2; // was 0.8 — end sooner
-
-
+    private static final double VIDEO_PREROLL_S = 0.0;
+    private static final double VIDEO_POSTROLL_S = 0.0;
 
 
     public Simulator() {
@@ -171,6 +169,7 @@ public class Simulator {
         // startSimulation()
         if (screenRec != null && !videoSessionStarted) {
             try {
+                screenRec.useSubfolderFor("recordings", getState().getGameId());
                 screenRec.startSession();
                 videoSessionStarted = true;
                 LOGGER.info(String.format("%s; VIDST; Video session started", getState().getTime()));
@@ -203,10 +202,18 @@ public class Simulator {
                 getState().getTime(), vidEpCode, vidEpIndex, vidEpWallStartMs));
     }
 
+
     private void videoOnEpisodeEndIfActive() {
         if (screenRec == null || !videoSessionStarted) return;
         if (vidEpIndex == null) return;
-        long wallEnd = System.currentTimeMillis() + (long)(VIDEO_POSTROLL_S * 1000);
+
+        // Use exact planned duration instead of 'now':
+        double epLenSec = episodeController.getEpisodeTimeLimit(); // e.g. 7.0 from JSON
+        long plannedEnd = vidEpWallStartMs
+                + (long) Math.round((VIDEO_PREROLL_S + epLenSec + VIDEO_POSTROLL_S) * 1000.0);
+
+        long wallEnd = plannedEnd;
+
         try {
             screenRec.cutEpisodeAsync(vidEpCode, vidEpIndex, vidEpWallStartMs, wallEnd, /*reencode=*/true);
             LOGGER.info(String.format("%s; VEND; Episode ended (code, idx, endWall); %s;%d;%d",
@@ -222,6 +229,21 @@ public class Simulator {
         }
     }
 
+    // Pseudocode; adapt to your FFmpegScreenRecorder API
+    void videoDrainAndStopSession(long timeoutMs) {
+        try {
+            // 1) Stop the active clip if any (send 'q' or close stdin)
+            videoOnEpisodeEndIfActive();  // must block until ffmpeg exits for the clip
+
+            // 2) Stop the session (if you have a persistent session)
+            videoStopSessionIfRunning();  // must block until all ffmpeg processes are down
+
+            // 3) Optional: small grace period to let filesystem settle
+            Thread.sleep(150);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
 
     private void videoStopSessionIfRunning() {
@@ -317,6 +339,9 @@ public class Simulator {
                 LOGGER.info(String.format("%s; PRCP; User set Subjective performance level to (level); %s", state.getTime(), state.getSubjPerfLevel()));
                 LOGGER.info(String.format("%s; EPEND; Episode end", state.getTime()));
 
+                // NEW: drain recorder synchronously
+                videoDrainAndStopSession(10000);  // 10s wait for all files to save
+
                 // VIDEO: close active clip + stop session
                 videoOnEpisodeEndIfActive();
                 videoStopSessionIfRunning();
@@ -341,7 +366,8 @@ public class Simulator {
 
                     // VIDEO: START first episode (no preroll needed)
                     epCounter++;
-                    armVideoStart(defaultEpCode(), epCounter);
+                    String thisEpCode = episodeController.getEpisodeCode(); // pull from controller
+                    armVideoStart(thisEpCode, epCounter);
 
                     // schedule end + disappearance
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
@@ -373,7 +399,8 @@ public class Simulator {
 
 // VIDEO: START next (no preroll)=
                     epCounter++;
-                    armVideoStart(defaultEpCode(), epCounter);
+                    String thisEpCode = episodeController.getEpisodeCode(); // pull from controller
+                    armVideoStart(thisEpCode, epCounter);
 
                     episodeController.setTriggerTime(state.getTime() + episodeController.getEpisodeTimeLimit());
                     degradationTriggerTime = state.getTime() + episodeController.getDegradationTime();

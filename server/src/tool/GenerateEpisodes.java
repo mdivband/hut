@@ -16,7 +16,7 @@ import java.util.*;
  *   for each ordered pair (u->v, u!=v). This naturally interleaves cycles.
  * - First-start policy: RANDOM | FIXED | ROUND_ROBIN.
  * - "Not boring" start: first 'minMix' edges not all ±1-step (optional).
- * - Episodes have extra fields: prevAgents and episodeCode ("EP-prev-cur").
+ * - Episodes have extra fields: prevAgents and episodeCode ("EP-prev-cur-cT" where c is colour initial, T is time).
  * - Colours balanced (one of each per |palette| agents, shuffled).
  * - degradationTime ∈ {3,4,5}.
  * - Writes episodes.json and prints a full self-doc + validation.
@@ -35,7 +35,7 @@ public class GenerateEpisodes {
         public int repetitions = 3;
 
         // Randomness
-        public Long seed = 20251013L;           // null => nondeterministic
+        public Long seed = null; //20251013L;           // null => nondeterministic
 
         // Start control
         public FirstStartMode firstStartMode = FirstStartMode.RANDOM;
@@ -66,7 +66,8 @@ public class GenerateEpisodes {
 
         // NEW
         public int prevAgents;        // 0 for the first episode
-        public String episodeCode;    // "EP-prev-cur"
+        // "EP-prev-cur-cT" => c = first letter of degColour (lowercase), T = degradationTime
+        public String episodeCode;
 
         public Episode(double episodeLength, int numAgents, int degradationTime,
                        List<String> colours, String degColour,
@@ -218,7 +219,16 @@ public class GenerateEpisodes {
         return choices[rng.nextInt(choices.length)];
     }
 
-    static String epCode(int prev, int cur) { return "EP-" + prev + "-" + cur; }
+    /** One-letter code from colour name (lowercase first char); robust to custom palette strings. */
+    static String colourTag(String colour) {
+        if (colour == null || colour.isEmpty()) return "?";
+        return String.valueOf(Character.toLowerCase(colour.charAt(0)));
+    }
+
+    /** Episode code now includes disappearing colour + time: EP-prev-cur-cT (e.g., EP-12-8-b6). */
+    static String epCode(int prev, int cur, String degColour, int degTime) {
+        return "EP-" + prev + "-" + cur + "-" + colourTag(degColour) + "-" + degTime;
+    }
 
     static EpisodeDoc buildEpisodes(DeckConfig cfg, StringBuilder runLog) {
         Random rng = (cfg.seed == null) ? new Random() : new Random(cfg.seed);
@@ -250,7 +260,7 @@ public class GenerateEpisodes {
 
             doc.episodes.add(new Episode(
                     cfg.episodeLength, cur, degTime, colours, degColour,
-                    prev, epCode(prev, cur)
+                    prev, epCode(prev, cur, degColour, degTime)
             ));
         }
 
@@ -293,7 +303,7 @@ public class GenerateEpisodes {
             int prev = (i == 0) ? 0 : doc.episodes.get(i - 1).numAgents;
             if (e.prevAgents != prev)
                 throw new AssertionError("Episode " + i + ": prevAgents=" + e.prevAgents + " expected " + prev);
-            String expectedCode = epCode(prev, e.numAgents);
+            String expectedCode = epCode(prev, e.numAgents, e.degColour, e.degradationTime);
             if (!expectedCode.equals(e.episodeCode))
                 throw new AssertionError("Episode " + i + ": episodeCode=" + e.episodeCode + " expected " + expectedCode);
         }
@@ -372,7 +382,7 @@ public class GenerateEpisodes {
             log.append("\nNode cycle:\n  ").append(String.join("->", nodesChain)).append("\n");
         }
 
-// --- EDGE LABEL CHAIN (A->B->C->... for each transition) ---
+        // --- EDGE LABEL CHAIN (A->B->C->... for each transition) ---
         {
             // Excel-like labels: A..Z, AA..AZ, BA.. etc.
             java.util.function.IntFunction<String> edgeLabel = idx -> {
@@ -398,8 +408,6 @@ public class GenerateEpisodes {
                 log.append(String.format("  %s: %d->%d%n", L, a, b));
             }
         }
-
-
 
         // Validate
         StringBuilder report = new StringBuilder();
